@@ -2,7 +2,8 @@ import CDP from 'chrome-remote-interface';
 
 let client = null;
 let targetInfo = null;
-const CDP_HOST = 'localhost';
+let activeHost = null;
+const CDP_HOSTS = ['127.0.0.1', 'localhost'];
 const CDP_PORT = 9222;
 const MAX_RETRIES = 5;
 const BASE_DELAY = 500;
@@ -45,33 +46,34 @@ export async function getClient() {
 export async function connect() {
   let lastError;
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      const target = await findChartTarget();
-      if (!target) {
-        throw new Error('No TradingView chart target found. Is TradingView open with a chart?');
+    for (const host of CDP_HOSTS) {
+      try {
+        const target = await findChartTarget(host);
+        if (!target) {
+          throw new Error('No TradingView chart target found. Is TradingView open with a chart?');
+        }
+        targetInfo = target;
+        activeHost = host;
+        client = await CDP({ host, port: CDP_PORT, target: target.id });
+
+        await client.Runtime.enable();
+        await client.Page.enable();
+        await client.DOM.enable();
+
+        return client;
+      } catch (err) {
+        lastError = err;
       }
-      targetInfo = target;
-      client = await CDP({ host: CDP_HOST, port: CDP_PORT, target: target.id });
-
-      // Enable required domains
-      await client.Runtime.enable();
-      await client.Page.enable();
-      await client.DOM.enable();
-
-      return client;
-    } catch (err) {
-      lastError = err;
-      const delay = Math.min(BASE_DELAY * Math.pow(2, attempt), 30000);
-      await new Promise(r => setTimeout(r, delay));
     }
+    const delay = Math.min(BASE_DELAY * Math.pow(2, attempt), 30000);
+    await new Promise(r => setTimeout(r, delay));
   }
   throw new Error(`CDP connection failed after ${MAX_RETRIES} attempts: ${lastError?.message}`);
 }
 
-async function findChartTarget() {
-  const resp = await fetch(`http://${CDP_HOST}:${CDP_PORT}/json/list`);
+async function findChartTarget(host) {
+  const resp = await fetch(`http://${host}:${CDP_PORT}/json/list`);
   const targets = await resp.json();
-  // Prefer targets with tradingview.com/chart in the URL
   return targets.find(t => t.type === 'page' && /tradingview\.com\/chart/i.test(t.url))
     || targets.find(t => t.type === 'page' && /tradingview/i.test(t.url))
     || null;
@@ -110,6 +112,7 @@ export async function disconnect() {
     try { await client.close(); } catch {}
     client = null;
     targetInfo = null;
+    activeHost = null;
   }
 }
 

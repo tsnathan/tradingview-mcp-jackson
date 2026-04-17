@@ -64,6 +64,15 @@ describe('dashboard status payload', () => {
               favorableExcursion: '28.00 USD',
               adverseExcursion: '-4.00 USD',
             },
+            {
+              symbol: 'TQQQ',
+              signal: '—',
+              entryPrice: '—',
+              entryTime: 'No trade time',
+              netPnl: '—',
+              favorableExcursion: '—',
+              adverseExcursion: '—',
+            },
           ],
         },
       ],
@@ -76,6 +85,7 @@ describe('dashboard status payload', () => {
     assert.equal(result.openTrades[0].symbol, 'SOXL');
     assert.equal(result.priorSignals.length, 1);
     assert.equal(result.priorSignals[0].watchlistName, 'Swing 15m');
+    assert.equal(result.priorSignals[0].trades.length, 1);
     assert.equal(result.priorSignals[0].trades[0].signal, 'OPEN');
     assert.match(result.priorSignals[0].trades[0].entryTime, /2026/);
     assert.equal(result.priorSignals[0].trades[0].entryPrice, 82.33);

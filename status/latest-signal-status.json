@@ -1,0 +1,191 @@
+{
+  "updatedAt": "2026-04-17T23:53:41.354Z",
+  "formattedTimestampEt": "04/17/2026, 07:53:41 PM",
+  "nextScheduledRunEt": "04/20/2026, 09:31:00 AM ET",
+  "scanMode": "signals_only",
+  "hasSignals": true,
+  "signalsFound": 2,
+  "changedSignals": 2,
+  "lines": [
+    "04/17/2026, 06:45:08 AM ET | WATCHLIST: Swing 15m | OPEN: BATS:ERX | ENTRY: 80.45 USD",
+    "04/17/2026, 06:45:00 AM ET | WATCHLIST: Swing 15m | OPEN: BATS:USO | ENTRY: 113.98 USD"
+  ],
+  "summary": "2 open trades",
+  "skipped": false,
+  "reason": null,
+  "symbolsScanned": 0,
+  "watchlistsChecked": [
+    "Swing 15m",
+    "Swing 30min",
+    "Swing 1H",
+    "Swing 4H",
+    "Swing 1D"
+  ],
+  "openTrades": [
+    {
+      "watchlistName": "Swing 15m",
+      "timeframe": "15",
+      "symbolCount": 21,
+      "symbol": "BATS:ERX",
+      "signal": "OPEN",
+      "wasOpen": true,
+      "entryPrice": "80.45 USD",
+      "entryTime": "04/17/2026, 06:45:08 AM ET",
+      "netPnl": "In progress",
+      "favorableExcursion": "In progress",
+      "adverseExcursion": "In progress"
+    },
+    {
+      "watchlistName": "Swing 15m",
+      "timeframe": "15",
+      "symbolCount": 21,
+      "symbol": "BATS:USO",
+      "signal": "OPEN",
+      "wasOpen": true,
+      "entryPrice": "113.98 USD",
+      "entryTime": "04/17/2026, 06:45:00 AM ET",
+      "netPnl": "In progress",
+      "favorableExcursion": "In progress",
+      "adverseExcursion": "In progress"
+    }
+  ],
+  "priorSignals": [
+    {
+      "watchlistName": "Swing 15m",
+      "timeframe": "15",
+      "source": "baseline_history",
+      "symbolCount": 21,
+      "trades": [
+        {
+          "symbol": "BATS:ERX",
+          "signal": "OPEN",
+          "wasOpen": true,
+          "entryPrice": "80.45 USD",
+          "entryTime": "04/17/2026, 06:45:08 AM ET",
+          "netPnl": "In progress",
+          "favorableExcursion": "In progress",
+          "adverseExcursion": "In progress"
+        },
+        {
+          "symbol": "BATS:USO",
+          "signal": "OPEN",
+          "wasOpen": true,
+          "entryPrice": "113.98 USD",
+          "entryTime": "04/17/2026, 06:45:00 AM ET",
+          "netPnl": "In progress",
+          "favorableExcursion": "In progress",
+          "adverseExcursion": "In progress"
+        },
+        {
+          "symbol": "BATS:MEXX",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "32.71 USD",
+          "entryTime": "Apr 14, 2026, 14:00 ET",
+          "netPnl": "-61.045 USD | -0.47%",
+          "favorableExcursion": "553.065 USD | 4.30%",
+          "adverseExcursion": "-134.685 USD | -1.05%"
+        },
+        {
+          "symbol": "BATS:TNA",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "42.95 USD",
+          "entryTime": "Apr 02, 2026, 04:15 ET",
+          "netPnl": "+690.039 USD | +6.45%",
+          "favorableExcursion": "860.805 USD | 8.04%",
+          "adverseExcursion": "-289.575 USD | -2.70%"
+        },
+        {
+          "symbol": "BATS:URTY",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "49.65 USD",
+          "entryTime": "Mar 20, 2026, 10:15 ET",
+          "netPnl": "+1,092.014 USD | +10.41%",
+          "favorableExcursion": "1,160.574 USD | 11.07%",
+          "adverseExcursion": "-721.546 USD | -6.88%"
+        },
+        {
+          "symbol": "LSE_DLY:0I9U",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "41.300 USD",
+          "entryTime": "Dec 16, 2025, 03:30 ET",
+          "netPnl": "+2,114.612 USD | +14.13%",
+          "favorableExcursion": "2,131.71 USD | 14.24%",
+          "adverseExcursion": "-22.191 USD | -0.15%"
+        }
+      ]
+    },
+    {
+      "watchlistName": "Swing 30min",
+      "timeframe": "30",
+      "source": "baseline_history",
+      "symbolCount": 9,
+      "trades": []
+    },
+    {
+      "watchlistName": "Swing 1H",
+      "timeframe": "60",
+      "source": "baseline_history",
+      "symbolCount": 35,
+      "trades": []
+    },
+    {
+      "watchlistName": "Swing 4H",
+      "timeframe": "240",
+      "source": "baseline_history",
+      "symbolCount": 19,
+      "trades": [
+        {
+          "symbol": "BATS:EPI",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "46.54 USD",
+          "entryTime": "Jul 22, 2025, 12:00 ET",
+          "netPnl": "-311.752 USD | -2.52%",
+          "favorableExcursion": "32.84 USD | 0.27%",
+          "adverseExcursion": "-778.46 USD | -6.28%"
+        },
+        {
+          "symbol": "BATS:ASHR",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "26.70 USD",
+          "entryTime": "Mar 28, 2025, 08:00 ET",
+          "netPnl": "-278.051 USD | -2.22%",
+          "favorableExcursion": "0 USD | 0.00%",
+          "adverseExcursion": "-1,644.642 USD | -13.12%"
+        },
+        {
+          "symbol": "BATS:VXZ",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "49.60 USD",
+          "entryTime": "Jan 30, 2025, 12:00 ET",
+          "netPnl": "+744.114 USD | +6.22%",
+          "favorableExcursion": "1,036.396 USD | 8.66%",
+          "adverseExcursion": "-11.954 USD | -0.10%"
+        },
+        {
+          "symbol": "BATS:AGQ",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "35.70 USD",
+          "entryTime": "Jan 27, 2025, 12:00 ET",
+          "netPnl": "+1,915.621 USD | +12.10%",
+          "favorableExcursion": "1,986.545 USD | 12.55%",
+          "adverseExcursion": "-197.445 USD | -1.25%"
+        }
+      ]
+    },
+    {
+      "watchlistName": "Swing 1D",
+      "timeframe": "D",
+      "source": "baseline_history",
+      "symbolCount": 8,
+      "trades": []
+    }
+  ]
+}

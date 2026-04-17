@@ -1,0 +1,1178 @@
+{
+  "last_updated": "2026-04-17T23:34:35.109Z",
+  "market_hours": {
+    "timezone": "America/New_York",
+    "open": "09:30",
+    "close": "16:00",
+    "days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ]
+  },
+  "signals": {
+    "AMEX:SOXL:15": {
+      "label_count": 27,
+      "last_signal": "▼",
+      "last_price": 78.3
+    },
+    "AMEX:SOXL:30": {
+      "symbol": "AMEX:SOXL",
+      "timeframe": "30",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:SOXL:60": {
+      "label_count": 23,
+      "last_signal": "▼",
+      "last_price": 58.33
+    },
+    "AMEX:SOXL:240": {
+      "symbol": "AMEX:SOXL",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "BATS:SOXL:30": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "BTCUSD:30": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "ETHUSD:30": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "SOLUSD:30": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "XRPUSD:30": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "SPY:30": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "QQQ:30": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "NVDA:30": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "SOXL:30": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "SOXL:15": {
+      "symbol": "SOXL",
+      "timeframe": "15",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:20:49.164Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:20:49.164Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "BTCUSD:15": {
+      "symbol": "BTCUSD",
+      "timeframe": "15",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:20:54.627Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:20:54.627Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "ETHUSD:15": {
+      "symbol": "ETHUSD",
+      "timeframe": "15",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "SOLUSD:15": {
+      "symbol": "SOLUSD",
+      "timeframe": "15",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "XRPUSD:15": {
+      "symbol": "XRPUSD",
+      "timeframe": "15",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "SPY:15": {
+      "symbol": "SPY",
+      "timeframe": "15",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "QQQ:15": {
+      "symbol": "QQQ",
+      "timeframe": "15",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "NVDA:15": {
+      "symbol": "NVDA",
+      "timeframe": "15",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "SOXL:60": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "BTCUSD:60": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "ETHUSD:60": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "SOLUSD:60": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "XRPUSD:60": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "SOLUSD:240": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "XRPUSD:240": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "SPY:240": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "QQQ:240": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "NVDA:240": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "SOXL:240": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "BTCUSD:240": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "ETHUSD:240": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "SOLUSD:D": {
+      "symbol": "SOLUSD",
+      "timeframe": "D",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "XRPUSD:D": {
+      "symbol": "XRPUSD",
+      "timeframe": "D",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "SPY:D": {
+      "symbol": "SPY",
+      "timeframe": "D",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "QQQ:D": {
+      "symbol": "QQQ",
+      "timeframe": "D",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "NVDA:D": {
+      "symbol": "NVDA",
+      "timeframe": "D",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "SOXL:D": {
+      "symbol": "SOXL",
+      "timeframe": "D",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "BTCUSD:D": {
+      "symbol": "BTCUSD",
+      "timeframe": "D",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "ETHUSD:D": {
+      "symbol": "ETHUSD",
+      "timeframe": "D",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "SPY:60": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "QQQ:60": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "NVDA:60": {
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33
+    },
+    "AMEX:BRZU:60": {
+      "symbol": "AMEX:BRZU",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:EDC:60": {
+      "symbol": "AMEX:EDC",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:FAZ:60": {
+      "symbol": "AMEX:FAZ",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:GUSH:60": {
+      "symbol": "AMEX:GUSH",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "NASDAQ:INTC:60": {
+      "symbol": "NASDAQ:INTC",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:LABU:60": {
+      "symbol": "AMEX:LABU",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:QID:60": {
+      "symbol": "AMEX:QID",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:SDS:60": {
+      "symbol": "AMEX:SDS",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:SH:60": {
+      "symbol": "AMEX:SH",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:SPXL:60": {
+      "symbol": "AMEX:SPXL",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:SPXS:60": {
+      "symbol": "AMEX:SPXS",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:SPXU:60": {
+      "symbol": "AMEX:SPXU",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "NASDAQ:SQQQ:60": {
+      "symbol": "NASDAQ:SQQQ",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:TECS:60": {
+      "symbol": "AMEX:TECS",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:TMV:60": {
+      "symbol": "AMEX:TMV",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:TNA:60": {
+      "symbol": "AMEX:TNA",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "NASDAQ:TQQQ:60": {
+      "symbol": "NASDAQ:TQQQ",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:TZA:60": {
+      "symbol": "AMEX:TZA",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:URTY:60": {
+      "symbol": "AMEX:URTY",
+      "timeframe": "60",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:21:32.512Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:21:32.512Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "AMEX:USO:60": {
+      "symbol": "AMEX:USO",
+      "timeframe": "60",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:21:36.709Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:21:36.709Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "CBOE:UVXY:60": {
+      "symbol": "CBOE:UVXY",
+      "timeframe": "60",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:21:40.309Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:21:40.309Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "AMEX:YANG:60": {
+      "symbol": "AMEX:YANG",
+      "timeframe": "60",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:22:19.653Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:22:19.653Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "AMEX:PILL:60": {
+      "symbol": "AMEX:PILL",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:UDOW:60": {
+      "symbol": "AMEX:UDOW",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:UPRO:60": {
+      "symbol": "AMEX:UPRO",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:UTSL:60": {
+      "symbol": "AMEX:UTSL",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:FAS:240": {
+      "symbol": "AMEX:FAS",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:EDC:240": {
+      "symbol": "AMEX:EDC",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:YINN:240": {
+      "symbol": "AMEX:YINN",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:EURL:240": {
+      "symbol": "AMEX:EURL",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:JNUG:240": {
+      "symbol": "AMEX:JNUG",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:MEXX:240": {
+      "symbol": "AMEX:MEXX",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:MIDU:240": {
+      "symbol": "AMEX:MIDU",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:PILL:240": {
+      "symbol": "AMEX:PILL",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:TNA:240": {
+      "symbol": "AMEX:TNA",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:UTSL:240": {
+      "symbol": "AMEX:UTSL",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:GLTR:240": {
+      "symbol": "AMEX:GLTR",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:UDOW:240": {
+      "symbol": "AMEX:UDOW",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:TMF:240": {
+      "symbol": "AMEX:TMF",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "NASDAQ:WGMI:60": {
+      "symbol": "NASDAQ:WGMI",
+      "timeframe": "60",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:GLD:240": {
+      "symbol": "AMEX:GLD",
+      "timeframe": "240",
+      "label_count": 0,
+      "last_signal": null,
+      "last_price": 82.33,
+      "last_seen_at": null
+    },
+    "AMEX:SPXU:15": {
+      "symbol": "AMEX:SPXU",
+      "timeframe": "15",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:20:59.946Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:20:59.946Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "NASDAQ:SQQQ:15": {
+      "symbol": "NASDAQ:SQQQ",
+      "timeframe": "15",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:21:04.378Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:21:04.378Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "AMEX:TECS:15": {
+      "symbol": "AMEX:TECS",
+      "timeframe": "15",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:21:08.882Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:21:08.882Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "AMEX:TMV:15": {
+      "symbol": "AMEX:TMV",
+      "timeframe": "15",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:21:13.293Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:21:13.293Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "AMEX:TNA:15": {
+      "symbol": "AMEX:TNA",
+      "timeframe": "15",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:21:18.498Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:21:18.498Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "NASDAQ:TQQQ:15": {
+      "symbol": "NASDAQ:TQQQ",
+      "timeframe": "15",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:21:22.911Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:21:22.911Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "AMEX:TZA:30": {
+      "symbol": "AMEX:TZA",
+      "timeframe": "30",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 509.7,
+      "last_seen_at": "2026-04-16T14:21:28.182Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T14:21:28.182Z",
+      "entry_price": 509.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "BATS:ERX:15": {
+      "symbol": "BATS:ERX",
+      "timeframe": "15",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 80.45,
+      "last_seen_at": "2026-04-17T10:45:08.000Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-17T10:45:08.000Z",
+      "entry_price": "80.45 USD",
+      "net_pnl": "In progress",
+      "favorable_excursion": "In progress",
+      "adverse_excursion": "In progress"
+    },
+    "BATS:URTY:15": {
+      "symbol": "BATS:URTY",
+      "timeframe": "15",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 66.23,
+      "last_seen_at": "2026-04-16T17:46:09.736Z",
+      "signal_type": "EXIT",
+      "entry_time": "Mar 20, 2026, 10:15",
+      "entry_price": "49.65 USD",
+      "net_pnl": "+1,092.014 USD | +10.41%",
+      "favorable_excursion": "1,160.574 USD | 11.07%",
+      "adverse_excursion": "-721.546 USD | -6.88%"
+    },
+    "BATS:TNA:15": {
+      "symbol": "BATS:TNA",
+      "timeframe": "15",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 55.08,
+      "last_seen_at": "2026-04-16T17:46:12.801Z",
+      "signal_type": "EXIT",
+      "entry_time": "Apr 02, 2026, 04:15",
+      "entry_price": "42.95 USD",
+      "net_pnl": "+690.039 USD | +6.45%",
+      "favorable_excursion": "860.805 USD | 8.04%",
+      "adverse_excursion": "-289.575 USD | -2.70%"
+    },
+    "BATS:MEXX:15": {
+      "symbol": "BATS:MEXX",
+      "timeframe": "15",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 35.49,
+      "last_seen_at": "2026-04-16T17:46:15.912Z",
+      "signal_type": "EXIT",
+      "entry_time": "Apr 14, 2026, 14:00",
+      "entry_price": "32.71 USD",
+      "net_pnl": "-61.045 USD | -0.47%",
+      "favorable_excursion": "553.065 USD | 4.30%",
+      "adverse_excursion": "-134.685 USD | -1.05%"
+    },
+    "LSE_DLY:0I9U:15": {
+      "symbol": "LSE_DLY:0I9U",
+      "timeframe": "15",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 36.83,
+      "last_seen_at": "2026-04-16T17:46:18.980Z",
+      "signal_type": "EXIT",
+      "entry_time": "Dec 16, 2025, 03:30",
+      "entry_price": "41.300 USD",
+      "net_pnl": "+2,114.612 USD | +14.13%",
+      "favorable_excursion": "2,131.71 USD | 14.24%",
+      "adverse_excursion": "-22.191 USD | -0.15%"
+    },
+    "BATS:USO:15": {
+      "symbol": "BATS:USO",
+      "timeframe": "15",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 113.98,
+      "last_seen_at": "2026-04-17T10:45:00.000Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-17T10:45:00.000Z",
+      "entry_price": "113.98 USD",
+      "net_pnl": "In progress",
+      "favorable_excursion": "In progress",
+      "adverse_excursion": "In progress"
+    },
+    "BATS:SOXL:15": {
+      "symbol": "BATS:SOXL",
+      "timeframe": "15",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 89.38,
+      "last_seen_at": "2026-04-16T17:46:25.081Z",
+      "signal_type": "EXIT",
+      "entry_time": "Apr 02, 2026, 04:15",
+      "entry_price": "47.88 USD",
+      "net_pnl": "+777.723 USD | +9.33%",
+      "favorable_excursion": "894.729 USD | 10.73%",
+      "adverse_excursion": "-371.991 USD | -4.46%"
+    },
+    "BATS:FAS:240": {
+      "symbol": "BATS:FAS",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 161.66,
+      "last_seen_at": "2026-04-16T19:46:08.441Z",
+      "signal_type": "EXIT",
+      "entry_time": "Aug 01, 2025, 12:00",
+      "entry_price": "158.57 USD",
+      "net_pnl": "+1,367.063 USD | +8.70%",
+      "favorable_excursion": "1,412.872 USD | 8.99%",
+      "adverse_excursion": "-328.538 USD | -2.09%"
+    },
+    "BATS:SOXL:240": {
+      "symbol": "BATS:SOXL",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 58.33,
+      "last_seen_at": "2026-04-16T19:46:11.627Z",
+      "signal_type": "EXIT",
+      "entry_time": "Feb 25, 2025, 12:00",
+      "entry_price": "25.59 USD",
+      "net_pnl": "-8,986.997 USD | -50.63%",
+      "favorable_excursion": "1,174.226 USD | 6.61%",
+      "adverse_excursion": "-12,831.304 USD | -72.28%"
+    },
+    "BATS:EDC:240": {
+      "symbol": "BATS:EDC",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 83.43,
+      "last_seen_at": "2026-04-16T19:46:14.749Z",
+      "signal_type": "EXIT",
+      "entry_time": "Dec 17, 2025, 16:00",
+      "entry_price": "48.90 USD",
+      "net_pnl": "-0.098 USD | -0.20%",
+      "favorable_excursion": "0 USD | 0.00%",
+      "adverse_excursion": "-0.049 USD | -0.10%"
+    },
+    "BATS:YINN:240": {
+      "symbol": "BATS:YINN",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 51.78,
+      "last_seen_at": "2026-04-16T19:46:18.036Z",
+      "signal_type": "EXIT",
+      "entry_time": "Sep 04, 2025, 12:00",
+      "entry_price": "44.47 USD",
+      "net_pnl": "+1,532.319 USD | +11.83%",
+      "favorable_excursion": "1,593.379 USD | 12.30%",
+      "adverse_excursion": "-65.321 USD | -0.50%"
+    },
+    "BATS:EURL:240": {
+      "symbol": "BATS:EURL",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 51.5,
+      "last_seen_at": "2026-04-16T19:46:21.117Z",
+      "signal_type": "EXIT",
+      "entry_time": "Jul 31, 2025, 16:00",
+      "entry_price": "31.39 USD",
+      "net_pnl": "+2,254.037 USD | +13.54%",
+      "favorable_excursion": "2,506.163 USD | 15.05%",
+      "adverse_excursion": "-1,028.937 USD | -6.18%"
+    },
+    "BATS:JNUG:240": {
+      "symbol": "BATS:JNUG",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 379.09,
+      "last_seen_at": "2026-04-16T19:46:24.411Z",
+      "signal_type": "EXIT",
+      "entry_time": "Apr 03, 2025, 08:00",
+      "entry_price": "56.54 USD",
+      "net_pnl": "+2,347.898 USD | +16.73%",
+      "favorable_excursion": "2,443.658 USD | 17.41%",
+      "adverse_excursion": "-2,826.342 USD | -20.14%"
+    },
+    "BATS:MEXX:240": {
+      "symbol": "BATS:MEXX",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 39.25,
+      "last_seen_at": "2026-04-16T19:46:27.653Z",
+      "signal_type": "EXIT",
+      "entry_time": "Mar 04, 2025, 08:00",
+      "entry_price": "10.26 USD",
+      "net_pnl": "+3,555.877 USD | +31.02%",
+      "favorable_excursion": "3,939.19 USD | 34.37%",
+      "adverse_excursion": "-971.21 USD | -8.47%"
+    },
+    "BATS:MIDU:240": {
+      "symbol": "BATS:MIDU",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 66,
+      "last_seen_at": "2026-04-16T19:46:30.835Z",
+      "signal_type": "EXIT",
+      "entry_time": "Jan 30, 2026, 16:00",
+      "entry_price": "56.16 USD",
+      "net_pnl": "+1,944.959 USD | +12.86%",
+      "favorable_excursion": "1,962.043 USD | 12.97%",
+      "adverse_excursion": "-305.627 USD | -2.02%"
+    },
+    "BATS:PILL:240": {
+      "symbol": "BATS:PILL",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 13.67,
+      "last_seen_at": "2026-04-16T19:46:34.013Z",
+      "signal_type": "EXIT",
+      "entry_time": "Mar 03, 2026, 12:00",
+      "entry_price": "11.52 USD",
+      "net_pnl": "-84.551 USD | -0.46%",
+      "favorable_excursion": "1,225.726 USD | 6.66%",
+      "adverse_excursion": "-4,372.725 USD | -23.77%"
+    },
+    "BATS:TNA:240": {
+      "symbol": "BATS:TNA",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 58.18,
+      "last_seen_at": "2026-04-16T19:46:37.037Z",
+      "signal_type": "EXIT",
+      "entry_time": "May 23, 2025, 12:00",
+      "entry_price": "27.83 USD",
+      "net_pnl": "+1,238.834 USD | +14.07%",
+      "favorable_excursion": "1,321.566 USD | 15.01%",
+      "adverse_excursion": "-24.594 USD | -0.28%"
+    },
+    "BATS:UTSL:240": {
+      "symbol": "BATS:UTSL",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 55.4,
+      "last_seen_at": "2026-04-16T19:46:40.141Z",
+      "signal_type": "EXIT",
+      "entry_time": "Aug 25, 2025, 12:00",
+      "entry_price": "41.21 USD",
+      "net_pnl": "+116.722 USD | +0.77%",
+      "favorable_excursion": "253.475 USD | 1.67%",
+      "adverse_excursion": "-1,623.325 USD | -10.69%"
+    },
+    "BATS:GLTR:240": {
+      "symbol": "BATS:GLTR",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 262.1,
+      "last_seen_at": "2026-04-16T19:46:43.356Z",
+      "signal_type": "EXIT",
+      "entry_time": "Dec 19, 2024, 08:00",
+      "entry_price": "109.55 USD",
+      "net_pnl": "+683.049 USD | +5.15%",
+      "favorable_excursion": "697.014 USD | 5.25%",
+      "adverse_excursion": "-114.896 USD | -0.87%"
+    },
+    "BATS:UDOW:240": {
+      "symbol": "BATS:UDOW",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 66.21,
+      "last_seen_at": "2026-04-16T19:46:46.466Z",
+      "signal_type": "EXIT",
+      "entry_time": "Jun 20, 2025, 08:00",
+      "entry_price": "41.89 USD",
+      "net_pnl": "+702.484 USD | +6.52%",
+      "favorable_excursion": "757.664 USD | 7.03%",
+      "adverse_excursion": "-211.226 USD | -1.96%"
+    },
+    "BATS:TMF:240": {
+      "symbol": "BATS:TMF",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 35.96,
+      "last_seen_at": "2026-04-16T19:46:49.713Z",
+      "signal_type": "EXIT",
+      "entry_time": "Apr 08, 2025, 16:00",
+      "entry_price": "40.44 USD",
+      "net_pnl": "+440.315 USD | +3.67%",
+      "favorable_excursion": "464.59 USD | 3.88%",
+      "adverse_excursion": "-1,364.69 USD | -11.39%"
+    },
+    "BATS:GLD:240": {
+      "symbol": "BATS:GLD",
+      "timeframe": "240",
+      "label_count": 23,
+      "last_signal": "▼",
+      "last_price": 497.72,
+      "last_seen_at": "2026-04-16T19:46:52.770Z",
+      "signal_type": "EXIT",
+      "entry_time": "Jul 28, 2025, 12:00",
+      "entry_price": "305.26 USD",
+      "net_pnl": "+272.482 USD | +2.23%",
+      "favorable_excursion": "340.59 USD | 2.79%",
+      "adverse_excursion": "-184.21 USD | -1.51%"
+    },
+    "BATS:TMF:15": {
+      "symbol": "BATS:TMF",
+      "timeframe": "15",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 35.96,
+      "last_seen_at": "2026-04-16T17:16:50.767Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T17:16:50.767Z",
+      "entry_price": 35.96,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "BATS:GLD:15": {
+      "symbol": "BATS:GLD",
+      "timeframe": "15",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 65.7,
+      "last_seen_at": "2026-04-16T17:16:55.255Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-04-16T17:16:55.255Z",
+      "entry_price": 65.7,
+      "net_pnl": "—",
+      "favorable_excursion": "—",
+      "adverse_excursion": "—"
+    },
+    "BATS:AGQ:240": {
+      "symbol": "BATS:AGQ",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 200.47,
+      "last_seen_at": "2026-04-16T19:46:55.796Z",
+      "signal_type": "EXIT",
+      "entry_time": "Jan 27, 2025, 12:00",
+      "entry_price": "35.70 USD",
+      "net_pnl": "+1,915.621 USD | +12.10%",
+      "favorable_excursion": "1,986.545 USD | 12.55%",
+      "adverse_excursion": "-197.445 USD | -1.25%"
+    },
+    "BATS:VXZ:240": {
+      "symbol": "BATS:VXZ",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 51.93,
+      "last_seen_at": "2026-04-16T19:46:59.090Z",
+      "signal_type": "EXIT",
+      "entry_time": "Jan 30, 2025, 12:00",
+      "entry_price": "49.60 USD",
+      "net_pnl": "+744.114 USD | +6.22%",
+      "favorable_excursion": "1,036.396 USD | 8.66%",
+      "adverse_excursion": "-11.954 USD | -0.10%"
+    },
+    "BATS:ASHR:240": {
+      "symbol": "BATS:ASHR",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 34.59,
+      "last_seen_at": "2026-04-16T19:47:02.232Z",
+      "signal_type": "EXIT",
+      "entry_time": "Mar 28, 2025, 08:00",
+      "entry_price": "26.70 USD",
+      "net_pnl": "-278.051 USD | -2.22%",
+      "favorable_excursion": "0 USD | 0.00%",
+      "adverse_excursion": "-1,644.642 USD | -13.12%"
+    },
+    "BATS:EPI:240": {
+      "symbol": "BATS:EPI",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 46.55,
+      "last_seen_at": "2026-04-16T19:47:05.247Z",
+      "signal_type": "EXIT",
+      "entry_time": "Jul 22, 2025, 12:00",
+      "entry_price": "46.54 USD",
+      "net_pnl": "-311.752 USD | -2.52%",
+      "favorable_excursion": "32.84 USD | 0.27%",
+      "adverse_excursion": "-778.46 USD | -6.28%"
+    }
+  },
+  "watchlists": {
+    "Swing 4H": {
+      "timeframe": "240",
+      "symbols": [
+        "AMEX:FAS",
+        "AMEX:SOXL",
+        "AMEX:EDC",
+        "AMEX:YINN",
+        "AMEX:EURL",
+        "AMEX:JNUG",
+        "AMEX:MEXX",
+        "AMEX:MIDU",
+        "AMEX:PILL",
+        "AMEX:TNA",
+        "AMEX:UTSL",
+        "AMEX:GLTR",
+        "AMEX:UDOW",
+        "AMEX:TMF",
+        "AMEX:GLD",
+        "AMEX:AGQ",
+        "CBOE:VXZ",
+        "AMEX:ASHR",
+        "AMEX:EPI"
+      ],
+      "symbol_count": 19,
+      "updated_at": "2026-04-16T19:47:17.485Z"
+    }
+  }
+}

@@ -255,8 +255,12 @@ function updateBaselineEntry(signalMap, entry) {
     entry.trade?.entryPrice ?? entry.signal?.price ?? entry.quote?.last ?? null,
     null,
   );
+  const syntheticOpen = hasSignal && !hasTradeState && (
+    hasSignalChanged(previous, entry.signal)
+    || String(previous.signal_type || '').toUpperCase() === 'OPEN'
+  );
 
-  const nextSignalType = hasTradeState ? tradeSignal : 'EXIT';
+  const nextSignalType = hasTradeState ? tradeSignal : syntheticOpen ? 'OPEN' : 'EXIT';
 
   signalMap[key] = {
     symbol: entry.state?.symbol || entry.symbol,
@@ -268,11 +272,11 @@ function updateBaselineEntry(signalMap, entry) {
       : previous.last_price ?? entry.quote?.last ?? null,
     last_seen_at: (hasSignal || hasTradeState) ? scannedAt : previous.last_seen_at || null,
     signal_type: nextSignalType,
-    entry_time: normalizeTradeDisplay(entry.trade?.entryTime, '') || (hasSignal ? scannedAt : previous.entry_time || previous.last_seen_at || null),
+    entry_time: normalizeTradeDisplay(entry.trade?.entryTime, '') || ((hasSignal || syntheticOpen) ? scannedAt : previous.entry_time || previous.last_seen_at || null),
     entry_price: entryPrice ?? previous.entry_price ?? previous.last_price ?? entry.quote?.last ?? null,
-    net_pnl: hasTradeState ? normalizeTradeDisplay(entry.trade?.netPnl) : previous.net_pnl ?? '—',
-    favorable_excursion: hasTradeState ? normalizeTradeDisplay(entry.trade?.favorableExcursion) : previous.favorable_excursion ?? '—',
-    adverse_excursion: hasTradeState ? normalizeTradeDisplay(entry.trade?.adverseExcursion) : previous.adverse_excursion ?? '—',
+    net_pnl: hasTradeState ? normalizeTradeDisplay(entry.trade?.netPnl) : syntheticOpen ? 'In progress' : previous.net_pnl ?? '—',
+    favorable_excursion: hasTradeState ? normalizeTradeDisplay(entry.trade?.favorableExcursion) : syntheticOpen ? 'In progress' : previous.favorable_excursion ?? '—',
+    adverse_excursion: hasTradeState ? normalizeTradeDisplay(entry.trade?.adverseExcursion) : syntheticOpen ? 'In progress' : previous.adverse_excursion ?? '—',
   };
 }
 
@@ -341,11 +345,20 @@ function normalizeTradeDisplay(value, fallback = '—') {
   return cleaned || fallback;
 }
 
+function fillTradeMetric(value, signal = 'EXIT') {
+  if (hasMeaningfulTradeValue(value)) return normalizeTradeDisplay(value);
+  return String(signal || '').toUpperCase() === 'OPEN' ? 'In progress' : 'Unavailable';
+}
+
 function hasMeaningfulTradeValue(value) {
   const cleaned = normalizeTradeDisplay(value, '');
   if (!cleaned) return false;
   const lowered = cleaned.toLowerCase();
-  return cleaned !== '—' && cleaned !== '-' && lowered !== 'n/a' && lowered !== 'no trade time';
+  return cleaned !== '—'
+    && cleaned !== '-'
+    && lowered !== 'n/a'
+    && lowered !== 'no trade time'
+    && lowered !== 'unavailable';
 }
 
 function parseEntryTimestamp(value) {
@@ -496,11 +509,26 @@ export function buildPriorSignalsByWatchlist(
             wasOpen: liveSignal === 'OPEN',
             entryPrice: normalizeTradeDisplay(tradeBackedEntry.trade.entryPrice),
             entryTime: formatEntryTimeDisplay(tradeBackedEntry.trade.entryTime, timezone),
-            netPnl: normalizeTradeDisplay(tradeBackedEntry.trade.netPnl),
-            favorableExcursion: normalizeTradeDisplay(tradeBackedEntry.trade.favorableExcursion),
-            adverseExcursion: normalizeTradeDisplay(tradeBackedEntry.trade.adverseExcursion),
+            netPnl: fillTradeMetric(tradeBackedEntry.trade.netPnl, liveSignal),
+            favorableExcursion: fillTradeMetric(tradeBackedEntry.trade.favorableExcursion, liveSignal),
+            adverseExcursion: fillTradeMetric(tradeBackedEntry.trade.adverseExcursion, liveSignal),
           };
           return isRenderablePriorRow(row) ? row : null;
+        }
+
+        const signalBackedEntry = matchingEntries.find((entry) => entry.signal?.hasSignal);
+        const isFastWatchlist = (timeframeToMinutes(timeframe) || 0) > 0 && (timeframeToMinutes(timeframe) || 0) <= 30;
+        if (signalBackedEntry?.signal?.hasSignal && isFastWatchlist) {
+          return {
+            symbol: signalBackedEntry.state?.symbol || signalBackedEntry.symbol || symbol,
+            signal: 'OPEN',
+            wasOpen: true,
+            entryPrice: normalizeTradeDisplay(signalBackedEntry.signal?.price ?? signalBackedEntry.quote?.last, 'n/a'),
+            entryTime: formatEntryTimeDisplay(signalBackedEntry.scanned_at || baselineUpdatedAt || new Date().toISOString(), timezone),
+            netPnl: 'In progress',
+            favorableExcursion: 'In progress',
+            adverseExcursion: 'In progress',
+          };
         }
 
         const priorCandidates = Object.entries(baselineSignals)
@@ -539,15 +567,16 @@ export function buildPriorSignalsByWatchlist(
         const latestSignal = normalizeTradeDisplay(latest.signal_type || 'EXIT').toUpperCase();
         const keepOpenVisible = latestSignal === 'OPEN'
           && isSameTradingDay(latestEntryTime, baselineUpdatedAt || new Date().toISOString(), timezone);
+        const resolvedSignal = keepOpenVisible ? 'OPEN' : (latestSignal === 'OPEN' ? 'EXIT' : latestSignal);
         const row = {
           symbol: latest.symbol || symbol,
-          signal: keepOpenVisible ? 'OPEN' : (latestSignal === 'OPEN' ? 'EXIT' : latestSignal),
+          signal: resolvedSignal,
           wasOpen: latestSignal === 'OPEN',
           entryPrice: normalizeTradeDisplay(latest.entry_price ?? latest.last_price ?? 'n/a'),
           entryTime: formatEntryTimeDisplay(latest.entry_time || latest.last_seen_at || baselineUpdatedAt, timezone),
-          netPnl: normalizeTradeDisplay(latest.net_pnl),
-          favorableExcursion: normalizeTradeDisplay(latest.favorable_excursion),
-          adverseExcursion: normalizeTradeDisplay(latest.adverse_excursion),
+          netPnl: fillTradeMetric(latest.net_pnl, resolvedSignal),
+          favorableExcursion: fillTradeMetric(latest.favorable_excursion, resolvedSignal),
+          adverseExcursion: fillTradeMetric(latest.adverse_excursion, resolvedSignal),
         };
 
         return isRenderablePriorRow(row) ? row : {
@@ -638,6 +667,9 @@ function buildOpenTrades(priorSignalsByWatchlist = []) {
           timeframe: section.timeframe,
           symbolCount: Number(section.symbolCount || 0),
           ...row,
+          netPnl: fillTradeMetric(row.netPnl, 'OPEN'),
+          favorableExcursion: fillTradeMetric(row.favorableExcursion, 'OPEN'),
+          adverseExcursion: fillTradeMetric(row.adverseExcursion, 'OPEN'),
         })),
     )
     .sort(
@@ -645,6 +677,26 @@ function buildOpenTrades(priorSignalsByWatchlist = []) {
         || String(a.watchlistName || '').localeCompare(String(b.watchlistName || ''))
         || String(a.symbol || '').localeCompare(String(b.symbol || '')),
     );
+}
+
+function sanitizePriorSignalsForDisplay(sections = []) {
+  return (Array.isArray(sections) ? sections : []).map((section) => ({
+    ...section,
+    trades: (Array.isArray(section.trades) ? section.trades : []).filter((row) => {
+      const signal = String(row.signal || '—').toUpperCase();
+      if (signal === 'OPEN') {
+        return hasMeaningfulTradeValue(row.entryTime) || hasMeaningfulTradeValue(row.entryPrice);
+      }
+      return signal !== '—'
+        && hasMeaningfulTradeValue(row.entryTime)
+        && hasMeaningfulTradeValue(row.entryPrice)
+        && (
+          hasMeaningfulTradeValue(row.netPnl)
+          || hasMeaningfulTradeValue(row.favorableExcursion)
+          || hasMeaningfulTradeValue(row.adverseExcursion)
+        );
+    }),
+  }));
 }
 
 function normalizeSymbolForMatch(value) {
@@ -748,7 +800,11 @@ export function validateWatchlistRegression({
 }
 
 async function resolveSymbolsForWatchlist(target, fallbackSymbols, options = {}) {
-  const { allowFallback = true } = options;
+  const {
+    allowFallback = true,
+    baselineWatchlists = {},
+    baselineSignals = {},
+  } = options;
 
   try {
     await watchlist.select({ name: target.watchlistName });
@@ -762,7 +818,24 @@ async function resolveSymbolsForWatchlist(target, fallbackSymbols, options = {})
     }
   } catch {}
 
-  if (!allowFallback) {
+  const storedSymbols = Array.isArray(baselineWatchlists?.[target.watchlistName]?.symbols)
+    ? baselineWatchlists[target.watchlistName].symbols.filter(Boolean)
+    : [];
+
+  const historicalSymbols = Object.values(baselineSignals || {})
+    .filter((entry) => String(entry?.timeframe || '') === String(target.timeframe || ''))
+    .map((entry) => entry?.symbol)
+    .filter(Boolean);
+
+  const resolvedFallback = storedSymbols.length > 0
+    ? storedSymbols
+    : historicalSymbols.length > 0
+      ? Array.from(new Set(historicalSymbols))
+      : Array.isArray(target.symbols) && target.symbols.length > 0
+        ? target.symbols
+        : fallbackSymbols;
+
+  if (!allowFallback && resolvedFallback.length === 0) {
     return {
       symbols: [],
       count: 0,
@@ -770,14 +843,10 @@ async function resolveSymbolsForWatchlist(target, fallbackSymbols, options = {})
     };
   }
 
-  const resolvedFallback = Array.isArray(target.symbols) && target.symbols.length > 0
-    ? target.symbols
-    : fallbackSymbols;
-
   return {
     symbols: resolvedFallback,
     count: resolvedFallback.length,
-    source: 'rules_fallback',
+    source: storedSymbols.length > 0 ? 'baseline_watchlist' : historicalSymbols.length > 0 ? 'baseline_history' : 'rules_fallback',
   };
 }
 
@@ -802,6 +871,7 @@ export function createDashboardStatus(result = {}) {
           .map((line) => line.trim())
           .filter(Boolean);
   const marketHours = result.market_hours || DEFAULT_MARKET_HOURS;
+  const priorSignals = sanitizePriorSignalsForDisplay(result.prior_signals_by_watchlist);
 
   return {
     updatedAt: result.generated_at || new Date().toISOString(),
@@ -818,7 +888,7 @@ export function createDashboardStatus(result = {}) {
     symbolsScanned: Number(result.total_scan_count || 0),
     watchlistsChecked: Array.isArray(result.watchlists_checked) ? result.watchlists_checked : [],
     openTrades: Array.isArray(result.open_trades) ? result.open_trades : [],
-    priorSignals: Array.isArray(result.prior_signals_by_watchlist) ? result.prior_signals_by_watchlist : [],
+    priorSignals,
   };
 }
 
@@ -899,7 +969,11 @@ export async function runBrief({
   try {
     for (const target of scanTargets) {
       const startedAt = Date.now();
-      const resolved = await resolveSymbolsForWatchlist(target, watchlist, { allowFallback: false });
+      const resolved = await resolveSymbolsForWatchlist(target, watchlist, {
+        allowFallback: true,
+        baselineWatchlists: baseline.watchlists,
+        baselineSignals: baseline.signals,
+      });
       const normalizedExpected = new Set(
         resolved.symbols.map((symbol) => String(symbol).split(':').pop()?.toUpperCase() || String(symbol).toUpperCase()),
       );
@@ -969,16 +1043,24 @@ export async function runBrief({
     }
   }
 
-  const signalEntries = results.filter(
-    (entry) => String(entry.trade?.signal || '').toUpperCase() === 'OPEN'
-      && isRecentTradeSignal(entry.trade?.entryTime, entry.scanned_at, entry.timeframe),
-  );
+  const signalEntries = results.filter((entry) => {
+    const hasOpenTrade = String(entry.trade?.signal || '').toUpperCase() === 'OPEN'
+      && isRecentTradeSignal(entry.trade?.entryTime, entry.scanned_at, entry.timeframe);
+    if (hasOpenTrade) return true;
+
+    const key = `${entry.state?.symbol || entry.symbol}:${entry.timeframe}`;
+    const previous = baseline.signals[key] || {};
+    return Boolean(entry.signal?.hasSignal) && hasSignalChanged(previous, entry.signal);
+  });
   const changedSignals = signalEntries.filter((entry) => {
     const key = `${entry.state?.symbol || entry.symbol}:${entry.timeframe}`;
     const previous = baseline.signals[key] || {};
-    return String(previous.signal_type || '').toUpperCase() !== 'OPEN'
-      || normalizeTradeDisplay(previous.entry_time, '') !== normalizeTradeDisplay(entry.trade?.entryTime, '')
-      || normalizeTradeDisplay(previous.entry_price, '') !== normalizeTradeDisplay(entry.trade?.entryPrice, '');
+    if (String(entry.trade?.signal || '').toUpperCase() === 'OPEN') {
+      return String(previous.signal_type || '').toUpperCase() !== 'OPEN'
+        || normalizeTradeDisplay(previous.entry_time, '') !== normalizeTradeDisplay(entry.trade?.entryTime, '')
+        || normalizeTradeDisplay(previous.entry_price, '') !== normalizeTradeDisplay(entry.trade?.entryPrice, '');
+    }
+    return hasSignalChanged(previous, entry.signal);
   });
 
   let displayBaseline = baseline;
@@ -1092,7 +1174,11 @@ export async function runSignalJob({
     const skippedWatchlistSummaries = [];
     const skippedResults = [];
     for (const target of scanTargets) {
-      const resolved = await resolveSymbolsForWatchlist(target, watchlist, { allowFallback: false });
+      const resolved = await resolveSymbolsForWatchlist(target, watchlist, {
+        allowFallback: true,
+        baselineWatchlists: baseline.watchlists,
+        baselineSignals: baseline.signals,
+      });
       skippedWatchlistSummaries.push({
         watchlist_name: target.watchlistName,
         timeframe: target.timeframe,
