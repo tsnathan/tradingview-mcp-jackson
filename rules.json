@@ -1,65 +1,88 @@
 {
-  "watchlist": ["BTCUSDT"],
-  "default_timeframe": "1",
+  "strategy": "Swing Profile Strategy [BigBeluga] — Trailing Stop Exit",
 
-  "strategy": {
-    "name": "10-Second Momentum Scalper",
-    "sources": [
-      "Price momentum — buy if last close > previous close (green candle)",
-      "RSI filter — only trade when RSI is not at an extreme (30–70 range)"
-    ],
-    "primary_timeframes": [
-      "1-minute (signal source)",
-      "10-second execution loop"
-    ]
+  "watchlist": ["SOXL", "BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "SPY", "QQQ", "NVDA"],
+
+  "default_timeframe": "30",
+
+  "chart": {
+    "primary_symbol": "BATS:SOXL",
+    "primary_timeframe": "30",
+    "exit_mode": "Trail Only",
+    "trail_method": "Percent",
+    "trail_pct": 2.0,
+    "trade_direction": "Long Only"
   },
 
-  "indicators": {
-    "rsi_14": "Momentum filter. Only trade when RSI is between 30–70 (avoid extremes).",
-    "price_momentum": "Compare last close vs previous close. Up = long signal. Down = short signal."
+  "watchlists": {
+    "Swing 15m":   "15",
+    "Swing 30min": "30",
+    "Swing 1H":    "60",
+    "Swing 4H":    "240",
+    "Swing 1D":    "D"
+  },
+
+  "baseline_file": "C:/Users/tsnat/tradingview-mcp-jackson/swing-signal-baseline.json",
+
+  "market_hours": {
+    "timezone": "America/New_York",
+    "open": "09:30",
+    "close": "16:00",
+    "days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
   },
 
   "bias_criteria": {
     "bullish": [
-      "Last 1-min candle closed higher than the one before it",
-      "RSI is between 30 and 70"
+      "Swing Profile shows Long signal (▲ label) on 1H or 4H",
+      "Lower timeframe (15m or 30m) long signal aligns with higher TF direction",
+      "Price is above the recent swing high profile zone",
+      "No opposing signal on the daily (1D)"
     ],
     "bearish": [
-      "Last 1-min candle closed lower than the one before it",
-      "RSI is between 30 and 70"
+      "Swing Profile shows Short signal (▼ label) on 1H or 4H",
+      "Lower timeframe (15m or 30m) short signal aligns with higher TF direction",
+      "Price is below the recent swing low profile zone",
+      "No opposing signal on the daily (1D)"
     ],
     "neutral": [
-      "RSI is above 70 (overbought — skip)",
-      "RSI is below 30 (oversold — skip)",
-      "Candle close change is less than 0.05% (chop — skip)"
+      "Mixed signals across timeframes (e.g. 1H long but 4H short)",
+      "No fresh swing signal on 1H or 4H within last 10 bars",
+      "Price consolidating inside a profile zone (no clear breakout)"
     ]
   },
-
-  "entry_rules": {
-    "long": [
-      "Last close > previous close by at least 0.05%",
-      "RSI between 30 and 70",
-      "Enter market buy immediately"
-    ],
-    "short": [
-      "Last close < previous close by at least 0.05%",
-      "RSI between 30 and 70",
-      "Enter market sell immediately"
-    ]
-  },
-
-  "exit_rules": [
-    "Exit automatically after 10 seconds (next loop tick closes previous position)",
-    "No manual exit management — pure time-based scalp"
-  ],
 
   "risk_rules": [
-    "Fixed trade size: 1% of portfolio per trade",
-    "Maximum trade size: $3.00",
-    "Maximum 6 trades per 60-second run",
-    "No stop loss — exit is time-based at next tick",
-    "For demo purposes only — minimum BitGet order size may apply"
+    "Only take trades where R:R is at least 1:2",
+    "No trading in the first 15 minutes of the NY session open (9:30 AM ET)",
+    "Maximum 2 open positions at once",
+    "If 2 losing trades in a row, stop for the day",
+    "Use trailing stop exit — Trail % = 2.0 (Percent method)",
+    "Exit mode: Trail Only — do NOT exit on direction flip alone"
   ],
 
-  "notes": "Demo strategy for YouTube video. Runs 6 trades over 60 seconds, one every 10 seconds. Signal is simple price momentum on 1-min candles with RSI sanity check."
+  "trail_sweep_values": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0],
+
+  "partial_flip_pct": 50,
+
+  "morning_brief_format": {
+    "include": [
+      "Current price and % change for primary symbol (SOXL)",
+      "Last Swing Profile signal direction and bars ago",
+      "Current strategy position: Long / Short / Flat",
+      "Trailing stop level if currently in a position",
+      "Bias score per timeframe (15m / 30m / 1H / 4H / 1D)",
+      "New signals found since last baseline scan",
+      "IS win rate vs OOS win rate from strategy tester",
+      "Best trail % from sweep table (highest win rate)"
+    ]
+  },
+
+  "ntfy": {
+    "topic": "swing-signals-tsnat",
+    "url": "https://ntfy.sh/swing-signals-tsnat",
+    "priority": "high",
+    "signal_format": "[{timeframe}] {symbol} → {direction} @ {price}"
+  },
+
+  "notes": "Swing Profile Strategy [BigBeluga] modified to use trailing stop exit. IS/OOS split 66/34 visible on chart (bottom-right table). Parameter sweep testing 8 trail % values simultaneously (top-right table). Pine script: C:/Users/tsnat/tradingview-mcp-jackson/swing-profile-trailing.pine"
 }

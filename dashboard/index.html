@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradingView Signal Dashboard</title>
+  <style>
+    body { font-family: Segoe UI, Arial, sans-serif; background:#0b1220; color:#e5eefc; margin:0; padding:24px; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .card { background:#121a2b; border:1px solid #24314f; border-radius:14px; padding:18px; margin-bottom:16px; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+    h1, h2 { margin:0 0 10px; }
+    .muted { color:#98a7c6; }
+    .good { color:#6ee7a8; font-weight:700; }
+    .flat { color:#facc15; font-weight:700; }
+    .hidden { display:none; }
+    .pill { display:inline-block; padding:4px 10px; border-radius:999px; background:#1e293b; margin:0 8px 8px 0; }
+    .latest-list { list-style:none; padding:0; margin:12px 0 0; }
+    .latest-list li { margin:10px 0; padding:10px 12px; background:#0f1728; border-radius:10px; border:1px solid #24314f; white-space:pre-wrap; }
+    .watchlist-section { margin-top:14px; padding:12px; background:#0f1728; border:1px solid #24314f; border-radius:12px; }
+    .watchlist-title { margin:0 0 4px; font-size:18px; }
+    .watchlist-meta { margin:0 0 8px; color:#98a7c6; font-size:13px; }
+    .section-toggle { cursor:pointer; list-style:none; font-weight:600; color:#e5eefc; }
+    .section-toggle::-webkit-details-marker { display:none; }
+    .toggle-meta { color:#98a7c6; font-size:12px; margin-left:8px; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #24314f; }
+    th { color:#98a7c6; font-weight:600; }
+    .row-open { background: rgba(34, 197, 94, 0.18); }
+    .status-open { color:#86efac; font-weight:700; }
+    .status-prior { color:#facc15; font-weight:700; }
+    .status-none { color:#98a7c6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Current Signal</h1>
+      <div id="summary" class="flat hidden"></div>
+      <p class="muted" id="refresh-note">Updates when the scheduled scan writes a new result.</p>
+      <div>
+        <span class="pill" id="updated">Updated: --</span>
+        <span class="pill" id="next-run">Next run: --</span>
+        <span class="pill" id="count">Signals: 0</span>
+        <span class="pill" id="changed">Changed: 0</span>
+        <span class="pill" id="watchlists">Watchlists: --</span>
+      </div>
+      <ul id="lines" class="latest-list"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Open Trades</h2>
+      <div id="open-trades"></div>
+    </div>
+
+    <div class="card">
+      <h2>Previous Signals</h2>
+      <div id="prior-sections"></div>
+    </div>
+  </div>
+
+  <script>
+    let lastUpdated = null;
+
+    function buildTradeRows(rows) {
+      return rows.map((row) => {
+        const signal = String(row.signal || '—').toUpperCase();
+        const rowClass = signal === 'OPEN' ? 'row-open' : '';
+        return `
+          <tr class="${rowClass}">
+            <td>${row.watchlistName || row.symbol || '—'}</td>
+            ${row.watchlistName ? `<td>${row.symbol || '—'}</td>` : ''}
+            <td class="status-${signal.toLowerCase()}">${signal}</td>
+            <td>${row.entryTime || '—'}</td>
+            <td>${row.entryPrice ?? '—'}</td>
+            <td>${row.netPnl ?? '—'}</td>
+            <td>${row.favorableExcursion ?? '—'}</td>
+            <td>${row.adverseExcursion ?? '—'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderOpenTrades(items) {
+      const container = document.getElementById('open-trades');
+      container.innerHTML = '';
+      const rows = Array.isArray(items) ? items : [];
+
+      if (!rows.length) {
+        const div = document.createElement('div');
+        div.className = 'muted';
+        div.textContent = 'No open trades across the tracked time frames.';
+        container.appendChild(div);
+        return;
+      }
+
+      container.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Watchlist</th>
+              <th>Symbol</th>
+              <th>Signal</th>
+              <th>Entry Date / Time</th>
+              <th>Entry Price</th>
+              <th>Net P&amp;L</th>
+              <th>Favorable Excursion</th>
+              <th>Adverse Excursion</th>
+            </tr>
+          </thead>
+          <tbody>${buildTradeRows(rows)}</tbody>
+        </table>
+      `;
+    }
+
+    function renderPriorSignals(items) {
+      const container = document.getElementById('prior-sections');
+      container.innerHTML = '';
+      const sections = Array.isArray(items) ? items : [];
+
+      if (!sections.length) {
+        const div = document.createElement('div');
+        div.className = 'muted';
+        div.textContent = 'No prior trades recorded yet.';
+        container.appendChild(div);
+        return;
+      }
+
+      for (const section of sections) {
+        const block = document.createElement('div');
+        block.className = 'watchlist-section';
+
+        const rows = [...(Array.isArray(section.trades) ? section.trades : [])]
+          .sort((a, b) => {
+            const rank = { OPEN: 0, EXIT: 1, '—': 2 };
+            const aSignal = String(a.signal || '—').toUpperCase();
+            const bSignal = String(b.signal || '—').toUpperCase();
+            const parseTime = (value) => {
+              const cleaned = String(value || '').replace(/\s+ET$/i, '').trim();
+              const parsed = Date.parse(cleaned);
+              return Number.isFinite(parsed) ? parsed : 0;
+            };
+            return (rank[aSignal] ?? 9) - (rank[bSignal] ?? 9)
+              || (parseTime(b.entryTime) - parseTime(a.entryTime))
+              || String(a.symbol || '').localeCompare(String(b.symbol || ''));
+          });
+        const tableRows = rows.map((row) => ({ ...row, watchlistName: null }));
+
+        const sourceLabel = section.source === 'tradingview_panel'
+          ? 'Source: TradingView watchlist'
+          : section.source === 'rules_fallback'
+            ? 'Source: configured symbol list'
+            : rows.length > 0
+              ? 'Source: saved prior history'
+              : 'Source: watchlist unavailable';
+        const shouldCollapse = Number(section.symbolCount || 0) > 8;
+        const detailsOpen = rows.length > 0 ? ' open' : '';
+        const rowCountLabel = `${rows.length} row${rows.length === 1 ? '' : 's'}`;
+        const tableHtml = `
+          <table>
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Signal</th>
+                <th>Entry Date / Time</th>
+                <th>Entry Price</th>
+                <th>Net P&amp;L</th>
+                <th>Favorable Excursion</th>
+                <th>Adverse Excursion</th>
+              </tr>
+            </thead>
+            <tbody>${buildTradeRows(tableRows) || '<tr><td colspan="7" class="muted">No prior trades recorded for this watchlist.</td></tr>'}</tbody>
+          </table>
+        `;
+
+        if (shouldCollapse) {
+          block.innerHTML = `
+            <details${detailsOpen}>
+              <summary class="section-toggle">${section.watchlistName || 'Watchlist'} · TF ${section.timeframe || '—'}<span class="toggle-meta">${section.symbolCount || 0} symbols · ${rowCountLabel}</span></summary>
+              <p class="watchlist-meta">${sourceLabel}</p>
+              ${tableHtml}
+            </details>
+          `;
+        } else {
+          block.innerHTML = `
+            <h3 class="watchlist-title">${section.watchlistName || 'Watchlist'} · TF ${section.timeframe || '—'}</h3>
+            <p class="watchlist-meta">${sourceLabel} · ${rowCountLabel}</p>
+            ${tableHtml}
+          `;
+        }
+
+        container.appendChild(block);
+      }
+    }
+
+    async function refresh(force = false) {
+      const res = await fetch('/api/status', { cache: 'no-store' });
+      const data = await res.json();
+      if (!force && lastUpdated && data.updatedAt === lastUpdated) return;
+      lastUpdated = data.updatedAt || null;
+
+      const summary = document.getElementById('summary');
+      if (force) {
+        summary.textContent = '';
+        summary.className = 'flat hidden';
+      } else {
+        summary.textContent = 'Job ran at ' + (data.formattedTimestampEt || '--') + ' ET';
+        summary.className = (data.hasSignals ? 'good' : 'flat');
+      }
+      document.getElementById('updated').textContent = 'Updated: ' + (data.formattedTimestampEt || '--') + ' ET';
+      document.getElementById('next-run').textContent = 'Next run: ' + (data.nextScheduledRunEt || '--');
+      document.getElementById('count').textContent = 'Signals: ' + (data.signalsFound ?? 0);
+      document.getElementById('changed').textContent = 'Changed: ' + (data.changedSignals ?? 0);
+      document.getElementById('watchlists').textContent = 'Watchlists: ' + ((data.watchlistsChecked || []).join(', ') || '--');
+
+      const lines = document.getElementById('lines');
+      lines.innerHTML = '';
+      const entries = data.lines && data.lines.length ? data.lines : [data.summary || 'NO SIGNAL'];
+      for (const line of entries) {
+        const li = document.createElement('li');
+        li.textContent = line;
+        lines.appendChild(li);
+      }
+
+      renderOpenTrades(data.openTrades || []);
+      renderPriorSignals(data.priorSignals || []);
+    }
+
+    refresh(true);
+    const stream = new EventSource('/events');
+    stream.onmessage = () => refresh(false);
+    stream.onerror = () => {
+      document.getElementById('refresh-note').textContent = 'Waiting for the next scheduled scan update...';
+    };
+  </script>
+</body>
+</html>

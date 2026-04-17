@@ -2,57 +2,93 @@ import { evaluate } from './connection.js';
 
 const DEFAULT_TIMEOUT = 10000;
 const POLL_INTERVAL = 200;
+const EVAL_TIMEOUT = 1500;
 
-export async function waitForChartReady(expectedSymbol = null, expectedTf = null, timeout = DEFAULT_TIMEOUT) {
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function withTimeout(promise, ms) {
+  let timer;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise(resolve => {
+        timer = setTimeout(() => resolve(null), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+export async function waitForChartReady(expectedSymbol = null, expectedTf = null, timeout = DEFAULT_TIMEOUT, options = {}) {
   const start = Date.now();
   let lastBarCount = -1;
   let stableCount = 0;
+  const pollInterval = options.pollInterval ?? POLL_INTERVAL;
+  const evalTimeout = options.evalTimeout ?? EVAL_TIMEOUT;
+  const evalFn = options.evalFn ?? evaluate;
 
   while (Date.now() - start < timeout) {
-    const state = await evaluate(`
+    const state = await withTimeout(evalFn(`
       (function() {
-        // Check for loading spinner
         var spinner = document.querySelector('[class*="loader"]')
           || document.querySelector('[class*="loading"]')
           || document.querySelector('[data-name="loading"]');
         var isLoading = spinner && spinner.offsetParent !== null;
 
-        // Try to get bar count from data window or chart
         var barCount = -1;
         try {
           var bars = document.querySelectorAll('[class*="bar"]');
           barCount = bars.length;
         } catch {}
 
-        // Get current symbol from header
-        var symbolEl = document.querySelector('[data-name="legend-source-title"]')
-          || document.querySelector('[class*="title"] [class*="apply-common-tooltip"]');
-        var currentSymbol = symbolEl ? symbolEl.textContent.trim() : '';
+        var currentSymbol = '';
+        try {
+          var symbolEl = document.querySelector('[data-name="legend-source-title"]')
+            || document.querySelector('[class*="title"] [class*="apply-common-tooltip"]');
+          currentSymbol = symbolEl ? symbolEl.textContent.trim() : '';
+        } catch {}
 
-        return { isLoading: !!isLoading, barCount: barCount, currentSymbol: currentSymbol };
+        var currentResolution = '';
+        try {
+          currentResolution = window.TradingViewApi._activeChartWidgetWV.value().resolution() || '';
+        } catch {}
+
+        return {
+          isLoading: !!isLoading,
+          barCount: barCount,
+          currentSymbol: currentSymbol,
+          currentResolution: String(currentResolution || '')
+        };
       })()
-    `);
+    `), evalTimeout);
 
     if (!state) {
-      await new Promise(r => setTimeout(r, POLL_INTERVAL));
+      stableCount = 0;
+      await sleep(pollInterval);
       continue;
     }
 
-    // Not ready if still loading
     if (state.isLoading) {
       stableCount = 0;
-      await new Promise(r => setTimeout(r, POLL_INTERVAL));
+      await sleep(pollInterval);
       continue;
     }
 
-    // Check symbol match if expected
-    if (expectedSymbol && state.currentSymbol && !state.currentSymbol.toUpperCase().includes(expectedSymbol.toUpperCase())) {
+    if (expectedSymbol && state.currentSymbol && !state.currentSymbol.toUpperCase().includes(String(expectedSymbol).toUpperCase())) {
       stableCount = 0;
-      await new Promise(r => setTimeout(r, POLL_INTERVAL));
+      await sleep(pollInterval);
       continue;
     }
 
-    // Check bar count stability
+    if (expectedTf && state.currentResolution && String(state.currentResolution) !== String(expectedTf)) {
+      stableCount = 0;
+      await sleep(pollInterval);
+      continue;
+    }
+
     if (state.barCount === lastBarCount && state.barCount > 0) {
       stableCount++;
     } else {
@@ -64,9 +100,8 @@ export async function waitForChartReady(expectedSymbol = null, expectedTf = null
       return true;
     }
 
-    await new Promise(r => setTimeout(r, POLL_INTERVAL));
+    await sleep(pollInterval);
   }
 
-  // Timeout — return true anyway, caller should verify
   return false;
 }

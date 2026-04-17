@@ -5,7 +5,7 @@ import * as core from "../core/morning.js";
 export function registerMorningTools(server) {
   server.tool(
     "morning_brief",
-    "Scan your watchlist, read all indicator values, and return structured data for a session brief. Reads rules.json for your bias criteria and watchlist. Claude applies the rules to generate your daily bias.",
+    "Scan your watchlist, read all indicator values, and return either the full brief or only active signals.",
     {
       rules_path: z
         .string()
@@ -13,10 +13,29 @@ export function registerMorningTools(server) {
         .describe(
           "Optional path to rules.json. Defaults to rules.json in the project root.",
         ),
+      signals_only: z
+        .boolean()
+        .optional()
+        .describe("If true, only return symbols that currently have a signal."),
+      changed_only: z
+        .boolean()
+        .optional()
+        .describe("If true, only return changed signals compared with the last baseline."),
+      update_baseline: z
+        .boolean()
+        .optional()
+        .describe("If true, persist the latest signal state to the baseline file."),
     },
-    async ({ rules_path } = {}) => {
+    async ({ rules_path, signals_only, changed_only, update_baseline } = {}) => {
       try {
-        return jsonResult(await core.runBrief({ rules_path }));
+        return jsonResult(
+          await core.runBrief({
+            rules_path,
+            signals_only,
+            changed_only,
+            update_baseline,
+          }),
+        );
       } catch (err) {
         return jsonResult({ success: false, error: err.message }, true);
       }

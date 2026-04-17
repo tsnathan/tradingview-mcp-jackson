@@ -1,7 +1,7 @@
 /**
  * Core chart control logic.
  */
-import { evaluate, evaluateAsync } from '../connection.js';
+import { evaluate } from '../connection.js';
 import { waitForChartReady } from '../wait.js';
 
 const CHART_API = 'window.TradingViewApi._activeChartWidgetWV.value()';
@@ -28,29 +28,52 @@ export async function getState() {
   return { success: true, ...state };
 }
 
-export async function setSymbol({ symbol }) {
-  await evaluateAsync(`
+export async function setSymbol({ symbol, wait_timeout } = {}) {
+  const escaped = symbol.replace(/'/g, "\\'");
+  const currentSymbol = await evaluate(`
     (function() {
-      var chart = ${CHART_API};
-      return new Promise(function(resolve) {
-        chart.setSymbol('${symbol.replace(/'/g, "\\'")}', {});
-        setTimeout(resolve, 500);
-      });
+      try { return ${CHART_API}.symbol() || ''; }
+      catch (e) { return ''; }
     })()
   `);
-  const ready = await waitForChartReady(symbol);
-  return { success: true, symbol, chart_ready: ready };
-}
 
-export async function setTimeframe({ timeframe }) {
+  if (currentSymbol && String(currentSymbol).toUpperCase().includes(String(symbol).toUpperCase())) {
+    return { success: true, symbol, chart_ready: true, changed: false };
+  }
+
   await evaluate(`
     (function() {
       var chart = ${CHART_API};
-      chart.setResolution('${timeframe.replace(/'/g, "\\'")}', {});
+      chart.setSymbol('${escaped}', {});
+      return true;
     })()
   `);
-  const ready = await waitForChartReady(null, timeframe);
-  return { success: true, timeframe, chart_ready: ready };
+  const ready = await waitForChartReady(symbol, null, wait_timeout);
+  return { success: true, symbol, chart_ready: ready, changed: true };
+}
+
+export async function setTimeframe({ timeframe, wait_timeout } = {}) {
+  const escaped = timeframe.replace(/'/g, "\\'");
+  const currentTimeframe = await evaluate(`
+    (function() {
+      try { return String(${CHART_API}.resolution() || ''); }
+      catch (e) { return ''; }
+    })()
+  `);
+
+  if (currentTimeframe === String(timeframe)) {
+    return { success: true, timeframe, chart_ready: true, changed: false };
+  }
+
+  await evaluate(`
+    (function() {
+      var chart = ${CHART_API};
+      chart.setResolution('${escaped}', {});
+      return true;
+    })()
+  `);
+  const ready = await waitForChartReady(null, timeframe, wait_timeout);
+  return { success: true, timeframe, chart_ready: ready, changed: true };
 }
 
 export async function setType({ chart_type }) {

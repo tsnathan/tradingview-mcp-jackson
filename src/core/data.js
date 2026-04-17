@@ -2,11 +2,128 @@
  * Core data access logic.
  */
 import { evaluate, evaluateAsync, KNOWN_PATHS } from '../connection.js';
+import * as ui from './ui.js';
 
 const MAX_OHLCV_BARS = 500;
 const MAX_TRADES = 20;
 const CHART_API = KNOWN_PATHS.chartApi;
 const BARS_PATH = KNOWN_PATHS.mainSeriesBars;
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function combineUsdValue(lines, usdIndex) {
+  if (usdIndex <= 0 || !lines[usdIndex - 1]) return '—';
+  const value = `${lines[usdIndex - 1]} USD`;
+  const pct = lines[usdIndex + 1] && /[%％]$/.test(lines[usdIndex + 1]) ? ` | ${lines[usdIndex + 1]}` : '';
+  return value + pct;
+}
+
+export function parseLatestTradeFromTesterText(text) {
+  const normalized = String(text || '')
+    .replace(/\u202f/g, ' ')
+    .replace(/−/g, '-')
+    .replace(/−/g, '-')
+    .replace(/\r/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+
+  if (!normalized.includes('Trade #')) return null;
+
+  const body = normalized.slice(normalized.indexOf('Trade #') + 'Trade #'.length).trim();
+  const blocks = body
+    .split(/\n(?=\d+(?:Long|Short))/)
+    .map(block => block.trim())
+    .filter(block => /^\d+(?:Long|Short)/.test(block));
+
+  if (blocks.length === 0) return null;
+
+  const latestBlock = blocks[blocks.length - 1];
+  const lines = latestBlock.split('\n').map(line => line.trim()).filter(Boolean);
+  const usdIndexes = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i] === 'USD') usdIndexes.push(i);
+  }
+
+  const dateLines = lines.filter(line => /^[A-Z][a-z]{2} \d{2}, \d{4}, \d{2}:\d{2}$/.test(line));
+  const firstLine = lines[0] || '';
+  const tradeNumberMatch = firstLine.match(/^(\d+)/);
+  const sideMatch = firstLine.match(/(Long|Short)$/);
+  const isOpenTrade = dateLines.length < 2;
+  const entryUsdIndex = isOpenTrade
+    ? (usdIndexes[0] ?? -1)
+    : (usdIndexes[1] ?? usdIndexes[0] ?? -1);
+  const pnlStartIndex = isOpenTrade ? 1 : 2;
+
+  return {
+    tradeNumber: tradeNumberMatch ? Number(tradeNumberMatch[1]) : null,
+    side: sideMatch ? sideMatch[1].toUpperCase() : null,
+    signal: isOpenTrade ? 'OPEN' : 'EXIT',
+    entryTime: isOpenTrade ? (dateLines[0] || '—') : (dateLines[1] || dateLines[0] || '—'),
+    entryPrice: entryUsdIndex >= 0 ? combineUsdValue(lines, entryUsdIndex).replace(/ \|.*$/, '') : '—',
+    netPnl: usdIndexes.length >= (pnlStartIndex + 1) ? combineUsdValue(lines, usdIndexes[pnlStartIndex]) : '—',
+    favorableExcursion: usdIndexes.length >= (pnlStartIndex + 2) ? combineUsdValue(lines, usdIndexes[pnlStartIndex + 1]) : '—',
+    adverseExcursion: usdIndexes.length >= (pnlStartIndex + 3) ? combineUsdValue(lines, usdIndexes[pnlStartIndex + 2]) : '—',
+    rawText: latestBlock,
+  };
+}
+
+export async function getLatestTradeFromTester({ timeout_ms = 8000 } = {}) {
+  try {
+    await ui.keyboard({ key: 'Escape' }).catch(() => null);
+    await ui.openPanel({ panel: 'strategy-tester', action: 'open' }).catch(() => null);
+  } catch {}
+
+  const started = Date.now();
+  let lastRaw = null;
+  let stableCount = 0;
+
+  while (Date.now() - started < timeout_ms) {
+    await evaluate(`
+      (function() {
+        var panel = document.querySelector('[data-name="backtesting"]')
+          || document.querySelector('[class*="strategyReport"]')
+          || document.querySelector('[class*="backtesting"]');
+        if (!panel) return false;
+        var tabs = Array.from(panel.querySelectorAll('[role="tab"], button, [role="button"]'));
+        for (var i = 0; i < tabs.length; i++) {
+          var text = (tabs[i].textContent || '').trim().toLowerCase();
+          if (text.includes('list of trades')) { tabs[i].click(); return true; }
+        }
+        return false;
+      })()
+    `).catch(() => null);
+
+    await sleep(500);
+
+    const panelText = await evaluate(`
+      (function() {
+        var panel = document.querySelector('[data-name="backtesting"]')
+          || document.querySelector('[class*="strategyReport"]')
+          || document.querySelector('[class*="backtesting"]');
+        if (!panel) return { text: '' };
+        return { text: (panel.innerText || '').trim() };
+      })()
+    `).catch(() => ({ text: '' }));
+
+    const trade = parseLatestTradeFromTesterText(panelText?.text || '');
+    if (trade && trade.rawText) {
+      if (trade.rawText === lastRaw) stableCount += 1;
+      else stableCount = 0;
+      lastRaw = trade.rawText;
+
+      if (stableCount >= 1) {
+        return { success: true, source: 'strategy_tester_dom', trade };
+      }
+    }
+
+    await sleep(300);
+  }
+
+  return { success: false, source: 'strategy_tester_dom', trade: null, error: 'Trade table did not finish loading in time.' };
+}
 
 function buildGraphicsJS(collectionName, mapKey, filter) {
   return `
@@ -141,7 +258,11 @@ export async function getStrategyResults() {
         var strat = null;
         for (var i = 0; i < sources.length; i++) {
           var s = sources[i];
-          if (s.metaInfo && s.metaInfo().is_price_study === false && (s.reportData || s.performance)) { strat = s; break; }
+          var meta = null;
+          try { meta = s.metaInfo ? s.metaInfo() : null; } catch(e) {}
+          var name = meta ? (meta.description || meta.shortDescription || meta.fullDescription || '') : '';
+          var looksLikeStrategy = /strategy/i.test(name) || !!(s.reportData || s.performance || s.ordersData || s._strategyOrdersPaneView);
+          if (looksLikeStrategy) { strat = s; break; }
         }
         if (!strat) return {metrics: {}, source: 'internal_api', error: 'No strategy found on chart. Add a strategy indicator first.'};
         var metrics = {};
@@ -174,7 +295,11 @@ export async function getTrades({ max_trades } = {}) {
         var strat = null;
         for (var i = 0; i < sources.length; i++) {
           var s = sources[i];
-          if (s.metaInfo && s.metaInfo().is_price_study === false && (s.ordersData || s.reportData)) { strat = s; break; }
+          var meta = null;
+          try { meta = s.metaInfo ? s.metaInfo() : null; } catch(e) {}
+          var name = meta ? (meta.description || meta.shortDescription || meta.fullDescription || '') : '';
+          var looksLikeStrategy = /strategy/i.test(name) || !!(s.ordersData || s.reportData || s._strategyOrdersPaneView);
+          if (looksLikeStrategy) { strat = s; break; }
         }
         if (!strat) return {trades: [], source: 'internal_api', error: 'No strategy found on chart.'};
         var orders = null;
@@ -210,7 +335,11 @@ export async function getEquity() {
         var strat = null;
         for (var i = 0; i < sources.length; i++) {
           var s = sources[i];
-          if (s.metaInfo && s.metaInfo().is_price_study === false && (s.reportData || s.performance)) { strat = s; break; }
+          var meta = null;
+          try { meta = s.metaInfo ? s.metaInfo() : null; } catch(e) {}
+          var name = meta ? (meta.description || meta.shortDescription || meta.fullDescription || '') : '';
+          var looksLikeStrategy = /strategy/i.test(name) || !!(s.reportData || s.performance || s.ordersData || s._strategyOrdersPaneView);
+          if (looksLikeStrategy) { strat = s; break; }
         }
         if (!strat) return {data: [], source: 'internal_api', error: 'No strategy found on chart.'};
         var data = [];

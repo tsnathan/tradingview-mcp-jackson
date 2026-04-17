@@ -1,0 +1,81 @@
+export const swing15mRegressionFixture = {
+  asOf: '2026-04-17T14:50:00.000Z',
+  watchlistName: 'Swing 15m',
+  timezone: 'America/New_York',
+  watchlistSummaries: [
+    {
+      watchlist_name: 'Swing 15m',
+      timeframe: '15',
+      symbols: ['BATS:MEXX', 'BATS:ERX', 'BATS:USO'],
+      source: 'tradingview_panel',
+      symbol_count: 3,
+    },
+  ],
+  results: [
+    {
+      symbol: 'BATS:MEXX',
+      timeframe: '15',
+      watchlist_name: 'Swing 15m',
+      scanned_at: '2026-04-17T10:46:53.000Z',
+      trade: {
+        signal: 'EXIT',
+        entryPrice: '32.71 USD',
+        entryTime: 'Apr 14, 2026, 14:00',
+        netPnl: '-61.045 USD | -0.47%',
+        favorableExcursion: '553.065 USD | 4.30%',
+        adverseExcursion: '-134.685 USD | -1.05%',
+      },
+    },
+    {
+      symbol: 'BATS:ERX',
+      timeframe: '15',
+      watchlist_name: 'Swing 15m',
+      scanned_at: '2026-04-17T10:45:08.000Z',
+      trade: {
+        signal: 'OPEN',
+        entryPrice: '80.45 USD',
+        entryTime: 'Apr 17, 2026, 06:45',
+        netPnl: '0 USD | 0.00%',
+        favorableExcursion: '0 USD | 0.00%',
+        adverseExcursion: '0 USD | 0.00%',
+      },
+    },
+    {
+      symbol: 'BATS:USO',
+      timeframe: '15',
+      watchlist_name: 'Swing 15m',
+      scanned_at: '2026-04-17T10:45:00.000Z',
+      trade: {
+        signal: 'OPEN',
+        entryPrice: '113.98 USD',
+        entryTime: 'Apr 17, 2026, 06:45',
+        netPnl: '0 USD | 0.00%',
+        favorableExcursion: '0 USD | 0.00%',
+        adverseExcursion: '0 USD | 0.00%',
+      },
+    },
+  ],
+  dayLogEvents: [
+    {
+      watchlistName: 'Swing 15m',
+      symbol: 'BATS:MEXX',
+      action: 'sell',
+      timestamp: '2026-04-17T10:46:53.000Z',
+      price: '34.02',
+    },
+    {
+      watchlistName: 'Swing 15m',
+      symbol: 'BATS:ERX',
+      action: 'buy',
+      timestamp: '2026-04-17T10:45:08.000Z',
+      price: '80.45',
+    },
+    {
+      watchlistName: 'Swing 15m',
+      symbol: 'BATS:USO',
+      action: 'buy',
+      timestamp: '2026-04-17T10:45:00.000Z',
+      price: '113.98',
+    },
+  ],
+};

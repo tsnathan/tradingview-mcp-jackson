@@ -10,8 +10,51 @@ register("brief", {
       short: "r",
       description: "Path to rules.json (default: ./rules.json)",
     },
+    "signals-only": {
+      type: "boolean",
+      description: "Return only symbols with an active signal",
+    },
+    "changed-only": {
+      type: "boolean",
+      description: "Only return signals that changed since the baseline file",
+    },
+    "update-baseline": {
+      type: "boolean",
+      description: "Persist the latest scan state to the baseline file",
+    },
   },
-  handler: async ({ rules }) => core.runBrief({ rules_path: rules }),
+  handler: async (opts) =>
+    core.runBrief({
+      rules_path: opts.rules,
+      signals_only: opts["signals-only"],
+      changed_only: opts["changed-only"],
+      update_baseline: opts["update-baseline"],
+    }),
+});
+
+register("signals", {
+  description: "Run the signal-only market-hours scan for automation",
+  options: {
+    rules: {
+      type: "string",
+      short: "r",
+      description: "Path to rules.json (default: ./rules.json)",
+    },
+    notify: {
+      type: "boolean",
+      description: "Send ntfy notification when signals are found",
+    },
+    all: {
+      type: "boolean",
+      description: "Return all active signals instead of only changed ones",
+    },
+  },
+  handler: async (opts) =>
+    core.runSignalJob({
+      rules_path: opts.rules,
+      changed_only: !opts.all,
+      notify: opts.notify,
+    }),
 });
 
 register("session", {

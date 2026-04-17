@@ -4,6 +4,8 @@ If you found this from the YouTube video — welcome. This is the improved fork.
 
 Built on top of the original [tradingview-mcp](https://github.com/tradesdontlie/tradingview-mcp) by [@tradesdontlie](https://github.com/tradesdontlie). Full credit to them for the foundation. This fork adds a morning brief workflow, a rules config, and fixes the launch bug on TradingView Desktop v2.14+.
 
+**New:** see the user guide in [USER_GUIDE.md](USER_GUIDE.md) for the signal scheduler and localhost dashboard.
+
 > [!WARNING]
 > **Not affiliated with TradingView Inc. or Anthropic.** This tool connects to your locally running TradingView Desktop app via Chrome DevTools Protocol. Review the [Disclaimer](#disclaimer) before use.
 

@@ -1,0 +1,827 @@
+// This work is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+// https://creativecommons.org/licenses/by-nc-sa/4.0/
+// © BigBeluga — Strategy + Trailing Stop + IS/OOS Analysis
+
+//@version=6
+strategy("Swing Profile Strategy [BigBeluga]", overlay = true,
+     max_labels_count = 500, max_boxes_count = 500,
+     calc_bars_count = 2000, max_bars_back = 5000,
+     initial_capital = 10000,
+     default_qty_type = strategy.percent_of_equity,
+     default_qty_value = 100,
+     commission_type = strategy.commission.percent,
+     commission_value = 0.1)
+
+
+// INPUTS ---------------------------------------------------------------------
+
+swingLen = input.int(50, "Swing Length", minval = 10)
+
+swingColorUp   = input.color(color.lime,   "▲", inline = "colors")
+swingColorDown = input.color(color.orange, "▼", inline = "colors")
+
+showProfile = input.bool(true,  "Profile",  group = "Swing Volume Profile")
+showHeatMap = input.bool(false, "HeatMap",  group = "Swing Volume Profile")
+
+showZigZag       = input.bool(true,     "ZigZag",  inline = "Zz")
+zigZagStyleInput = input.string("Dotted", "",       ["Dotted", "Dashed", "Solid"], inline = "Zz")
+
+showPOC       = input.bool(true,       "PoC", "", inline = "Poc", group = "Point of Control")
+pocWidthInput = input.int(2,           "",    inline = "Poc", group = "Point of Control")
+pocColor      = input.color(color.red, "",    inline = "Poc", group = "Point of Control")
+
+transparentNA = color.new(color.black, 100)
+
+string dataSizeInput = input.string("Small", title = "Data Size", options = ["Tiny", "Small", "Normal", "Large", "Huge"])
+
+// Strategy settings
+tradeDirection = input.string("Long Only", "Trade Direction",
+     options = ["Long Only", "Short Only", "Both"], group = "Strategy")
+
+exitMode = input.string("Trail Only", "Exit Mode",
+     options = ["Flip Only", "Trail Only", "Trail + Flip", "Trail + Partial Flip"],
+     group = "Strategy",
+     tooltip = "Flip Only = original behavior, close on direction flip.\nTrail Only = trailing stop only; ignore flips.\nTrail + Flip = trailing stop + full close on flip.\nTrail + Partial Flip = close partialFlipPct% on flip, trail the rest.")
+
+partialFlipPct = input.float(50.0, "Partial Flip %",
+     minval = 1.0, maxval = 99.0, step = 5.0, group = "Strategy",
+     tooltip = "Used in 'Trail + Partial Flip' mode only. % of position closed when a flip signal fires. Trailing stop manages the remaining position.")
+
+useConfirmedBarSignals = input.bool(false, "Use Confirmed-Bar Signals (A/B)", group = "Strategy",
+     tooltip = "OFF = current behavior (reacts on the active bar). ON = trade only on flips confirmed by the previous closed bar.")
+showABDiagnostics = input.bool(true, "Show A/B Diagnostics", group = "Strategy")
+
+// Trailing stop settings
+trailMethod  = input.string("Percent", "Method",
+     options = ["Percent", "ATR"], group = "Trailing Stop",
+     tooltip = "Percent: trail stop = peak price × (1 ± trail%)\nATR: trail stop = peak price ± ATR(length) × multiplier")
+trailPct     = input.float(2.0, "Trail %",
+     minval = 0.1, step = 0.1, group = "Trailing Stop",
+     tooltip = "Percentage distance from peak price to the trailing stop level.")
+trailATRLen  = input.int(14, "ATR Length",
+     minval = 1, group = "Trailing Stop")
+trailATRMult = input.float(2.0, "ATR Multiplier",
+     minval = 0.1, step = 0.1, group = "Trailing Stop",
+     tooltip = "Trail stop distance = ATR(length) × multiplier measured from the peak price.")
+
+// IS / OOS settings
+showISoOS  = input.bool(true, "Show IS/OOS Table", group = "IS / OOS Split")
+isSplitPct = input.int(66, "In-Sample %",
+     minval = 10, maxval = 90, group = "IS / OOS Split",
+     tooltip = "Percentage of total chart bars treated as in-sample. The remaining bars are the out-of-sample walk-forward test period.")
+
+// Trail % sweep — 8 configurable values tested simultaneously
+GRP_SWEEP = "Trail % Sweep"
+showSweep = input.bool(true, "Show Sweep Table", group = GRP_SWEEP,
+     tooltip = "Runs 8 trail % values simultaneously on the same entry signals and compares results.\nBest win rate highlighted green. Adjust the 8 values below to focus your search range.")
+sv0 = input.float(1.0,  "Values →", minval=0.1, step=0.5, group=GRP_SWEEP, inline="sv1")
+sv1 = input.float(2.0,  "",          minval=0.1, step=0.5, group=GRP_SWEEP, inline="sv1")
+sv2 = input.float(3.0,  "",          minval=0.1, step=0.5, group=GRP_SWEEP, inline="sv1")
+sv3 = input.float(4.0,  "",          minval=0.1, step=0.5, group=GRP_SWEEP, inline="sv1")
+sv4 = input.float(5.0,  "",          minval=0.1, step=0.5, group=GRP_SWEEP, inline="sv2")
+sv5 = input.float(6.0,  "",          minval=0.1, step=0.5, group=GRP_SWEEP, inline="sv2")
+sv6 = input.float(8.0,  "",          minval=0.1, step=0.5, group=GRP_SWEEP, inline="sv2")
+sv7 = input.float(10.0, "",          minval=0.1, step=0.5, group=GRP_SWEEP, inline="sv2")
+
+
+// HELPER FUNCTIONS -----------------------------------------------------------
+
+getLabelSize() =>
+    switch dataSizeInput
+        "Small"  => size.small
+        "Normal" => size.normal
+        "Large"  => size.large
+        "Huge"   => size.huge
+        => size.tiny
+
+getZigZagLineStyle() =>
+    switch zigZagStyleInput
+        "Dotted" => line.style_dotted
+        "Dashed" => line.style_dashed
+        "Solid"  => line.style_solid
+
+// Returns the trail % for virtual sweep index i
+svTrail(i) =>
+    switch i
+        0 => sv0
+        1 => sv1
+        2 => sv2
+        3 => sv3
+        4 => sv4
+        5 => sv5
+        6 => sv6
+        => sv7
+
+
+// PERSISTENT STORAGE ---------------------------------------------------------
+
+var polyline profilePoly  = na
+var dataLabel = label(na)
+var pocLineHandle = line(na)
+var profileBoxes  = array.new<box>()
+
+type SwingData
+    float price
+    int   index
+
+var highSwing = SwingData.new(na, na)
+var lowSwing  = SwingData.new(na, na)
+
+// Direction flag: true = down move, false = up move
+var isDownMove = false
+
+// Trailing stop peak/trough trackers
+var float longPeak    = na
+var float shortTrough = na
+
+// MAE / MFE per-trade trackers
+var float tradeEntryPrice = na      // entry price of current open position
+var float tradeMaxFav     = 0.0     // Max Favorable Excursion (% above entry for long)
+var float tradeMaxAdv     = 0.0     // Max Adverse Excursion  (% below entry for long)
+var float totalMFE        = 0.0     // Cumulative MFE across all closed trades
+var float totalMAE        = 0.0     // Cumulative MAE across all closed trades
+var int   mfeMaeCount     = 0       // Number of completed trades tracked
+
+// Sweep virtual position state (8 parallel simulations)
+var int[]   svDir   = array.new_int(8, 0)       // 1=long -1=short 0=flat
+var float[] svEntry = array.new_float(8, na)    // entry price
+var float[] svPeak  = array.new_float(8, na)    // peak (long) or trough (short)
+var int[]   svWins  = array.new_int(8, 0)
+var int[]   svLoss  = array.new_int(8, 0)
+var float[] svPnL   = array.new_float(8, 0.0)  // cumulative % return
+
+
+// CALCULATIONS ---------------------------------------------------------------
+
+highestSwingHigh = ta.highest(swingLen)
+lowestSwingLow   = ta.lowest(swingLen)
+
+if high == highestSwingHigh
+    isDownMove := true
+if low == lowestSwingLow
+    isDownMove := false
+
+if high[1] == highestSwingHigh[1] and high < highestSwingHigh
+    highSwing.index := bar_index[1]
+    highSwing.price := high[1]
+
+if low[1] == lowestSwingLow[1] and low > lowestSwingLow
+    lowSwing.index := bar_index[1]
+    lowSwing.price := low[1]
+
+priceBinSize = ta.atr(200) * 0.5
+atrTrail     = ta.atr(trailATRLen)
+
+
+// STRATEGY ENTRIES / EXITS ---------------------------------------------------
+
+directionFlipped         = isDownMove != isDownMove[1]
+strategyDirectionFlipped = useConfirmedBarSignals ? (bar_index > 1 and directionFlipped[1]) : directionFlipped
+strategyIsDownMove       = useConfirmedBarSignals ? isDownMove[1] : isDownMove
+
+doExitOnFlip  = exitMode == "Flip Only" or exitMode == "Trail + Flip"
+doTrail       = exitMode == "Trail Only" or exitMode == "Trail + Flip" or exitMode == "Trail + Partial Flip"
+doPartialFlip = exitMode == "Trail + Partial Flip"
+
+// SWEEP: check trail stops each bar BEFORE processing new entry signals
+if showSweep
+    for i = 0 to 7
+        curDir = array.get(svDir, i)
+        if curDir != 0
+            t_       = svTrail(i)
+            curPeak_ = array.get(svPeak, i)
+            if curDir == 1  // long
+                newPeak_   = math.max(curPeak_, high)
+                trailStop_ = newPeak_ * (1.0 - t_ / 100.0)
+                array.set(svPeak, i, newPeak_)
+                if low <= trailStop_
+                    ep_      = array.get(svEntry, i)
+                    tpnl_    = (trailStop_ - ep_) / ep_ * 100.0
+                    array.set(svPnL,  i, array.get(svPnL,  i) + tpnl_)
+                    array.set(svWins, i, array.get(svWins, i) + (tpnl_ > 0 ? 1 : 0))
+                    array.set(svLoss, i, array.get(svLoss, i) + (tpnl_ <= 0 ? 1 : 0))
+                    array.set(svDir,   i, 0)
+                    array.set(svEntry, i, na)
+                    array.set(svPeak,  i, na)
+            else  // short
+                newPeak_   = math.min(curPeak_, low)   // track trough
+                trailStop_ = newPeak_ * (1.0 + t_ / 100.0)
+                array.set(svPeak, i, newPeak_)
+                if high >= trailStop_
+                    ep_   = array.get(svEntry, i)
+                    tpnl_ = (ep_ - trailStop_) / ep_ * 100.0
+                    array.set(svPnL,  i, array.get(svPnL,  i) + tpnl_)
+                    array.set(svWins, i, array.get(svWins, i) + (tpnl_ > 0 ? 1 : 0))
+                    array.set(svLoss, i, array.get(svLoss, i) + (tpnl_ <= 0 ? 1 : 0))
+                    array.set(svDir,   i, 0)
+                    array.set(svEntry, i, na)
+                    array.set(svPeak,  i, na)
+
+var int lastSignalBarIndex = na
+var int lastSignalDir      = 0
+
+if strategyDirectionFlipped
+    if strategyIsDownMove
+        lastSignalBarIndex := bar_index
+        lastSignalDir      := -1
+        if doExitOnFlip
+            strategy.close("Long", comment = "Flip Short")
+        if doPartialFlip and strategy.position_size > 0
+            strategy.close("Long", qty_percent = partialFlipPct,
+                 comment = "Partial Flip " + str.tostring(int(partialFlipPct)) + "%")
+        if tradeDirection == "Short Only" or tradeDirection == "Both"
+            strategy.entry("Short", strategy.short, comment = "Swing High")
+    else
+        lastSignalBarIndex := bar_index
+        lastSignalDir      := 1
+        if doExitOnFlip
+            strategy.close("Short", comment = "Flip Long")
+        if doPartialFlip and strategy.position_size < 0
+            strategy.close("Short", qty_percent = partialFlipPct,
+                 comment = "Partial Flip " + str.tostring(int(partialFlipPct)) + "%")
+        if tradeDirection == "Long Only" or tradeDirection == "Both"
+            strategy.entry("Long", strategy.long, comment = "Swing Low")
+
+// SWEEP: open/close virtual positions on direction flip
+if showSweep and strategyDirectionFlipped
+    newSvDir = strategyIsDownMove ? -1 : 1
+    for i = 0 to 7
+        // If trail didn't close it yet, close at flip close price
+        oldDir_ = array.get(svDir, i)
+        if oldDir_ != 0
+            oldEp_    = array.get(svEntry, i)
+            flipPnl_  = oldDir_ == 1
+                 ? (close - oldEp_) / oldEp_ * 100.0
+                 : (oldEp_ - close) / oldEp_ * 100.0
+            array.set(svPnL,  i, array.get(svPnL,  i) + flipPnl_)
+            array.set(svWins, i, array.get(svWins, i) + (flipPnl_ > 0 ? 1 : 0))
+            array.set(svLoss, i, array.get(svLoss, i) + (flipPnl_ <= 0 ? 1 : 0))
+        // Open new virtual position if direction matches
+        isLongEntry_  = newSvDir ==  1 and (tradeDirection == "Long Only"  or tradeDirection == "Both")
+        isShortEntry_ = newSvDir == -1 and (tradeDirection == "Short Only" or tradeDirection == "Both")
+        canTrade_ = isLongEntry_ or isShortEntry_
+        if canTrade_
+            array.set(svDir,   i, newSvDir)
+            array.set(svEntry, i, close)
+            array.set(svPeak,  i, newSvDir == 1 ? high : low)
+        else
+            array.set(svDir,   i, 0)
+            array.set(svEntry, i, na)
+            array.set(svPeak,  i, na)
+
+// Reset peak trackers when position is flat
+if strategy.position_size == 0
+    longPeak    := na
+    shortTrough := na
+
+// MAE / MFE — record excursion on every bar while in a long position
+if strategy.position_size > 0
+    if na(tradeEntryPrice)
+        tradeEntryPrice := strategy.position_avg_price
+    mfePct_ = (high  - tradeEntryPrice) / tradeEntryPrice * 100.0
+    maePct_ = (tradeEntryPrice - low)   / tradeEntryPrice * 100.0
+    tradeMaxFav := math.max(tradeMaxFav, mfePct_)
+    tradeMaxAdv := math.max(tradeMaxAdv, maePct_)
+
+// MAE / MFE — on close of long trade, accumulate totals and reset
+wasLong_ = strategy.position_size[1] > 0
+isFlat_  = strategy.position_size == 0
+if wasLong_ and isFlat_
+    totalMFE    += tradeMaxFav
+    totalMAE    += tradeMaxAdv
+    mfeMaeCount += 1
+    tradeEntryPrice := na
+    tradeMaxFav     := 0.0
+    tradeMaxAdv     := 0.0
+
+// Long trailing stop — updated every bar while in position
+if strategy.position_size > 0 and doTrail
+    longPeak := na(longPeak) ? high : math.max(longPeak, high)
+    longTrailStop = trailMethod == "ATR"
+         ? longPeak - atrTrail * trailATRMult
+         : longPeak * (1.0 - trailPct / 100.0)
+    strategy.exit("Trail Long", from_entry = "Long",
+         stop             = longTrailStop,
+         comment_trailing = trailMethod + " Trail")
+
+// Short trailing stop — updated every bar while in position
+if strategy.position_size < 0 and doTrail
+    shortTrough := na(shortTrough) ? low : math.min(shortTrough, low)
+    shortTrailStop = trailMethod == "ATR"
+         ? shortTrough + atrTrail * trailATRMult
+         : shortTrough * (1.0 + trailPct / 100.0)
+    strategy.exit("Trail Short", from_entry = "Short",
+         stop             = shortTrailStop,
+         comment_trailing = trailMethod + " Trail")
+
+// A/B diagnostics label
+barsSinceSignal = na(lastSignalBarIndex) ? na : bar_index - lastSignalBarIndex
+modeLabel       = useConfirmedBarSignals ? "Confirmed (prev bar)" : "Fast (active bar)"
+lastSignalLabel = lastSignalDir == -1 ? "Short" : lastSignalDir == 1 ? "Long" : "None"
+positionLabel   = strategy.position_size > 0 ? "Long" : strategy.position_size < 0 ? "Short" : "Flat"
+
+if showABDiagnostics and barstate.islast
+    var label diagLabel = na
+    label.delete(diagLabel)
+    trailDesc = trailMethod == "Percent"
+         ? str.tostring(trailPct) + "%"
+         : str.tostring(trailATRMult) + "×ATR(" + str.tostring(trailATRLen) + ")"
+    diagText = "Mode: "              + modeLabel +
+      "\nExit: "                     + exitMode +
+      "\nTrail: "                    + (doTrail ? trailDesc : "off") +
+      "\nLast signal: "              + lastSignalLabel +
+      "\nBars since signal: "        + str.tostring(barsSinceSignal) +
+      "\nPosition: "                 + positionLabel
+    diagY = na(highSwing.price) ? high : highSwing.price
+    diagLabel := label.new(bar_index, diagY, diagText,
+      style     = label.style_label_left,
+      color     = color.new(color.black, 75),
+      textcolor = color.white,
+      textalign = text.align_left,
+      size      = size.small)
+
+
+// IS / OOS PERFORMANCE TABLE -------------------------------------------------
+
+if showISoOS and barstate.islast
+    isSplitBar = int(last_bar_index * isSplitPct / 100)
+
+    int   isWins  = 0
+    int   isLoss  = 0
+    float isPnL   = 0.0
+    int   oosWins = 0
+    int   oosLoss = 0
+    float oosPnL  = 0.0
+
+    if strategy.closedtrades > 0
+        for i = 0 to strategy.closedtrades - 1
+            eBar   = strategy.closedtrades.entry_bar_index(i)
+            profit = strategy.closedtrades.profit(i)
+            if eBar <= isSplitBar
+                isPnL += profit
+                if profit > 0
+                    isWins += 1
+                else
+                    isLoss += 1
+            else
+                oosPnL += profit
+                if profit > 0
+                    oosWins += 1
+                else
+                    oosLoss += 1
+
+    isTotal  = isWins  + isLoss
+    oosTotal = oosWins + oosLoss
+    isWR     = isTotal  > 0 ? str.tostring(math.round(isWins  / isTotal  * 100)) + "%" : "–"
+    oosWR    = oosTotal > 0 ? str.tostring(math.round(oosWins / oosTotal * 100)) + "%" : "–"
+
+    hdrC = color.new(#1F4E79, 0)
+    grnC = color.new(color.green,  70)
+    redC = color.new(color.red,    70)
+    gryC = color.new(color.silver, 80)
+
+    var table perfT = table.new(position.bottom_right, 3, 5,
+         border_color = color.gray, border_width = 1,
+         frame_color  = color.gray, frame_width  = 1)
+
+    table.cell(perfT, 0, 0, "IS / OOS",
+         bgcolor = hdrC, text_color = color.white, text_size = size.small)
+    table.cell(perfT, 1, 0, "In-Sample (" + str.tostring(isSplitPct) + "%)",
+         bgcolor = hdrC, text_color = color.white, text_size = size.small)
+    table.cell(perfT, 2, 0, "Out-of-Sample (" + str.tostring(100 - isSplitPct) + "%)",
+         bgcolor = hdrC, text_color = color.white, text_size = size.small)
+
+    table.cell(perfT, 0, 1, "Trades",
+         bgcolor = gryC, text_color = color.black, text_size = size.small)
+    table.cell(perfT, 1, 1, str.tostring(isTotal),
+         bgcolor = gryC, text_color = color.black, text_size = size.small)
+    table.cell(perfT, 2, 1, str.tostring(oosTotal),
+         bgcolor = gryC, text_color = color.black, text_size = size.small)
+
+    table.cell(perfT, 0, 2, "Win Rate",
+         bgcolor = gryC, text_color = color.black, text_size = size.small)
+    table.cell(perfT, 1, 2, isWR,
+         bgcolor = isTotal  > 0 ? (isWins  / isTotal  >= 0.5 ? grnC : redC) : gryC,
+         text_color = color.black, text_size = size.small)
+    table.cell(perfT, 2, 2, oosWR,
+         bgcolor = oosTotal > 0 ? (oosWins / oosTotal >= 0.5 ? grnC : redC) : gryC,
+         text_color = color.black, text_size = size.small)
+
+    table.cell(perfT, 0, 3, "Net P&L ($)",
+         bgcolor = gryC, text_color = color.black, text_size = size.small)
+    table.cell(perfT, 1, 3, str.tostring(math.round(isPnL,  2)),
+         bgcolor = isPnL  >= 0 ? grnC : redC, text_color = color.black, text_size = size.small)
+    table.cell(perfT, 2, 3, str.tostring(math.round(oosPnL, 2)),
+         bgcolor = oosPnL >= 0 ? grnC : redC, text_color = color.black, text_size = size.small)
+
+    table.cell(perfT, 0, 4, "W / L",
+         bgcolor = gryC, text_color = color.black, text_size = size.small)
+    table.cell(perfT, 1, 4, str.tostring(isWins)  + " / " + str.tostring(isLoss),
+         bgcolor = gryC, text_color = color.black, text_size = size.small)
+    table.cell(perfT, 2, 4, str.tostring(oosWins) + " / " + str.tostring(oosLoss),
+         bgcolor = gryC, text_color = color.black, text_size = size.small)
+
+
+// MAE / MFE TABLE ------------------------------------------------------------
+
+if barstate.islast and mfeMaeCount > 0
+    avgMFE_  = totalMFE / mfeMaeCount
+    avgMAE_  = totalMAE / mfeMaeCount
+    // Suggested TP = 80% of average MFE (leaves room before reversal)
+    // Suggested SL = 120% of average MAE (tight enough to protect capital)
+    sugTP_   = str.tostring(math.round(avgMFE_ * 0.8, 2)) + "%"
+    sugSL_   = str.tostring(math.round(avgMAE_ * 1.2, 2)) + "%"
+
+    hdrM_ = color.new(#2E4057, 0)
+    gryM_ = color.new(color.silver, 80)
+    grnM_ = color.new(color.green,  70)
+    redM_ = color.new(color.red,    70)
+
+    var table maeT = table.new(position.bottom_left, 2, 6,
+         border_color = color.gray, border_width = 1,
+         frame_color  = color.gray, frame_width  = 1)
+
+    table.cell(maeT, 0, 0, "MAE / MFE",
+         bgcolor = hdrM_, text_color = color.white, text_size = size.small)
+    table.cell(maeT, 1, 0, str.tostring(mfeMaeCount) + " trades",
+         bgcolor = hdrM_, text_color = color.white, text_size = size.small)
+
+    table.cell(maeT, 0, 1, "Avg MFE",
+         bgcolor = gryM_, text_color = color.black, text_size = size.small)
+    table.cell(maeT, 1, 1, str.tostring(math.round(avgMFE_, 2)) + "%",
+         bgcolor = grnM_, text_color = color.black, text_size = size.small)
+
+    table.cell(maeT, 0, 2, "Avg MAE",
+         bgcolor = gryM_, text_color = color.black, text_size = size.small)
+    table.cell(maeT, 1, 2, str.tostring(math.round(avgMAE_, 2)) + "%",
+         bgcolor = redM_, text_color = color.black, text_size = size.small)
+
+    table.cell(maeT, 0, 3, "MFE/MAE Ratio",
+         bgcolor = gryM_, text_color = color.black, text_size = size.small)
+    table.cell(maeT, 1, 3, str.tostring(math.round(avgMFE_ / math.max(avgMAE_, 0.001), 2)) + "×",
+         bgcolor = avgMFE_ > avgMAE_ ? grnM_ : redM_, text_color = color.black, text_size = size.small)
+
+    table.cell(maeT, 0, 4, "Sug. TP (80% MFE)",
+         bgcolor = gryM_, text_color = color.black, text_size = size.small)
+    table.cell(maeT, 1, 4, sugTP_,
+         bgcolor = grnM_, text_color = color.black, text_size = size.small)
+
+    table.cell(maeT, 0, 5, "Sug. SL (120% MAE)",
+         bgcolor = gryM_, text_color = color.black, text_size = size.small)
+    table.cell(maeT, 1, 5, sugSL_,
+         bgcolor = redM_, text_color = color.black, text_size = size.small)
+
+
+// TRAIL % SWEEP TABLE --------------------------------------------------------
+
+if showSweep and barstate.islast
+    // Find best win rate across all 8 virtual strategies
+    float bestWR_ = -1.0
+    for i = 0 to 7
+        w_   = array.get(svWins, i)
+        l_   = array.get(svLoss, i)
+        tot_ = w_ + l_
+        if tot_ > 0
+            wr_ = w_ / tot_
+            if wr_ > bestWR_
+                bestWR_ := wr_
+
+    hdrSC  = color.new(#1A3A0A, 0)   // dark green header
+    bestC_ = color.new(#92D050, 30)  // bright green best row
+    grnS   = color.new(color.green,  70)
+    redS   = color.new(color.red,    70)
+    gryS   = color.new(color.silver, 80)
+
+    var table sweepT = table.new(position.top_right, 5, 9,
+         border_color = color.gray, border_width = 1,
+         frame_color  = color.gray, frame_width  = 1)
+
+    table.cell(sweepT, 0, 0, "Trail %",   bgcolor=hdrSC, text_color=color.white, text_size=size.small)
+    table.cell(sweepT, 1, 0, "Trades",    bgcolor=hdrSC, text_color=color.white, text_size=size.small)
+    table.cell(sweepT, 2, 0, "Win %",     bgcolor=hdrSC, text_color=color.white, text_size=size.small)
+    table.cell(sweepT, 3, 0, "Return %",  bgcolor=hdrSC, text_color=color.white, text_size=size.small)
+    table.cell(sweepT, 4, 0, "W / L",     bgcolor=hdrSC, text_color=color.white, text_size=size.small)
+
+    for i = 0 to 7
+        row_  = i + 1
+        t_    = svTrail(i)
+        w_    = array.get(svWins, i)
+        l_    = array.get(svLoss, i)
+        tot_  = w_ + l_
+        pnl_  = array.get(svPnL, i)
+        wr_   = tot_ > 0 ? w_ / tot_ : 0.0
+        isBest_ = tot_ > 0 and math.abs(wr_ - bestWR_) < 0.001
+        wrStr_  = tot_ > 0 ? str.tostring(math.round(wr_ * 100)) + "%" : "–"
+        pnlStr_ = str.tostring(math.round(pnl_, 1)) + "%"
+        rowBg_  = isBest_ ? bestC_ : gryS
+        wrBg_   = isBest_ ? bestC_ : (tot_ > 0 ? (wr_ >= 0.5 ? grnS : redS) : gryS)
+        pnlBg_  = pnl_ >= 0 ? grnS : redS
+        table.cell(sweepT, 0, row_, str.tostring(t_) + "%",       bgcolor=rowBg_, text_color=color.black, text_size=size.small)
+        table.cell(sweepT, 1, row_, str.tostring(tot_),            bgcolor=rowBg_, text_color=color.black, text_size=size.small)
+        table.cell(sweepT, 2, row_, wrStr_,                        bgcolor=wrBg_,  text_color=color.black, text_size=size.small)
+        table.cell(sweepT, 3, row_, pnlStr_,                       bgcolor=pnlBg_, text_color=color.black, text_size=size.small)
+        table.cell(sweepT, 4, row_, str.tostring(w_) + " / " + str.tostring(l_), bgcolor=rowBg_, text_color=color.black, text_size=size.small)
+
+
+// HISTORICAL SWING LEG -------------------------------------------------------
+
+if directionFlipped
+
+    profilePoly.delete()
+    dataLabel.delete()
+    for b in profileBoxes
+        b.delete()
+    profileBoxes.clear()
+
+    swingMainColor = isDownMove ? swingColorDown : swingColorUp
+
+    if showZigZag
+        line.new(highSwing.index, highSwing.price, lowSwing.index, lowSwing.price,
+             color = swingMainColor, style = getZigZagLineStyle())
+
+    swingBottom = math.min(highSwing.price, lowSwing.price)
+    swingTop    = math.max(highSwing.price, lowSwing.price)
+
+    binCount = int(math.abs(highSwing.price - lowSwing.price) / priceBinSize)
+    binStep  = math.abs(highSwing.price - lowSwing.price) / binCount
+
+    lastSwingIndex = math.max(highSwing.index, lowSwing.index)
+    prevSwingIndex = math.min(highSwing.index, lowSwing.index)
+
+    volumeBins     = array.new<float>(binCount, 0.)
+    profilePoints  = array.new<chart.point>()
+    buyVolumeBins  = array.new<float>(binCount, 0.)
+    sellVolumeBins = array.new<float>(binCount, 0.)
+
+    barOffset = bar_index - lastSwingIndex
+
+    for i = barOffset to (lastSwingIndex - prevSwingIndex) + barOffset
+        candleClose = close[i]
+        candleOpen  = open[i]
+        candleVol   = volume[i]
+
+        for k = 0 to binCount - 1
+            binMidPrice = swingBottom + (k * binStep) + (binStep / 2)
+            if math.abs(binMidPrice - candleClose) < binStep
+                volumeBins.set(k, volumeBins.get(k) + candleVol)
+                if candleClose > candleOpen
+                    buyVolumeBins.set(k, buyVolumeBins.get(k) + candleVol)
+                else
+                    sellVolumeBins.set(k, sellVolumeBins.get(k) + candleVol)
+
+    for k = 0 to binCount - 1
+        binLow  = swingBottom + (k * binStep)
+        binHigh = binLow + binStep
+
+        volumeRatio  = volumeBins.get(k) / volumeBins.max()
+        profileWidth = int(volumeRatio * ((lastSwingIndex - prevSwingIndex) / 2))
+
+        if volumeRatio == 1 and showPOC
+            line.new(showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+                 math.avg(binLow, binHigh), lastSwingIndex, math.avg(binLow, binHigh),
+                 color = pocColor, width = pocWidthInput)
+
+        box.new(
+             showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+             binHigh,
+             showHeatMap ? lastSwingIndex : prevSwingIndex,
+             binLow,
+             transparentNA, 0,
+             bgcolor = showProfile or showHeatMap
+                  ? color.from_gradient(volumeRatio, 0, 1,
+                       color.new(swingMainColor, 90),
+                       color.new(volumeRatio == 1 and showPOC ? pocColor : swingMainColor, 50))
+                  : transparentNA,
+             text = showHeatMap ? "" : volumeRatio == 1 ? str.tostring(volumeBins.max(), format.volume) : "")
+
+        if k == 0
+            profilePoints.push(chart.point.from_index(prevSwingIndex, binLow))
+        profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binLow))
+        profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binHigh))
+        if k == binCount - 1
+            profilePoints.push(chart.point.from_index(prevSwingIndex, binHigh))
+
+    if showProfile
+        polyline.new(profilePoints, false, true,
+             line_color = showHeatMap ? color.new(swingMainColor, 50) : swingMainColor)
+
+    swingArrowText = isDownMove ? "▼" : "▲"
+    swingTooltip =
+          "Total Volume: "   + str.tostring(volumeBins.sum(),     format.volume)
+         + "\nBuy Volume: "  + str.tostring(buyVolumeBins.sum(),  format.volume)
+         + "\nSell Volume: " + str.tostring(sellVolumeBins.sum(), format.volume)
+         + "\nDelta Volume: "+ str.tostring(
+              (buyVolumeBins.sum() - sellVolumeBins.sum()) / volumeBins.sum() * 100,
+              format.percent)
+
+    label.new(prevSwingIndex, isDownMove ? swingTop : swingBottom, swingArrowText,
+         style     = isDownMove ? label.style_label_down : label.style_label_up,
+         color     = transparentNA,
+         textcolor = swingMainColor,
+         size      = getLabelSize(),
+         tooltip   = swingTooltip)
+
+
+// REAL-TIME SWING LEG --------------------------------------------------------
+
+if not isDownMove
+    for b in profileBoxes
+        b.delete()
+    profileBoxes.clear()
+
+    if barstate.islast
+        swingMainColor = chart.fg_color
+        line.delete(line.new(highSwing.index, highSwing.price, lowSwing.index, lowSwing.price,
+             color = swingMainColor, style = line.style_dashed)[1])
+
+        swingBottom = math.min(highSwing.price, lowSwing.price)
+        swingTop    = math.max(highSwing.price, lowSwing.price)
+        binCount    = int(math.abs(highSwing.price - lowSwing.price) / priceBinSize)
+        binStep     = math.abs(highSwing.price - lowSwing.price) / binCount
+
+        lastSwingIndex = math.max(highSwing.index, lowSwing.index)
+        prevSwingIndex = math.min(highSwing.index, lowSwing.index)
+
+        volumeBins     = array.new<float>(binCount, 0.)
+        profilePoints  = array.new<chart.point>()
+        buyVolumeBins  = array.new<float>(binCount, 0.)
+        sellVolumeBins = array.new<float>(binCount, 0.)
+        barOffset      = bar_index - lastSwingIndex
+
+        for i = barOffset to (lastSwingIndex - prevSwingIndex) + barOffset
+            candleClose = close[i]
+            candleOpen  = open[i]
+            candleVol   = volume[i]
+            for k = 0 to binCount - 1
+                binMidPrice = swingBottom + (k * binStep) + (binStep / 2)
+                if math.abs(binMidPrice - candleClose) < binStep
+                    volumeBins.set(k, volumeBins.get(k) + candleVol)
+                    if candleClose > candleOpen
+                        buyVolumeBins.set(k, buyVolumeBins.get(k) + candleVol)
+                    else
+                        sellVolumeBins.set(k, sellVolumeBins.get(k) + candleVol)
+
+        for k = 0 to binCount - 1
+            binLow  = swingBottom + (k * binStep)
+            binHigh = binLow + binStep
+            volumeRatio  = volumeBins.get(k) / volumeBins.max()
+            profileWidth = int(volumeRatio * ((lastSwingIndex - prevSwingIndex) / 2))
+
+            if volumeRatio == 1 and showPOC
+                pocLineHandle := line.new(showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+                     math.avg(binLow, binHigh), lastSwingIndex, math.avg(binLow, binHigh),
+                     color = pocColor, width = pocWidthInput)
+                line.delete(pocLineHandle[1])
+
+            profileBoxes.push(box.new(
+                 showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+                 binHigh,
+                 showHeatMap ? lastSwingIndex : prevSwingIndex,
+                 binLow,
+                 transparentNA, 0,
+                 bgcolor = showProfile or showHeatMap
+                      ? color.from_gradient(volumeRatio, 0, 1,
+                           color.new(swingMainColor, 90),
+                           color.new(volumeRatio == 1 and showPOC ? pocColor : swingMainColor, 50))
+                      : transparentNA,
+                 text = showHeatMap ? "" : volumeRatio == 1 ? str.tostring(volumeBins.max(), format.volume) : ""))
+
+            if k == 0
+                profilePoints.push(chart.point.from_index(prevSwingIndex, binLow))
+            profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binLow))
+            profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binHigh))
+            if k == binCount - 1
+                profilePoints.push(chart.point.from_index(prevSwingIndex, binHigh))
+
+        if showProfile
+            polyline.delete(profilePoly[1])
+            profilePoly := polyline.new(profilePoints, false, true,
+                 line_color = showHeatMap ? color.new(swingMainColor, 50) : swingMainColor)
+
+        swingTooltip  = "T - Total Volume\nB - Buy Volume\nS - Sell Volume\nD - Delta Volume"
+        swingDataText =
+              "T: " + str.tostring(volumeBins.sum(),     format.volume)
+             + "\nB: " + str.tostring(buyVolumeBins.sum(),  format.volume)
+             + "\nS: " + str.tostring(sellVolumeBins.sum(), format.volume)
+             + "\nD: " + str.tostring(
+                  (buyVolumeBins.sum() - sellVolumeBins.sum()) / volumeBins.sum() * 100,
+                  format.percent)
+
+        dataLabel := label.new(prevSwingIndex, not isDownMove ? swingTop : swingBottom, swingDataText,
+             style     = not isDownMove ? label.style_label_down : label.style_label_up,
+             color     = transparentNA,
+             textcolor = swingMainColor,
+             size      = getLabelSize(),
+             tooltip   = swingTooltip,
+             textalign = text.align_left)
+        label.delete(dataLabel[1])
+
+else
+    for b in profileBoxes
+        b.delete()
+    profileBoxes.clear()
+
+    if barstate.islast
+        swingMainColor = chart.fg_color
+        line.delete(line.new(highSwing.index, highSwing.price, lowSwing.index, lowSwing.price,
+             color = swingMainColor, style = line.style_dashed)[1])
+
+        swingBottom = math.min(highSwing.price, lowSwing.price)
+        swingTop    = math.max(highSwing.price, lowSwing.price)
+        binCount    = int(math.abs(highSwing.price - lowSwing.price) / priceBinSize)
+        binStep     = math.abs(highSwing.price - lowSwing.price) / binCount
+
+        lastSwingIndex = math.max(highSwing.index, lowSwing.index)
+        prevSwingIndex = math.min(highSwing.index, lowSwing.index)
+
+        volumeBins     = array.new<float>(binCount, 0.)
+        profilePoints  = array.new<chart.point>()
+        buyVolumeBins  = array.new<float>(binCount, 0.)
+        sellVolumeBins = array.new<float>(binCount, 0.)
+        barOffset      = bar_index - lastSwingIndex
+
+        for i = barOffset to (lastSwingIndex - prevSwingIndex) + barOffset
+            candleClose = close[i]
+            candleOpen  = open[i]
+            candleVol   = volume[i]
+            for k = 0 to binCount - 1
+                binMidPrice = swingBottom + (k * binStep) + (binStep / 2)
+                if math.abs(binMidPrice - candleClose) < binStep
+                    volumeBins.set(k, volumeBins.get(k) + candleVol)
+                    if candleClose > candleOpen
+                        buyVolumeBins.set(k, buyVolumeBins.get(k) + candleVol)
+                    else
+                        sellVolumeBins.set(k, sellVolumeBins.get(k) + candleVol)
+
+        for k = 0 to binCount - 1
+            binLow  = swingBottom + (k * binStep)
+            binHigh = binLow + binStep
+            volumeRatio  = volumeBins.get(k) / volumeBins.max()
+            profileWidth = int(volumeRatio * ((lastSwingIndex - prevSwingIndex) / 2))
+
+            if volumeRatio == 1 and showPOC
+                pocLineHandle := line.new(showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+                     math.avg(binLow, binHigh), lastSwingIndex, math.avg(binLow, binHigh),
+                     color = pocColor, width = pocWidthInput)
+                line.delete(pocLineHandle[1])
+
+            profileBoxes.push(box.new(
+                 showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+                 binHigh,
+                 showHeatMap ? lastSwingIndex : prevSwingIndex,
+                 binLow,
+                 transparentNA, 0,
+                 bgcolor = showProfile or showHeatMap
+                      ? color.from_gradient(volumeRatio, 0, 1,
+                           color.new(swingMainColor, 90),
+                           color.new(volumeRatio == 1 and showPOC ? pocColor : swingMainColor, 50))
+                      : transparentNA,
+                 text = showHeatMap ? "" : volumeRatio == 1 ? str.tostring(volumeBins.max(), format.volume) : ""))
+
+            if k == 0
+                profilePoints.push(chart.point.from_index(prevSwingIndex, binLow))
+            profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binLow))
+            profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binHigh))
+            if k == binCount - 1
+                profilePoints.push(chart.point.from_index(prevSwingIndex, binHigh))
+
+        if showProfile
+            polyline.delete(profilePoly[1])
+            profilePoly := polyline.new(profilePoints, false, true,
+                 line_color = showHeatMap ? color.new(swingMainColor, 50) : swingMainColor)
+
+        swingTooltip  = "T - Total Volume\nB - Buy Volume\nS - Sell Volume\nD - Delta Volume"
+        swingDataText =
+              "T: " + str.tostring(volumeBins.sum(),     format.volume)
+             + "\nB: " + str.tostring(buyVolumeBins.sum(),  format.volume)
+             + "\nS: " + str.tostring(sellVolumeBins.sum(), format.volume)
+             + "\nD: " + str.tostring(
+                  (buyVolumeBins.sum() - sellVolumeBins.sum()) / volumeBins.sum() * 100,
+                  format.percent)
+
+        dataLabel := label.new(prevSwingIndex, not isDownMove ? swingTop : swingBottom, swingDataText,
+             style     = not isDownMove ? label.style_label_down : label.style_label_up,
+             color     = transparentNA,
+             textcolor = swingMainColor,
+             size      = getLabelSize(),
+             tooltip   = swingTooltip,
+             textalign = text.align_left)
+        label.delete(dataLabel[1])
+
+
+// MOVING AVERAGE -------------------------------------------------------------
+
+GRP = "Moving Average"
+maTypeInput   = input.string("None", "Type", options = ["None", "SMA", "EMA", "SMMA (RMA)", "WMA", "VWMA"], group = GRP, display = display.none)
+maLengthInput = input.int(25, "Length", group = GRP, display = display.none, active = maTypeInput != "None")
+src           = input(close, title = "Source", group = GRP, active = maTypeInput != "None")
+
+ma(source, length, MAtype) =>
+    switch MAtype
+        "SMA"        => ta.sma(source, length)
+        "EMA"        => ta.ema(source, length)
+        "SMMA (RMA)" => ta.rma(source, length)
+        "WMA"        => ta.wma(source, length)
+        "VWMA"       => ta.vwma(source, length)
+
+plot(ma(src, maLengthInput, maTypeInput), color = color.yellow, title = "MA")
