@@ -400,7 +400,8 @@ function formatEntryTimeDisplay(value, timezone = DEFAULT_MARKET_HOURS.timezone)
   const cleaned = normalizeTradeDisplay(value, '').replace(/\s+ET$/i, '').trim();
   if (!cleaned) return 'No trade time';
   if (/^\d{4}-\d{2}-\d{2}T/.test(cleaned)) return `${formatTimestamp(cleaned, timezone)} ET`;
-  if (/^[A-Z][a-z]{2} \d{2}, \d{4}, \d{2}:\d{2}$/.test(cleaned)) return `${cleaned} ET`;
+  if (/^[A-Z][a-z]{2} \d{1,2}, \d{4}, \d{1,2}:\d{2}$/.test(cleaned)) return `${cleaned} ET`;
+  if (/^[A-Z][a-z]{2} \d{1,2}, \d{4}$/.test(cleaned)) return cleaned;
   if (/^\d{1,2}\/\d{1,2}\/\d{4},/.test(cleaned)) return `${cleaned} ET`;
   const parsed = Date.parse(cleaned);
   return Number.isFinite(parsed) ? `${formatTimestamp(cleaned, timezone)} ET` : cleaned;
@@ -1276,6 +1277,7 @@ export async function runSignalJob({
   rules_path,
   changed_only = true,
   notify = false,
+  force = false,
 } = {}) {
   const { rules } = loadRules(rules_path);
   const baselinePath = resolve(rules.baseline_file || DEFAULT_BASELINE_PATH);
@@ -1298,7 +1300,7 @@ export async function runSignalJob({
     return errorResult;
   }
 
-  if (!shouldRunEquityScanNow(new Date(), marketHours)) {
+  if (!force && !shouldRunEquityScanNow(new Date(), marketHours)) {
     const timezone = marketHours.timezone || DEFAULT_MARKET_HOURS.timezone;
     const skippedWatchlistSummaries = [];
     const skippedResults = [];

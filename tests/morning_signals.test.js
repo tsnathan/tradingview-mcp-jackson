@@ -134,6 +134,62 @@ USD
     assert.equal(trade.entryTime, 'Apr 17, 2026, 06:45');
     assert.equal(trade.entryPrice, '80.45 USD');
   });
+
+  it('parses daily EXIT trades when the strategy table shows date-only rows', () => {
+    const text = `Trade #
+9Long
+Exit
+Entry
+Apr 17, 2026
+Apr 10, 2026
+Trail Long
+321.99
+USD
+329.94
+USD
+101
+33.53 KUSD
+490.10
+USD
+1.49%
+860.19
+USD
+2.60%
+-3707.00
+USD
+-11.22%`;
+    const trade = parseLatestTradeFromTesterText(text);
+
+    assert.equal(trade.signal, 'EXIT');
+    assert.equal(trade.entryTime, 'Apr 10, 2026');
+    assert.equal(trade.entryPrice, '329.94 USD');
+  });
+
+  it('parses daily OPEN trades when the strategy table shows one date without time', () => {
+    const text = `Trade #
+10Long
+Exit
+Entry
+Apr 17, 2026
+Trail Long
+138.07
+USD
+108.24
+USD
+40
+5.52 KUSD
+3964.214
+USD
+27.30%
+-4757.236
+USD
+-32.77%`;
+    const trade = parseLatestTradeFromTesterText(text);
+
+    assert.equal(trade.signal, 'OPEN');
+    assert.equal(trade.entryTime, 'Apr 17, 2026');
+    assert.equal(trade.entryPrice, '138.07 USD');
+  });
 });
 
 describe('scan target building', () => {

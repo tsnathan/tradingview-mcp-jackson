@@ -2,11 +2,13 @@ import { runSignalJob } from '../src/core/morning.js';
 
 const notify = process.argv.includes('--notify');
 const all = process.argv.includes('--all');
+const force = process.argv.includes('--force') || all;
 
 try {
   const result = await runSignalJob({
     changed_only: !all,
     notify,
+    force,
   });
 
   if (result.skipped) {

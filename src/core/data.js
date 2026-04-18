@@ -47,7 +47,7 @@ export function parseLatestTradeFromTesterText(text) {
     if (lines[i] === 'USD') usdIndexes.push(i);
   }
 
-  const dateLines = lines.filter(line => /^[A-Z][a-z]{2} \d{2}, \d{4}, \d{2}:\d{2}$/.test(line));
+  const dateLines = lines.filter(line => /^[A-Z][a-z]{2} \d{1,2}, \d{4}(?:, \d{1,2}:\d{2})?$/.test(line));
   const firstLine = lines[0] || '';
   const tradeNumberMatch = firstLine.match(/^(\d+)/);
   const sideMatch = firstLine.match(/(Long|Short)$/);
