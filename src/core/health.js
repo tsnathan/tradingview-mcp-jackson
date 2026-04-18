@@ -195,14 +195,13 @@ function findTradingViewBinary({ platform = process.platform } = {}) {
 
   if (!tvPath && platform === 'win32') {
     try {
-      const windowsAppsRoot = `${process.env.PROGRAMFILES}\\WindowsApps`;
-      const found = execSync(`cmd.exe /d /s /c "dir /s /b \"${windowsAppsRoot}\\TradingView*\\TradingView.exe\" 2>nul"`, { timeout: 10000 })
-        .toString()
-        .trim()
-        .split(/\r?\n/)
-        .find(Boolean);
-      if (found && existsSync(found)) {
-        tvPath = found;
+      const installLocation = execSync(
+        'powershell -NoProfile -Command "(Get-AppxPackage TradingView.Desktop | Select-Object -ExpandProperty InstallLocation)"',
+        { timeout: 10000 },
+      ).toString().trim();
+      const candidate = installLocation ? join(installLocation, 'TradingView.exe') : null;
+      if (candidate && existsSync(candidate)) {
+        tvPath = candidate;
       }
     } catch {}
   }
@@ -234,7 +233,7 @@ export function buildTradingViewLaunchPlan({
   cdpPort = 9222,
   projectRoot = PROJECT_ROOT,
 } = {}) {
-  if (!tvPath) {
+  if (!tvPath && platform !== 'win32') {
     throw new Error('TradingView executable path is required to build a launch plan.');
   }
 
@@ -243,7 +242,7 @@ export function buildTradingViewLaunchPlan({
     ELECTRON_EXTRA_LAUNCH_ARGS: `--remote-debugging-port=${cdpPort}`,
   };
 
-  if (platform === 'win32' && /WindowsApps/i.test(tvPath)) {
+  if (platform === 'win32' && !tvPath) {
     const vbsLauncher = join(projectRoot, 'scripts', 'launch_tv_debug.vbs');
     if (existsSync(vbsLauncher) && cdpPort === 9222) {
       return {
@@ -273,7 +272,7 @@ export async function launch({ port, kill_existing } = {}) {
   const platform = process.platform;
   const { tvPath, candidates } = findTradingViewBinary({ platform });
 
-  if (!tvPath) {
+  if (!tvPath && platform !== 'win32') {
     throw new Error(`TradingView not found on ${platform}. Searched: ${candidates.join(', ')}, WindowsApps, and PATH.`);
   }
 
@@ -305,7 +304,7 @@ export async function launch({ port, kill_existing } = {}) {
         return {
           success: true,
           platform,
-          binary: tvPath,
+          binary: tvPath || 'shell:AppsFolder\\TradingView.Desktop_n534cwy3pjxzj!TradingView.Desktop',
           pid: child.pid,
           cdp_port: cdpPort,
           cdp_url: `http://localhost:${cdpPort}`,
@@ -319,7 +318,7 @@ export async function launch({ port, kill_existing } = {}) {
   return {
     success: true,
     platform,
-    binary: tvPath,
+    binary: tvPath || 'shell:AppsFolder\\TradingView.Desktop_n534cwy3pjxzj!TradingView.Desktop',
     pid: child.pid,
     cdp_port: cdpPort,
     cdp_ready: false,

@@ -41,7 +41,7 @@
       <div id="summary" class="flat hidden"></div>
       <p class="muted" id="refresh-note">Updates when the scheduled scan writes a new result.</p>
       <div>
-        <span class="pill" id="tv-status">TradingView Connected: --</span>
+        <span class="pill" id="tv-status">TradingView Status: --</span>
         <span class="pill" id="updated">Updated: --</span>
         <span class="pill" id="next-run">Next run: --</span>
         <span class="pill" id="count">Signals: 0</span>
@@ -207,13 +207,13 @@
       if (data.connectionError || data.errorMessage) {
         summary.textContent = '';
         summary.className = 'hidden';
-        tvStatus.textContent = 'TradingView Connected: Disconnected';
+        tvStatus.textContent = 'TradingView Status: Disconnected';
         tvStatus.className = 'pill pill-status-disconnected';
-        document.getElementById('refresh-note').textContent = 'Reconnect TradingView Desktop, then rerun the scan.';
+        document.getElementById('refresh-note').textContent = 'Recommendation: keep TradingView Desktop open on a chart and signed in. The scheduled cron job will retry the connection automatically.';
       } else {
         summary.textContent = '';
         summary.className = 'hidden';
-        tvStatus.textContent = 'TradingView Connected: Active';
+        tvStatus.textContent = 'TradingView Status: Connected';
         tvStatus.className = 'pill pill-status-active';
         document.getElementById('refresh-note').textContent = 'Updates when the scheduled scan writes a new result.';
       }

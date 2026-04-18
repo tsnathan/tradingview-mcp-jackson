@@ -28,10 +28,21 @@ describe('TradingView auto-launch', () => {
     assert.equal(attempts, 2);
   });
 
-  it('uses the Windows helper launcher for WindowsApps installs', () => {
+  it('uses the direct executable when the WindowsApps install path is known', () => {
     const plan = buildTradingViewLaunchPlan({
       platform: 'win32',
       tvPath: 'C:\\Program Files\\WindowsApps\\TradingView.Desktop_3.0.0.7652_x64__n534cwy3pjxzj\\TradingView.exe',
+      cdpPort: 9222,
+      projectRoot: process.cwd(),
+    });
+
+    assert.match(plan.command, /TradingView\.exe$/i);
+    assert.deepEqual(plan.args, ['--remote-debugging-port=9222']);
+  });
+
+  it('still builds a Windows launch plan when the executable path is not directly discoverable', () => {
+    const plan = buildTradingViewLaunchPlan({
+      platform: 'win32',
       cdpPort: 9222,
       projectRoot: process.cwd(),
     });

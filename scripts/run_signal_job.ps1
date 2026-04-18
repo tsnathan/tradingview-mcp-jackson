@@ -21,10 +21,37 @@ function Test-CdpReady {
   }
 }
 
+function Get-TradingViewExe {
+  $candidates = @(
+    "$env:LOCALAPPDATA\TradingView\TradingView.exe",
+    "$env:PROGRAMFILES\TradingView\TradingView.exe",
+    "${env:PROGRAMFILES(X86)}\TradingView\TradingView.exe"
+  ) | Where-Object { $_ -and (Test-Path $_) }
+
+  if ($candidates) {
+    return $candidates[0]
+  }
+
+  try {
+    $installLocation = Get-AppxPackage TradingView.Desktop | Select-Object -ExpandProperty InstallLocation
+    if ($installLocation) {
+      $exe = Join-Path $installLocation 'TradingView.exe'
+      if (Test-Path $exe) {
+        return $exe
+      }
+    }
+  } catch {}
+
+  return $null
+}
+
 if (-not (Test-CdpReady)) {
   Write-Host 'TradingView debug endpoint unavailable. Attempting automatic launch...'
 
-  if (Test-Path '.\scripts\launch_tv_debug.vbs') {
+  $tvExe = Get-TradingViewExe
+  if ($tvExe) {
+    Start-Process -FilePath $tvExe -ArgumentList '--remote-debugging-port=9222' | Out-Null
+  } elseif (Test-Path '.\scripts\launch_tv_debug.vbs') {
     Start-Process 'wscript.exe' -ArgumentList (Resolve-Path '.\scripts\launch_tv_debug.vbs') | Out-Null
   } elseif (Test-Path '.\scripts\launch_tv_debug.bat') {
     Start-Process -FilePath (Resolve-Path '.\scripts\launch_tv_debug.bat') | Out-Null
