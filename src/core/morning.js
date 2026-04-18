@@ -697,26 +697,76 @@ function buildWatchlistSummaryLines(
   });
 }
 
-function buildOpenTrades(priorSignalsByWatchlist = []) {
-  return priorSignalsByWatchlist
-    .flatMap((section) =>
-      (Array.isArray(section.trades) ? section.trades : [])
-        .filter((row) => String(row.signal || '—').toUpperCase() === 'OPEN')
-        .map((row) => ({
-          watchlistName: section.watchlistName,
-          timeframe: section.timeframe,
-          symbolCount: Number(section.symbolCount || 0),
-          ...row,
-          netPnl: fillTradeMetric(row.netPnl, 'OPEN'),
-          favorableExcursion: fillTradeMetric(row.favorableExcursion, 'OPEN'),
-          adverseExcursion: fillTradeMetric(row.adverseExcursion, 'OPEN'),
-        })),
-    )
-    .sort(
-      (a, b) => parseEntryTimestamp(b.entryTime) - parseEntryTimestamp(a.entryTime)
-        || String(a.watchlistName || '').localeCompare(String(b.watchlistName || ''))
-        || String(a.symbol || '').localeCompare(String(b.symbol || '')),
-    );
+export function buildOpenTrades(
+  priorSignalsByWatchlist = [],
+  baselineSignals = {},
+  asOf = new Date().toISOString(),
+  timezone = DEFAULT_MARKET_HOURS.timezone,
+) {
+  const rowsByKey = new Map();
+
+  const addRow = (section, row) => {
+    const signal = String(row?.signal || '—').toUpperCase();
+    const symbol = row?.symbol || 'n/a';
+    const entryTime = row?.entryTime || row?.entry_time || 'No prior trade recorded';
+    if (signal !== 'OPEN') return;
+    if (!hasMeaningfulTradeValue(entryTime) || !isSameTradingDay(entryTime, asOf, timezone)) return;
+
+    const key = `${section?.watchlistName || section?.watchlist_name || 'Watchlist'}|${section?.timeframe || ''}|${normalizeSymbolForMatch(symbol)}`;
+    rowsByKey.set(key, {
+      watchlistName: section?.watchlistName || section?.watchlist_name || 'Watchlist',
+      timeframe: section?.timeframe || row?.timeframe || '—',
+      symbolCount: Number(section?.symbolCount || section?.symbol_count || 0),
+      symbol,
+      signal: 'OPEN',
+      wasOpen: true,
+      entryPrice: normalizeTradeDisplay(row?.entryPrice ?? row?.entry_price),
+      entryTime: formatEntryTimeDisplay(entryTime, timezone),
+      netPnl: fillTradeMetric(row?.netPnl ?? row?.net_pnl, 'OPEN'),
+      favorableExcursion: fillTradeMetric(row?.favorableExcursion ?? row?.favorable_excursion, 'OPEN'),
+      adverseExcursion: fillTradeMetric(row?.adverseExcursion ?? row?.adverse_excursion, 'OPEN'),
+    });
+  };
+
+  for (const section of priorSignalsByWatchlist) {
+    for (const row of (Array.isArray(section.trades) ? section.trades : [])) {
+      addRow(section, row);
+    }
+  }
+
+  for (const entry of Object.values(baselineSignals || {})) {
+    const signalType = String(entry?.signal_type || '').toUpperCase();
+    if (signalType !== 'OPEN') continue;
+
+    const timeframe = String(entry?.timeframe || '');
+    const symbol = entry?.symbol || 'n/a';
+    const matchingSection = priorSignalsByWatchlist.find((section) => {
+      if (String(section?.timeframe || '') !== timeframe) return false;
+      const trades = Array.isArray(section?.trades) ? section.trades : [];
+      return trades.some((row) => normalizeSymbolForMatch(row.symbol) === normalizeSymbolForMatch(symbol));
+    }) || priorSignalsByWatchlist.find((section) => String(section?.timeframe || '') === timeframe) || {
+      watchlistName: `Watchlist ${timeframe}`,
+      timeframe,
+      symbolCount: 0,
+    };
+
+    addRow(matchingSection, {
+      symbol,
+      timeframe,
+      signal: 'OPEN',
+      entryPrice: entry?.entry_price,
+      entryTime: entry?.entry_time || entry?.last_seen_at,
+      netPnl: entry?.net_pnl,
+      favorableExcursion: entry?.favorable_excursion,
+      adverseExcursion: entry?.adverse_excursion,
+    });
+  }
+
+  return Array.from(rowsByKey.values()).sort(
+    (a, b) => parseEntryTimestamp(b.entryTime) - parseEntryTimestamp(a.entryTime)
+      || String(a.watchlistName || '').localeCompare(String(b.watchlistName || ''))
+      || String(a.symbol || '').localeCompare(String(b.symbol || '')),
+  );
 }
 
 function sanitizePriorSignalsForDisplay(sections = []) {
@@ -997,7 +1047,7 @@ function buildConnectionErrorResult({
     changed_signals: 0,
     total_scan_count: 0,
     symbols_scanned: [],
-    open_trades: buildOpenTrades(priorSignalsByWatchlist),
+    open_trades: buildOpenTrades(priorSignalsByWatchlist, baseline.signals || {}, generatedAt, timezone),
     scan_mode: 'signals_only',
     watchlists_checked: scanTargets.map((target) => target.watchlistName),
     prior_signals_by_watchlist: priorSignalsByWatchlist,
@@ -1225,7 +1275,7 @@ export async function runBrief({
     displayBaseline.last_updated,
     displayBaseline.watchlists,
   );
-  const openTrades = buildOpenTrades(priorSignalsByWatchlist);
+  const openTrades = buildOpenTrades(priorSignalsByWatchlist, displayBaseline.signals, generatedAt, timezone);
   const watchlistSummaryLines = buildWatchlistSummaryLines(
     watchlistSummaries,
     results,
@@ -1357,7 +1407,7 @@ export async function runSignalJob({
       signals_found: 0,
       changed_signals: 0,
       symbols_scanned: [],
-      open_trades: buildOpenTrades(priorSignalsByWatchlist),
+      open_trades: buildOpenTrades(priorSignalsByWatchlist, baseline.signals || {}, new Date().toISOString(), timezone),
       scan_mode: "signals_only",
       watchlists_checked: scanTargets.map((target) => target.watchlistName),
       prior_signals_by_watchlist: priorSignalsByWatchlist,

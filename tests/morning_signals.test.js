@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseLatestTradeFromTesterText } from '../src/core/data.js';
 import {
+  buildOpenTrades,
   buildPriorSignalsByWatchlist,
   buildScanTargets,
   detectSignalFromSnapshot,
@@ -515,6 +516,72 @@ describe('prior signals by watchlist', () => {
     assert.equal(sections[0].trades[1].symbol, 'BATS:BBB');
     assert.equal(sections[0].trades[1].signal, '—');
     assert.equal(sections[0].trades[1].entryTime, 'No prior trade recorded');
+  });
+});
+
+describe('open trades section', () => {
+  it('returns only the two same-day 15m open trades', () => {
+    const openTrades = buildOpenTrades(
+      [
+        {
+          watchlistName: 'Swing 15m',
+          timeframe: '15',
+          symbolCount: 10,
+          trades: [
+            {
+              symbol: 'BATS:ERX',
+              signal: 'EXIT',
+              wasOpen: false,
+              entryPrice: '94.02 USD',
+              entryTime: 'Mar 23, 2026, 07:15 ET',
+            },
+            {
+              symbol: 'BATS:USO',
+              signal: 'EXIT',
+              wasOpen: false,
+              entryPrice: '126.46 USD',
+              entryTime: 'Mar 31, 2026, 12:45 ET',
+            },
+          ],
+        },
+      ],
+      {
+        'BATS:ERX:15': {
+          symbol: 'BATS:ERX',
+          timeframe: '15',
+          signal_type: 'OPEN',
+          entry_time: '2026-04-17T10:45:08.000Z',
+          entry_price: '80.45 USD',
+          net_pnl: 'In progress',
+          favorable_excursion: 'In progress',
+          adverse_excursion: 'In progress',
+        },
+        'BATS:USO:15': {
+          symbol: 'BATS:USO',
+          timeframe: '15',
+          signal_type: 'OPEN',
+          entry_time: '2026-04-17T10:45:00.000Z',
+          entry_price: '113.98 USD',
+          net_pnl: 'In progress',
+          favorable_excursion: 'In progress',
+          adverse_excursion: 'In progress',
+        },
+        'BATS:SPY:15': {
+          symbol: 'BATS:SPY',
+          timeframe: '15',
+          signal_type: 'OPEN',
+          entry_time: '2026-04-16T10:45:00.000Z',
+          entry_price: '519.22 USD',
+          net_pnl: 'In progress',
+          favorable_excursion: 'In progress',
+          adverse_excursion: 'In progress',
+        },
+      },
+      '2026-04-17T22:35:20.943Z',
+      'America/New_York',
+    );
+
+    assert.deepEqual(openTrades.map((row) => row.symbol), ['BATS:ERX', 'BATS:USO']);
   });
 });
 
