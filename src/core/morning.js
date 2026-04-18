@@ -554,11 +554,11 @@ export function buildPriorSignalsByWatchlist(
           return {
             symbol,
             signal: '—',
-            entryPrice: '—',
-            entryTime: 'No trade time',
-            netPnl: '—',
-            favorableExcursion: '—',
-            adverseExcursion: '—',
+            entryPrice: 'Unavailable',
+            entryTime: 'No prior trade recorded',
+            netPnl: 'Unavailable',
+            favorableExcursion: 'Unavailable',
+            adverseExcursion: 'Unavailable',
             wasOpen: false,
           };
         }
@@ -582,11 +582,11 @@ export function buildPriorSignalsByWatchlist(
         return isRenderablePriorRow(row) ? row : {
           symbol: latest.symbol || symbol,
           signal: '—',
-          entryPrice: '—',
-          entryTime: 'No trade time',
-          netPnl: normalizeTradeDisplay(latest.net_pnl),
-          favorableExcursion: normalizeTradeDisplay(latest.favorable_excursion),
-          adverseExcursion: normalizeTradeDisplay(latest.adverse_excursion),
+          entryPrice: hasMeaningfulTradeValue(latest.entry_price ?? latest.last_price) ? normalizeTradeDisplay(latest.entry_price ?? latest.last_price) : 'Unavailable',
+          entryTime: hasMeaningfulTradeValue(latest.entry_time || latest.last_seen_at) ? formatEntryTimeDisplay(latest.entry_time || latest.last_seen_at || baselineUpdatedAt, timezone) : 'No prior trade recorded',
+          netPnl: hasMeaningfulTradeValue(latest.net_pnl) ? normalizeTradeDisplay(latest.net_pnl) : 'Unavailable',
+          favorableExcursion: hasMeaningfulTradeValue(latest.favorable_excursion) ? normalizeTradeDisplay(latest.favorable_excursion) : 'Unavailable',
+          adverseExcursion: hasMeaningfulTradeValue(latest.adverse_excursion) ? normalizeTradeDisplay(latest.adverse_excursion) : 'Unavailable',
           wasOpen: latestSignal === 'OPEN',
         };
       })
@@ -682,19 +682,26 @@ function buildOpenTrades(priorSignalsByWatchlist = []) {
 function sanitizePriorSignalsForDisplay(sections = []) {
   return (Array.isArray(sections) ? sections : []).map((section) => ({
     ...section,
-    trades: (Array.isArray(section.trades) ? section.trades : []).filter((row) => {
+    trades: (Array.isArray(section.trades) ? section.trades : []).map((row) => {
       const signal = String(row.signal || '—').toUpperCase();
-      if (signal === 'OPEN') {
-        return hasMeaningfulTradeValue(row.entryTime) || hasMeaningfulTradeValue(row.entryPrice);
-      }
-      return signal !== '—'
-        && hasMeaningfulTradeValue(row.entryTime)
-        && hasMeaningfulTradeValue(row.entryPrice)
-        && (
-          hasMeaningfulTradeValue(row.netPnl)
-          || hasMeaningfulTradeValue(row.favorableExcursion)
-          || hasMeaningfulTradeValue(row.adverseExcursion)
-        );
+      return {
+        ...row,
+        entryPrice: hasMeaningfulTradeValue(row.entryPrice)
+          ? row.entryPrice
+          : 'Unavailable',
+        entryTime: hasMeaningfulTradeValue(row.entryTime)
+          ? row.entryTime
+          : 'No prior trade recorded',
+        netPnl: hasMeaningfulTradeValue(row.netPnl)
+          ? row.netPnl
+          : signal === 'OPEN' ? 'In progress' : 'Unavailable',
+        favorableExcursion: hasMeaningfulTradeValue(row.favorableExcursion)
+          ? row.favorableExcursion
+          : signal === 'OPEN' ? 'In progress' : 'Unavailable',
+        adverseExcursion: hasMeaningfulTradeValue(row.adverseExcursion)
+          ? row.adverseExcursion
+          : signal === 'OPEN' ? 'In progress' : 'Unavailable',
+      };
     }),
   }));
 }

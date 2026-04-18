@@ -415,7 +415,7 @@ describe('prior signals by watchlist', () => {
     assert.equal(sections[0].trades[0].entryTime.includes('Jan 30, 2026, 13:00'), true);
     assert.equal(sections[0].trades[1].symbol, 'BATS:BBB');
     assert.equal(sections[0].trades[1].signal, '—');
-    assert.equal(sections[0].trades[1].entryTime, 'No trade time');
+    assert.equal(sections[0].trades[1].entryTime, 'No prior trade recorded');
   });
 });
 

@@ -26,7 +26,7 @@ describe('dashboard status payload', () => {
     assert.equal(typeof result.nextScheduledRunEt, 'string');
   });
 
-  it('passes through open trades and previous signals when present', () => {
+  it('passes through open trades and preserves watchlist row counts for previous signals', () => {
     const result = createDashboardStatus({
       generated_at: '2026-04-15T16:01:00.000Z',
       formatted_timestamp_et: '04/15/2026, 12:01:00 PM',
@@ -53,7 +53,7 @@ describe('dashboard status payload', () => {
         {
           watchlistName: 'Swing 15m',
           timeframe: '15',
-          symbolCount: 8,
+          symbolCount: 2,
           trades: [
             {
               symbol: 'SOXL',
@@ -67,11 +67,11 @@ describe('dashboard status payload', () => {
             {
               symbol: 'TQQQ',
               signal: '—',
-              entryPrice: '—',
-              entryTime: 'No trade time',
-              netPnl: '—',
-              favorableExcursion: '—',
-              adverseExcursion: '—',
+              entryPrice: 'Unavailable',
+              entryTime: 'No prior trade recorded',
+              netPnl: 'Unavailable',
+              favorableExcursion: 'Unavailable',
+              adverseExcursion: 'Unavailable',
             },
           ],
         },
@@ -85,9 +85,11 @@ describe('dashboard status payload', () => {
     assert.equal(result.openTrades[0].symbol, 'SOXL');
     assert.equal(result.priorSignals.length, 1);
     assert.equal(result.priorSignals[0].watchlistName, 'Swing 15m');
-    assert.equal(result.priorSignals[0].trades.length, 1);
+    assert.equal(result.priorSignals[0].trades.length, 2);
     assert.equal(result.priorSignals[0].trades[0].signal, 'OPEN');
     assert.match(result.priorSignals[0].trades[0].entryTime, /2026/);
     assert.equal(result.priorSignals[0].trades[0].entryPrice, 82.33);
+    assert.equal(result.priorSignals[0].trades[1].entryPrice, 'Unavailable');
+    assert.equal(result.priorSignals[0].trades[1].entryTime, 'No prior trade recorded');
   });
 });

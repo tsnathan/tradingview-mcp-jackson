@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-04-17T23:53:41.354Z",
-  "formattedTimestampEt": "04/17/2026, 07:53:41 PM",
+  "updatedAt": "2026-04-18T00:00:30.781Z",
+  "formattedTimestampEt": "04/17/2026, 08:00:30 PM",
   "nextScheduledRunEt": "04/20/2026, 09:31:00 AM ET",
   "scanMode": "signals_only",
   "hasSignals": true,
@@ -77,6 +77,86 @@
           "adverseExcursion": "In progress"
         },
         {
+          "symbol": "BATS:GLD",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "65.7",
+          "entryTime": "04/16/2026, 01:16:55 PM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "BATS:TMF",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "35.96",
+          "entryTime": "04/16/2026, 01:16:50 PM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "NASDAQ:TQQQ",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:21:22 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "AMEX:TMV",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:21:13 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "AMEX:TECS",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:21:08 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "NASDAQ:SQQQ",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:21:04 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "AMEX:SPXU",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:20:59 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "BTCUSD",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:20:54 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
           "symbol": "BATS:MEXX",
           "signal": "EXIT",
           "wasOpen": false,
@@ -115,6 +195,76 @@
           "netPnl": "+2,114.612 USD | +14.13%",
           "favorableExcursion": "2,131.71 USD | 14.24%",
           "adverseExcursion": "-22.191 USD | -0.15%"
+        },
+        {
+          "symbol": "ETHUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NVDA",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "QQQ",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SOLUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SOXL",
+          "signal": "—",
+          "entryPrice": "78.3",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SPY",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "XRPUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         }
       ]
     },
@@ -123,14 +273,456 @@
       "timeframe": "30",
       "source": "baseline_history",
       "symbolCount": 9,
-      "trades": []
+      "trades": [
+        {
+          "symbol": "AMEX:TZA",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:21:28 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "AMEX:SOXL",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "BTCUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "ETHUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NVDA",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "QQQ",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SOLUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SPY",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "XRPUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        }
+      ]
     },
     {
       "watchlistName": "Swing 1H",
       "timeframe": "60",
       "source": "baseline_history",
       "symbolCount": 35,
-      "trades": []
+      "trades": [
+        {
+          "symbol": "AMEX:YANG",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:22:19 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "CBOE:UVXY",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:21:40 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "AMEX:USO",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:21:36 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "AMEX:URTY",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "509.7",
+          "entryTime": "04/16/2026, 10:21:32 AM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable"
+        },
+        {
+          "symbol": "AMEX:BRZU",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:EDC",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:FAZ",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:GUSH",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:LABU",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:PILL",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:QID",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:SDS",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:SH",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:SPXL",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:SPXS",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:SPXU",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:TECS",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:TMV",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:TNA",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:TZA",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:UDOW",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:UPRO",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:UTSL",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "BTCUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "ETHUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:INTC",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:SQQQ",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:TQQQ",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:WGMI",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NVDA",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "QQQ",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SOLUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SOXL",
+          "signal": "—",
+          "entryPrice": "58.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SPY",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "XRPUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        }
+      ]
     },
     {
       "watchlistName": "Swing 4H",
@@ -177,6 +769,156 @@
           "netPnl": "+1,915.621 USD | +12.10%",
           "favorableExcursion": "1,986.545 USD | 12.55%",
           "adverseExcursion": "-197.445 USD | -1.25%"
+        },
+        {
+          "symbol": "AMEX:EDC",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:EURL",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:FAS",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:GLD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:GLTR",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:JNUG",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:MEXX",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:MIDU",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:PILL",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:SOXL",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:TMF",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:TNA",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:UDOW",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:UTSL",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:YINN",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         }
       ]
     },
@@ -185,7 +927,88 @@
       "timeframe": "D",
       "source": "baseline_history",
       "symbolCount": 8,
-      "trades": []
+      "trades": [
+        {
+          "symbol": "BTCUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "ETHUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NVDA",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "QQQ",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SOLUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SOXL",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "SPY",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "XRPUSD",
+          "signal": "—",
+          "entryPrice": "82.33",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        }
+      ]
     }
   ]
 }
