@@ -1,19 +1,23 @@
 {
-  "updatedAt": "2026-04-18T00:07:22.927Z",
-  "formattedTimestampEt": "04/17/2026, 08:07:22 PM",
-  "nextScheduledRunEt": "04/20/2026, 09:31:22 AM ET",
+  "updatedAt": "2026-04-18T03:34:07.711Z",
+  "formattedTimestampEt": "04/17/2026, 11:34:07 PM",
+  "nextScheduledRunEt": "04/20/2026, 09:31:07 AM ET",
   "scanMode": "signals_only",
   "hasSignals": false,
   "signalsFound": 0,
   "changedSignals": 0,
   "lines": [
-    "TradingView connection unavailable. CDP connection failed after 5 attempts: fetch failed"
+    "04/17/2026, 11:34:07 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 23 | SCAN: 0.0s | NO SIGNAL | Outside market hours",
+    "04/17/2026, 11:34:07 PM ET | WATCHLIST: Swing 30min | SYMBOLS: 2 | SCAN: 0.0s | NO SIGNAL | Outside market hours",
+    "04/17/2026, 11:34:07 PM ET | WATCHLIST: Swing 1H | SYMBOLS: 27 | SCAN: 0.0s | NO SIGNAL | Outside market hours",
+    "04/17/2026, 11:34:07 PM ET | WATCHLIST: Swing 4H | SYMBOLS: 19 | SCAN: 0.0s | NO SIGNAL | Outside market hours",
+    "04/17/2026, 11:34:07 PM ET | WATCHLIST: Swing 1D | SYMBOLS: 14 | SCAN: 0.0s | NO SIGNAL | Outside market hours"
   ],
-  "summary": "TradingView connection unavailable. CDP connection failed after 5 attempts: fetch failed",
+  "summary": "04/17/2026, 11:34:07 PM ET | NO SIGNAL | Outside market hours",
   "skipped": true,
-  "reason": "TradingView connection unavailable. CDP connection failed after 5 attempts: fetch failed",
-  "connectionError": true,
-  "errorMessage": "TradingView connection unavailable. CDP connection failed after 5 attempts: fetch failed",
+  "reason": "Outside market hours",
+  "connectionError": false,
+  "errorMessage": null,
   "symbolsScanned": 0,
   "watchlistsChecked": [
     "Swing 15m",
@@ -54,7 +58,7 @@
     {
       "watchlistName": "Swing 15m",
       "timeframe": "15",
-      "source": "connection_unavailable",
+      "source": "rules_fallback",
       "symbolCount": 23,
       "trades": [
         {
@@ -272,7 +276,7 @@
     {
       "watchlistName": "Swing 30min",
       "timeframe": "30",
-      "source": "connection_unavailable",
+      "source": "rules_fallback",
       "symbolCount": 2,
       "trades": [
         {
@@ -300,7 +304,7 @@
     {
       "watchlistName": "Swing 1H",
       "timeframe": "60",
-      "source": "connection_unavailable",
+      "source": "rules_fallback",
       "symbolCount": 27,
       "trades": [
         {
@@ -578,7 +582,7 @@
     {
       "watchlistName": "Swing 4H",
       "timeframe": "240",
-      "source": "connection_unavailable",
+      "source": "baseline_history",
       "symbolCount": 19,
       "trades": [
         {
@@ -776,88 +780,148 @@
     {
       "watchlistName": "Swing 1D",
       "timeframe": "D",
-      "source": "connection_unavailable",
-      "symbolCount": 8,
+      "source": "baseline_history",
+      "symbolCount": 14,
       "trades": [
         {
-          "symbol": "BTCUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
+          "symbol": "BATS:GLD",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "400.24 USD",
+          "entryTime": "Mar 24, 2026",
+          "netPnl": "+1,345.315 USD | +11.19%",
+          "favorableExcursion": "1,441.793 USD | 12.00%",
+          "adverseExcursion": "-43.207 USD | -0.36%"
         },
         {
-          "symbol": "ETHUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
+          "symbol": "BATS:AGQ",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "108.24 USD",
+          "entryTime": "Mar 20, 2026",
+          "netPnl": "+3,964.214 USD | +27.30%",
+          "favorableExcursion": "4,757.236 USD | 32.77%",
+          "adverseExcursion": "-1,953.484 USD | -13.45%"
         },
         {
-          "symbol": "NVDA",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
+          "symbol": "BATS:MEXX",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "25.55 USD",
+          "entryTime": "Mar 20, 2026",
+          "netPnl": "+5,527.896 USD | +32.26%",
+          "favorableExcursion": "6,642.682 USD | 38.77%",
+          "adverseExcursion": "-1,337.019 USD | -7.80%"
         },
         {
-          "symbol": "QQQ",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
+          "symbol": "BATS:JNUG",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "159.53 USD",
+          "entryTime": "Mar 19, 2026",
+          "netPnl": "+11,451.953 USD | +51.59%",
+          "favorableExcursion": "13,281.516 USD | 59.84%",
+          "adverseExcursion": "-1,381.595 USD | -6.22%"
         },
         {
-          "symbol": "SOLUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
+          "symbol": "BATS:NUGT",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "148.50 USD",
+          "entryTime": "Mar 19, 2026",
+          "netPnl": "+8,687.061 USD | +49.95%",
+          "favorableExcursion": "9,738.086 USD | 55.99%",
+          "adverseExcursion": "-965.074 USD | -5.55%"
         },
         {
-          "symbol": "SOXL",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
+          "symbol": "BATS:MIDU",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "55.55 USD",
+          "entryTime": "Mar 10, 2026",
+          "netPnl": "+3,438.896 USD | +16.58%",
+          "favorableExcursion": "3,877.13 USD | 18.69%",
+          "adverseExcursion": "-3,049.48 USD | -14.70%"
         },
         {
-          "symbol": "SPY",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
+          "symbol": "BATS:URTY",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "55.48 USD",
+          "entryTime": "Mar 10, 2026",
+          "netPnl": "+4,668.743 USD | +26.19%",
+          "favorableExcursion": "5,131.031 USD | 28.78%",
+          "adverseExcursion": "-3,012.739 USD | -16.90%"
         },
         {
-          "symbol": "XRPUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
+          "symbol": "BATS:IYC",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "101.00 USD",
+          "entryTime": "Feb 13, 2026",
+          "netPnl": "+538.627 USD | +3.62%",
+          "favorableExcursion": "676.053 USD | 4.55%",
+          "adverseExcursion": "-1,045.317 USD | -7.03%"
+        },
+        {
+          "symbol": "BATS:MSFT",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "490.10 USD",
+          "entryTime": "Nov 19, 2025",
+          "netPnl": "-2,183.133 USD | -13.91%",
+          "favorableExcursion": "147.197 USD | 0.94%",
+          "adverseExcursion": "-4,297.923 USD | -27.38%"
+        },
+        {
+          "symbol": "BATS:IYG",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "75.34 USD",
+          "entryTime": "Mar 11, 2025",
+          "netPnl": "+1,182.034 USD | +9.11%",
+          "favorableExcursion": "1,268.442 USD | 9.78%",
+          "adverseExcursion": "-1,622.878 USD | -12.51%"
+        },
+        {
+          "symbol": "BATS:TSLA",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "329.94 USD",
+          "entryTime": "Feb 12, 2025",
+          "netPnl": "-860.193 USD | -2.60%",
+          "favorableExcursion": "3,707.006 USD | 11.22%",
+          "adverseExcursion": "-11,601.994 USD | -35.13%"
+        },
+        {
+          "symbol": "BATS:UDOW",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "44.87 USD",
+          "entryTime": "Jan 13, 2025",
+          "netPnl": "-311.617 USD | -1.67%",
+          "favorableExcursion": "4,365.974 USD | 23.37%",
+          "adverseExcursion": "-6,849.386 USD | -36.66%"
+        },
+        {
+          "symbol": "BATS:UTSL",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "32.52 USD",
+          "entryTime": "Dec 17, 2024",
+          "netPnl": "+2,006.893 USD | +13.58%",
+          "favorableExcursion": "2,441.376 USD | 16.52%",
+          "adverseExcursion": "-3,392.524 USD | -22.96%"
+        },
+        {
+          "symbol": "BATS:XLI",
+          "signal": "EXIT",
+          "wasOpen": false,
+          "entryPrice": "96.40 USD",
+          "entryTime": "Mar 16, 2023",
+          "netPnl": "+719.623 USD | +5.92%",
+          "favorableExcursion": "764.014 USD | 6.28%",
+          "adverseExcursion": "-164.606 USD | -1.35%"
         }
       ]
     }

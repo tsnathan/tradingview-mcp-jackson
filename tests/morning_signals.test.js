@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { parseLatestTradeFromTesterText } from '../src/core/data.js';
 import {
   buildOpenTrades,
+  buildOutsideHoursResult,
   buildPriorSignalsByWatchlist,
   buildScanTargets,
   detectSignalFromSnapshot,
@@ -582,6 +583,58 @@ describe('open trades section', () => {
     );
 
     assert.deepEqual(openTrades.map((row) => row.symbol), ['BATS:ERX', 'BATS:USO']);
+  });
+});
+
+describe('outside-hours skip behavior', () => {
+  it('preserves saved open trades without scanning symbols live', () => {
+    const result = buildOutsideHoursResult({
+      marketHours: {
+        timezone: 'America/New_York',
+        open: '09:30',
+        close: '16:00',
+        days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      },
+      scanTargets: [
+        { watchlistName: 'Swing 15m', timeframe: '15', symbols: ['BATS:ERX', 'BATS:USO'] },
+      ],
+      baseline: {
+        last_updated: '2026-04-17T22:35:20.943Z',
+        signals: {
+          'BATS:ERX:15': {
+            symbol: 'BATS:ERX',
+            timeframe: '15',
+            signal_type: 'OPEN',
+            entry_time: '2026-04-17T10:45:08.000Z',
+            entry_price: '80.45 USD',
+            net_pnl: 'In progress',
+            favorable_excursion: 'In progress',
+            adverse_excursion: 'In progress',
+          },
+          'BATS:USO:15': {
+            symbol: 'BATS:USO',
+            timeframe: '15',
+            signal_type: 'OPEN',
+            entry_time: '2026-04-17T10:45:00.000Z',
+            entry_price: '113.98 USD',
+            net_pnl: 'In progress',
+            favorable_excursion: 'In progress',
+            adverse_excursion: 'In progress',
+          },
+        },
+        watchlists: {
+          'Swing 15m': {
+            symbols: ['BATS:ERX', 'BATS:USO'],
+            symbol_count: 2,
+          },
+        },
+      },
+    });
+
+    assert.equal(result.skipped, true);
+    assert.equal(result.reason, 'Outside market hours');
+    assert.equal(result.total_scan_count, 0);
+    assert.deepEqual(result.open_trades.map((row) => row.symbol), ['BATS:ERX', 'BATS:USO']);
   });
 });
 

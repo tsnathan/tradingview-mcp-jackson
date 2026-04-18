@@ -991,6 +991,69 @@ export function createDashboardStatus(result = {}) {
   };
 }
 
+export function buildOutsideHoursResult({
+  marketHours = DEFAULT_MARKET_HOURS,
+  scanTargets = [],
+  baseline = {},
+  reason = 'Outside market hours',
+} = {}) {
+  const generatedAt = new Date().toISOString();
+  const timezone = marketHours.timezone || DEFAULT_MARKET_HOURS.timezone;
+  const watchlistSummaries = scanTargets.map((target) => {
+    const stored = baseline.watchlists?.[target.watchlistName] || {};
+    const historicalSymbols = Object.values(baseline.signals || {})
+      .filter((entry) => String(entry?.timeframe || '') === String(target.timeframe || ''))
+      .map((entry) => entry?.symbol)
+      .filter(Boolean);
+    const symbols = Array.isArray(stored.symbols) && stored.symbols.length > 0
+      ? stored.symbols
+      : historicalSymbols.length > 0
+        ? Array.from(new Set(historicalSymbols))
+        : Array.isArray(target.symbols) ? target.symbols : [];
+
+    return {
+      watchlist_name: target.watchlistName,
+      timeframe: target.timeframe,
+      symbol_count: Number(stored.symbol_count || symbols.length || 0),
+      symbols,
+      source: Array.isArray(stored.symbols) && stored.symbols.length > 0 ? 'baseline_history' : 'rules_fallback',
+      scan_duration_ms: 0,
+    };
+  });
+
+  const priorSignalsByWatchlist = buildPriorSignalsByWatchlist(
+    watchlistSummaries,
+    [],
+    baseline.signals || {},
+    timezone,
+    baseline.last_updated,
+    baseline.watchlists || {},
+  );
+
+  return {
+    success: true,
+    skipped: true,
+    reason,
+    signal_lines: [],
+    watchlist_summary_lines: watchlistSummaries.map(
+      (target) => `${formatTimestamp(generatedAt, timezone)} ET | WATCHLIST: ${target.watchlist_name} | SYMBOLS: ${target.symbol_count} | SCAN: ${formatDuration(target.scan_duration_ms)} | NO SIGNAL | ${reason}`,
+    ),
+    summary_line: `${formatTimestamp(generatedAt, timezone)} ET | NO SIGNAL | ${reason}`,
+    generated_at: generatedAt,
+    formatted_timestamp_et: formatTimestamp(generatedAt, timezone),
+    next_scheduled_run_et: getNextScheduledRunLabel(generatedAt, marketHours),
+    market_hours: marketHours,
+    signals_found: 0,
+    changed_signals: 0,
+    total_scan_count: 0,
+    symbols_scanned: [],
+    open_trades: buildOpenTrades(priorSignalsByWatchlist, baseline.signals || {}, generatedAt, timezone),
+    scan_mode: 'signals_only',
+    watchlists_checked: scanTargets.map((target) => target.watchlistName),
+    prior_signals_by_watchlist: priorSignalsByWatchlist,
+  };
+}
+
 function buildConnectionErrorResult({
   marketHours = DEFAULT_MARKET_HOURS,
   scanTargets = [],
@@ -1351,67 +1414,12 @@ export async function runSignalJob({
   }
 
   if (!force && !shouldRunEquityScanNow(new Date(), marketHours)) {
-    const timezone = marketHours.timezone || DEFAULT_MARKET_HOURS.timezone;
-    const skippedWatchlistSummaries = [];
-    const skippedResults = [];
-    for (const target of scanTargets) {
-      const resolved = await resolveSymbolsForWatchlist(target, watchlist, {
-        allowFallback: true,
-        baselineWatchlists: baseline.watchlists,
-        baselineSignals: baseline.signals,
-      });
-      skippedWatchlistSummaries.push({
-        watchlist_name: target.watchlistName,
-        timeframe: target.timeframe,
-        symbol_count: resolved.count,
-        symbols: resolved.symbols,
-        source: resolved.source,
-      });
-
-      for (const symbol of resolved.symbols) {
-        try {
-          skippedResults.push(
-            await scanSymbol({
-              symbol,
-              timeframe: target.timeframe,
-              studyFilter,
-              watchlistName: target.watchlistName,
-              watchlistSymbolCount: resolved.count,
-            }),
-          );
-        } catch {}
-      }
-    }
-
-    const priorSignalsByWatchlist = buildPriorSignalsByWatchlist(
-      skippedWatchlistSummaries,
-      skippedResults,
-      baseline.signals,
-      timezone,
-      baseline.last_updated,
-      baseline.watchlists,
-    );
-    const skippedResult = {
-      success: true,
-      skipped: true,
-      reason: "Outside market hours",
-      signal_lines: [],
-      watchlist_summary_lines: skippedWatchlistSummaries.map(
-        (target) => `${formatTimestamp(new Date(), timezone)} ET | WATCHLIST: ${target.watchlist_name} | SYMBOLS: ${target.symbol_count} | SCAN: ${formatDuration(target.scan_duration_ms)} | NO SIGNAL | Outside market hours`,
-      ),
-      summary_line: `${formatTimestamp(new Date(), timezone)} ET | NO SIGNAL | Outside market hours`,
-      generated_at: new Date().toISOString(),
-      formatted_timestamp_et: formatTimestamp(new Date(), timezone),
-      next_scheduled_run_et: getNextScheduledRunLabel(new Date(), marketHours),
-      market_hours: marketHours,
-      signals_found: 0,
-      changed_signals: 0,
-      symbols_scanned: [],
-      open_trades: buildOpenTrades(priorSignalsByWatchlist, baseline.signals || {}, new Date().toISOString(), timezone),
-      scan_mode: "signals_only",
-      watchlists_checked: scanTargets.map((target) => target.watchlistName),
-      prior_signals_by_watchlist: priorSignalsByWatchlist,
-    };
+    const skippedResult = buildOutsideHoursResult({
+      marketHours,
+      scanTargets,
+      baseline,
+      reason: 'Outside market hours',
+    });
     writeLatestStatus(skippedResult);
     return skippedResult;
   }
