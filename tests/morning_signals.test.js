@@ -308,6 +308,49 @@ describe('prior signals by watchlist', () => {
     assert.equal(sections[0].trades[0].signal, 'EXIT');
   });
 
+  it('prefers saved EXIT history over synthetic OPEN rows for fast watchlists', () => {
+    const sections = buildPriorSignalsByWatchlist(
+      [
+        {
+          watchlist_name: 'Swing 15m',
+          timeframe: '15',
+          symbols: ['BATS:ERX'],
+          source: 'tradingview_panel',
+          symbol_count: 1,
+        },
+      ],
+      [
+        {
+          symbol: 'BATS:ERX',
+          timeframe: '15',
+          watchlist_name: 'Swing 15m',
+          scanned_at: '2026-04-17T14:15:00.000Z',
+          signal: { hasSignal: true, price: 94.02 },
+          trade: null,
+        },
+      ],
+      {
+        'BATS:ERX:15': {
+          symbol: 'BATS:ERX',
+          timeframe: '15',
+          signal_type: 'EXIT',
+          entry_price: '94.02 USD',
+          entry_time: '2026-03-23T11:15:00.000Z',
+          net_pnl: '+937.121 USD | +7.72%',
+          favorable_excursion: '961.821 USD | 7.92%',
+          adverse_excursion: '-250.779 USD | -2.07%',
+        },
+      },
+      'America/New_York',
+      '2026-04-17T14:20:00.000Z',
+      { 'Swing 15m': { symbols: ['BATS:ERX'], symbol_count: 1 } },
+    );
+
+    assert.equal(sections.length, 1);
+    assert.equal(sections[0].trades.length, 1);
+    assert.equal(sections[0].trades[0].signal, 'EXIT');
+  });
+
   it('limits saved prior rows to symbols belonging to that watchlist', () => {
     const sections = buildPriorSignalsByWatchlist(
       [

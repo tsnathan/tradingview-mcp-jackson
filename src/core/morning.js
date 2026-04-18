@@ -545,18 +545,6 @@ export function buildPriorSignalsByWatchlist(
 
         const signalBackedEntry = matchingEntries.find((entry) => entry.signal?.hasSignal);
         const isFastWatchlist = (timeframeToMinutes(timeframe) || 0) > 0 && (timeframeToMinutes(timeframe) || 0) <= 30;
-        if (signalBackedEntry?.signal?.hasSignal && isFastWatchlist) {
-          return {
-            symbol: signalBackedEntry.state?.symbol || signalBackedEntry.symbol || symbol,
-            signal: 'OPEN',
-            wasOpen: true,
-            entryPrice: normalizeTradeDisplay(signalBackedEntry.signal?.price ?? signalBackedEntry.quote?.last, 'n/a'),
-            entryTime: formatEntryTimeDisplay(signalBackedEntry.scanned_at || baselineUpdatedAt || new Date().toISOString(), timezone),
-            netPnl: 'In progress',
-            favorableExcursion: 'In progress',
-            adverseExcursion: 'In progress',
-          };
-        }
 
         const priorCandidates = Object.entries(baselineSignals)
           .map(([key, value]) => {
@@ -577,6 +565,30 @@ export function buildPriorSignalsByWatchlist(
           .sort((a, b) => new Date(b.last_seen_at || baselineUpdatedAt || 0).getTime() - new Date(a.last_seen_at || baselineUpdatedAt || 0).getTime());
 
         const latest = priorCandidates[0];
+        const latestSavedSignal = normalizeTradeDisplay(latest?.signal_type || '—').toUpperCase();
+        const hasSavedHistory = Boolean(latest) && (
+          latestSavedSignal === 'OPEN'
+          || latestSavedSignal === 'EXIT'
+          || hasMeaningfulTradeValue(latest?.entry_price ?? latest?.last_price)
+          || hasMeaningfulTradeValue(latest?.entry_time || latest?.last_seen_at)
+          || hasMeaningfulTradeValue(latest?.net_pnl)
+          || hasMeaningfulTradeValue(latest?.favorable_excursion)
+          || hasMeaningfulTradeValue(latest?.adverse_excursion)
+        );
+
+        if (signalBackedEntry?.signal?.hasSignal && isFastWatchlist && !hasSavedHistory) {
+          return {
+            symbol: signalBackedEntry.state?.symbol || signalBackedEntry.symbol || symbol,
+            signal: 'OPEN',
+            wasOpen: true,
+            entryPrice: normalizeTradeDisplay(signalBackedEntry.signal?.price ?? signalBackedEntry.quote?.last, 'n/a'),
+            entryTime: formatEntryTimeDisplay(signalBackedEntry.scanned_at || baselineUpdatedAt || new Date().toISOString(), timezone),
+            netPnl: 'In progress',
+            favorableExcursion: 'In progress',
+            adverseExcursion: 'In progress',
+          };
+        }
+
         if (!latest) {
           return {
             symbol,
