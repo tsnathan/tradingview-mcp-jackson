@@ -127,6 +127,52 @@ This scheduled script now checks the TradingView connection first and attempts a
 
 ---
 
+## Push notifications
+
+This project can send push alerts when a new signal is found.
+
+### Notification service
+
+The current setup uses `ntfy`.
+
+Your notification settings live in `rules.json` under the `ntfy` section.
+
+Example:
+
+```json
+"ntfy": {
+  "topic": "swing-signals-tsnat",
+  "url": "https://ntfy.sh/swing-signals-tsnat",
+  "priority": "high",
+  "signal_format": "[{timeframe}] {symbol} → {direction} @ {price}"
+}
+```
+
+### How to receive alerts
+
+1. install the `ntfy` app on your phone, or use the web client
+2. subscribe to your topic name
+3. keep the scheduled scan running
+4. when a new signal is detected, the job will post a notification automatically
+
+### How to test notification delivery
+
+Run:
+
+```powershell
+node .\scripts\run_signal_job.js --notify
+```
+
+If a fresh signal is present and your `ntfy` block is configured correctly, a push message should be sent.
+
+### Notes
+
+- notifications are only sent when the signal job finds qualifying signal output
+- no alert is expected when the result is `NO SIGNAL`
+- if nothing arrives, confirm the topic name and URL in `rules.json`
+
+---
+
 ## Reconnection recommendations
 
 If the dashboard shows Disconnected:
