@@ -15,6 +15,8 @@
     .error { color:#fca5a5; font-weight:700; background:#2a1220; border:1px solid #7f1d1d; padding:10px 12px; border-radius:10px; margin-bottom:10px; }
     .hidden { display:none; }
     .pill { display:inline-block; padding:4px 10px; border-radius:999px; background:#1e293b; margin:0 8px 8px 0; }
+    .pill-status-active { background:#123524; color:#86efac; }
+    .pill-status-disconnected { background:#3a1520; color:#fca5a5; }
     .latest-list { list-style:none; padding:0; margin:12px 0 0; }
     .latest-list li { margin:10px 0; padding:10px 12px; background:#0f1728; border-radius:10px; border:1px solid #24314f; white-space:pre-wrap; }
     .watchlist-section { margin-top:14px; padding:12px; background:#0f1728; border:1px solid #24314f; border-radius:12px; }
@@ -39,6 +41,7 @@
       <div id="summary" class="flat hidden"></div>
       <p class="muted" id="refresh-note">Updates when the scheduled scan writes a new result.</p>
       <div>
+        <span class="pill" id="tv-status">TradingView Connected: --</span>
         <span class="pill" id="updated">Updated: --</span>
         <span class="pill" id="next-run">Next run: --</span>
         <span class="pill" id="count">Signals: 0</span>
@@ -153,8 +156,8 @@
             : rows.length > 0
               ? 'Source: saved prior history'
               : 'Source: watchlist unavailable';
-        const shouldCollapse = Number(section.symbolCount || 0) > 8;
-        const detailsOpen = rows.length > 0 ? ' open' : '';
+        const shouldCollapse = rows.length > 5;
+        const detailsOpen = shouldCollapse ? '' : (rows.length > 0 ? ' open' : '');
         const rowCountLabel = `${rows.length} row${rows.length === 1 ? '' : 's'}`;
         const tableHtml = `
           <table>
@@ -200,16 +203,18 @@
       lastUpdated = data.updatedAt || null;
 
       const summary = document.getElementById('summary');
+      const tvStatus = document.getElementById('tv-status');
       if (data.connectionError || data.errorMessage) {
-        summary.textContent = data.errorMessage || data.reason || 'TradingView connection unavailable.';
-        summary.className = 'error';
-        document.getElementById('refresh-note').textContent = 'Reconnect TradingView Desktop, then rerun the scan.';
-      } else if (force) {
         summary.textContent = '';
-        summary.className = 'flat hidden';
+        summary.className = 'hidden';
+        tvStatus.textContent = 'TradingView Connected: Disconnected';
+        tvStatus.className = 'pill pill-status-disconnected';
+        document.getElementById('refresh-note').textContent = 'Reconnect TradingView Desktop, then rerun the scan.';
       } else {
-        summary.textContent = 'Job ran at ' + (data.formattedTimestampEt || '--') + ' ET';
-        summary.className = (data.hasSignals ? 'good' : 'flat');
+        summary.textContent = '';
+        summary.className = 'hidden';
+        tvStatus.textContent = 'TradingView Connected: Active';
+        tvStatus.className = 'pill pill-status-active';
         document.getElementById('refresh-note').textContent = 'Updates when the scheduled scan writes a new result.';
       }
       document.getElementById('updated').textContent = 'Updated: ' + (data.formattedTimestampEt || '--') + ' ET';
@@ -220,7 +225,9 @@
 
       const lines = document.getElementById('lines');
       lines.innerHTML = '';
-      const entries = data.lines && data.lines.length ? data.lines : [data.summary || 'NO SIGNAL'];
+      const entries = (data.connectionError || data.errorMessage)
+        ? []
+        : (data.lines && data.lines.length ? data.lines : [data.summary || 'NO SIGNAL']);
       for (const line of entries) {
         const li = document.createElement('li');
         li.textContent = line;
