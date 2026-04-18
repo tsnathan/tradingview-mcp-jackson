@@ -8,6 +8,7 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as chart from "./chart.js";
 import * as data from "./data.js";
+import { launch as launchTradingView } from "./health.js";
 import * as watchlist from "./watchlist.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -24,6 +25,32 @@ const DEFAULT_MARKET_HOURS = {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function ensureTradingViewConnection({
+  getStateFn = () => chart.getState(),
+  launchFn = (options) => launchTradingView(options),
+  waitMs = 5000,
+} = {}) {
+  try {
+    await getStateFn();
+    return { connected: true, launched: false };
+  } catch (initialError) {
+    try {
+      await launchFn({ port: 9222, kill_existing: true });
+      if (waitMs > 0) {
+        await sleep(waitMs);
+      }
+      await getStateFn();
+      return {
+        connected: true,
+        launched: true,
+        reason: initialError?.message || String(initialError),
+      };
+    } catch (launchError) {
+      throw new Error(launchError?.message || initialError?.message || String(launchError || initialError));
+    }
+  }
 }
 
 function parseJsonFile(filePath, fallback = {}) {
@@ -1247,7 +1274,7 @@ export async function runSignalJob({
   const studyFilter = String(rules.strategy || 'Swing Profile').split('—')[0].trim();
 
   try {
-    await chart.getState();
+    await ensureTradingViewConnection();
   } catch (error) {
     const errorResult = buildConnectionErrorResult({
       marketHours,

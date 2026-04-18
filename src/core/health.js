@@ -4,6 +4,11 @@
 import { getClient, getTargetInfo, evaluate } from '../connection.js';
 import { existsSync } from 'fs';
 import { execSync, spawn } from 'child_process';
+import { dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = resolve(__dirname, '../..');
 
 export async function healthCheck() {
   await getClient();
@@ -159,11 +164,7 @@ export async function uiState() {
   return { success: true, ...state };
 }
 
-export async function launch({ port, kill_existing } = {}) {
-  const cdpPort = port || 9222;
-  const killFirst = kill_existing !== false;
-  const platform = process.platform;
-
+function findTradingViewBinary({ platform = process.platform } = {}) {
   const pathMap = {
     darwin: [
       '/Applications/TradingView.app/Contents/MacOS/TradingView',
@@ -186,15 +187,32 @@ export async function launch({ port, kill_existing } = {}) {
   let tvPath = null;
   const candidates = pathMap[platform] || pathMap.linux;
   for (const p of candidates) {
-    if (p && existsSync(p)) { tvPath = p; break; }
+    if (p && existsSync(p)) {
+      tvPath = p;
+      break;
+    }
+  }
+
+  if (!tvPath && platform === 'win32') {
+    try {
+      const windowsAppsRoot = `${process.env.PROGRAMFILES}\\WindowsApps`;
+      const found = execSync(`cmd.exe /d /s /c "dir /s /b \"${windowsAppsRoot}\\TradingView*\\TradingView.exe\" 2>nul"`, { timeout: 10000 })
+        .toString()
+        .trim()
+        .split(/\r?\n/)
+        .find(Boolean);
+      if (found && existsSync(found)) {
+        tvPath = found;
+      }
+    } catch {}
   }
 
   if (!tvPath) {
     try {
       const cmd = platform === 'win32' ? 'where TradingView.exe' : 'which tradingview';
-      tvPath = execSync(cmd, { timeout: 3000 }).toString().trim().split('\n')[0];
+      tvPath = execSync(cmd, { timeout: 3000 }).toString().trim().split(/\r?\n/)[0];
       if (tvPath && !existsSync(tvPath)) tvPath = null;
-    } catch { /* ignore */ }
+    } catch {}
   }
 
   if (!tvPath && platform === 'darwin') {
@@ -204,26 +222,75 @@ export async function launch({ port, kill_existing } = {}) {
         const candidate = `${found}/Contents/MacOS/TradingView`;
         if (existsSync(candidate)) tvPath = candidate;
       }
-    } catch { /* ignore */ }
+    } catch {}
   }
 
+  return { tvPath, candidates };
+}
+
+export function buildTradingViewLaunchPlan({
+  platform = process.platform,
+  tvPath,
+  cdpPort = 9222,
+  projectRoot = PROJECT_ROOT,
+} = {}) {
   if (!tvPath) {
-    throw new Error(`TradingView not found on ${platform}. Searched: ${candidates.join(', ')}. Launch manually with: /path/to/TradingView --remote-debugging-port=${cdpPort}`);
+    throw new Error('TradingView executable path is required to build a launch plan.');
+  }
+
+  const env = {
+    ...process.env,
+    ELECTRON_EXTRA_LAUNCH_ARGS: `--remote-debugging-port=${cdpPort}`,
+  };
+
+  if (platform === 'win32' && /WindowsApps/i.test(tvPath)) {
+    const vbsLauncher = join(projectRoot, 'scripts', 'launch_tv_debug.vbs');
+    if (existsSync(vbsLauncher) && cdpPort === 9222) {
+      return {
+        command: 'wscript.exe',
+        args: [vbsLauncher],
+        options: { detached: true, stdio: 'ignore', windowsHide: true, env },
+      };
+    }
+
+    return {
+      command: 'cmd.exe',
+      args: ['/c', 'start', '', 'explorer.exe', 'shell:AppsFolder\\TradingView.Desktop_n534cwy3pjxzj!TradingView.Desktop'],
+      options: { detached: true, stdio: 'ignore', windowsHide: true, env },
+    };
+  }
+
+  return {
+    command: tvPath,
+    args: [`--remote-debugging-port=${cdpPort}`],
+    options: { detached: true, stdio: 'ignore', windowsHide: platform === 'win32', env },
+  };
+}
+
+export async function launch({ port, kill_existing } = {}) {
+  const cdpPort = port || 9222;
+  const killFirst = kill_existing !== false;
+  const platform = process.platform;
+  const { tvPath, candidates } = findTradingViewBinary({ platform });
+
+  if (!tvPath) {
+    throw new Error(`TradingView not found on ${platform}. Searched: ${candidates.join(', ')}, WindowsApps, and PATH.`);
   }
 
   if (killFirst) {
     try {
       if (platform === 'win32') execSync('taskkill /F /IM TradingView.exe', { timeout: 5000 });
       else execSync('pkill -f TradingView', { timeout: 5000 });
-      await new Promise(r => setTimeout(r, 1500));
-    } catch { /* may not be running */ }
+      await new Promise((r) => setTimeout(r, 1500));
+    } catch {}
   }
 
-  const child = spawn(tvPath, [`--remote-debugging-port=${cdpPort}`], { detached: true, stdio: 'ignore' });
+  const launchPlan = buildTradingViewLaunchPlan({ platform, tvPath, cdpPort });
+  const child = spawn(launchPlan.command, launchPlan.args, launchPlan.options);
   child.unref();
 
   for (let i = 0; i < 15; i++) {
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1000));
     try {
       const http = await import('http');
       const ready = await new Promise((resolve) => {
@@ -236,16 +303,26 @@ export async function launch({ port, kill_existing } = {}) {
       if (ready) {
         const info = JSON.parse(ready);
         return {
-          success: true, platform, binary: tvPath, pid: child.pid,
-          cdp_port: cdpPort, cdp_url: `http://localhost:${cdpPort}`,
-          browser: info.Browser, user_agent: info['User-Agent'],
+          success: true,
+          platform,
+          binary: tvPath,
+          pid: child.pid,
+          cdp_port: cdpPort,
+          cdp_url: `http://localhost:${cdpPort}`,
+          browser: info.Browser,
+          user_agent: info['User-Agent'],
         };
       }
-    } catch { /* retry */ }
+    } catch {}
   }
 
   return {
-    success: true, platform, binary: tvPath, pid: child.pid, cdp_port: cdpPort, cdp_ready: false,
-    warning: 'TradingView launched but CDP not responding yet. It may still be loading. Try tv_health_check in a few seconds.',
+    success: true,
+    platform,
+    binary: tvPath,
+    pid: child.pid,
+    cdp_port: cdpPort,
+    cdp_ready: false,
+    warning: 'TradingView launch was attempted, but CDP is not responding yet.',
   };
 }
