@@ -3,6 +3,22 @@ import assert from 'node:assert/strict';
 import { createDashboardStatus } from '../src/core/morning.js';
 
 describe('dashboard status payload', () => {
+  it('surfaces TradingView connection errors for the top page banner', () => {
+    const result = createDashboardStatus({
+      generated_at: '2026-04-17T16:10:00.000Z',
+      formatted_timestamp_et: '04/17/2026, 12:10:00 PM',
+      connection_error: true,
+      error_message: 'TradingView connection unavailable. CDP connection failed.',
+      summary_line: 'TradingView connection unavailable. CDP connection failed.',
+      watchlist_summary_lines: ['TradingView connection unavailable. CDP connection failed.'],
+      prior_signals_by_watchlist: [],
+    });
+
+    assert.equal(result.connectionError, true);
+    assert.match(result.errorMessage, /TradingView connection unavailable/);
+    assert.equal(result.lines[0], 'TradingView connection unavailable. CDP connection failed.');
+  });
+
   it('includes one summary line per watchlist for the latest output section', () => {
     const result = createDashboardStatus({
       generated_at: '2026-04-15T16:00:00.000Z',

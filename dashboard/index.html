@@ -12,6 +12,7 @@
     .muted { color:#98a7c6; }
     .good { color:#6ee7a8; font-weight:700; }
     .flat { color:#facc15; font-weight:700; }
+    .error { color:#fca5a5; font-weight:700; background:#2a1220; border:1px solid #7f1d1d; padding:10px 12px; border-radius:10px; margin-bottom:10px; }
     .hidden { display:none; }
     .pill { display:inline-block; padding:4px 10px; border-radius:999px; background:#1e293b; margin:0 8px 8px 0; }
     .latest-list { list-style:none; padding:0; margin:12px 0 0; }
@@ -199,12 +200,17 @@
       lastUpdated = data.updatedAt || null;
 
       const summary = document.getElementById('summary');
-      if (force) {
+      if (data.connectionError || data.errorMessage) {
+        summary.textContent = data.errorMessage || data.reason || 'TradingView connection unavailable.';
+        summary.className = 'error';
+        document.getElementById('refresh-note').textContent = 'Reconnect TradingView Desktop, then rerun the scan.';
+      } else if (force) {
         summary.textContent = '';
         summary.className = 'flat hidden';
       } else {
         summary.textContent = 'Job ran at ' + (data.formattedTimestampEt || '--') + ' ET';
         summary.className = (data.hasSignals ? 'good' : 'flat');
+        document.getElementById('refresh-note').textContent = 'Updates when the scheduled scan writes a new result.';
       }
       document.getElementById('updated').textContent = 'Updated: ' + (data.formattedTimestampEt || '--') + ' ET';
       document.getElementById('next-run').textContent = 'Next run: ' + (data.nextScheduledRunEt || '--');

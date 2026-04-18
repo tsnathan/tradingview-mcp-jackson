@@ -29,6 +29,8 @@ function defaultStatus() {
     summary: 'NO SIGNAL',
     skipped: false,
     reason: null,
+    connectionError: false,
+    errorMessage: null,
     symbolsScanned: 0,
     priorSignals: [],
   };

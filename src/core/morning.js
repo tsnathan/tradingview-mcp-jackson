@@ -892,10 +892,75 @@ export function createDashboardStatus(result = {}) {
     summary: result.summary_line || lines.join("\n") || "NO SIGNAL",
     skipped: Boolean(result.skipped),
     reason: result.reason || null,
+    connectionError: Boolean(result.connection_error),
+    errorMessage: result.error_message || null,
     symbolsScanned: Number(result.total_scan_count || 0),
     watchlistsChecked: Array.isArray(result.watchlists_checked) ? result.watchlists_checked : [],
     openTrades: Array.isArray(result.open_trades) ? result.open_trades : [],
     priorSignals,
+  };
+}
+
+function buildConnectionErrorResult({
+  marketHours = DEFAULT_MARKET_HOURS,
+  scanTargets = [],
+  baseline = {},
+  reason = 'TradingView connection unavailable. Open TradingView Desktop with remote debugging enabled.',
+} = {}) {
+  const generatedAt = new Date().toISOString();
+  const timezone = marketHours.timezone || DEFAULT_MARKET_HOURS.timezone;
+  const watchlistSummaries = scanTargets.map((target) => {
+    const stored = baseline.watchlists?.[target.watchlistName] || {};
+    const historicalSymbols = Object.values(baseline.signals || {})
+      .filter((entry) => String(entry?.timeframe || '') === String(target.timeframe || ''))
+      .map((entry) => entry?.symbol)
+      .filter(Boolean);
+    const symbols = Array.isArray(stored.symbols) && stored.symbols.length > 0
+      ? stored.symbols
+      : historicalSymbols.length > 0
+        ? Array.from(new Set(historicalSymbols))
+        : Array.isArray(target.symbols) ? target.symbols : [];
+
+    return {
+      watchlist_name: target.watchlistName,
+      timeframe: target.timeframe,
+      symbol_count: Number(stored.symbol_count || symbols.length || 0),
+      symbols,
+      source: 'connection_unavailable',
+      scan_duration_ms: 0,
+    };
+  });
+
+  const priorSignalsByWatchlist = buildPriorSignalsByWatchlist(
+    watchlistSummaries,
+    [],
+    baseline.signals || {},
+    timezone,
+    baseline.last_updated,
+    baseline.watchlists || {},
+  );
+
+  return {
+    success: false,
+    skipped: true,
+    connection_error: true,
+    reason,
+    error_message: reason,
+    signal_lines: [],
+    watchlist_summary_lines: [reason],
+    summary_line: reason,
+    generated_at: generatedAt,
+    formatted_timestamp_et: formatTimestamp(generatedAt, timezone),
+    next_scheduled_run_et: getNextScheduledRunLabel(generatedAt, marketHours),
+    market_hours: marketHours,
+    signals_found: 0,
+    changed_signals: 0,
+    total_scan_count: 0,
+    symbols_scanned: [],
+    open_trades: buildOpenTrades(priorSignalsByWatchlist),
+    scan_mode: 'signals_only',
+    watchlists_checked: scanTargets.map((target) => target.watchlistName),
+    prior_signals_by_watchlist: priorSignalsByWatchlist,
   };
 }
 
@@ -964,11 +1029,16 @@ export async function runBrief({
   }
 
   let originalSymbol, originalTimeframe;
+  let currentState;
   try {
-    const currentState = await chart.getState();
+    currentState = await chart.getState();
     originalSymbol = currentState.symbol;
     originalTimeframe = currentState.resolution;
-  } catch (_) {}
+  } catch (error) {
+    const err = new Error(`TradingView connection unavailable. ${error?.message || String(error)}`);
+    err.code = 'TV_CONNECTION_UNAVAILABLE';
+    throw err;
+  }
 
   const results = [];
   const watchlistSummaries = [];
@@ -1175,6 +1245,19 @@ export async function runSignalJob({
   const { watchlist = [], default_timeframe = '240', watchlists = {} } = rules;
   const scanTargets = buildScanTargets({ watchlist, default_timeframe, watchlists });
   const studyFilter = String(rules.strategy || 'Swing Profile').split('—')[0].trim();
+
+  try {
+    await chart.getState();
+  } catch (error) {
+    const errorResult = buildConnectionErrorResult({
+      marketHours,
+      scanTargets,
+      baseline,
+      reason: `TradingView connection unavailable. ${error?.message || String(error)}`,
+    });
+    writeLatestStatus(errorResult);
+    return errorResult;
+  }
 
   if (!shouldRunEquityScanNow(new Date(), marketHours)) {
     const timezone = marketHours.timezone || DEFAULT_MARKET_HOURS.timezone;

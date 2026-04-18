@@ -1,18 +1,19 @@
 {
-  "updatedAt": "2026-04-18T00:00:30.781Z",
-  "formattedTimestampEt": "04/17/2026, 08:00:30 PM",
-  "nextScheduledRunEt": "04/20/2026, 09:31:00 AM ET",
+  "updatedAt": "2026-04-18T00:07:22.927Z",
+  "formattedTimestampEt": "04/17/2026, 08:07:22 PM",
+  "nextScheduledRunEt": "04/20/2026, 09:31:22 AM ET",
   "scanMode": "signals_only",
-  "hasSignals": true,
-  "signalsFound": 2,
-  "changedSignals": 2,
+  "hasSignals": false,
+  "signalsFound": 0,
+  "changedSignals": 0,
   "lines": [
-    "04/17/2026, 06:45:08 AM ET | WATCHLIST: Swing 15m | OPEN: BATS:ERX | ENTRY: 80.45 USD",
-    "04/17/2026, 06:45:00 AM ET | WATCHLIST: Swing 15m | OPEN: BATS:USO | ENTRY: 113.98 USD"
+    "TradingView connection unavailable. CDP connection failed after 5 attempts: fetch failed"
   ],
-  "summary": "2 open trades",
-  "skipped": false,
-  "reason": null,
+  "summary": "TradingView connection unavailable. CDP connection failed after 5 attempts: fetch failed",
+  "skipped": true,
+  "reason": "TradingView connection unavailable. CDP connection failed after 5 attempts: fetch failed",
+  "connectionError": true,
+  "errorMessage": "TradingView connection unavailable. CDP connection failed after 5 attempts: fetch failed",
   "symbolsScanned": 0,
   "watchlistsChecked": [
     "Swing 15m",
@@ -25,7 +26,7 @@
     {
       "watchlistName": "Swing 15m",
       "timeframe": "15",
-      "symbolCount": 21,
+      "symbolCount": 23,
       "symbol": "BATS:ERX",
       "signal": "OPEN",
       "wasOpen": true,
@@ -38,7 +39,7 @@
     {
       "watchlistName": "Swing 15m",
       "timeframe": "15",
-      "symbolCount": 21,
+      "symbolCount": 23,
       "symbol": "BATS:USO",
       "signal": "OPEN",
       "wasOpen": true,
@@ -53,8 +54,8 @@
     {
       "watchlistName": "Swing 15m",
       "timeframe": "15",
-      "source": "baseline_history",
-      "symbolCount": 21,
+      "source": "connection_unavailable",
+      "symbolCount": 23,
       "trades": [
         {
           "symbol": "BATS:ERX",
@@ -271,8 +272,8 @@
     {
       "watchlistName": "Swing 30min",
       "timeframe": "30",
-      "source": "baseline_history",
-      "symbolCount": 9,
+      "source": "connection_unavailable",
+      "symbolCount": 2,
       "trades": [
         {
           "symbol": "AMEX:TZA",
@@ -293,84 +294,14 @@
           "favorableExcursion": "Unavailable",
           "adverseExcursion": "Unavailable",
           "wasOpen": false
-        },
-        {
-          "symbol": "BTCUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "ETHUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "NVDA",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "QQQ",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "SOLUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "SPY",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "XRPUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
         }
       ]
     },
     {
       "watchlistName": "Swing 1H",
       "timeframe": "60",
-      "source": "baseline_history",
-      "symbolCount": 35,
+      "source": "connection_unavailable",
+      "symbolCount": 27,
       "trades": [
         {
           "symbol": "AMEX:YANG",
@@ -603,26 +534,6 @@
           "wasOpen": false
         },
         {
-          "symbol": "BTCUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "ETHUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
           "symbol": "NASDAQ:INTC",
           "signal": "—",
           "entryPrice": "82.33",
@@ -661,73 +572,13 @@
           "favorableExcursion": "Unavailable",
           "adverseExcursion": "Unavailable",
           "wasOpen": false
-        },
-        {
-          "symbol": "NVDA",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "QQQ",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "SOLUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "SOXL",
-          "signal": "—",
-          "entryPrice": "58.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "SPY",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
-        },
-        {
-          "symbol": "XRPUSD",
-          "signal": "—",
-          "entryPrice": "82.33",
-          "entryTime": "No prior trade recorded",
-          "netPnl": "Unavailable",
-          "favorableExcursion": "Unavailable",
-          "adverseExcursion": "Unavailable",
-          "wasOpen": false
         }
       ]
     },
     {
       "watchlistName": "Swing 4H",
       "timeframe": "240",
-      "source": "baseline_history",
+      "source": "connection_unavailable",
       "symbolCount": 19,
       "trades": [
         {
@@ -925,7 +776,7 @@
     {
       "watchlistName": "Swing 1D",
       "timeframe": "D",
-      "source": "baseline_history",
+      "source": "connection_unavailable",
       "symbolCount": 8,
       "trades": [
         {
