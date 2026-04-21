@@ -416,6 +416,30 @@ function timeframeToMinutes(value) {
   return null;
 }
 
+function isTimeframeDueNow(timeframe, date = new Date(), marketHours = DEFAULT_MARKET_HOURS) {
+  if (!shouldRunEquityScanNow(date, marketHours)) return false;
+
+  const timezone = marketHours?.timezone || DEFAULT_MARKET_HOURS.timezone;
+  const current = toTimeParts(date, timezone);
+  const currentMinutes = current.hour * 60 + current.minute;
+  const openMinutes = timeToMinutes(marketHours?.open || DEFAULT_MARKET_HOURS.open);
+  const tfMinutes = timeframeToMinutes(timeframe);
+
+  if (currentMinutes < openMinutes + 1) return false;
+  if (!tfMinutes) return true;
+  if (tfMinutes >= 1440) return currentMinutes === openMinutes + 1;
+
+  return currentMinutes % tfMinutes === 1;
+}
+
+export function filterScanTargetsBySchedule(
+  scanTargets = [],
+  now = new Date(),
+  marketHours = DEFAULT_MARKET_HOURS,
+) {
+  return scanTargets.filter((target) => isTimeframeDueNow(target.timeframe, now, marketHours));
+}
+
 function isSameTradingDay(value, reference = new Date(), timezone = DEFAULT_MARKET_HOURS.timezone) {
   const input = Date.parse(String(value || ''));
   const ref = Date.parse(String(reference || ''));
@@ -429,6 +453,40 @@ function isSameTradingDay(value, reference = new Date(), timezone = DEFAULT_MARK
   return fmt.format(new Date(input)) === fmt.format(new Date(ref));
 }
 
+function isSameOrPreviousTradingDay(value, reference = new Date(), timezone = DEFAULT_MARKET_HOURS.timezone) {
+  const input = Date.parse(String(value || ''));
+  const ref = Date.parse(String(reference || ''));
+  if (!Number.isFinite(input) || !Number.isFinite(ref)) return false;
+
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  const entryDay = fmt.format(new Date(input));
+  const referenceDate = new Date(ref);
+  const referenceDay = fmt.format(referenceDate);
+  if (entryDay === referenceDay) return true;
+
+  const current = toTimeParts(referenceDate, timezone);
+  const isWeekend = current.weekday === 'Sat' || current.weekday === 'Sun';
+  const isPreMarket = (current.hour * 60 + current.minute) < (timeToMinutes(DEFAULT_MARKET_HOURS.open) + 1);
+  if (!isWeekend && !isPreMarket) return false;
+
+  let probe = new Date(referenceDate.getTime() - 24 * 60 * 60 * 1000);
+  for (let i = 0; i < 3; i += 1) {
+    const weekday = toTimeParts(probe, timezone).weekday;
+    if (weekday !== 'Sat' && weekday !== 'Sun') {
+      return fmt.format(probe) === entryDay;
+    }
+    probe = new Date(probe.getTime() - 24 * 60 * 60 * 1000);
+  }
+
+  return false;
+}
+
 function isRecentTradeSignal(entryTime, scannedAt, timeframe, maxBars = 4) {
   const entryTs = parseEntryTimestamp(entryTime);
   const scanTs = parseEntryTimestamp(scannedAt || new Date().toISOString());
@@ -439,12 +497,7 @@ function isRecentTradeSignal(entryTime, scannedAt, timeframe, maxBars = 4) {
 }
 
 function isScheduledRunMinute(date, marketHours = DEFAULT_MARKET_HOURS) {
-  if (!shouldRunEquityScanNow(date, marketHours)) return false;
-  const timezone = marketHours?.timezone || DEFAULT_MARKET_HOURS.timezone;
-  const current = toTimeParts(date, timezone);
-  const currentMinutes = current.hour * 60 + current.minute;
-  const openMinutes = timeToMinutes(marketHours?.open || DEFAULT_MARKET_HOURS.open) + 1;
-  return (currentMinutes - openMinutes) % 15 === 0;
+  return isTimeframeDueNow('15', date, marketHours);
 }
 
 function getNextScheduledRunLabel(from = new Date(), marketHours = DEFAULT_MARKET_HOURS) {
@@ -664,6 +717,10 @@ function buildWatchlistSummaryLines(
     const displayedCount = Number(summary.symbol_count || priorSection?.symbolCount || 0);
     const prefix = `${formatTimestamp(Date.now(), timezone)} ET | WATCHLIST: ${watchlistName} | SYMBOLS: ${displayedCount} | SCAN: ${formatDuration(summary.scan_duration_ms)}`;
 
+    if (summary.skipped_due_schedule) {
+      return `${prefix} | WAITING FOR NEXT ${timeframe || 'WATCHLIST'} BAR`;
+    }
+
     const recentOpenTrades = results
       .filter((entry) => entry.watchlist_name === watchlistName && !entry.error)
       .filter((entry) => String(entry.trade?.signal || '').toUpperCase() === 'OPEN')
@@ -710,7 +767,7 @@ export function buildOpenTrades(
     const symbol = row?.symbol || 'n/a';
     const entryTime = row?.entryTime || row?.entry_time || 'No prior trade recorded';
     if (signal !== 'OPEN') return;
-    if (!hasMeaningfulTradeValue(entryTime) || !isSameTradingDay(entryTime, asOf, timezone)) return;
+    if (!hasMeaningfulTradeValue(entryTime) || !isSameOrPreviousTradingDay(entryTime, asOf, timezone)) return;
 
     const key = `${section?.watchlistName || section?.watchlist_name || 'Watchlist'}|${section?.timeframe || ''}|${normalizeSymbolForMatch(symbol)}`;
     rowsByKey.set(key, {
@@ -1035,6 +1092,7 @@ export function buildOutsideHoursResult({
     skipped: true,
     reason,
     signal_lines: [],
+    changed_signal_lines: [],
     watchlist_summary_lines: watchlistSummaries.map(
       (target) => `${formatTimestamp(generatedAt, timezone)} ET | WATCHLIST: ${target.watchlist_name} | SYMBOLS: ${target.symbol_count} | SCAN: ${formatDuration(target.scan_duration_ms)} | NO SIGNAL | ${reason}`,
     ),
@@ -1100,6 +1158,7 @@ function buildConnectionErrorResult({
     reason,
     error_message: reason,
     signal_lines: [],
+    changed_signal_lines: [],
     watchlist_summary_lines: [reason],
     summary_line: reason,
     generated_at: generatedAt,
@@ -1167,10 +1226,16 @@ export async function runBrief({
   signals_only = false,
   changed_only = false,
   update_baseline = false,
+  scan_targets = null,
+  full_scan_targets = null,
 } = {}) {
   const { rules, path: loadedFrom } = loadRules(rules_path);
   const { watchlist = [], default_timeframe = "240", watchlists = {} } = rules;
-  const scanTargets = buildScanTargets({ watchlist, default_timeframe, watchlists });
+  const allScanTargets = full_scan_targets || buildScanTargets({ watchlist, default_timeframe, watchlists });
+  const scanTargets = Array.isArray(scan_targets) ? scan_targets : allScanTargets;
+  const dueWatchlists = Array.isArray(scan_targets)
+    ? new Set(scan_targets.map((target) => target.watchlistName))
+    : null;
   const baselinePath = resolve(rules.baseline_file || DEFAULT_BASELINE_PATH);
   const baseline = loadBaseline(baselinePath);
   const studyFilter = String(rules.strategy || "Swing Profile").split("—")[0].trim();
@@ -1197,7 +1262,29 @@ export async function runBrief({
   const watchlistSummaries = [];
 
   try {
-    for (const target of scanTargets) {
+    for (const target of allScanTargets) {
+      if (dueWatchlists && !dueWatchlists.has(target.watchlistName)) {
+        const baselineWatchlist = baseline.watchlists?.[target.watchlistName] || {};
+        const savedSymbols = Array.isArray(baselineWatchlist.symbols) && baselineWatchlist.symbols.length > 0
+          ? baselineWatchlist.symbols
+          : Array.isArray(target.symbols)
+            ? target.symbols
+            : watchlist;
+
+        watchlistSummaries.push({
+          watchlist_name: target.watchlistName,
+          timeframe: target.timeframe,
+          symbol_count: savedSymbols.length,
+          scanned_count: 0,
+          missing_symbols: [],
+          symbols: savedSymbols,
+          source: 'scheduled_skip',
+          scan_duration_ms: 0,
+          skipped_due_schedule: true,
+        });
+        continue;
+      }
+
       const startedAt = Date.now();
       const resolved = await resolveSymbolsForWatchlist(target, watchlist, {
         allowFallback: true,
@@ -1326,6 +1413,10 @@ export async function runBrief({
     const symbol = entry.state?.symbol || entry.symbol || 'n/a';
     return `${formatTimestamp(entry.scanned_at || generatedAt, timezone)} ET | WATCHLIST: ${entry.watchlist_name || 'Default'} | OPEN: ${symbol} | ENTRY: ${normalizeTradeDisplay(entry.trade?.entryPrice)} | AT: ${normalizeTradeDisplay(entry.trade?.entryTime)}`;
   });
+  const changedSignalLines = changedSignals.map((entry) => {
+    const symbol = entry.state?.symbol || entry.symbol || 'n/a';
+    return `${formatTimestamp(entry.scanned_at || generatedAt, timezone)} ET | WATCHLIST: ${entry.watchlist_name || 'Default'} | OPEN: ${symbol} | ENTRY: ${normalizeTradeDisplay(entry.trade?.entryPrice)} | AT: ${normalizeTradeDisplay(entry.trade?.entryTime)}`;
+  });
   const noSignalLines = watchlistSummaries.map(
     (target) => `${formatTimestamp(generatedAt, timezone)} ET | WATCHLIST: ${target.watchlist_name} | SYMBOLS: ${target.symbol_count} | SCAN: ${formatDuration(target.scan_duration_ms)} | NO SIGNAL`,
   );
@@ -1373,6 +1464,7 @@ export async function runBrief({
     signals_found: signalEntries.length,
     changed_signals: changedSignals.length,
     signal_lines: signalLines,
+    changed_signal_lines: changedSignalLines,
     watchlist_summary_lines: watchlistSummaryLines,
     summary_line: watchlistSummaryLines.join("\n") || noSignalLines.join("\n"),
     instruction: signals_only
@@ -1400,6 +1492,19 @@ export async function runSignalJob({
   const scanTargets = buildScanTargets({ watchlist, default_timeframe, watchlists });
   const studyFilter = String(rules.strategy || 'Swing Profile').split('—')[0].trim();
 
+  const now = new Date();
+
+  if (!force && !shouldRunEquityScanNow(now, marketHours)) {
+    const skippedResult = buildOutsideHoursResult({
+      marketHours,
+      scanTargets,
+      baseline,
+      reason: 'Outside market hours',
+    });
+    writeLatestStatus(skippedResult);
+    return skippedResult;
+  }
+
   try {
     await ensureTradingViewConnection();
   } catch (error) {
@@ -1413,12 +1518,13 @@ export async function runSignalJob({
     return errorResult;
   }
 
-  if (!force && !shouldRunEquityScanNow(new Date(), marketHours)) {
+  const dueScanTargets = force ? scanTargets : filterScanTargetsBySchedule(scanTargets, now, marketHours);
+  if (!force && dueScanTargets.length === 0) {
     const skippedResult = buildOutsideHoursResult({
       marketHours,
       scanTargets,
       baseline,
-      reason: 'Outside market hours',
+      reason: 'No watchlists are due for scan at this minute',
     });
     writeLatestStatus(skippedResult);
     return skippedResult;
@@ -1429,13 +1535,16 @@ export async function runSignalJob({
     signals_only: true,
     changed_only,
     update_baseline: true,
+    scan_targets: dueScanTargets,
+    full_scan_targets: scanTargets,
   });
 
-  if (notify && result.signal_lines.length > 0 && rules.ntfy?.url) {
+  if (notify && result.changed_signal_lines.length > 0 && rules.ntfy?.url) {
     await fetch(rules.ntfy.url, {
       method: "POST",
-      body: result.signal_lines.join("\n"),
+      body: result.changed_signal_lines.join("\n"),
       headers: {
+        "Content-Type": "text/plain",
         Title: "TradingView signal scan",
         Priority: String(rules.ntfy.priority || "default"),
       },

@@ -153,7 +153,7 @@ Example:
 1. install the `ntfy` app on your phone, or use the web client
 2. subscribe to your topic name
 3. keep the scheduled scan running
-4. when a new signal is detected, the job will post a notification automatically
+4. when a new signal is detected for the first time that day, the job will post a notification automatically
 
 ### How to test notification delivery
 
@@ -167,7 +167,7 @@ If a fresh signal is present and your `ntfy` block is configured correctly, a pu
 
 ### Notes
 
-- notifications are only sent when the signal job finds qualifying signal output
+- notifications are only sent when a signal is **new or changed** since the last scan — repeat scans on the same open signal do not re-notify
 - no alert is expected when the result is `NO SIGNAL`
 - if nothing arrives, confirm the topic name and URL in `rules.json`
 
@@ -177,16 +177,22 @@ If a fresh signal is present and your `ntfy` block is configured correctly, a pu
 
 If the dashboard shows Disconnected:
 
-1. keep TradingView Desktop open
-2. confirm you are signed in
-3. leave a chart tab open
+1. open TradingView Desktop from the Start Menu
+2. confirm you are signed in and a chart is visible
+3. wait for the chart to finish loading fully
 4. run the PowerShell job once manually if needed
 5. refresh the dashboard page
 
-If TradingView launches but still does not connect:
+If TradingView is open but still does not connect:
 - close all TradingView windows completely
-- rerun the scheduled job
-- wait for the chart to finish loading
+- reopen from the Start Menu
+- wait for the chart to finish loading before re-running the job
+
+### Note for Microsoft Store (MSIX) installs
+
+TradingView installed from the Microsoft Store requires a specific launch method to enable the debug connection (Chrome DevTools Protocol on port 9222). The scheduled job handles this automatically using the Windows `IApplicationActivationManager` interface. You do not need to do anything special — just open TradingView normally from the Start Menu before market open each day.
+
+The `ELECTRON_EXTRA_LAUNCH_ARGS` environment variable stored at `HKEY_CURRENT_USER\Environment` does **not** enable the debug port for MSIX installs and has no effect. It can be ignored.
 
 ---
 

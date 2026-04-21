@@ -6,6 +6,7 @@ import {
   buildOutsideHoursResult,
   buildPriorSignalsByWatchlist,
   buildScanTargets,
+  filterScanTargetsBySchedule,
   detectSignalFromSnapshot,
   formatPriorSignalForWatchlist,
   shouldRunEquityScanNow,
@@ -635,6 +636,37 @@ describe('outside-hours skip behavior', () => {
     assert.equal(result.reason, 'Outside market hours');
     assert.equal(result.total_scan_count, 0);
     assert.deepEqual(result.open_trades.map((row) => row.symbol), ['BATS:ERX', 'BATS:USO']);
+  });
+});
+
+describe('scheduled timeframe filtering', () => {
+  const marketHours = {
+    timezone: 'America/New_York',
+    open: '09:30',
+    close: '16:00',
+    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+  };
+
+  const scanTargets = buildScanTargets({
+    watchlist: ['SOXL'],
+    default_timeframe: '30',
+    watchlists: {
+      'Swing 15m': '15',
+      'Swing 30min': '30',
+      'Swing 1H': '60',
+      'Swing 4H': '240',
+      'Swing 1D': 'D',
+    },
+  });
+
+  it('runs only the due timeframes at 10:01 ET', () => {
+    const due = filterScanTargetsBySchedule(scanTargets, new Date('2026-04-15T14:01:00.000Z'), marketHours);
+    assert.deepEqual(due.map((t) => t.watchlistName), ['Swing 15m', 'Swing 30min', 'Swing 1H']);
+  });
+
+  it('runs only the 15m watchlist at 10:16 ET', () => {
+    const due = filterScanTargetsBySchedule(scanTargets, new Date('2026-04-15T14:16:00.000Z'), marketHours);
+    assert.deepEqual(due.map((t) => t.watchlistName), ['Swing 15m']);
   });
 });
 
