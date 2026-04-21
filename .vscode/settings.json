@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^Set-Location 'C:\\\\Users\\\\tsnat\\\\tradingview-mcp-jackson'; & 'C:\\\\Program Files\\\\nodejs\\\\node\\.exe' '\\.\\\\scripts\\\\run_signal_job\\.js' --all; Get-Content '\\.\\\\status\\\\latest-signal-status\\.json'$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

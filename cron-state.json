@@ -1,0 +1,25 @@
+{
+  "note": "Updated each time a new cron job is created. Cron jobs are session-only — they reset when Claude session ends. To cancel active job: CronDelete <active_cron_id>",
+
+  "active_cron_id": "79968ae8",
+  "created_at": "2026-04-13T22:31:00.000Z",
+  "session_note": "Last session ended — this job ID is no longer valid. Re-run 'good morning' to create a new one.",
+
+  "config": {
+    "interval_minutes": 15,
+    "watchlists": ["Swing 15m", "Swing 30min", "Swing 1H", "Swing 4H", "Swing 1D"],
+    "ntfy_topic": "swing-signals-tsnat",
+    "baseline_file": "C:/Users/tsnat/tradingview-mcp-jackson/swing-signal-baseline.json",
+    "rth_only_symbols": "all except hours_24h list in baseline",
+    "hours_24h": ["BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "BNBUSD"]
+  },
+
+  "history": [
+    {
+      "cron_id": "79968ae8",
+      "created_at": "2026-04-13T22:31:00.000Z",
+      "ended_at": "session_end",
+      "reason": "Morning startup — session expired"
+    }
+  ]
+}
