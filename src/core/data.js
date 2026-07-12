@@ -51,17 +51,22 @@ export function parseLatestTradeFromTesterText(text) {
   const firstLine = lines[0] || '';
   const tradeNumberMatch = firstLine.match(/^(\d+)/);
   const sideMatch = firstLine.match(/(Long|Short)$/);
-  const isOpenTrade = dateLines.length < 2;
-  const entryUsdIndex = isOpenTrade
-    ? (usdIndexes[0] ?? -1)
-    : (usdIndexes[1] ?? usdIndexes[0] ?? -1);
-  const pnlStartIndex = isOpenTrade ? 1 : 2;
+  const hasTwoDates = dateLines.length >= 2;
+  // On daily charts TradingView shows two dates even for open positions (mark date + entry date).
+  // The exit Signal column literally reads "Open" when the position is still active.
+  const hasOpenExitSignal = lines.some(line => line === 'Open');
+  const isOpenTrade = !hasTwoDates || hasOpenExitSignal;
+  // When two dates are present, the exit/mark date appears first and entry appears second.
+  const entryUsdIndex = hasTwoDates
+    ? (usdIndexes[1] ?? usdIndexes[0] ?? -1)
+    : (usdIndexes[0] ?? -1);
+  const pnlStartIndex = hasTwoDates ? 2 : 1;
 
   return {
     tradeNumber: tradeNumberMatch ? Number(tradeNumberMatch[1]) : null,
     side: sideMatch ? sideMatch[1].toUpperCase() : null,
     signal: isOpenTrade ? 'OPEN' : 'EXIT',
-    entryTime: isOpenTrade ? (dateLines[0] || '—') : (dateLines[1] || dateLines[0] || '—'),
+    entryTime: hasTwoDates ? (dateLines[1] || dateLines[0] || '—') : (dateLines[0] || '—'),
     entryPrice: entryUsdIndex >= 0 ? combineUsdValue(lines, entryUsdIndex).replace(/ \|.*$/, '') : '—',
     netPnl: usdIndexes.length >= (pnlStartIndex + 1) ? combineUsdValue(lines, usdIndexes[pnlStartIndex]) : '—',
     favorableExcursion: usdIndexes.length >= (pnlStartIndex + 2) ? combineUsdValue(lines, usdIndexes[pnlStartIndex + 1]) : '—',
@@ -70,7 +75,7 @@ export function parseLatestTradeFromTesterText(text) {
   };
 }
 
-export async function getLatestTradeFromTester({ timeout_ms = 8000 } = {}) {
+export async function getLatestTradeFromTester({ timeout_ms = 14000 } = {}) {
   try {
     await ui.keyboard({ key: 'Escape' }).catch(() => null);
     await ui.openPanel({ panel: 'strategy-tester', action: 'open' }).catch(() => null);
@@ -98,6 +103,34 @@ export async function getLatestTradeFromTester({ timeout_ms = 8000 } = {}) {
 
     await sleep(500);
 
+    // Scroll to the true bottom of the virtual trades list. Virtual lists
+    // render new rows as you scroll, which increases scrollHeight — so we
+    // keep scrolling until the max scrollTop position stops changing.
+    let prevScrollTop = -1;
+    for (let scrollPass = 0; scrollPass < 8; scrollPass++) {
+      const newScrollTop = await evaluate(`
+        (function() {
+          var panel = document.querySelector('[data-name="backtesting"]')
+            || document.querySelector('[class*="strategyReport"]')
+            || document.querySelector('[class*="backtesting"]');
+          if (!panel) return -1;
+          var maxTop = -1;
+          var els = panel.querySelectorAll('*');
+          for (var i = 0; i < els.length; i++) {
+            var el = els[i];
+            if (el.scrollHeight > el.clientHeight + 50) {
+              el.scrollTop = el.scrollHeight;
+              if (el.scrollTop > maxTop) maxTop = el.scrollTop;
+            }
+          }
+          return maxTop;
+        })()
+      `).catch(() => -1);
+      await sleep(250);
+      if (newScrollTop !== -1 && newScrollTop === prevScrollTop) break;
+      prevScrollTop = newScrollTop;
+    }
+
     const panelText = await evaluate(`
       (function() {
         var panel = document.querySelector('[data-name="backtesting"]')
@@ -114,7 +147,10 @@ export async function getLatestTradeFromTester({ timeout_ms = 8000 } = {}) {
       else stableCount = 0;
       lastRaw = trade.rawText;
 
-      if (stableCount >= 1) {
+      // Require at least 3 s before accepting a stable result. TradingView
+      // shows the previous cached state immediately when a chart loads cold;
+      // the 3 s window lets the strategy finish recalculating on fresh bars.
+      if (stableCount >= 2 && Date.now() - started >= 3000) {
         return { success: true, source: 'strategy_tester_dom', trade };
       }
     }
@@ -123,6 +159,294 @@ export async function getLatestTradeFromTester({ timeout_ms = 8000 } = {}) {
   }
 
   return { success: false, source: 'strategy_tester_dom', trade: null, error: 'Trade table did not finish loading in time.' };
+}
+
+// Parse favorable/adverse excursion % from a single raw trade block.
+// Returns absolute % values (both positive) so callers can do entry*(1±pct/100).
+function parseTradeBlockStats(block) {
+  const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+  const usdIdx = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i] === 'USD') usdIdx.push(i);
+  }
+  const dateLinesCount = lines.filter(l =>
+    /^[A-Z][a-z]{2} \d{1,2}, \d{4}(?:, \d{1,2}:\d{2})?$/.test(l)
+  ).length;
+  const hasTwoDates = dateLinesCount >= 2;
+  const hasOpenSignal = lines.some(l => l === 'Open');
+  const isOpen = !hasTwoDates || hasOpenSignal;
+  const pnlStart = hasTwoDates ? 2 : 1;
+
+  function pctAt(idx) {
+    const next = lines[idx + 1];
+    if (!next || !/[%％]/.test(next)) return null;
+    const n = parseFloat(next.replace(/[%％,\s]/g, ''));
+    return Number.isFinite(n) ? Math.abs(n) : null;
+  }
+
+  return {
+    isOpen,
+    favorablePct: usdIdx[pnlStart + 1] !== undefined ? pctAt(usdIdx[pnlStart + 1]) : null,
+    adversePct:   usdIdx[pnlStart + 2] !== undefined ? pctAt(usdIdx[pnlStart + 2]) : null,
+  };
+}
+
+// Read the full strategy tester panel and compute avg/max favorable and adverse
+// excursion % from all COMPLETED trades (open trade is excluded).
+export async function getAllTradesExcursionStats({ timeout_ms = 14000 } = {}) {
+  try {
+    await ui.keyboard({ key: 'Escape' }).catch(() => null);
+    await ui.openPanel({ panel: 'strategy-tester', action: 'open' }).catch(() => null);
+  } catch {}
+
+  const started = Date.now();
+  let lastRaw = null;
+  let stableCount = 0;
+  let fullText = null;
+
+  while (Date.now() - started < timeout_ms) {
+    await evaluate(`
+      (function() {
+        var panel = document.querySelector('[data-name="backtesting"]')
+          || document.querySelector('[class*="strategyReport"]')
+          || document.querySelector('[class*="backtesting"]');
+        if (!panel) return false;
+        var tabs = Array.from(panel.querySelectorAll('[role="tab"], button, [role="button"]'));
+        for (var i = 0; i < tabs.length; i++) {
+          var t = (tabs[i].textContent || '').trim().toLowerCase();
+          if (t.includes('list of trades')) { tabs[i].click(); return true; }
+        }
+        return false;
+      })()
+    `).catch(() => null);
+
+    await sleep(500);
+
+    const panelText = await evaluate(`
+      (function() {
+        var panel = document.querySelector('[data-name="backtesting"]')
+          || document.querySelector('[class*="strategyReport"]')
+          || document.querySelector('[class*="backtesting"]');
+        if (!panel) return { text: '' };
+        return { text: (panel.innerText || '').trim() };
+      })()
+    `).catch(() => ({ text: '' }));
+
+    const raw = panelText?.text || '';
+    if (raw.includes('Trade #')) {
+      if (raw === lastRaw) stableCount++;
+      else stableCount = 0;
+      lastRaw = raw;
+      if (stableCount >= 2) { fullText = raw; break; }
+    }
+    await sleep(300);
+  }
+
+  if (!fullText) return null;
+
+  const normalized = String(fullText)
+    .replace(/ /g, ' ')
+    .replace(/−/g, '-')
+    .replace(/−/g, '-')
+    .replace(/\r/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+
+  const body = normalized.slice(normalized.indexOf('Trade #') + 'Trade #'.length).trim();
+  const blocks = body
+    .split(/\n(?=\d+(?:Long|Short))/)
+    .map(b => b.trim())
+    .filter(b => /^\d+(?:Long|Short)/.test(b));
+
+  const favPcts = [];
+  const advPcts = [];
+
+  for (const block of blocks) {
+    const { isOpen, favorablePct, adversePct } = parseTradeBlockStats(block);
+    if (!isOpen) {
+      if (favorablePct != null && favorablePct > 0) favPcts.push(favorablePct);
+      if (adversePct != null) advPcts.push(adversePct);
+    }
+  }
+
+  if (favPcts.length === 0) return null;
+
+  const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+  const round2 = n => Math.round(n * 100) / 100;
+
+  return {
+    totalTrades: blocks.length,
+    completedTrades: favPcts.length,
+    avgFavorablePct: round2(avg(favPcts)),
+    maxFavorablePct: round2(Math.max(...favPcts)),
+    avgAdversePct:   round2(avg(advPcts)),
+    maxAdversePct:   round2(Math.max(...advPcts)),
+  };
+}
+
+// Parse key metrics from Strategy Tester Performance Summary tab innerText.
+export function parseStrategyMetricsText(text) {
+  const norm = String(text || '')
+    .replace(/ /g, ' ')
+    .replace(/−/g, '-')
+    .replace(/–/g, '-')
+    .replace(/\r/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+
+  const lines = norm.split('\n').map(l => l.trim()).filter(Boolean);
+
+  function extractValue(candidate, valueType) {
+    const text = candidate.replace(/,/g, '').trim();
+    if (valueType === 'pct') {
+      const match = text.match(/(-?\d+\.?\d*)\s*[%％]/);
+      if (match) return parseFloat(match[1]);
+    }
+    if (valueType === 'frac') {
+      const match = text.match(/(\d+)\s*\/\s*(\d+)/);
+      if (match) return `${match[1]}/${match[2]}`;
+    }
+    if (valueType === 'posint') {
+      const match = text.match(/^(\d+)$/);
+      if (match) return parseInt(match[1], 10);
+    }
+    if (valueType === 'float') {
+      const match = text.match(/^-?\d+\.?\d*$/);
+      if (match) return parseFloat(match[0]);
+      if (text === '∞') return null;
+    }
+    return null;
+  }
+
+  function findAfterLabel(labelPatterns, valueType, windowSize = 6) {
+    for (let i = 0; i < lines.length; i++) {
+      const lower = lines[i].toLowerCase();
+      if (labelPatterns.some(p => lower.includes(p))) {
+        const sameLine = extractValue(lines[i], valueType);
+        if (sameLine != null) return sameLine;
+        for (let j = i + 1; j <= Math.min(i + windowSize, lines.length - 1); j++) {
+          const candidate = lines[j];
+          const extracted = extractValue(candidate, valueType);
+          if (extracted != null) return extracted;
+        }
+      }
+    }
+    return null;
+  }
+
+  const netProfitPct = findAfterLabel(['net profit', 'net profit %', 'net profit pct'], 'pct');
+  const maxDrawdownPct = findAfterLabel(['max drawdown', 'maximum drawdown'], 'pct');
+  const totalTrades = findAfterLabel(['total closed trades', 'total trades', 'closed trades'], 'posint');
+  const percentProfitable = findAfterLabel(['percent profitable', 'profitable trades', 'win rate'], 'pct');
+  const profitFactor = findAfterLabel(['profit factor'], 'float');
+  const winningTrades = findAfterLabel(['number winning trades', 'winning trades', 'winning trades'], 'posint');
+  let profitableFrac = findAfterLabel(['percent profitable'], 'frac');
+  if (!profitableFrac && winningTrades != null && totalTrades != null) {
+    profitableFrac = `${winningTrades}/${totalTrades}`;
+  }
+
+  return {
+    netProfitPct: netProfitPct != null ? Math.round(netProfitPct * 100) / 100 : null,
+    maxDrawdownPct: maxDrawdownPct != null ? Math.round(Math.abs(maxDrawdownPct) * 100) / 100 : null,
+    totalTrades: totalTrades ?? null,
+    percentProfitable: percentProfitable != null ? Math.round(percentProfitable * 100) / 100 : null,
+    profitableFrac: profitableFrac ?? null,
+    profitFactor: profitFactor != null ? Math.round(profitFactor * 1000) / 1000 : null,
+  };
+}
+
+export async function getStrategyMetricsFromDOM({ timeout_ms = 16000 } = {}) {
+  try {
+    await ui.keyboard({ key: 'Escape' }).catch(() => null);
+    await ui.openPanel({ panel: 'strategy-tester', action: 'open' }).catch(() => null);
+  } catch {}
+
+  const started = Date.now();
+
+  // Click Performance Summary / Metrics tab (NOT "List of Trades")
+  await evaluate(`
+    (function() {
+      var panel = document.querySelector('[data-name="backtesting"]')
+        || document.querySelector('[class*="strategyReport"]')
+        || document.querySelector('[class*="backtesting"]');
+      if (!panel) return false;
+      var tabs = Array.from(panel.querySelectorAll('[role="tab"], button[class*="tab"], [class*="tabItem"]'));
+      if (!tabs.length) tabs = Array.from(panel.querySelectorAll('button, [role="button"]'));
+      var names = ['performance summary', 'metrics', 'overview', 'summary'];
+      for (var ni = 0; ni < names.length; ni++) {
+        for (var i = 0; i < tabs.length; i++) {
+          var t = (tabs[i].textContent || '').trim().toLowerCase();
+          if (t.includes(names[ni])) { tabs[i].click(); return true; }
+        }
+      }
+      // Fallback: first tab that is NOT "list of trades" or "properties"
+      for (var i = 0; i < tabs.length; i++) {
+        var t = (tabs[i].textContent || '').trim().toLowerCase();
+        if (!t.includes('list') && !t.includes('trades') && !t.includes('propert') && t.length > 2 && t.length < 30) {
+          tabs[i].click();
+          return true;
+        }
+      }
+      return false;
+    })()
+  `).catch(() => null);
+
+  await sleep(600);
+
+  let lastText = null;
+  let stableCount = 0;
+  let panelText = null;
+
+  while (Date.now() - started < timeout_ms) {
+    const result = await evaluate(`
+      (function() {
+        var panel = document.querySelector('[data-name="backtesting"]')
+          || document.querySelector('[class*="strategyReport"]')
+          || document.querySelector('[class*="backtesting"]');
+        if (!panel) return { text: '' };
+        return { text: (panel.innerText || '').trim() };
+      })()
+    `).catch(() => ({ text: '' }));
+
+    const text = result?.text || '';
+    const hasData = text.length > 50 && (
+      text.includes('Net Profit') ||
+      text.includes('Total Closed') ||
+      text.includes('Profit Factor') ||
+      text.includes('Percent Profitable')
+    );
+
+    if (hasData) {
+      if (text === lastText) stableCount++;
+      else stableCount = 0;
+      lastText = text;
+
+      if (stableCount >= 2 && Date.now() - started >= 3000) {
+        panelText = text;
+        break;
+      }
+    }
+
+    await sleep(400);
+  }
+
+  if (!panelText) {
+    if (lastText && lastText.length > 50) {
+      panelText = lastText;
+    } else {
+      return { success: false, error: 'Strategy Tester metrics did not load in time', metrics: null };
+    }
+  }
+
+  const metrics = parseStrategyMetricsText(panelText);
+  const hasAnyMetric = Object.values(metrics).some(v => v != null);
+  if (!hasAnyMetric) {
+    return { success: false, error: 'Could not parse metrics from Strategy Tester panel', metrics: null };
+  }
+
+  return { success: true, metrics };
 }
 
 function buildGraphicsJS(collectionName, mapKey, filter) {

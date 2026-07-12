@@ -13,6 +13,8 @@
     .good { color:#6ee7a8; font-weight:700; }
     .flat { color:#facc15; font-weight:700; }
     .error { color:#fca5a5; font-weight:700; background:#2a1220; border:1px solid #7f1d1d; padding:10px 12px; border-radius:10px; margin-bottom:10px; }
+    .regression-pass { color:#86efac; font-weight:700; background:#0d2a1a; border:1px solid #14532d; padding:10px 16px; border-radius:10px; margin-bottom:16px; }
+    .regression-fail { color:#fca5a5; font-weight:700; background:#2a1220; border:1px solid #7f1d1d; padding:10px 16px; border-radius:10px; margin-bottom:16px; }
     .hidden { display:none; }
     .pill { display:inline-block; padding:4px 10px; border-radius:999px; background:#1e293b; margin:0 8px 8px 0; }
     .pill-status-active { background:#123524; color:#86efac; }
@@ -22,6 +24,41 @@
     .watchlist-section { margin-top:14px; padding:12px; background:#0f1728; border:1px solid #24314f; border-radius:12px; }
     .watchlist-title { margin:0 0 4px; font-size:18px; }
     .watchlist-meta { margin:0 0 8px; color:#98a7c6; font-size:13px; }
+    .controls { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-top:10px; }
+    .control-group { display:flex; flex-direction:column; gap:6px; min-width:150px; }
+    .control-label { color:#98a7c6; font-size:12px; font-weight:600; }
+    .control-input, .control-select {
+      background:#0f1728;
+      color:#e5eefc;
+      border:1px solid #334155;
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:14px;
+    }
+    .btn {
+      border:1px solid #334155;
+      border-radius:10px;
+      background:#1e293b;
+      color:#e5eefc;
+      padding:8px 12px;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .btn:hover { background:#27364f; }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    .btn-primary { background:#0b6b3a; border-color:#15803d; }
+    .btn-primary:hover { background:#0f7a44; }
+    .btn-danger { background:#7f1d1d; border-color:#991b1b; }
+    .btn-danger:hover { background:#991b1b; }
+    .action-message {
+      margin-top:10px;
+      min-height:18px;
+      color:#98a7c6;
+      font-size:13px;
+      white-space:pre-wrap;
+    }
+    .action-message-error { color:#fca5a5; }
     .section-toggle { cursor:pointer; list-style:none; font-weight:600; color:#e5eefc; }
     .section-toggle::-webkit-details-marker { display:none; }
     .toggle-meta { color:#98a7c6; font-size:12px; margin-left:8px; }
@@ -32,14 +69,23 @@
     .status-open { color:#86efac; font-weight:700; }
     .status-prior { color:#facc15; font-weight:700; }
     .status-none { color:#98a7c6; }
+    .scan-status-bar { display:flex; align-items:center; gap:10px; margin-top:10px; padding:8px 14px; background:#0f1728; border:1px solid #334155; border-radius:10px; font-size:13px; color:#98a7c6; flex-wrap:wrap; }
+    .scan-status-bar .ssb-elapsed { color:#facc15; font-weight:700; font-family:monospace; min-width:3.5ch; }
+    .scan-status-bar .ssb-watchlist { color:#e5eefc; font-weight:600; }
+    .scan-status-bar .ssb-sep { opacity:.4; }
+    body.ta-only-mode #open-trades-card,
+    body.ta-only-mode #prior-signals-card {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <div id="regression-banner" class="hidden"></div>
     <div class="card">
       <h1>Current Signal</h1>
       <div id="summary" class="flat hidden"></div>
-      <p class="muted" id="refresh-note">Updates when the scheduled scan writes a new result.</p>
+      <p class="muted" id="refresh-note">Updates when the scheduled scan writes a new result. The signal count can include changed/exited signals even when a watchlist summary shows no active OPEN signal.</p>
       <div>
         <span class="pill" id="tv-status">TradingView Status: --</span>
         <span class="pill" id="updated">Updated: --</span>
@@ -48,22 +94,241 @@
         <span class="pill" id="changed">Changed: 0</span>
         <span class="pill" id="watchlists">Watchlists: --</span>
       </div>
+      <div id="watchdog-error" class="error hidden"></div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <select id="cron-watchlist-top" class="control-select" style="min-width:160px;">
+          <option value="">All Watchlists</option>
+        </select>
+        <button id="run-cron-btn-top" class="btn btn-primary" type="button">▶ Run Scan Now</button>
+        <span id="top-action-message" class="action-message" style="margin-top:0;"></span>
+      </div>
+      <p class="muted" style="margin:8px 0 0; font-size:12px;">The top scan button respects the selected watchlist. Baseline seeding still ignores the dashboard selection.</p>
+      <div id="scan-status-bar" class="scan-status-bar hidden">
+        <span class="ssb-elapsed" id="ssb-elapsed">0:00</span>
+        <span class="ssb-sep">|</span>
+        <span id="ssb-watchlist" class="ssb-watchlist">—</span>
+        <span class="ssb-sep">|</span>
+        <span id="ssb-symbols">0/0 symbols</span>
+        <span class="ssb-sep">|</span>
+        <span id="ssb-wl-index">watchlist 0/0</span>
+      </div>
       <ul id="lines" class="latest-list"></ul>
     </div>
 
     <div class="card">
+      <details id="watchlist-sync-panel">
+        <summary class="section-toggle">Watchlist Symbols <span id="watchlist-sync-count">0</span> watchlist(s)</summary>
+        <p class="muted" style="margin:10px 0 0;">Symbols seeded into the baseline for each configured watchlist. Source shows how symbols were last read.</p>
+        <div id="watchlist-sync-content" style="margin-top:12px;"></div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Manual Scan Controls</h2>
+      <p class="muted">Run the scheduled cron scan on demand, or scan a single symbol and timeframe.</p>
+      <div class="controls">
+        <div class="control-group">
+          <label class="control-label" for="cron-watchlist">Watchlist</label>
+          <select id="cron-watchlist" class="control-select">
+            <option value="">All Watchlists</option>
+          </select>
+          <div class="muted" style="font-size:12px; margin-top:4px;">Dashboard scan will respect this selected watchlist. Baseline seeding ignores it and scans all configured watchlists.</div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Action</label>
+          <button id="run-cron-btn" class="btn btn-primary" type="button">Run Cron Scan Now</button>
+        </div>
+        <div class="control-group">
+          <label class="control-label">View</label>
+          <button id="toggle-ta-only-btn" class="btn" type="button">TA Metrics Only</button>
+        </div>
+      </div>
+      <form id="symbol-scan-form" class="controls">
+        <div class="control-group">
+          <label class="control-label" for="symbol-input">Symbol</label>
+          <input id="symbol-input" class="control-input" type="text" placeholder="SOXL or NASDAQ:TSLA" required />
+        </div>
+        <div class="control-group">
+          <label class="control-label" for="timeframe-select">Timeframe</label>
+          <select id="timeframe-select" class="control-select" required>
+            <option value="1">1m</option>
+            <option value="5">5m</option>
+            <option value="15" selected>15m</option>
+            <option value="30">30m</option>
+            <option value="60">1h</option>
+            <option value="240">4h</option>
+            <option value="D">1D</option>
+            <option value="W">1W</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Action</label>
+          <button id="run-symbol-btn" class="btn" type="submit">Run Symbol Scan</button>
+        </div>
+      </form>
+      <div id="action-message" class="action-message"></div>
+      <div style="margin-top:16px; padding-top:14px; border-top:1px solid #24314f; display:flex; align-items:center; gap:12px;">
+        <button id="restart-server-btn" class="btn btn-danger" type="button">↺ Restart Server</button>
+        <span id="restart-message" class="action-message" style="margin-top:0;"></span>
+      </div>
+    </div>
+
+    <div class="card" id="open-trades-card">
       <h2>Open Trades</h2>
       <div id="open-trades"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="prior-signals-card">
       <h2>Previous Signals</h2>
       <div id="prior-sections"></div>
+    </div>
+
+    <div class="card">
+      <h2>Strategy Tester Metrics</h2>
+      <p class="muted">Export Net P&amp;L %, Max Drawdown %, Total Trades, Win Rate, and Profit Factor from the Strategy Tester Performance Summary tab for all watchlist symbols.</p>
+      <p class="muted" style="font-size:12px;">Works in any strategy mode. Navigates to each symbol and reads the Performance Summary tab — takes several minutes for all watchlists.</p>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;">
+        <label class="control-label" for="metrics-watchlist-select" style="margin-right:4px;">Watchlist</label>
+        <select id="metrics-watchlist-select" class="control-select" style="min-width:220px;">
+          <option value="">All configured watchlists</option>
+        </select>
+        <button id="export-metrics-btn" class="btn btn-primary" type="button">⬇ Export Strategy Metrics</button>
+        <button id="start-reconcile-btn" class="btn btn-secondary" type="button">♻ Reconcile + Refresh Metrics</button>
+        <button id="download-metrics-btn" class="btn hidden" type="button">↓ Download CSV Again</button>
+        <span id="metrics-export-message" class="action-message" style="margin-top:0;"></span>
+      </div>
+      <div id="metrics-export-status-bar" class="scan-status-bar hidden">
+        <span class="ssb-elapsed" id="me-elapsed">0:00</span>
+        <span class="ssb-sep">|</span>
+        <span id="me-watchlist" class="ssb-watchlist">—</span>
+        <span class="ssb-sep">|</span>
+        <span id="me-progress">0/0 symbols</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <details id="ta-metrics-panel">
+        <summary class="section-toggle">TA Metrics Preflight · <span id="ta-metrics-count">0</span> symbol result(s)</summary>
+        <div style="margin-top:12px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+          <button id="download-ta-csv" class="btn" type="button">Download CSV</button>
+          <button id="download-ta-excel" class="btn" type="button">Download Excel</button>
+          <span class="toggle-meta">Exports raw watchlist, symbol and TA metrics table rows captured during the latest scan.</span>
+        </div>
+        <div id="ta-metrics-content" style="margin-top:16px;"></div>
+      </details>
     </div>
   </div>
 
   <script>
     let lastUpdated = null;
+    let actionInFlight = false;
+    let scanStartedAt = null;
+    let elapsedTimer = null;
+
+    function startScanStatusBar(startedAt) {
+      scanStartedAt = startedAt ? new Date(startedAt) : new Date();
+      document.getElementById('scan-status-bar').classList.remove('hidden');
+      tickElapsed();
+      elapsedTimer = setInterval(tickElapsed, 1000);
+    }
+
+    function stopScanStatusBar() {
+      if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; }
+      document.getElementById('scan-status-bar').classList.add('hidden');
+      scanStartedAt = null;
+    }
+
+    function tickElapsed() {
+      if (!scanStartedAt) return;
+      const s = Math.floor((Date.now() - scanStartedAt) / 1000);
+      const el = document.getElementById('ssb-elapsed');
+      if (el) el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    }
+
+    function updateScanStatusBar(d) {
+      const wl = document.getElementById('ssb-watchlist');
+      const sym = document.getElementById('ssb-symbols');
+      const idx = document.getElementById('ssb-wl-index');
+      const seps = document.querySelectorAll('#scan-status-bar .ssb-sep');
+      if (wl) wl.textContent = d.watchlistName || '—';
+      const symText = d.symbolsTotal > 0 ? `${d.symbolsScanned}/${d.symbolsTotal} symbols` : '';
+      const idxText = d.watchlistTotal > 0 ? `watchlist ${d.watchlistIndex}/${d.watchlistTotal}` : '';
+      if (sym) sym.textContent = symText;
+      if (idx) idx.textContent = idxText;
+      if (seps[1]) seps[1].style.display = symText ? '' : 'none';
+      if (seps[2]) seps[2].style.display = idxText ? '' : 'none';
+    }
+
+    function parseMetric(str) {
+      // Parses "±N.NN USD | ±N.NN%" → { usd, pct }
+      // Also handles bare "±N.NN%" or "±N.NN USD"
+      const s = String(str ?? '').replace(/,/g, '');
+      const full = s.match(/([+-]?\d+(?:\.\d+)?)\s*USD\s*\|\s*([+-]?\d+(?:\.\d+)?)%/);
+      if (full) return { usd: parseFloat(full[1]), pct: parseFloat(full[2]) };
+      const pctOnly = s.match(/([+-]?\d+(?:\.\d+)?)%/);
+      if (pctOnly) return { usd: null, pct: parseFloat(pctOnly[1]) };
+      const usdOnly = s.match(/([+-]?\d+(?:\.\d+)?)\s*USD/);
+      if (usdOnly) return { usd: parseFloat(usdOnly[1]), pct: null };
+      const bare = s.match(/([+-]?\d+(?:\.\d+)?)/);
+      return bare ? { usd: parseFloat(bare[1]), pct: null } : { usd: null, pct: null };
+    }
+
+    function avgOf(nums) {
+      const valid = nums.filter(n => n != null && Number.isFinite(n));
+      if (!valid.length) return null;
+      return valid.reduce((a, b) => a + b, 0) / valid.length;
+    }
+
+    function parseDisplayTimestamp(value) {
+      const cleaned = String(value || '').replace(/\s+ET$/i, '').trim();
+      const parsed = Date.parse(cleaned);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function colorNum(n, s) {
+      if (n == null) return '—';
+      return n < 0
+        ? `<span style="color:#fca5a5">${s}</span>`
+        : `<span style="color:#6ee7a8">${s}</span>`;
+    }
+
+    function fmtMetricAvg(usd, pct) {
+      if (usd == null && pct == null) return '—';
+      const sign = n => n >= 0 ? '+' : '';
+      if (usd != null && pct != null) {
+        const s = `${sign(usd)}${usd.toFixed(2)} USD | ${sign(pct)}${pct.toFixed(2)}%`;
+        return colorNum(pct, s);
+      }
+      if (pct != null) return colorNum(pct, `${sign(pct)}${pct.toFixed(2)}%`);
+      return colorNum(usd, `${sign(usd)}${usd.toFixed(2)} USD`);
+    }
+
+    function buildSummaryRow(rows) {
+      const exitRows = rows.filter(r => String(r.signal || '').toUpperCase() === 'EXIT');
+      if (exitRows.length < 2) return '';
+
+      const pnlParsed  = exitRows.map(r => parseMetric(r.netPnl));
+      const favParsed  = exitRows.map(r => parseMetric(r.favorableExcursion));
+      const advParsed  = exitRows.map(r => parseMetric(r.adverseExcursion));
+
+      const avgPnlUsd  = avgOf(pnlParsed.map(p => p.usd));
+      const avgPnlPct  = avgOf(pnlParsed.map(p => p.pct));
+      const avgFavUsd  = avgOf(favParsed.map(p => p.usd));
+      const avgFavPct  = avgOf(favParsed.map(p => p.pct));
+      const avgAdvUsd  = avgOf(advParsed.map(p => p.usd));
+      const avgAdvPct  = avgOf(advParsed.map(p => p.pct));
+
+      if (avgPnlUsd == null && avgPnlPct == null && avgFavUsd == null && avgFavPct == null) return '';
+
+      return `
+        <tr style="border-top:2px solid #334466;background:#0d1525;font-weight:600;font-size:12px;color:#98a7c6;">
+          <td colspan="4" style="color:#98a7c6;padding:8px 8px;">Avg (${exitRows.length} closed)</td>
+          <td>${fmtMetricAvg(avgPnlUsd, avgPnlPct)}</td>
+          <td>${fmtMetricAvg(avgFavUsd, avgFavPct)}</td>
+          <td>${fmtMetricAvg(avgAdvUsd, avgAdvPct)}</td>
+        </tr>
+      `;
+    }
 
     function buildTradeRows(rows) {
       return rows.map((row) => {
@@ -76,9 +341,74 @@
             <td class="status-${signal.toLowerCase()}">${signal}</td>
             <td>${row.entryTime || '—'}</td>
             <td>${row.entryPrice ?? '—'}</td>
-            <td>${row.netPnl ?? '—'}</td>
-            <td>${row.favorableExcursion ?? '—'}</td>
-            <td>${row.adverseExcursion ?? '—'}</td>
+            <td>${colorVal(row.netPnl)}</td>
+            <td>${colorVal(row.favorableExcursion)}</td>
+            <td>${colorVal(row.adverseExcursion)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function fmt2(n) { return (n == null || !Number.isFinite(Number(n))) ? '—' : Number(n).toFixed(2); }
+    function fmtPct(n) { return (n == null || !Number.isFinite(Number(n))) ? '—' : Number(n).toFixed(2) + '%'; }
+    function colorVal(str) {
+      const s = String(str ?? '');
+      if (s === '—' || s === '') return s;
+      return /^\s*-/.test(s) || /[−–]\s*\d/.test(s) ? `<span style="color:#fca5a5">${s}</span>` : s;
+    }
+
+    function buildOpenTradesSummaryRow(rows) {
+      if (rows.length < 2) return '';
+      const pnlParsed = rows.map(r => parseMetric(r.netPnl));
+      const avgPnlUsd = avgOf(pnlParsed.map(p => p.usd));
+      const avgPnlPct = avgOf(pnlParsed.map(p => p.pct));
+
+      const mfeAvgs = rows.map(r => r.excursionStats?.avgFavorablePct ?? null);
+      const mfeMaxs = rows.map(r => r.excursionStats?.maxFavorablePct ?? null);
+      const maeAvgs = rows.map(r => r.excursionStats?.avgAdversePct ?? null);
+      const maeMaxs = rows.map(r => r.excursionStats?.maxAdversePct ?? null);
+
+      const avgMfeAvg = avgOf(mfeAvgs);
+      const avgMfeMax = avgOf(mfeMaxs);
+      const avgMaeAvg = avgOf(maeAvgs);
+      const avgMaeMax = avgOf(maeMaxs);
+
+      const mfeCell = avgMfeAvg != null ? `${fmtPct(avgMfeAvg)} / ${fmtPct(avgMfeMax)}` : '—';
+      const maeCell = avgMaeAvg != null ? `${fmtPct(avgMaeAvg)} / ${fmtPct(avgMaeMax)}` : '—';
+
+      return `
+        <tr style="border-bottom:2px solid #334466;background:#0d1525;font-weight:600;font-size:12px;color:#98a7c6;">
+          <td colspan="5" style="color:#98a7c6;padding:8px 8px;">Avg (${rows.length} open)</td>
+          <td>${fmtMetricAvg(avgPnlUsd, avgPnlPct)}</td>
+          <td>${mfeCell}</td>
+          <td>${maeCell}</td>
+          <td></td>
+        </tr>
+      `;
+    }
+
+    function buildOpenTradeRows(rows) {
+      return rows.map((row) => {
+        const stats = row.excursionStats || null;
+        const levels = row.alertLevels || null;
+        const mfe = stats ? `${fmtPct(stats.avgFavorablePct)} / ${fmtPct(stats.maxFavorablePct)}` : '—';
+        const mae = stats ? `${fmtPct(stats.avgAdversePct)} / ${fmtPct(stats.maxAdversePct)}` : '—';
+        const alertStatusColor = row.alertsCreated ? '#6ee7a8' : row.alertsSkipReason ? '#fb923c' : '#facc15';
+        const alertStatusText  = row.alertsCreated ? '✓ Alerts set' : row.alertsSkipReason || '⏳ Pending';
+        const alertCell = levels
+          ? `Stop: ${fmt2(levels.stopAvg)} / ${fmt2(levels.stopMax)}<br>Target: ${fmt2(levels.targetAvg)} / ${fmt2(levels.targetMax)}<br><span style="font-size:11px;color:${alertStatusColor}">${alertStatusText}</span>`
+          : '—';
+        return `
+          <tr class="row-open">
+            <td>${row.watchlistName || '—'}</td>
+            <td>${row.symbol || '—'}</td>
+            <td class="status-open">OPEN</td>
+            <td>${row.entryTime || '—'}</td>
+            <td>${row.entryPrice ?? '—'}</td>
+            <td>${colorVal(row.netPnl)}</td>
+            <td>${mfe}</td>
+            <td>${mae}</td>
+            <td style="font-size:12px;line-height:1.6">${alertCell}</td>
           </tr>
         `;
       }).join('');
@@ -87,7 +417,10 @@
     function renderOpenTrades(items) {
       const container = document.getElementById('open-trades');
       container.innerHTML = '';
-      const rows = Array.isArray(items) ? items : [];
+      const rows = [...(Array.isArray(items) ? items : [])]
+        .sort((a, b) => parseDisplayTimestamp(b.entryTime) - parseDisplayTimestamp(a.entryTime)
+          || String(a.watchlistName || '').localeCompare(String(b.watchlistName || ''))
+          || String(a.symbol || '').localeCompare(String(b.symbol || '')));
 
       if (!rows.length) {
         const div = document.createElement('div');
@@ -97,6 +430,7 @@
         return;
       }
 
+      const openSummary = buildOpenTradesSummaryRow(rows);
       container.innerHTML = `
         <table>
           <thead>
@@ -107,11 +441,13 @@
               <th>Entry Date / Time</th>
               <th>Entry Price</th>
               <th>Net P&amp;L</th>
-              <th>Favorable Excursion</th>
-              <th>Adverse Excursion</th>
+              <th>Hist. MFE avg / max</th>
+              <th>Hist. MAE avg / max</th>
+              <th>Alert Levels (avg / max)</th>
             </tr>
+            ${openSummary || ''}
           </thead>
-          <tbody>${buildTradeRows(rows)}</tbody>
+          <tbody>${buildOpenTradeRows(rows)}</tbody>
         </table>
       `;
     }
@@ -138,13 +474,8 @@
             const rank = { OPEN: 0, EXIT: 1, '—': 2 };
             const aSignal = String(a.signal || '—').toUpperCase();
             const bSignal = String(b.signal || '—').toUpperCase();
-            const parseTime = (value) => {
-              const cleaned = String(value || '').replace(/\s+ET$/i, '').trim();
-              const parsed = Date.parse(cleaned);
-              return Number.isFinite(parsed) ? parsed : 0;
-            };
             return (rank[aSignal] ?? 9) - (rank[bSignal] ?? 9)
-              || (parseTime(b.entryTime) - parseTime(a.entryTime))
+              || (parseDisplayTimestamp(b.entryTime) - parseDisplayTimestamp(a.entryTime))
               || String(a.symbol || '').localeCompare(String(b.symbol || ''));
           });
         const tableRows = rows.map((row) => ({ ...row, watchlistName: null }));
@@ -159,6 +490,7 @@
         const shouldCollapse = rows.length > 5;
         const detailsOpen = shouldCollapse ? '' : (rows.length > 0 ? ' open' : '');
         const rowCountLabel = `${rows.length} row${rows.length === 1 ? '' : 's'}`;
+        const summaryRow = buildSummaryRow(tableRows);
         const tableHtml = `
           <table>
             <thead>
@@ -171,6 +503,7 @@
                 <th>Favorable Excursion</th>
                 <th>Adverse Excursion</th>
               </tr>
+              ${summaryRow || ''}
             </thead>
             <tbody>${buildTradeRows(tableRows) || '<tr><td colspan="7" class="muted">No prior trades recorded for this watchlist.</td></tr>'}</tbody>
           </table>
@@ -196,9 +529,268 @@
       }
     }
 
+    function renderWatchlistSyncStatus(items, options) {
+      const container = document.getElementById('watchlist-sync-content');
+      const panel = document.getElementById('watchlist-sync-panel');
+      const countEl = document.getElementById('watchlist-sync-count');
+      const rows = Array.isArray(items) ? items : [];
+      if (countEl) countEl.textContent = String(rows.length);
+      container.innerHTML = '';
+
+      if (!rows.length) {
+        const div = document.createElement('div');
+        div.className = 'muted';
+        div.textContent = 'No watchlist data available yet. Run a scan to populate.';
+        container.appendChild(div);
+        return;
+      }
+
+      const sourceLabel = {
+        tradingview_panel: { text: 'Live from TradingView', color: '#86efac' },
+        rules_fallback:    { text: 'Fallback from rules.json', color: '#facc15' },
+        watchlist_unavailable: { text: 'Cached (TradingView unreadable)', color: '#94a3b8' },
+      };
+
+      const list = document.createElement('ul');
+      list.style.cssText = 'margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;';
+
+      for (const item of rows) {
+        const syms = Array.isArray(item.symbols) ? item.symbols : [];
+        const hasError = Boolean(item.selectError) && syms.length === 0;
+        const src = sourceLabel[item.source] || { text: item.source || 'unknown', color: '#94a3b8' };
+
+        const li = document.createElement('li');
+        li.style.cssText = `padding:12px 14px;background:#0f1728;border:1px solid ${hasError ? '#7f1d1d' : '#24314f'};border-radius:10px;`;
+
+        // Header row: name + timeframe + source badge
+        const header = document.createElement('div');
+        header.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;';
+        header.innerHTML = `
+          <span style="font-weight:700;">${item.watchlistName}</span>
+          <span style="color:#94a3b8;font-size:12px;">TF ${item.timeframe || '?'}</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:999px;background:#1e293b;color:${src.color};">${src.text}</span>
+          <span style="font-size:12px;color:#94a3b8;">${syms.length} symbol${syms.length !== 1 ? 's' : ''}</span>
+        `;
+        li.appendChild(header);
+
+        // Symbol chips
+        if (syms.length) {
+          const chips = document.createElement('div');
+          chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;';
+          for (const sym of syms) {
+            const chip = document.createElement('span');
+            chip.style.cssText = 'font-size:11px;padding:2px 7px;border-radius:6px;background:#1e293b;color:#e5eefc;font-family:monospace;';
+            chip.textContent = String(sym).split(':').pop();
+            chips.appendChild(chip);
+          }
+          li.appendChild(chips);
+        }
+
+        // Error note (only when no symbols loaded)
+        if (item.selectError && syms.length === 0) {
+          const err = document.createElement('div');
+          err.style.cssText = 'margin-top:8px;font-size:12px;color:#fca5a5;';
+          err.textContent = item.selectError;
+          li.appendChild(err);
+        }
+
+        list.appendChild(li);
+      }
+
+      container.appendChild(list);
+    }
+
+    function formatCsvCell(value) {
+      const text = String(value ?? '');
+      const escaped = text.replace(/"/g, '""');
+      return '"' + escaped + '"';
+    }
+
+    function extractTaMetricsCsvRows(items) {
+      const rows = [];
+      for (const item of Array.isArray(items) ? items : []) {
+        const watchlistName = item.watchlist_name || item.watchlistName || 'Default';
+        const timeframe = item.timeframe || item.timeframe || '';
+        const symbol = item.symbol || 'Unknown';
+        const tables = Array.isArray(item.tables?.studies) ? item.tables.studies
+          : Array.isArray(item.tables) ? item.tables : [];
+        if (!tables.length) {
+          rows.push([watchlistName, timeframe, symbol, '', '', '', 'No TA metrics table rows found']);
+          continue;
+        }
+        for (let studyIndex = 0; studyIndex < tables.length; studyIndex += 1) {
+          const study = tables[studyIndex] || {};
+          const studyName = study.name || `Study ${studyIndex + 1}`;
+          const tableRows = Array.isArray(study.tables) ? study.tables : [];
+          if (!tableRows.length) {
+            rows.push([watchlistName, timeframe, symbol, studyName, studyIndex + 1, 0, 'No rows']);
+            continue;
+          }
+          for (let tableIndex = 0; tableIndex < tableRows.length; tableIndex += 1) {
+            const rowLines = Array.isArray(tableRows[tableIndex].rows) ? tableRows[tableIndex].rows : [];
+            if (!rowLines.length) {
+              rows.push([watchlistName, timeframe, symbol, studyName, tableIndex + 1, 0, 'No rows']);
+              continue;
+            }
+            for (let rowIndex = 0; rowIndex < rowLines.length; rowIndex += 1) {
+              rows.push([
+                watchlistName,
+                timeframe,
+                symbol,
+                studyName,
+                tableIndex + 1,
+                rowIndex + 1,
+                rowLines[rowIndex],
+              ]);
+            }
+          }
+        }
+      }
+      return rows;
+    }
+
+    function downloadFile(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadTaMetricsCsv(items) {
+      const rows = extractTaMetricsCsvRows(items);
+      const header = ['Watchlist', 'Timeframe', 'Symbol', 'Study', 'Table #', 'Row #', 'Value'];
+      const csv = [header, ...rows].map((cols) => cols.map(formatCsvCell).join(',')).join('\r\n');
+      downloadFile(csv, 'ta-metrics-preflight.csv', 'text/csv;charset=utf-8');
+    }
+
+    function downloadTaMetricsExcel(items) {
+      const rows = extractTaMetricsCsvRows(items);
+      const headers = ['Watchlist', 'Timeframe', 'Symbol', 'Study', 'Table #', 'Row #', 'Value'];
+      const htmlRows = [headers, ...rows].map((cols) => `        <tr>${cols.map(c => `<td>${String(c || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>`).join('')}</tr>`).join('\n');
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><table border="1">\n${htmlRows}\n</table></body></html>`;
+      downloadFile(html, 'ta-metrics-preflight.xls', 'application/vnd.ms-excel;charset=utf-8');
+    }
+
+    function renderTaMetrics(items) {
+      const content = document.getElementById('ta-metrics-content');
+      const countEl = document.getElementById('ta-metrics-count');
+      const rows = Array.isArray(items) ? items : [];
+      if (countEl) countEl.textContent = String(rows.length);
+      content.innerHTML = '';
+      if (!rows.length) {
+        const div = document.createElement('div');
+        div.className = 'muted';
+        div.textContent = 'No TA metrics preflight results are available yet. Run a scan and refresh to capture per-symbol metric tables.';
+        content.appendChild(div);
+        return;
+      }
+
+      for (const item of rows) {
+        const block = document.createElement('div');
+        block.style.marginBottom = '18px';
+        const header = document.createElement('div');
+        header.style.marginBottom = '10px';
+        header.innerHTML = `<strong>${item.watchlist_name || item.watchlistName || 'Default'} · ${item.symbol || 'Unknown'} · TF ${item.timeframe || '—'}</strong>`;
+        block.appendChild(header);
+
+        const tables = Array.isArray(item.tables?.studies) ? item.tables.studies
+          : Array.isArray(item.tables) ? item.tables : [];
+        if (!tables.length) {
+          const missing = document.createElement('div');
+          missing.className = 'muted';
+          missing.textContent = 'No TA metric tables were captured for this symbol. The strategy must be in sweep/IS-OOS mode (not Fast mode) for tables to render.';
+          block.appendChild(missing);
+          content.appendChild(block);
+          continue;
+        }
+
+        for (const study of tables) {
+          const title = document.createElement('div');
+          title.style.margin = '10px 0 4px';
+          title.style.fontSize = '14px';
+          title.style.fontWeight = '700';
+          title.textContent = study.name || 'TA metrics study';
+          block.appendChild(title);
+
+          const table = document.createElement('table');
+          const thead = document.createElement('thead');
+          thead.innerHTML = '<tr><th>Row</th><th>Value</th></tr>';
+          table.appendChild(thead);
+          const tbody = document.createElement('tbody');
+          const tableRows = Array.isArray(study.tables) ? study.tables : [];
+          if (!tableRows.length) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="2" class="muted">No rows available</td>';
+            tbody.appendChild(tr);
+          } else {
+            tableRows.forEach((tableRow, tableIndex) => {
+              const rowLines = Array.isArray(tableRow.rows) ? tableRow.rows : [];
+              if (!rowLines.length) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${tableIndex + 1}</td><td class="muted">No rows</td>`;
+                tbody.appendChild(tr);
+                return;
+              }
+              rowLines.forEach((rowText, rowIndex) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${tableIndex + 1}.${rowIndex + 1}</td><td>${String(rowText || '—')}</td>`;
+                tbody.appendChild(tr);
+              });
+            });
+          }
+          table.appendChild(tbody);
+          block.appendChild(table);
+        }
+
+        content.appendChild(block);
+      }
+    }
+
+    document.getElementById('download-ta-csv').addEventListener('click', () => {
+      const status = window.__latestDashboardStatus || {};
+      downloadTaMetricsCsv(status.scanResults || []);
+    });
+    document.getElementById('download-ta-excel').addEventListener('click', () => {
+      const status = window.__latestDashboardStatus || {};
+      downloadTaMetricsExcel(status.scanResults || []);
+    });
+
+    let taMetricsOnlyMode = false;
+    function setTaMetricsOnlyMode(enabled) {
+      taMetricsOnlyMode = enabled;
+      document.body.classList.toggle('ta-only-mode', enabled);
+      const btn = document.getElementById('toggle-ta-only-btn');
+      if (btn) {
+        btn.textContent = enabled ? 'Show all sections' : 'TA Metrics Only';
+      }
+      const details = document.getElementById('ta-metrics-panel');
+      if (details) details.open = true;
+    }
+
+    document.getElementById('toggle-ta-only-btn').addEventListener('click', () => {
+      setTaMetricsOnlyMode(!taMetricsOnlyMode);
+    });
+
     async function refresh(force = false) {
       const res = await fetch('/api/status', { cache: 'no-store' });
       const data = await res.json();
+      window.__latestDashboardStatus = data;
+
+      // Always check scanRunning before the early-return guard — the clock must stop
+      // even when updatedAt hasn't changed (e.g. cron-finished SSE was missed).
+      // Also handle the case where the page loads while a scan is already in progress.
+      if (data.scanRunning && !elapsedTimer) {
+        startScanStatusBar(null);
+        setActionBusy(true);
+      } else if (data.scanRunning === false && elapsedTimer) {
+        stopScanStatusBar();
+      }
+
       if (!force && lastUpdated && data.updatedAt === lastUpdated) return;
       lastUpdated = data.updatedAt || null;
 
@@ -217,7 +809,32 @@
         tvStatus.className = 'pill pill-status-active';
         document.getElementById('refresh-note').textContent = 'Updates when the scheduled scan writes a new result.';
       }
-      document.getElementById('updated').textContent = 'Updated: ' + (data.formattedTimestampEt || '--') + ' ET';
+      const watchdogEl = document.getElementById('watchdog-error');
+      if (data.watchdogError && data.watchdogMessage) {
+        watchdogEl.textContent = '⚠ ' + data.watchdogMessage;
+        watchdogEl.className = 'error';
+      } else {
+        watchdogEl.className = 'error hidden';
+      }
+
+      const reg = data.regressionResult;
+      const regEl = document.getElementById('regression-banner');
+      if (reg && reg.checkedAt) {
+        if (reg.passed) {
+          regEl.textContent = `✓ Regression Run ${reg.formattedCheckedAt} ET — Pass (${reg.checksPassed}/${reg.checksTotal} checks)`;
+          regEl.className = 'regression-pass';
+        } else {
+          const failLines = (reg.failures || []).map(f => `\n  • ${f}`).join('');
+          regEl.textContent = `✗ Regression Run ${reg.formattedCheckedAt} ET — Failed (${reg.checksPassed}/${reg.checksTotal} checks)${failLines}`;
+          regEl.className = 'regression-fail';
+          regEl.style.whiteSpace = 'pre-wrap';
+        }
+      } else {
+        regEl.className = 'hidden';
+      }
+
+      const updatedLabel = data.isPartialScan ? `Scanning (${data.scanProgress?.watchlistIndex ?? '?'}/${data.scanProgress?.watchlistTotal ?? '?'} watchlists)` : 'Updated: ' + (data.formattedTimestampEt || '--') + ' ET';
+      document.getElementById('updated').textContent = updatedLabel;
       document.getElementById('next-run').textContent = 'Next run: ' + (data.nextScheduledRunEt || '--');
       document.getElementById('count').textContent = 'Signals: ' + (data.signalsFound ?? 0);
       document.getElementById('changed').textContent = 'Changed: ' + (data.changedSignals ?? 0);
@@ -236,14 +853,363 @@
 
       renderOpenTrades(data.openTrades || []);
       renderPriorSignals(data.priorSignals || []);
+      renderWatchlistSyncStatus(data.watchlistSync || [], data.watchlistSyncOptions || []);
+      renderTaMetrics(data.scanResults || []);
+    }
+
+    function setActionBusy(isBusy) {
+      actionInFlight = isBusy;
+      for (const id of ['run-cron-btn', 'run-cron-btn-top', 'run-symbol-btn', 'cron-watchlist', 'cron-watchlist-top']) {
+        const el = document.getElementById(id);
+        if (el) el.disabled = isBusy;
+      }
+    }
+
+    function loadWatchlists() {
+      fetch('/api/watchlists', { cache: 'no-store' })
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success || !Array.isArray(data.watchlists)) return;
+          for (const id of ['cron-watchlist-top', 'cron-watchlist', 'metrics-watchlist-select']) {
+            const sel = document.getElementById(id);
+            if (!sel) continue;
+            data.watchlists.forEach(name => {
+              const opt = document.createElement('option');
+              opt.value = name;
+              opt.textContent = name;
+              sel.appendChild(opt);
+            });
+          }
+        })
+        .catch(() => {});
+    }
+
+    function setActionMessage(text, isError = false) {
+      const el = document.getElementById('action-message');
+      el.textContent = text || '';
+      el.className = isError ? 'action-message action-message-error' : 'action-message';
+      const topEl = document.getElementById('top-action-message');
+      if (topEl) {
+        topEl.textContent = text || '';
+        topEl.className = isError ? 'action-message action-message-error' : 'action-message';
+        topEl.style.marginTop = '0';
+      }
+    }
+
+    async function postJson(url, payload = {}) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      let body = {};
+      try {
+        body = await res.json();
+      } catch {}
+      if (!res.ok || body.success === false) {
+        throw new Error(body.error || `Request failed (${res.status})`);
+      }
+      return body;
+    }
+
+    async function runCronNow(selectId) {
+      if (actionInFlight) return;
+      const sel = document.getElementById(selectId || 'cron-watchlist-top');
+      const watchlistName = sel ? String(sel.value || '').trim() : '';
+      setActionBusy(true);
+      const label = watchlistName || 'all configured watchlists';
+      setActionMessage(`Running scan for ${label}...`);
+      try {
+        const payload = watchlistName ? { watchlistName } : {};
+        await postJson('/api/run-cron-now', payload);
+        // 202 accepted — scan is running in background; SSE cron-finished will re-enable the button
+        setActionMessage('Scan started — dashboard will refresh when complete...');
+      } catch (error) {
+        setActionMessage(error?.message || 'Failed to run cron scan.', true);
+        setActionBusy(false);
+      }
+    }
+
+    async function runSymbolScan(event) {
+      event.preventDefault();
+      if (actionInFlight) return;
+
+      const symbolInput = document.getElementById('symbol-input');
+      const timeframeSelect = document.getElementById('timeframe-select');
+      const symbol = String(symbolInput.value || '').trim().toUpperCase();
+      const timeframe = String(timeframeSelect.value || '').trim();
+      if (!symbol || !timeframe) {
+        setActionMessage('Symbol and timeframe are required.', true);
+        return;
+      }
+
+      setActionBusy(true);
+      setActionMessage(`Running scan for ${symbol} (${timeframe})...`);
+
+      try {
+        const payload = await postJson('/api/run-symbol-scan', { symbol, timeframe });
+        await refresh(true);
+
+        const out = payload.result || {};
+        if (out.error) {
+          setActionMessage(`Scan completed with warning: ${out.error}`, true);
+        } else if (out.hasSignal) {
+          const direction = (out.direction || '').toUpperCase();
+          setActionMessage(`Signal detected for ${out.symbol} (${out.timeframe}) ${direction} at ${out.price ?? 'n/a'}`);
+        } else {
+          setActionMessage(out.summary || `Scan complete for ${out.symbol || symbol} (${out.timeframe || timeframe}).`);
+        }
+      } catch (error) {
+        setActionMessage(error?.message || 'Failed to run symbol scan.', true);
+      } finally {
+        setActionBusy(false);
+      }
+    }
+
+    async function restartServer() {
+      const btn = document.getElementById('restart-server-btn');
+      const msg = document.getElementById('restart-message');
+      if (btn.disabled) return;
+      btn.disabled = true;
+      msg.className = 'action-message';
+      msg.textContent = 'Restarting…';
+      try {
+        await postJson('/api/restart', {});
+      } catch {
+        // Expected — server exits before sending a complete response sometimes.
+      }
+      // Poll until the server comes back up, then reload.
+      const deadline = Date.now() + 30000;
+      let dots = 0;
+      const poll = setInterval(async () => {
+        dots = (dots + 1) % 4;
+        msg.textContent = 'Waiting for server' + '.'.repeat(dots + 1);
+        if (Date.now() > deadline) {
+          clearInterval(poll);
+          msg.className = 'action-message action-message-error';
+          msg.textContent = 'Server did not respond within 30 s — refresh the page manually.';
+          btn.disabled = false;
+          return;
+        }
+        try {
+          const r = await fetch('/api/status', { cache: 'no-store' });
+          if (r.ok) { clearInterval(poll); window.location.reload(); }
+        } catch { /* not up yet */ }
+      }, 1500);
     }
 
     refresh(true);
-    const stream = new EventSource('/events');
-    stream.onmessage = () => refresh(false);
-    stream.onerror = () => {
-      document.getElementById('refresh-note').textContent = 'Waiting for the next scheduled scan update...';
-    };
+    loadWatchlists();
+
+    document.getElementById('run-cron-btn').addEventListener('click', () => runCronNow('cron-watchlist'));
+    document.getElementById('run-cron-btn-top').addEventListener('click', () => runCronNow('cron-watchlist-top'));
+    document.getElementById('symbol-scan-form').addEventListener('submit', runSymbolScan);
+    document.getElementById('restart-server-btn').addEventListener('click', restartServer);
+    document.getElementById('symbol-input').addEventListener('blur', (event) => {
+      event.target.value = String(event.target.value || '').trim().toUpperCase();
+    });
+
+    // Strategy Tester Metrics export
+    let metricsExportInFlight = false;
+    let reconcileInFlight = false;
+    let metricsExportStartedAt = null;
+    let metricsElapsedTimer = null;
+
+    function startMetricsStatusBar(startedAt) {
+      metricsExportStartedAt = startedAt ? new Date(startedAt) : new Date();
+      document.getElementById('metrics-export-status-bar').classList.remove('hidden');
+      tickMetricsElapsed();
+      metricsElapsedTimer = setInterval(tickMetricsElapsed, 1000);
+    }
+
+    function stopMetricsStatusBar() {
+      if (metricsElapsedTimer) { clearInterval(metricsElapsedTimer); metricsElapsedTimer = null; }
+      document.getElementById('metrics-export-status-bar').classList.add('hidden');
+      metricsExportStartedAt = null;
+    }
+
+    function tickMetricsElapsed() {
+      if (!metricsExportStartedAt) return;
+      const s = Math.floor((Date.now() - metricsExportStartedAt) / 1000);
+      const el = document.getElementById('me-elapsed');
+      if (el) el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    }
+
+    function setMetricsMessage(text, isError = false) {
+      const el = document.getElementById('metrics-export-message');
+      el.textContent = text || '';
+      el.className = isError ? 'action-message action-message-error' : 'action-message';
+    }
+
+    async function startMetricsExport() {
+      if (metricsExportInFlight || actionInFlight || reconcileInFlight) {
+        setMetricsMessage('Another scan or reconciliation is in progress — wait for it to complete.', true);
+        return;
+      }
+      metricsExportInFlight = true;
+      document.getElementById('export-metrics-btn').disabled = true;
+      document.getElementById('start-reconcile-btn').disabled = true;
+      document.getElementById('download-metrics-btn').classList.add('hidden');
+      setMetricsMessage('Starting metrics export…');
+      try {
+        const sel = document.getElementById('metrics-watchlist-select');
+        const watchlistName = sel ? String(sel.value || '').trim() : '';
+        const payload = watchlistName ? { watchlistName } : {};
+        const res = await fetch('/api/start-metrics-export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || `Request failed (${res.status})`);
+        }
+        if (watchlistName) {
+          setMetricsMessage(`Export started — scanning watchlist ${watchlistName} only…`);
+        } else {
+          setMetricsMessage('Export started — scanning all watchlist symbols…');
+        }
+      } catch (error) {
+        setMetricsMessage(error?.message || 'Failed to start metrics export.', true);
+        metricsExportInFlight = false;
+        document.getElementById('export-metrics-btn').disabled = false;
+        document.getElementById('start-reconcile-btn').disabled = false;
+      }
+    }
+
+    async function startReconciliation() {
+      if (metricsExportInFlight || actionInFlight || reconcileInFlight) {
+        setMetricsMessage('Another scan or reconciliation is in progress — wait for it to complete.', true);
+        return;
+      }
+      reconcileInFlight = true;
+      document.getElementById('start-reconcile-btn').disabled = true;
+      document.getElementById('export-metrics-btn').disabled = true;
+      document.getElementById('download-metrics-btn').classList.add('hidden');
+      setMetricsMessage('Starting reconciliation and metrics refresh…');
+      try {
+        const res = await fetch('/api/start-reconciliation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || `Request failed (${res.status})`);
+        }
+        setMetricsMessage('Reconciliation started — refreshing metrics for all watchlist symbols…');
+      } catch (error) {
+        setMetricsMessage(error?.message || 'Failed to start reconciliation.', true);
+        reconcileInFlight = false;
+        document.getElementById('start-reconcile-btn').disabled = false;
+      }
+    }
+
+    function triggerMetricsCsvDownload() {
+      const ts = new Date().toISOString().slice(0, 10);
+      const link = document.createElement('a');
+      link.href = '/api/metrics-csv';
+      link.download = `strategy-metrics-${ts}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    document.getElementById('export-metrics-btn').addEventListener('click', startMetricsExport);
+    document.getElementById('start-reconcile-btn').addEventListener('click', startReconciliation);
+    document.getElementById('download-metrics-btn').addEventListener('click', triggerMetricsCsvDownload);
+
+    // SSE for immediate push when the server detects a file change.
+    function connectSSE() {
+      const stream = new EventSource('/events');
+      stream.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'scan-started' && data.action === 'cron-now') {
+            startScanStatusBar(data.startedAt);
+            return;
+          }
+          if (data.type === 'scan-progress') {
+            updateScanStatusBar(data);
+            return;
+          }
+          if (data.type === 'cron-finished') {
+            stopScanStatusBar();
+            if (actionInFlight) {
+              refresh(true).then(() => {
+                if (data.success) {
+                  setActionMessage(data.summary || 'Cron scan completed.');
+                } else {
+                  setActionMessage(data.error || 'Scan failed.', true);
+                }
+                setActionBusy(false);
+              });
+            }
+            return;
+          }
+          if (data.type === 'metrics-started') {
+            startMetricsStatusBar(data.startedAt);
+            return;
+          }
+          if (data.type === 'metrics-progress') {
+            const wlEl = document.getElementById('me-watchlist');
+            const progEl = document.getElementById('me-progress');
+            if (wlEl) wlEl.textContent = data.watchlistName || '—';
+            if (progEl) progEl.textContent = `${data.done}/${data.total} symbols`;
+            return;
+          }
+          if (data.type === 'metrics-ready') {
+            stopMetricsStatusBar();
+            metricsExportInFlight = false;
+            document.getElementById('export-metrics-btn').disabled = false;
+            document.getElementById('download-metrics-btn').classList.remove('hidden');
+            setMetricsMessage(`Export complete — ${data.successCount}/${data.count} symbols read. Downloading…`);
+            triggerMetricsCsvDownload();
+            return;
+          }
+          if (data.type === 'metrics-failed') {
+            stopMetricsStatusBar();
+            metricsExportInFlight = false;
+            document.getElementById('export-metrics-btn').disabled = false;
+            setMetricsMessage(data.error || 'Metrics export failed.', true);
+            return;
+          }
+          if (data.type === 'reconcile-started') {
+            startMetricsStatusBar(data.startedAt);
+            return;
+          }
+          if (data.type === 'reconcile-metrics-progress') {
+            const wlEl = document.getElementById('me-watchlist');
+            const progEl = document.getElementById('me-progress');
+            if (wlEl) wlEl.textContent = data.watchlistName || '—';
+            if (progEl) progEl.textContent = `${data.done}/${data.total} symbols`;
+            return;
+          }
+          if (data.type === 'reconcile-metrics-ready') {
+            stopMetricsStatusBar();
+            setMetricsMessage(`Metrics refresh complete — ${data.successCount}/${data.count} symbols read.`);
+            document.getElementById('download-metrics-btn').classList.remove('hidden');
+            return;
+          }
+          if (data.type === 'reconcile-complete') {
+            reconcileInFlight = false;
+            document.getElementById('start-reconcile-btn').disabled = false;
+            document.getElementById('export-metrics-btn').disabled = false;
+            setMetricsMessage('Reconciliation complete.');
+            return;
+          }
+          if (data.type === 'reconcile-failed') {
+            stopMetricsStatusBar();
+            reconcileInFlight = false;
+            document.getElementById('start-reconcile-btn').disabled = false;
+            document.getElementById('export-metrics-btn').disabled = false;
+            setMetricsMessage(data.error || 'Reconciliation failed.', true);
+            return;
+          }
+        } catch {}
+        refresh(false);
+      };
+      stream.onerror = () => {
+        stream.close();
+        setTimeout(connectSSE, 5000);
+      };
+    }
+    connectSSE();
+
+    // Polling backstop: catches any SSE or fs.watch misses (common on Windows).
+    setInterval(() => refresh(false), 30_000);
   </script>
 </body>
 </html>

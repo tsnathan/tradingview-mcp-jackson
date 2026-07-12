@@ -1,81 +1,90 @@
 /**
  * Core alert logic.
  */
-import { evaluate, evaluateAsync, getClient } from '../connection.js';
+import { evaluate, evaluateAsync } from '../connection.js';
 
-export async function create({ condition, price, message }) {
-  const opened = await evaluate(`
-    (function() {
-      var btn = document.querySelector('[aria-label="Create Alert"]')
-        || document.querySelector('[data-name="alerts"]');
-      if (btn) { btn.click(); return true; }
-      return false;
-    })()
-  `);
+// Map internal timeframe strings to TradingView resolution strings for the REST API.
+function toResolution(timeframe) {
+  const tf = String(timeframe || '60');
+  if (tf === 'D') return '1D';
+  if (tf === 'W') return '1W';
+  if (tf === 'M') return '1M';
+  return tf; // '15', '60', '240', etc. are already correct
+}
 
-  if (!opened) {
-    const client = await getClient();
-    await client.Input.dispatchKeyEvent({ type: 'keyDown', modifiers: 1, key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65 });
-    await client.Input.dispatchKeyEvent({ type: 'keyUp', key: 'a', code: 'KeyA' });
-  }
+export async function create({ condition = 'crossing', price, message, symbol, timeframe }) {
+  const resolution = toResolution(timeframe || '60');
 
-  await new Promise(r => setTimeout(r, 1000));
+  const result = await evaluateAsync(`
+    (async function() {
+      try {
+        var encodedSymbol = null;
 
-  const priceSet = await evaluate(`
-    (function() {
-      var inputs = document.querySelectorAll('[class*="alert"] input[type="text"], [class*="alert"] input[type="number"]');
-      for (var i = 0; i < inputs.length; i++) {
-        var label = inputs[i].closest('[class*="row"]')?.querySelector('[class*="label"]');
-        if (label && /value|price/i.test(label.textContent)) {
-          var nativeSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-          nativeSet.call(inputs[i], '${price}');
-          inputs[i].dispatchEvent(new Event('input', { bubbles: true }));
-          inputs[i].dispatchEvent(new Event('change', { bubbles: true }));
-          return true;
+        // Try to build the encoded symbol from the active chart's symbolExt()
+        try {
+          var chart = window.TradingViewApi._activeChartWidgetWV.value();
+          var info = chart.symbolExt();
+          var proName = info.pro_name || info.symbol || '';
+          var providedSym = ${JSON.stringify(symbol || '')};
+
+          // Accept the chart's symbol if it matches what we want (or no symbol was provided)
+          if (!providedSym || proName.toUpperCase().includes(providedSym.split(':').pop().toUpperCase())) {
+            var adj = info.adjustment || 'splits';
+            var cur = info['currency-id'] || info.currency_id || info.currencyId || 'USD';
+            encodedSymbol = '=' + JSON.stringify({ symbol: proName, adjustment: adj, 'currency-id': cur });
+          }
+        } catch(e) {}
+
+        // Fallback: build a minimal encoded symbol from the provided symbol string
+        if (!encodedSymbol && ${JSON.stringify(symbol || '')}) {
+          encodedSymbol = '=' + JSON.stringify({ symbol: ${JSON.stringify(symbol || '')}, adjustment: 'splits', 'currency-id': 'USD' });
         }
-      }
-      if (inputs.length > 0) {
-        var nativeSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-        nativeSet.call(inputs[0], '${price}');
-        inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
-        return true;
-      }
-      return false;
-    })()
-  `);
 
-  if (message) {
-    await evaluate(`
-      (function() {
-        var textarea = document.querySelector('[class*="alert"] textarea')
-          || document.querySelector('textarea[placeholder*="message"]');
-        if (textarea) {
-          var nativeSet = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
-          nativeSet.call(textarea, ${JSON.stringify(message)});
-          textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        if (!encodedSymbol) {
+          return { success: false, error: 'Could not resolve encoded symbol for alert creation' };
         }
-      })()
-    `);
-  }
 
-  await new Promise(r => setTimeout(r, 500));
-  const created = await evaluate(`
-    (function() {
-      var btns = document.querySelectorAll('button[data-name="submit"], button');
-      for (var i = 0; i < btns.length; i++) {
-        if (/^create$/i.test(btns[i].textContent.trim())) { btns[i].click(); return true; }
+        var payload = {
+          symbol: encodedSymbol,
+          resolution: ${JSON.stringify(resolution)},
+          type: ${JSON.stringify(condition || 'crossing')},
+          value: ${price},
+          message: ${JSON.stringify(message || '')},
+          email: false,
+          popup: true,
+        };
+
+        var resp = await fetch('https://pricealerts.tradingview.com/create_alert', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(10000),
+        });
+
+        var data = await resp.json();
+        return { success: data.s === 'ok', alert_id: (data.r && data.r.alert_id) || null, raw: data };
+      } catch(e) {
+        return { success: false, error: e.message };
       }
-      return false;
     })()
   `);
 
-  return { success: !!created, price, condition, message: message || '(none)', price_set: !!priceSet, source: 'dom_fallback' };
+  return {
+    success: result?.success === true,
+    price,
+    condition,
+    message: message || '(none)',
+    alert_id: result?.alert_id || null,
+    error: result?.error || null,
+    source: 'rest_api',
+  };
 }
 
 export async function list() {
   // Use pricealerts REST API — returns structured data with alert_id, symbol, price, conditions
   const result = await evaluateAsync(`
-    fetch('https://pricealerts.tradingview.com/list_alerts', { credentials: 'include' })
+    fetch('https://pricealerts.tradingview.com/list_alerts', { credentials: 'include', signal: AbortSignal.timeout(10000) })
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.s !== 'ok' || !Array.isArray(data.r)) return { alerts: [], error: data.errmsg || 'Unexpected response' };

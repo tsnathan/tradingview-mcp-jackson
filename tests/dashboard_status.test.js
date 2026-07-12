@@ -40,6 +40,28 @@ describe('dashboard status payload', () => {
     assert.equal(result.lines[0].includes('NO SIGNAL'), true);
     assert.equal(result.lines[1].includes('SIGNAL: OPEN'), true);
     assert.equal(typeof result.nextScheduledRunEt, 'string');
+    assert.deepEqual(result.scanResults, []);
+  });
+
+  it('exposes watchlist sync diagnostics for the dashboard', () => {
+    const result = createDashboardStatus({
+      generated_at: '2026-04-15T16:02:00.000Z',
+      formatted_timestamp_et: '04/15/2026, 12:02:00 PM',
+      scan_mode: 'signals_only',
+      signals_found: 0,
+      changed_signals: 0,
+      signal_lines: [],
+      watchlist_summary_lines: ['04/15/2026, 12:02:00 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 8 | SCAN: 6.2s | NO SIGNAL'],
+      summary_line: '04/15/2026, 12:02:00 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 8 | SCAN: 6.2s | NO SIGNAL',
+      watchlist_sync: [
+        { watchlistName: 'Swing 15m', symbols: [], source: 'watchlist_unavailable', activeWatchlistName: 'Swing 15m', selectError: 'Could not select watchlist' }
+      ],
+      symbols_scanned: [],
+    });
+
+    assert.ok(Array.isArray(result.watchlistSync));
+    assert.equal(result.watchlistSync[0].watchlistName, 'Swing 15m');
+    assert.equal(result.watchlistSync[0].selectError, 'Could not select watchlist');
   });
 
   it('passes through open trades and preserves watchlist row counts for previous signals', () => {
@@ -107,5 +129,22 @@ describe('dashboard status payload', () => {
     assert.equal(result.priorSignals[0].trades[0].entryPrice, 82.33);
     assert.equal(result.priorSignals[0].trades[1].entryPrice, 'Unavailable');
     assert.equal(result.priorSignals[0].trades[1].entryTime, 'No prior trade recorded');
+  });
+
+  it('shows changed signal lines when no current open signals are present in watchlist summaries', () => {
+    const result = createDashboardStatus({
+      generated_at: '2026-04-15T16:05:00.000Z',
+      formatted_timestamp_et: '04/15/2026, 12:05:00 PM',
+      scan_mode: 'changed_signals_only',
+      signals_found: 1,
+      changed_signals: 1,
+      signal_lines: ['04/15/2026, 12:05:00 PM ET | WATCHLIST: Swing 15m | SOXL | SIGNAL: EXIT | TF: 15 | PRICE: 82.33'],
+      watchlist_summary_lines: ['04/15/2026, 12:05:00 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 8 | SCAN: 6.2s | NO SIGNAL'],
+      summary_line: '04/15/2026, 12:05:00 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 8 | SCAN: 6.2s | NO SIGNAL',
+      symbols_scanned: [],
+    });
+
+    assert.equal(result.lines.length, 1);
+    assert.equal(result.lines[0], '04/15/2026, 12:05:00 PM ET | WATCHLIST: Swing 15m | SOXL | SIGNAL: EXIT | TF: 15 | PRICE: 82.33');
   });
 });

@@ -8,12 +8,37 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function findWatchlistToggleButtonSelector() {
+  return [
+    '[data-name="base-watchlist-widget-button"]',
+    '[data-name="watchlists-button"]',
+    '[data-name="watchlist-button"]',
+    '[aria-label*="Watchlists"]',
+    '[aria-label*="Watchlist"]',
+    '[title*="Watchlists"]',
+    '[title*="Watchlist"]',
+  ];
+}
+
 async function ensurePanelOpen() {
   const panelState = await evaluate(`
     (function() {
-      var btn = document.querySelector('[data-name="base-watchlist-widget-button"]')
-        || document.querySelector('[aria-label*="Watchlist"]')
-        || document.querySelector('[aria-label*="Watchlist, details, and news"]');
+      var selectors = [
+        '[data-name="base-watchlist-widget-button"]',
+        '[data-name="watchlists-button"]',
+        '[data-name="watchlist-button"]',
+        '[aria-label*="Watchlists"]',
+        '[aria-label*="Watchlist"]',
+        '[title*="Watchlists"]',
+        '[title*="Watchlist"]'
+      ];
+      var btn = selectors.map(function(sel) { return document.querySelector(sel); }).find(function(el) { return el; });
+      if (!btn) {
+        btn = Array.from(document.querySelectorAll('button,div,span,a')).find(function(el) {
+          var text = (el.textContent || '').trim();
+          return /^Watchlists?$/.test(text);
+        });
+      }
       if (!btn) return { error: 'Watchlist button not found' };
       var rightArea = document.querySelector('[class*="layout__area--right"]');
       var sidebarOpen = !!(rightArea && rightArea.offsetWidth > 50);
@@ -31,9 +56,30 @@ export async function getActiveName() {
   await ensurePanelOpen();
   const result = await evaluate(`
     (function() {
-      var btn = document.querySelector('[data-name="watchlists-button"]');
-      if (!btn) return { name: null };
-      var text = (btn.textContent || '').trim();
+      var selectors = [
+        '[data-name="base-watchlist-widget-button"]',
+        '[data-name="watchlists-button"]',
+        '[data-name="watchlist-button"]',
+        '[aria-label*="Watchlists"]',
+        '[aria-label*="Watchlist"]',
+        '[title*="Watchlists"]',
+        '[title*="Watchlist"]'
+      ];
+      var btn = selectors.map(function(sel) { return document.querySelector(sel); }).find(function(el) { return el; });
+      function getText(node) {
+        return node && node.textContent ? String(node.textContent || '').trim().replace(/\s+/g, ' ') : '';
+      }
+      var text = btn ? getText(btn) : '';
+      if (!text) {
+        var fallback = Array.from(document.querySelectorAll('button,div,span,a')).find(function(el) {
+          var t = getText(el);
+          return /^Watchlists?\s*[:\-]?\s*(.+)$/i.test(t);
+        });
+        if (fallback) {
+          var match = getText(fallback).match(/^Watchlists?\s*[:\-]?\s*(.+)$/i);
+          text = match ? match[1] : getText(fallback);
+        }
+      }
       return { name: text || null };
     })()
   `);
@@ -64,14 +110,90 @@ export async function select({ name }) {
 
   const opened = await evaluate(`
     (function() {
-      var btn = document.querySelector('[data-name="watchlists-button"]');
+      var selectors = [
+        '[data-name="watchlists-button"]',
+        '[data-name="watchlist-button"]',
+        '[aria-label*="Watchlists"]',
+        '[aria-label*="Watchlist"]',
+        '[title*="Watchlists"]',
+        '[title*="Watchlist"]'
+      ];
+      var btn = selectors.map(function(sel) { return document.querySelector(sel); }).find(function(el) { return el; });
+      if (!btn) {
+        btn = Array.from(document.querySelectorAll('button,div,span,a')).find(function(el) {
+          var text = (el.textContent || '').trim();
+          return /^Watchlists?$/.test(text) || /^Watchlist$/.test(text);
+        });
+      }
       if (!btn) return { found: false };
-      btn.click();
+      try {
+        btn.click();
+      } catch (e) {
+        try {
+          btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+          btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+          btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+        } catch (e2) {}
+      }
       return { found: true };
     })()
   `);
   if (!opened?.found) throw new Error('Watchlists selector button not found');
-  await delay(300);
+
+  // Poll for the dropdown overlay to appear (up to ~1.6s, 200ms intervals).
+  // A fixed 400ms often fires before TradingView's React UI finishes rendering.
+  let overlayVisible = false;
+  for (let p = 0; p < 8; p++) {
+    await delay(200);
+    const check = await evaluate(`
+      (function() {
+        function isVisible(el) {
+          if (!el) return false;
+          if (el.offsetParent !== null) return true;
+          try { return !!(el.getClientRects && el.getClientRects().length > 0); } catch (e) { return false; }
+        }
+        var roots = Array.from(document.querySelectorAll(
+          '[role="dialog"],[role="listbox"],[class*="menu"],[class*="popup"],[class*="overlay"],[class*="dropdown"]'
+        )).filter(function(el) { return el && isVisible(el); });
+        return { open: roots.some(function(r) { return r.children.length > 2; }) };
+      })()
+    `);
+    if (check?.open) { overlayVisible = true; break; }
+  }
+
+  // If the overlay never appeared the first click may have closed the panel
+  // (toggle collision). Re-open the panel and click once more.
+  if (!overlayVisible) {
+    await ensurePanelOpen();
+    await evaluate(`
+      (function() {
+        var selectors = [
+          '[data-name="watchlists-button"]',
+          '[data-name="watchlist-button"]',
+          '[aria-label*="Watchlists"]',
+          '[aria-label*="Watchlist"]',
+          '[title*="Watchlists"]',
+          '[title*="Watchlist"]'
+        ];
+        var btn = selectors.map(function(sel) { return document.querySelector(sel); }).find(function(el) { return el; });
+        if (!btn) {
+          btn = Array.from(document.querySelectorAll('button,div,span,a')).find(function(el) {
+            var text = (el.textContent || '').trim();
+            return /^Watchlists?$/.test(text) || /^Watchlist$/.test(text);
+          });
+        }
+        if (!btn) return;
+        try { btn.click(); } catch (e) {
+          try {
+            ['pointerdown','mousedown','mouseup','click'].forEach(function(type) {
+              btn.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
+            });
+          } catch (e2) {}
+        }
+      })()
+    `);
+    await delay(700);
+  }
 
   const selected = await evaluate(`
     (function() {
@@ -99,14 +221,14 @@ export async function select({ name }) {
 
       function clickNode(node) {
         if (!node) return false;
-        var clickable = node.closest('.item-jFqVJoPk, .accessible-NQERJsv9, [role="menuitem"], [role="option"], button, [data-name]') || node;
+        var clickable = node.closest('[role="menuitem"], [role="option"], button, [data-name], li, a, div, span') || node;
         try { clickable.scrollIntoView({ block: 'center' }); } catch (e) {}
         try {
           ['pointerdown', 'mousedown', 'mouseup', 'click'].forEach(function(type) {
             clickable.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
           });
         } catch (e) {
-          clickable.click();
+          try { clickable.click(); } catch (e2) { return false; }
         }
         return true;
       }
@@ -128,7 +250,7 @@ export async function select({ name }) {
 
       function findMatch(root) {
         var scope = root || document;
-        var candidates = Array.from(scope.querySelectorAll('.item-jFqVJoPk, .accessible-NQERJsv9, [role="menuitem"], [role="option"], button, div, span'));
+        var candidates = Array.from(scope.querySelectorAll('[role="menuitem"], [role="option"], button, li, a, div, span'));
         for (var i = 0; i < candidates.length; i++) {
           var text = getText(candidates[i]);
           var textNorm = norm(text);
@@ -153,41 +275,50 @@ export async function select({ name }) {
         return null;
       }
 
-      var overlayRoots = Array.from(document.querySelectorAll('[role="dialog"], [role="listbox"], [class*="menu"], [class*="popup"], [data-name*="menu"], [data-name*="popup"]'));
+      function isVisible(el) {
+        if (!el) return false;
+        if (el.offsetParent !== null) return true;
+        try {
+          return !!(el.getClientRects && el.getClientRects().length > 0);
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function findWatchlistOverlayRoots() {
+        var roots = Array.from(document.querySelectorAll('[role="dialog"], [role="listbox"], [class*="menu"], [class*="popup"], [data-name*="menu"], [data-name*="popup"], [class*="overlay"], [class*="panel"], [class*="dropdown"], [aria-label*="watchlist"], [aria-labelledby*="watchlist"]'));
+        return roots.filter(function(el) { return el && isVisible(el); });
+      }
+
+      var overlayRoots = findWatchlistOverlayRoots();
       for (var r = 0; r < overlayRoots.length; r++) {
         var direct = findMatch(overlayRoots[r]);
         if (direct) return direct;
       }
 
-      var openListNodes = Array.from(document.querySelectorAll('button, div, span')).filter(function(el) {
-        return /open\s+li/i.test(getText(el));
-      });
-      if (openListNodes.length) {
-        clickNode(openListNodes[0]);
-        overlayRoots = Array.from(document.querySelectorAll('[role="dialog"], [role="listbox"], [class*="menu"], [class*="popup"], [data-name*="menu"], [data-name*="popup"]'));
-        for (var s = 0; s < overlayRoots.length; s++) {
-          searchFullList(overlayRoots[s]);
-        }
-        for (var o = 0; o < overlayRoots.length; o++) {
-          var openMatch = findMatch(overlayRoots[o]);
-          if (openMatch) {
-            openMatch.mode = 'open-list';
-            return openMatch;
-          }
-        }
+      for (var r = 0; r < overlayRoots.length; r++) {
+        searchFullList(overlayRoots[r]);
+      }
+      overlayRoots = findWatchlistOverlayRoots();
+      for (var r = 0; r < overlayRoots.length; r++) {
+        var filtered = findMatch(overlayRoots[r]);
+        if (filtered) return filtered;
+      }
+      // Try again with any visible root in case the dropdown was rendered outside the original overlay set.
+      var fallbackRoots = Array.from(document.querySelectorAll('[role="dialog"], [role="listbox"], [class*="menu"], [class*="popup"], [data-name*="menu"], [data-name*="popup"], [class*="overlay"], [class*="panel"], [class*="dropdown"], [aria-label*="watchlist"], [aria-labelledby*="watchlist"]')).filter(function(el) { return el && isVisible(el); });
+      for (var r = 0; r < fallbackRoots.length; r++) {
+        var filtered = findMatch(fallbackRoots[r]);
+        if (filtered) return filtered;
       }
 
-      var containers = overlayRoots.filter(function(el) { return el && el.scrollHeight > el.clientHeight; });
-      for (var c = 0; c < containers.length; c++) {
-        var container = containers[c];
-        var step = Math.max(80, Math.floor(container.clientHeight * 0.8));
-        for (var pos = 0; pos <= container.scrollHeight; pos += step) {
-          container.scrollTop = pos;
-          var match = findMatch(container);
-          if (match) {
-            match.scrolled = true;
-            return match;
-          }
+      var fallbackRoots = Array.from(document.querySelectorAll('button, li, a, div, span'));
+      for (var k = 0; k < fallbackRoots.length; k++) {
+        var item = fallbackRoots[k];
+        var text = getText(item);
+        var textNorm = norm(text);
+        if (!text || text.length > 100) continue;
+        if (text.toLowerCase() === wanted || textNorm === wantedNorm || textNorm.includes(wantedNorm)) {
+          if (clickNode(item)) return { found: true, selected: text, mode: 'fallback' };
         }
       }
 
@@ -206,6 +337,58 @@ export async function select({ name }) {
   }
 
   throw new Error(`Watchlist selection did not stick: ${name}`);
+}
+
+export async function getWatchlistOptions() {
+  await ensurePanelOpen();
+  const result = await evaluate(`
+    (function() {
+      function text(node) {
+        return node && node.textContent ? String(node.textContent || '').trim().replace(/\s+/g, ' ') : '';
+      }
+
+      function normalize(text) {
+        return String(text || '').trim();
+      }
+
+      var activeBtn = document.querySelector('[data-name="base-watchlist-widget-button"]')
+        || document.querySelector('[data-name="watchlists-button"]')
+        || document.querySelector('[data-name="watchlist-button"]')
+        || document.querySelector('[aria-label*="Watchlists"]')
+        || document.querySelector('[aria-label*="Watchlist"]')
+        || document.querySelector('[title*="Watchlists"]')
+        || document.querySelector('[title*="Watchlist"]');
+      var activeName = text(activeBtn);
+      if (activeBtn) {
+        try { activeBtn.click(); } catch (e) {}
+      }
+
+      function isVisible(el) {
+        if (!el) return false;
+        if (el.offsetParent !== null) return true;
+        try { return !!(el.getClientRects && el.getClientRects().length > 0); } catch (e) { return false; }
+      }
+      var roots = Array.from(document.querySelectorAll('[role="dialog"], [role="listbox"], [class*="menu"], [class*="popup"], [data-name*="menu"], [data-name*="popup"], [class*="overlay"], [class*="panel"], [class*="dropdown"], [aria-label*="watchlist"], [aria-labelledby*="watchlist"]'));
+      var candidates = [];
+      roots.forEach(function(root) {
+        if (!root || !isVisible(root)) return;
+        var items = Array.from(root.querySelectorAll('button, div, span, li, a'));
+        items.forEach(function(item) {
+          var t = text(item);
+          if (!t) return;
+          if (t.length > 2 && t.length < 100 && /[A-Za-z0-9]/.test(t)) {
+            candidates.push(t);
+          }
+        });
+      });
+
+      var options = Array.from(new Set(candidates)).map(function(opt) { return normalize(opt); }).filter(Boolean);
+      return { activeName, options };
+      return { activeName, options };
+    })()
+  `);
+
+  return { success: true, options: result?.options || [], activeName: result?.activeName || null };
 }
 
 export async function get() {

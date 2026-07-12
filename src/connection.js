@@ -72,7 +72,7 @@ export async function connect() {
 }
 
 async function findChartTarget(host) {
-  const resp = await fetch(`http://${host}:${CDP_PORT}/json/list`);
+  const resp = await fetch(`http://${host}:${CDP_PORT}/json/list`, { signal: AbortSignal.timeout(3000) });
   const targets = await resp.json();
   return targets.find(t => t.type === 'page' && /tradingview\.com\/chart/i.test(t.url))
     || targets.find(t => t.type === 'page' && /tradingview/i.test(t.url))

@@ -1,5 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { writeFileSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { parseLatestTradeFromTesterText } from '../src/core/data.js';
 import {
   buildOpenTrades,
@@ -10,6 +13,11 @@ import {
   detectSignalFromSnapshot,
   formatPriorSignalForWatchlist,
   shouldRunEquityScanNow,
+  updateBaselineEntry,
+  syncWatchlistSymbolsFromTradingView,
+  formatSignalLine,
+  createDashboardStatus,
+  isMarketHoliday,
 } from '../src/core/morning.js';
 
 describe('signal detection', () => {
@@ -48,6 +56,43 @@ describe('signal detection', () => {
 
     assert.equal(result.hasSignal, false);
     assert.equal(result.direction, null);
+  });
+
+  it('formats exit signals with SIGNAL not OPEN', () => {
+    const line = formatSignalLine({
+      state: { symbol: 'BATS:GLTR' },
+      symbol: 'BATS:GLTR',
+      timeframe: '240',
+      watchlist_name: 'Swing 4H',
+      watchlist_symbol_count: 18,
+      scanned_at: '2026-05-18T19:51:40.461Z',
+      signal: {
+        hasSignal: true,
+        direction: 'bearish',
+        price: 232.82,
+        text: '▼',
+      },
+      trade: {
+        signal: 'EXIT',
+        entryTime: 'Aug 08, 2023, 12:00',
+        entryPrice: '86.78 USD',
+      },
+    });
+
+    assert.equal(line.includes('SIGNAL: SHORT'), true);
+    assert.equal(line.includes('BATS:GLTR'), true);
+    assert.equal(line.includes('PRICE: 232.82'), true);
+    assert.equal(line.includes('OPEN:'), false);
+  });
+
+  it('does not fall back to general signal lines when there are no same-day open trades', () => {
+    const result = createDashboardStatus({
+      watchlist_summary_lines: ['2026-05-18T21:00:00Z ET | WATCHLIST: Swing 30min | SYMBOLS: 5 | SCAN: 0s | NO SIGNAL'],
+      signal_lines: ['2026-05-18T21:00:00Z ET | WATCHLIST: Swing 30min | SYMBOLS: 5 | BATS:SOXL | SIGNAL: LONG | TF: 30 | PRICE: 189.56 | Mode: Fast (active bar)'],
+      summary_line: '2026-05-18T21:00:00Z ET | NO SIGNAL',
+    });
+
+    assert.deepEqual(result.lines, ['2026-05-18T21:00:00Z ET | WATCHLIST: Swing 30min | SYMBOLS: 5 | SCAN: 0s | NO SIGNAL']);
   });
 });
 
@@ -214,6 +259,51 @@ describe('scan target building', () => {
     assert.equal(targets[0].symbols.length, 2);
     assert.equal(targets[1].symbols.length, 1);
     assert.equal(targets[2].symbols.length, 2);
+  });
+});
+
+describe('watchlist sync helper', () => {
+  const baselinePath = join(tmpdir(), 'tv-watchlist-sync-test.json');
+
+  it('syncs TradingView watchlist symbols into the baseline', async () => {
+    if (existsSync(baselinePath)) rmSync(baselinePath, { force: true });
+    try {
+      const fakeWatchlist = {
+        getActiveName: async () => ({ name: 'Swing 15m' }),
+        select: async ({ name }) => ({ success: true, changed: true, name }),
+        get: async () => ({
+          success: true,
+          count: 2,
+          source: 'tradingview_panel',
+          symbols: [{ symbol: 'URTY' }, { symbol: 'TNA' }],
+        }),
+      };
+
+    const rules = {
+      watchlist: ['SOXL'],
+      default_timeframe: '15',
+      watchlists: {
+        'Swing 15m': '15',
+      },
+    };
+
+    const result = await syncWatchlistSymbolsFromTradingView({
+      rules,
+      baselinePath,
+      watchlistModule: fakeWatchlist,
+    });
+
+    assert.equal(result.success, true);
+    assert.equal(result.synced.length, 1);
+    assert.equal(result.synced[0].count, 2);
+    assert.equal(result.synced[0].source, 'tradingview_panel');
+
+    const baseline = JSON.parse(readFileSync(baselinePath, 'utf8'));
+    assert.deepEqual(baseline.watchlists['Swing 15m'].symbols, ['URTY', 'TNA']);
+    assert.equal(baseline.watchlists['Swing 15m'].symbol_count, 2);
+  } finally {
+    if (existsSync(baselinePath)) rmSync(baselinePath, { force: true });
+  }
   });
 });
 
@@ -585,6 +675,124 @@ describe('open trades section', () => {
 
     assert.deepEqual(openTrades.map((row) => row.symbol), ['BATS:ERX', 'BATS:USO']);
   });
+
+  it('keeps baseline opens scoped to the watchlist symbol set', () => {
+    const openTrades = buildOpenTrades(
+      [
+        {
+          watchlistName: 'Swing 1D',
+          timeframe: 'D',
+          symbolCount: 2,
+          trades: [
+            {
+              symbol: 'BATS:MEXX',
+              signal: 'OPEN',
+              wasOpen: true,
+              entryPrice: '25.55 USD',
+              entryTime: 'Mar 20, 2026',
+            },
+            {
+              symbol: 'BATS:UDOW',
+              signal: 'OPEN',
+              wasOpen: true,
+              entryPrice: '61.99 USD',
+              entryTime: 'May 01, 2026, 11:15 ET',
+            },
+          ],
+        },
+      ],
+      {
+        'BATS:MEXX:D': {
+          symbol: 'BATS:MEXX',
+          timeframe: 'D',
+          signal_type: 'OPEN',
+          entry_time: 'Mar 20, 2026',
+          entry_price: '25.55 USD',
+        },
+        'BATS:LABU:D': {
+          symbol: 'BATS:LABU',
+          timeframe: 'D',
+          signal_type: 'OPEN',
+          entry_time: '2026-05-01T15:16:14.489Z',
+          entry_price: '168.23',
+        },
+      },
+      '2026-05-01T18:35:20.943Z',
+      'America/New_York',
+    );
+
+    assert.deepEqual(openTrades.map((row) => row.symbol), ['BATS:UDOW', 'BATS:MEXX']);
+  });
+
+  it('includes recent open trade results even when no prior OPEN baseline row exists', () => {
+    const openTrades = buildOpenTrades(
+      [
+        {
+          watchlistName: 'Swing 15m',
+          timeframe: '15',
+          symbolCount: 1,
+          trades: [],
+        },
+      ],
+      {},
+      '2026-05-18T19:45:00.000Z',
+      'America/New_York',
+      [
+        {
+          symbol: 'BATS:NEW',
+          timeframe: '15',
+          watchlist_name: 'Swing 15m',
+          scanned_at: '2026-05-18T19:40:00.000Z',
+          trade: {
+            signal: 'OPEN',
+            entryTime: '2026-05-18T19:35:00.000Z',
+            entryPrice: '50.00 USD',
+            netPnl: '+15.00 USD',
+            favorableExcursion: '+25.00 USD',
+            adverseExcursion: '-5.00 USD',
+          },
+        },
+      ],
+    );
+
+    assert.equal(openTrades.length, 1);
+    assert.equal(openTrades[0].symbol, 'BATS:NEW');
+    assert.equal(openTrades[0].signal, 'OPEN');
+    assert.equal(openTrades[0].entryPrice, '50.00 USD');
+  });
+});
+
+describe('baseline entry updates', () => {
+  it('preserves an existing open entry time when a refresh only has last_seen_at', () => {
+    const signalMap = {
+      'BATS:MEXX:D': {
+        symbol: 'BATS:MEXX',
+        timeframe: 'D',
+        signal_type: 'OPEN',
+        entry_time: 'Apr 30, 2026, 11:12:07',
+        last_seen_at: '2026-04-30T15:12:07.000Z',
+        entry_price: '8.44',
+      },
+    };
+
+    updateBaselineEntry(signalMap, {
+      symbol: 'BATS:MEXX',
+      timeframe: 'D',
+      scanned_at: '2026-05-01T15:12:07.000Z',
+      signal: {
+        hasSignal: true,
+        direction: 'bullish',
+        labelCount: 25,
+        price: 8.72,
+      },
+      trade: {},
+      quote: { last: 8.72 },
+    });
+
+    assert.equal(signalMap['BATS:MEXX:D'].signal_type, 'OPEN');
+    assert.equal(signalMap['BATS:MEXX:D'].entry_time, 'Apr 30, 2026, 11:12:07');
+    assert.equal(signalMap['BATS:MEXX:D'].last_seen_at, '2026-05-01T15:12:07.000Z');
+  });
 });
 
 describe('outside-hours skip behavior', () => {
@@ -691,5 +899,24 @@ describe('market hours gating', () => {
   it('blocks scans after the close', () => {
     const result = shouldRunEquityScanNow(new Date('2026-04-15T20:05:00.000Z'), marketHours);
     assert.equal(result, false);
+  });
+
+  it('blocks scans on a US market holiday', () => {
+    const julyFourth2026 = new Date('2026-07-03T14:00:00.000Z');
+    const result = shouldRunEquityScanNow(julyFourth2026, marketHours);
+    assert.equal(result, false);
+  });
+
+  it('recognizes a custom holiday in rules.market_hours', () => {
+    const customHours = {
+      timezone: 'America/New_York',
+      open: '09:30',
+      close: '16:00',
+      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      holidays: ['2026-06-19'],
+    };
+    const date = new Date('2026-06-19T14:00:00.000Z');
+    assert.equal(isMarketHoliday(date, customHours), true);
+    assert.equal(shouldRunEquityScanNow(date, customHours), false);
   });
 });

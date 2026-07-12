@@ -1,0 +1,11 @@
+﻿const { buildPriorSignalsByWatchlist, buildOpenTrades } = require('./src/core/morning.js');
+const fs = require('fs');
+const status = JSON.parse(fs.readFileSync('status/latest-signal-status.json','utf8'));
+const baseline = JSON.parse(fs.readFileSync('swing-signal-baseline.json','utf8'));
+const watchlistSummaries = status.watchlist_scan_summaries || [];
+const results = status.scanResults || [];
+const prior = buildPriorSignalsByWatchlist(watchlistSummaries, results, baseline.signals || {}, 'America/New_York', status.updatedAt || new Date().toISOString(), baseline.watchlists || {});
+const openTrades = buildOpenTrades(prior, baseline.signals || {}, status.updatedAt || new Date().toISOString(), 'America/New_York');
+console.log('prior open count', prior.reduce((sum,sec)=>sum+(sec.trades.filter(t=>t.signal==='OPEN').length),0));
+console.log('openTrades count', openTrades.length);
+console.log(JSON.stringify(openTrades.slice(0,20), null, 2));

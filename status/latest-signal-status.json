@@ -1,263 +1,1185 @@
 {
-  "updatedAt": "2026-04-21T03:47:54.260Z",
-  "formattedTimestampEt": "04/20/2026, 11:47:54 PM",
-  "nextScheduledRunEt": "04/21/2026, 09:31:54 AM ET",
-  "scanMode": "changed_signals_only",
+  "updatedAt": "2026-07-12T19:50:09.535Z",
+  "formattedTimestampEt": "07/12/2026, 03:50:09 PM",
+  "nextScheduledRunEt": "07/13/2026, 09:31:09 AM ET",
+  "scanMode": "signals_only",
   "hasSignals": true,
-  "signalsFound": 72,
-  "changedSignals": 72,
+  "signalsFound": 6,
+  "changedSignals": 6,
   "lines": [
-    "04/20/2026, 11:47:54 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 23 | SCAN: 98.2s | NO SIGNAL",
-    "04/20/2026, 11:47:54 PM ET | WATCHLIST: Swing 30min | SYMBOLS: 2 | SCAN: 8.6s | NO SIGNAL",
-    "04/20/2026, 11:47:54 PM ET | WATCHLIST: Swing 1H | SYMBOLS: 27 | SCAN: 90.0s | NO SIGNAL",
-    "04/20/2026, 11:47:54 PM ET | WATCHLIST: Swing 4H | SYMBOLS: 18 | SCAN: 59.9s | NO SIGNAL",
-    "04/20/2026, 11:47:54 PM ET | WATCHLIST: Swing 1D | SYMBOLS: 14 | SCAN: 65.9s | NO SIGNAL"
+    "07/12/2026, 03:50:09 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 13 | SCAN: 0.0s | WAITING FOR NEXT 15 BAR",
+    "07/12/2026, 03:49:58 PM ET | WATCHLIST: Swing 30min | SYMBOLS: 6 | SCAN: 104.2s | NO SIGNAL",
+    "07/12/2026, 03:50:09 PM ET | WATCHLIST: Swing 1H | SYMBOLS: 19 | SCAN: 0.0s | WAITING FOR NEXT 60 BAR",
+    "07/12/2026, 03:50:09 PM ET | WATCHLIST: Swing 4H | SYMBOLS: 20 | SCAN: 0.0s | WAITING FOR NEXT 240 BAR",
+    "07/12/2026, 03:50:09 PM ET | WATCHLIST: Swing 1D | SYMBOLS: 23 | SCAN: 0.0s | WAITING FOR NEXT D BAR"
   ],
-  "summary": "04/20/2026, 11:47:54 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 23 | SCAN: 98.2s | NO SIGNAL\n04/20/2026, 11:47:54 PM ET | WATCHLIST: Swing 30min | SYMBOLS: 2 | SCAN: 8.6s | NO SIGNAL\n04/20/2026, 11:47:54 PM ET | WATCHLIST: Swing 1H | SYMBOLS: 27 | SCAN: 90.0s | NO SIGNAL\n04/20/2026, 11:47:54 PM ET | WATCHLIST: Swing 4H | SYMBOLS: 18 | SCAN: 59.9s | NO SIGNAL\n04/20/2026, 11:47:54 PM ET | WATCHLIST: Swing 1D | SYMBOLS: 14 | SCAN: 65.9s | NO SIGNAL",
+  "summary": "07/12/2026, 03:50:09 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 13 | SCAN: 0.0s | WAITING FOR NEXT 15 BAR\n07/12/2026, 03:49:58 PM ET | WATCHLIST: Swing 30min | SYMBOLS: 6 | SCAN: 104.2s | NO SIGNAL\n07/12/2026, 03:50:09 PM ET | WATCHLIST: Swing 1H | SYMBOLS: 19 | SCAN: 0.0s | WAITING FOR NEXT 60 BAR\n07/12/2026, 03:50:09 PM ET | WATCHLIST: Swing 4H | SYMBOLS: 20 | SCAN: 0.0s | WAITING FOR NEXT 240 BAR\n07/12/2026, 03:50:09 PM ET | WATCHLIST: Swing 1D | SYMBOLS: 23 | SCAN: 0.0s | WAITING FOR NEXT D BAR",
   "skipped": false,
   "reason": null,
   "connectionError": false,
   "errorMessage": null,
-  "symbolsScanned": 88,
-  "watchlistsChecked": [
-    "Swing 15m",
-    "Swing 30min",
-    "Swing 1H",
-    "Swing 4H",
-    "Swing 1D"
+  "symbolsScanned": 6,
+  "scheduleDisabled": false,
+  "scanResults": [
+    {
+      "symbol": "AMEX:SOXL",
+      "timeframe": "30",
+      "watchlist_name": "Swing 30min",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-12T19:48:34.507Z",
+      "state": {
+        "success": true,
+        "symbol": "BATS:SOXL",
+        "resolution": "30",
+        "chartType": 19,
+        "studies": [
+          {
+            "id": "HE2wnN",
+            "name": "Swing Profile Strategy [BigBeluga]"
+          }
+        ]
+      },
+      "indicators": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "quote": {
+        "success": true,
+        "symbol": "BATS:SOXL",
+        "time": 1783726200,
+        "open": 191.81,
+        "high": 194.38,
+        "low": 191.81,
+        "close": 194.21,
+        "last": 194.21,
+        "volume": 27323,
+        "description": "Direxion Daily Semiconductor Bull 3X ETF",
+        "exchange": "Cboe One",
+        "type": "fund"
+      },
+      "labels": {
+        "success": true,
+        "study_count": 1,
+        "studies": [
+          {
+            "name": "Swing Profile Strategy [BigBeluga]",
+            "total_labels": 27,
+            "showing": 25,
+            "labels": [
+              {
+                "text": "▼",
+                "price": 86.4
+              },
+              {
+                "text": "▲",
+                "price": 79.76
+              },
+              {
+                "text": "▼",
+                "price": 133.38
+              },
+              {
+                "text": "▲",
+                "price": 103.98
+              },
+              {
+                "text": "▼",
+                "price": 167.98
+              },
+              {
+                "text": "▲",
+                "price": 147.6
+              },
+              {
+                "text": "▼",
+                "price": 191.28
+              },
+              {
+                "text": "▲",
+                "price": 150.58
+              },
+              {
+                "text": "▼",
+                "price": 189.56
+              },
+              {
+                "text": "▲",
+                "price": 135.03
+              },
+              {
+                "text": "▼",
+                "price": 239.08
+              },
+              {
+                "text": "▲",
+                "price": 210.14
+              },
+              {
+                "text": "▼",
+                "price": 284.66
+              },
+              {
+                "text": "▲",
+                "price": 173.5
+              },
+              {
+                "text": "▼",
+                "price": 231.05
+              },
+              {
+                "text": "▲",
+                "price": 157.55
+              },
+              {
+                "text": "▼",
+                "price": 279.3
+              },
+              {
+                "text": "▲",
+                "price": 226
+              },
+              {
+                "text": "▼",
+                "price": 302
+              },
+              {
+                "text": "▲",
+                "price": 211.13
+              },
+              {
+                "text": "▼",
+                "price": 269.04
+              },
+              {
+                "text": "▲",
+                "price": 192.3
+              },
+              {
+                "text": "▼",
+                "price": 272
+              },
+              {
+                "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 76\nPosition: Flat",
+                "price": 204.55
+              },
+              {
+                "text": "T: 23.03M\nB: 14.744M\nS: 8.286M\nD: 28.04%",
+                "price": 147.56
+              }
+            ]
+          }
+        ]
+      },
+      "tables": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "signal": {
+        "hasSignal": true,
+        "direction": "bearish",
+        "price": 204.55,
+        "source": "label",
+        "study": "Swing Profile Strategy [BigBeluga]",
+        "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 76\nPosition: Flat",
+        "labelCount": 25,
+        "positionState": "flat"
+      },
+      "trade": null,
+      "trade_source": "strategy_tester_dom"
+    },
+    {
+      "symbol": "CBOE:UVXY",
+      "timeframe": "30",
+      "watchlist_name": "Swing 30min",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-12T19:48:51.372Z",
+      "state": {
+        "success": true,
+        "symbol": "BATS:UVXY",
+        "resolution": "30",
+        "chartType": 19,
+        "studies": [
+          {
+            "id": "HE2wnN",
+            "name": "Swing Profile Strategy [BigBeluga]"
+          }
+        ]
+      },
+      "indicators": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "quote": {
+        "success": true,
+        "symbol": "BATS:UVXY",
+        "time": 1783726200,
+        "open": 23.22,
+        "high": 23.22,
+        "low": 23.2,
+        "close": 23.22,
+        "last": 23.22,
+        "volume": 506,
+        "description": "ProShares Ultra VIX Short-Term Futures ETF",
+        "exchange": "Cboe One",
+        "type": "fund"
+      },
+      "labels": {
+        "success": true,
+        "study_count": 1,
+        "studies": [
+          {
+            "name": "Swing Profile Strategy [BigBeluga]",
+            "total_labels": 34,
+            "showing": 25,
+            "labels": [
+              {
+                "text": "▲",
+                "price": 35.24
+              },
+              {
+                "text": "▼",
+                "price": 37.8
+              },
+              {
+                "text": "▲",
+                "price": 35.32
+              },
+              {
+                "text": "▼",
+                "price": 36.98
+              },
+              {
+                "text": "▲",
+                "price": 35.06
+              },
+              {
+                "text": "▼",
+                "price": 37.74
+              },
+              {
+                "text": "▲",
+                "price": 28.27
+              },
+              {
+                "text": "▼",
+                "price": 30.03
+              },
+              {
+                "text": "▲",
+                "price": 28.95
+              },
+              {
+                "text": "▼",
+                "price": 29.96
+              },
+              {
+                "text": "▲",
+                "price": 27.45
+              },
+              {
+                "text": "▼",
+                "price": 31.58
+              },
+              {
+                "text": "▲",
+                "price": 28.74
+              },
+              {
+                "text": "▼",
+                "price": 34.1
+              },
+              {
+                "text": "▲",
+                "price": 25.38
+              },
+              {
+                "text": "▼",
+                "price": 27.95
+              },
+              {
+                "text": "▲",
+                "price": 24.68
+              },
+              {
+                "text": "▼",
+                "price": 28.44
+              },
+              {
+                "text": "▲",
+                "price": 25.96
+              },
+              {
+                "text": "▼",
+                "price": 28.76
+              },
+              {
+                "text": "▲",
+                "price": 24.27
+              },
+              {
+                "text": "▼",
+                "price": 25.67
+              },
+              {
+                "text": "▲",
+                "price": 23.53
+              },
+              {
+                "text": "Mode: Fast (active bar)\nLast signal: Long\nBars since signal: 47\nPosition: Long",
+                "price": 26.19
+              },
+              {
+                "text": "T: 5.756M\nB: 2.472M\nS: 3.284M\nD: -14.11%",
+                "price": 26.19
+              }
+            ]
+          }
+        ]
+      },
+      "tables": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "signal": {
+        "hasSignal": true,
+        "direction": "bullish",
+        "price": 26.19,
+        "source": "label",
+        "study": "Swing Profile Strategy [BigBeluga]",
+        "text": "Mode: Fast (active bar)\nLast signal: Long\nBars since signal: 47\nPosition: Long",
+        "labelCount": 25,
+        "positionState": "long"
+      },
+      "trade": null,
+      "trade_source": "strategy_tester_dom"
+    },
+    {
+      "symbol": "NYSE:DXYZ",
+      "timeframe": "30",
+      "watchlist_name": "Swing 30min",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-12T19:49:08.297Z",
+      "state": {
+        "success": true,
+        "symbol": "BATS:DXYZ",
+        "resolution": "30",
+        "chartType": 19,
+        "studies": [
+          {
+            "id": "HE2wnN",
+            "name": "Swing Profile Strategy [BigBeluga]"
+          }
+        ]
+      },
+      "indicators": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "quote": {
+        "success": true,
+        "symbol": "BATS:DXYZ",
+        "time": 1783726200,
+        "open": 27.59,
+        "high": 27.59,
+        "low": 27.59,
+        "close": 27.59,
+        "last": 27.59,
+        "volume": 1,
+        "description": "Destiny Tech100 Inc",
+        "exchange": "Cboe One",
+        "type": "fund"
+      },
+      "labels": {
+        "success": true,
+        "study_count": 1,
+        "studies": [
+          {
+            "name": "Swing Profile Strategy [BigBeluga]",
+            "total_labels": 27,
+            "showing": 25,
+            "labels": [
+              {
+                "text": "▼",
+                "price": 30.76
+              },
+              {
+                "text": "▲",
+                "price": 28.8
+              },
+              {
+                "text": "▼",
+                "price": 30
+              },
+              {
+                "text": "▲",
+                "price": 28.91
+              },
+              {
+                "text": "▼",
+                "price": 30.4
+              },
+              {
+                "text": "▲",
+                "price": 28.43
+              },
+              {
+                "text": "▼",
+                "price": 29.98
+              },
+              {
+                "text": "▲",
+                "price": 28.62
+              },
+              {
+                "text": "▼",
+                "price": 71.26
+              },
+              {
+                "text": "▲",
+                "price": 42.5
+              },
+              {
+                "text": "▼",
+                "price": 55.34
+              },
+              {
+                "text": "▲",
+                "price": 46.57
+              },
+              {
+                "text": "▼",
+                "price": 73.8
+              },
+              {
+                "text": "▲",
+                "price": 40
+              },
+              {
+                "text": "▼",
+                "price": 46.4
+              },
+              {
+                "text": "▲",
+                "price": 32.5
+              },
+              {
+                "text": "▼",
+                "price": 42.6
+              },
+              {
+                "text": "▲",
+                "price": 26.4
+              },
+              {
+                "text": "▼",
+                "price": 30.38
+              },
+              {
+                "text": "▲",
+                "price": 23.8
+              },
+              {
+                "text": "▼",
+                "price": 26.39
+              },
+              {
+                "text": "▲",
+                "price": 23.6
+              },
+              {
+                "text": "▼",
+                "price": 26.19
+              },
+              {
+                "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 50\nPosition: Flat",
+                "price": 29.16
+              },
+              {
+                "text": "T: 690.474K\nB: 475.3K\nS: 215.174K\nD: 37.67%",
+                "price": 23.85
+              }
+            ]
+          }
+        ]
+      },
+      "tables": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "signal": {
+        "hasSignal": true,
+        "direction": "bearish",
+        "price": 29.16,
+        "source": "label",
+        "study": "Swing Profile Strategy [BigBeluga]",
+        "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 50\nPosition: Flat",
+        "labelCount": 25,
+        "positionState": "flat"
+      },
+      "trade": null,
+      "trade_source": "strategy_tester_dom"
+    },
+    {
+      "symbol": "CBOE:WTAI",
+      "timeframe": "30",
+      "watchlist_name": "Swing 30min",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-12T19:49:25.106Z",
+      "state": {
+        "success": true,
+        "symbol": "BATS:WTAI",
+        "resolution": "30",
+        "chartType": 19,
+        "studies": [
+          {
+            "id": "HE2wnN",
+            "name": "Swing Profile Strategy [BigBeluga]"
+          }
+        ]
+      },
+      "indicators": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "quote": {
+        "success": true,
+        "symbol": "BATS:WTAI",
+        "time": 1783719000,
+        "open": 44.52,
+        "high": 45,
+        "low": 44.52,
+        "close": 45,
+        "last": 45,
+        "volume": 100,
+        "description": "WisdomTree Artificial Intelligence and Innovation Fund",
+        "exchange": "Cboe One",
+        "type": "fund"
+      },
+      "labels": {
+        "success": true,
+        "study_count": 1,
+        "studies": [
+          {
+            "name": "Swing Profile Strategy [BigBeluga]",
+            "total_labels": 27,
+            "showing": 25,
+            "labels": [
+              {
+                "text": "▼",
+                "price": 31.58
+              },
+              {
+                "text": "▲",
+                "price": 28
+              },
+              {
+                "text": "▼",
+                "price": 30.75
+              },
+              {
+                "text": "▲",
+                "price": 29
+              },
+              {
+                "text": "▼",
+                "price": 30.5
+              },
+              {
+                "text": "▲",
+                "price": 29.22
+              },
+              {
+                "text": "▼",
+                "price": 30.84
+              },
+              {
+                "text": "▲",
+                "price": 27.85
+              },
+              {
+                "text": "▼",
+                "price": 30.19
+              },
+              {
+                "text": "▲",
+                "price": 28.74
+              },
+              {
+                "text": "▼",
+                "price": 30.25
+              },
+              {
+                "text": "▲",
+                "price": 28.07
+              },
+              {
+                "text": "▼",
+                "price": 30.77
+              },
+              {
+                "text": "▲",
+                "price": 26.57
+              },
+              {
+                "text": "▼",
+                "price": 32.12
+              },
+              {
+                "text": "▲",
+                "price": 29.55
+              },
+              {
+                "text": "▼",
+                "price": 41.96
+              },
+              {
+                "text": "▲",
+                "price": 38.38
+              },
+              {
+                "text": "▼",
+                "price": 48.47
+              },
+              {
+                "text": "▲",
+                "price": 40.37
+              },
+              {
+                "text": "▼",
+                "price": 48.89
+              },
+              {
+                "text": "▲",
+                "price": 43.29
+              },
+              {
+                "text": "▼",
+                "price": 48.48
+              },
+              {
+                "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 16\nPosition: Flat",
+                "price": 44.52
+              },
+              {
+                "text": "T: 577.913K\nB: 263.752K\nS: 314.161K\nD: -8.72%",
+                "price": 41.07
+              }
+            ]
+          }
+        ]
+      },
+      "tables": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "signal": {
+        "hasSignal": true,
+        "direction": "bearish",
+        "price": 44.52,
+        "source": "label",
+        "study": "Swing Profile Strategy [BigBeluga]",
+        "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 16\nPosition: Flat",
+        "labelCount": 25,
+        "positionState": "flat"
+      },
+      "trade": null,
+      "trade_source": "strategy_tester_dom"
+    },
+    {
+      "symbol": "COINBASE:BTCUSD",
+      "timeframe": "30",
+      "watchlist_name": "Swing 30min",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-12T19:49:41.404Z",
+      "state": {
+        "success": true,
+        "symbol": "COINBASE:BTCUSD",
+        "resolution": "30",
+        "chartType": 19,
+        "studies": [
+          {
+            "id": "HE2wnN",
+            "name": "Swing Profile Strategy [BigBeluga]"
+          }
+        ]
+      },
+      "indicators": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "quote": {
+        "success": true,
+        "symbol": "COINBASE:BTCUSD",
+        "time": 1783884600,
+        "open": 64164.98,
+        "high": 64164.99,
+        "low": 64104.01,
+        "close": 64131.22,
+        "last": 64131.22,
+        "volume": 12.91745401,
+        "description": "Bitcoin / US Dollar",
+        "exchange": "Coinbase",
+        "type": "spot"
+      },
+      "labels": {
+        "success": true,
+        "study_count": 1,
+        "studies": [
+          {
+            "name": "Swing Profile Strategy [BigBeluga]",
+            "total_labels": 26,
+            "showing": 25,
+            "labels": [
+              {
+                "text": "▲",
+                "price": 59073.01
+              },
+              {
+                "text": "▼",
+                "price": 64234.45
+              },
+              {
+                "text": "▲",
+                "price": 60708.92
+              },
+              {
+                "text": "▼",
+                "price": 64727.27
+              },
+              {
+                "text": "▲",
+                "price": 63640
+              },
+              {
+                "text": "▼",
+                "price": 67264
+              },
+              {
+                "text": "▲",
+                "price": 64491.88
+              },
+              {
+                "text": "▼",
+                "price": 66384.01
+              },
+              {
+                "text": "▲",
+                "price": 62159.76
+              },
+              {
+                "text": "▼",
+                "price": 64508.4
+              },
+              {
+                "text": "▲",
+                "price": 63171.19
+              },
+              {
+                "text": "▼",
+                "price": 65553.39
+              },
+              {
+                "text": "▲",
+                "price": 61862.27
+              },
+              {
+                "text": "▼",
+                "price": 63156.34
+              },
+              {
+                "text": "▲",
+                "price": 58000
+              },
+              {
+                "text": "▼",
+                "price": 60838.92
+              },
+              {
+                "text": "▲",
+                "price": 58800
+              },
+              {
+                "text": "▼",
+                "price": 60702.63
+              },
+              {
+                "text": "▲",
+                "price": 57717.55
+              },
+              {
+                "text": "▼",
+                "price": 63940.79
+              },
+              {
+                "text": "▲",
+                "price": 61250
+              },
+              {
+                "text": "▼",
+                "price": 64658.85
+              },
+              {
+                "text": "▲",
+                "price": 61453.09
+              },
+              {
+                "text": "Mode: Fast (active bar)\nLast signal: Long\nBars since signal: 41\nPosition: Long",
+                "price": 64669.42
+              },
+              {
+                "text": "T: 16.191K\nB: 8.364K\nS: 7.827K\nD: 3.31%",
+                "price": 64669.42
+              }
+            ]
+          }
+        ]
+      },
+      "tables": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "signal": {
+        "hasSignal": true,
+        "direction": "bullish",
+        "price": 64669.42,
+        "source": "label",
+        "study": "Swing Profile Strategy [BigBeluga]",
+        "text": "Mode: Fast (active bar)\nLast signal: Long\nBars since signal: 41\nPosition: Long",
+        "labelCount": 25,
+        "positionState": "long"
+      },
+      "trade": null,
+      "trade_source": "strategy_tester_dom"
+    },
+    {
+      "symbol": "AMEX:FNGU",
+      "timeframe": "30",
+      "watchlist_name": "Swing 30min",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-12T19:49:58.622Z",
+      "state": {
+        "success": true,
+        "symbol": "BATS:FNGU",
+        "resolution": "30",
+        "chartType": 19,
+        "studies": [
+          {
+            "id": "HE2wnN",
+            "name": "Swing Profile Strategy [BigBeluga]"
+          }
+        ]
+      },
+      "indicators": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "quote": {
+        "success": true,
+        "symbol": "BATS:FNGU",
+        "time": 1783726200,
+        "open": 28.5,
+        "high": 28.5,
+        "low": 28.48,
+        "close": 28.48,
+        "last": 28.48,
+        "volume": 10,
+        "description": "MicroSectors FANG+ 3 Leveraged ETNs",
+        "exchange": "Cboe One",
+        "type": "fund"
+      },
+      "labels": {
+        "success": true,
+        "study_count": 1,
+        "studies": [
+          {
+            "name": "Swing Profile Strategy [BigBeluga]",
+            "total_labels": 25,
+            "showing": 25,
+            "labels": [
+              {
+                "text": "▼",
+                "price": null
+              },
+              {
+                "text": "▲",
+                "price": null
+              },
+              {
+                "text": "▼",
+                "price": 24.14
+              },
+              {
+                "text": "▲",
+                "price": 22.42
+              },
+              {
+                "text": "▼",
+                "price": 24.78
+              },
+              {
+                "text": "▲",
+                "price": 22.85
+              },
+              {
+                "text": "▼",
+                "price": 24.81
+              },
+              {
+                "text": "▲",
+                "price": 23.21
+              },
+              {
+                "text": "▼",
+                "price": 25.21
+              },
+              {
+                "text": "▲",
+                "price": 23
+              },
+              {
+                "text": "▼",
+                "price": 29.89
+              },
+              {
+                "text": "▲",
+                "price": 27.18
+              },
+              {
+                "text": "▼",
+                "price": 30.94
+              },
+              {
+                "text": "▲",
+                "price": 26.89
+              },
+              {
+                "text": "▼",
+                "price": 36.78
+              },
+              {
+                "text": "▲",
+                "price": 26.4
+              },
+              {
+                "text": "▼",
+                "price": 29.28
+              },
+              {
+                "text": "▲",
+                "price": 24.08
+              },
+              {
+                "text": "▼",
+                "price": 30.53
+              },
+              {
+                "text": "▲",
+                "price": 26.83
+              },
+              {
+                "text": "▼",
+                "price": 29.67
+              },
+              {
+                "text": "▲",
+                "price": 23.06
+              },
+              {
+                "text": "▼",
+                "price": 28.03
+              },
+              {
+                "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 44\nPosition: Flat",
+                "price": 29.03
+              },
+              {
+                "text": "T: 3.171M\nB: 1.481M\nS: 1.69M\nD: -6.58%",
+                "price": 25.55
+              }
+            ]
+          }
+        ]
+      },
+      "tables": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "signal": {
+        "hasSignal": true,
+        "direction": "bearish",
+        "price": 29.03,
+        "source": "label",
+        "study": "Swing Profile Strategy [BigBeluga]",
+        "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 44\nPosition: Flat",
+        "labelCount": 25,
+        "positionState": "flat"
+      },
+      "trade": null,
+      "trade_source": "strategy_tester_dom"
+    }
   ],
+  "watchlistsChecked": [
+    "Swing 30min"
+  ],
+  "watchlistSync": [
+    {
+      "watchlistName": "Swing 15m",
+      "symbols": [
+        "AMEX:ERX",
+        "AMEX:URTY",
+        "AMEX:TNA",
+        "AMEX:MEXX",
+        "LSE:0I9U",
+        "AMEX:SOXL",
+        "AMEX:EWO",
+        "AMEX:AGQ",
+        "NYSE:DXYZ",
+        "CBOE:WQTM",
+        "CBOE:WTAI",
+        "CBOE:DRAM",
+        "AMEX:XRP"
+      ],
+      "count": 13,
+      "source": "data_attributes",
+      "selected": false,
+      "activeWatchlistName": "Swing 4H",
+      "selectError": "Watchlist selection did not stick: Swing 15m"
+    },
+    {
+      "watchlistName": "Swing 30min",
+      "symbols": [
+        "AMEX:SOXL",
+        "CBOE:UVXY",
+        "NYSE:DXYZ",
+        "CBOE:WTAI",
+        "COINBASE:BTCUSD",
+        "AMEX:FNGU"
+      ],
+      "count": 6,
+      "source": "data_attributes",
+      "selected": false,
+      "activeWatchlistName": "Swing 4H",
+      "selectError": "Could not select watchlist: Swing 30min"
+    },
+    {
+      "watchlistName": "Swing 1H",
+      "symbols": [
+        "AMEX:ASHR",
+        "AMEX:EDC",
+        "NASDAQ:INTC",
+        "AMEX:LABU",
+        "AMEX:PILL",
+        "AMEX:SPXL",
+        "NASDAQ:SQQQ",
+        "AMEX:TECS",
+        "AMEX:TMV",
+        "AMEX:TOPT",
+        "NASDAQ:TQQQ",
+        "AMEX:TZA",
+        "AMEX:UDOW",
+        "AMEX:UPRO",
+        "AMEX:URTY",
+        "AMEX:USO",
+        "NASDAQ:WGMI",
+        "AMEX:YANG",
+        "CBOE:XOVL"
+      ],
+      "count": 19,
+      "source": "data_attributes",
+      "selected": false,
+      "activeWatchlistName": "Swing 4H",
+      "selectError": "Watchlist selection did not stick: Swing 1H"
+    },
+    {
+      "watchlistName": "Swing 4H",
+      "symbols": [
+        "AMEX:AGQ",
+        "AMEX:ASHR",
+        "NYSE:DXYZ",
+        "AMEX:EPI",
+        "AMEX:EURL",
+        "AMEX:FAS",
+        "AMEX:GLD",
+        "AMEX:GLTR",
+        "AMEX:JNUG",
+        "AMEX:MEXX",
+        "AMEX:MIDU",
+        "AMEX:PILL",
+        "NASDAQ:QTUM",
+        "AMEX:SOXL",
+        "AMEX:TMF",
+        "AMEX:TNA",
+        "AMEX:UDOW",
+        "AMEX:UTSL",
+        "CBOE:WQTM",
+        "AMEX:EWY"
+      ],
+      "count": 20,
+      "source": "data_attributes",
+      "selected": true,
+      "activeWatchlistName": "Swing 4H",
+      "selectError": null
+    },
+    {
+      "watchlistName": "Swing 1D",
+      "symbols": [
+        "AMEX:AGQ",
+        "AMEX:GLD",
+        "AMEX:IYC",
+        "AMEX:IYG",
+        "AMEX:JNUG",
+        "AMEX:MEXX",
+        "AMEX:MIDU",
+        "NASDAQ:MSFT",
+        "AMEX:NUGT",
+        "NASDAQ:TSLA",
+        "AMEX:UDOW",
+        "AMEX:URTY",
+        "AMEX:UTSL",
+        "AMEX:XLI",
+        "NASDAQ:NVDA",
+        "CBOE:INTL",
+        "NASDAQ:MU",
+        "NASDAQ:PLTR",
+        "NASDAQ:AAPL",
+        "NYSE:DXYZ",
+        "CBOE:WQTM",
+        "NASDAQ:QTUM",
+        "CBOE:WTAI"
+      ],
+      "count": 23,
+      "source": "data_attributes",
+      "selected": false,
+      "activeWatchlistName": "Swing 4H",
+      "selectError": "Watchlist selection did not stick: Swing 1D"
+    }
+  ],
+  "watchlistSyncOptions": [],
+  "watchlistSyncActiveName": null,
   "openTrades": [],
   "priorSignals": [
     {
       "watchlistName": "Swing 15m",
       "timeframe": "15",
-      "source": "baseline_history",
-      "symbolCount": 23,
+      "source": "scheduled_skip",
+      "symbolCount": 13,
       "trades": [
         {
-          "symbol": "BATS:MEXX",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "32.71 USD",
-          "entryTime": "Apr 14, 2026, 14:00 ET",
-          "netPnl": "+488.605 USD | +3.80%",
-          "favorableExcursion": "737.775 USD | 5.73%",
-          "adverseExcursion": "-134.685 USD | -1.05%"
-        },
-        {
-          "symbol": "BATS:GLD",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "435.51 USD",
-          "entryTime": "Apr 10, 2026, 05:00 ET",
-          "netPnl": "+58.072 USD | +0.63%",
-          "favorableExcursion": "92.494 USD | 1.01%",
-          "adverseExcursion": "-9.566 USD | -0.10%"
-        },
-        {
-          "symbol": "BATS:SPXU",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "54.45 USD",
-          "entryTime": "Apr 07, 2026, 16:30 ET",
-          "netPnl": "-900.218 USD | -8.56%",
-          "favorableExcursion": "39.671 USD | 0.38%",
-          "adverseExcursion": "-1,052.709 USD | -10.01%"
-        },
-        {
-          "symbol": "BATS:TECS",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "18.70 USD",
-          "entryTime": "Apr 07, 2026, 16:00 ET",
-          "netPnl": "-827.209 USD | -7.24%",
-          "favorableExcursion": "0 USD | 0.00%",
-          "adverseExcursion": "-1,530.307 USD | -13.40%"
-        },
-        {
-          "symbol": "BATS:TQQQ",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "43.26 USD",
-          "entryTime": "Apr 07, 2026, 07:00 ET",
-          "netPnl": "+233.486 USD | +2.41%",
-          "favorableExcursion": "285.99 USD | 2.95%",
-          "adverseExcursion": "-325.53 USD | -3.36%"
-        },
-        {
-          "symbol": "BATS:SQQQ",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "77.57 USD",
-          "entryTime": "Apr 02, 2026, 10:45 ET",
-          "netPnl": "-36.303 USD | -0.35%",
-          "favorableExcursion": "162.681 USD | 1.59%",
-          "adverseExcursion": "-336.279 USD | -3.28%"
-        },
-        {
-          "symbol": "BATS:TMV",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "36.83 USD",
-          "entryTime": "Apr 02, 2026, 10:45 ET",
-          "netPnl": "+226.334 USD | +2.18%",
-          "favorableExcursion": "236.931 USD | 2.29%",
-          "adverseExcursion": "-21.589 USD | -0.21%"
-        },
-        {
-          "symbol": "BATS:UVXY",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "50.51 USD",
-          "entryTime": "Apr 02, 2026, 10:45 ET",
-          "netPnl": "-50.365 USD | -0.44%",
-          "favorableExcursion": "590.404 USD | 5.12%",
-          "adverseExcursion": "-547.316 USD | -4.75%"
-        },
-        {
-          "symbol": "BATS:SOXL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "47.88 USD",
-          "entryTime": "Apr 02, 2026, 04:15 ET",
-          "netPnl": "+889.464 USD | +9.33%",
-          "favorableExcursion": "1,023.282 USD | 10.73%",
-          "adverseExcursion": "-425.438 USD | -4.46%"
-        },
-        {
-          "symbol": "BATS:TMF",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "35.37 USD",
-          "entryTime": "Apr 02, 2026, 04:15 ET",
-          "netPnl": "+218.759 USD | +2.25%",
-          "favorableExcursion": "256.089 USD | 2.64%",
-          "adverseExcursion": "-39.831 USD | -0.41%"
-        },
-        {
-          "symbol": "BATS:TNA",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "42.95 USD",
-          "entryTime": "Apr 02, 2026, 04:15 ET",
-          "netPnl": "-0.086 USD | -0.20%",
-          "favorableExcursion": "0 USD | 0.00%",
-          "adverseExcursion": "-0.043 USD | -0.10%"
-        },
-        {
-          "symbol": "BATS:USO",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "126.46 USD",
-          "entryTime": "Mar 31, 2026, 12:45 ET",
-          "netPnl": "+637.031 USD | +5.14%",
-          "favorableExcursion": "676.547 USD | 5.45%",
-          "adverseExcursion": "-430.853 USD | -3.47%"
-        },
-        {
-          "symbol": "BATS:ERX",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "94.02 USD",
-          "entryTime": "Mar 23, 2026, 07:15 ET",
-          "netPnl": "+937.121 USD | +7.72%",
-          "favorableExcursion": "961.821 USD | 7.92%",
-          "adverseExcursion": "-250.779 USD | -2.07%"
-        },
-        {
-          "symbol": "BATS:URTY",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "49.65 USD",
-          "entryTime": "Mar 20, 2026, 10:15 ET",
-          "netPnl": "-0.099 USD | -0.20%",
-          "favorableExcursion": "0 USD | 0.00%",
-          "adverseExcursion": "-0.05 USD | -0.10%"
-        },
-        {
-          "symbol": "BITSTAMP:BTCUSD",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "148.50 USD",
-          "entryTime": "Mar 19, 2026",
-          "netPnl": "+8,117.84 USD | +46.68%",
-          "favorableExcursion": "9,738.086 USD | 55.99%",
-          "adverseExcursion": "-965.074 USD | -5.55%"
-        },
-        {
-          "symbol": "COINBASE:XRPUSD",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "55.48 USD",
-          "entryTime": "Mar 10, 2026",
-          "netPnl": "+4,405.786 USD | +24.71%",
-          "favorableExcursion": "5,131.031 USD | 28.78%",
-          "adverseExcursion": "-3,012.739 USD | -16.90%"
-        },
-        {
-          "symbol": "LSE_DLY:0I9U",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "41.300 USD",
-          "entryTime": "Dec 16, 2025, 03:30 ET",
-          "netPnl": "+2,114.612 USD | +14.13%",
-          "favorableExcursion": "2,131.71 USD | 14.24%",
-          "adverseExcursion": "-22.191 USD | -0.15%"
-        },
-        {
-          "symbol": "BATS:MSFT",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "490.10 USD",
-          "entryTime": "Nov 19, 2025",
-          "netPnl": "-2,235.56 USD | -14.24%",
-          "favorableExcursion": "147.197 USD | 0.94%",
-          "adverseExcursion": "-4,297.923 USD | -27.38%"
-        },
-        {
-          "symbol": "BATS:TSLA",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "329.94 USD",
-          "entryTime": "Feb 12, 2025",
-          "netPnl": "-860.193 USD | -2.60%",
-          "favorableExcursion": "3,707.006 USD | 11.22%",
-          "adverseExcursion": "-11,601.994 USD | -35.13%"
-        },
-        {
-          "symbol": "COINBASE:SOLUSD",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "44.87 USD",
-          "entryTime": "Jan 13, 2025",
-          "netPnl": "-311.617 USD | -1.67%",
-          "favorableExcursion": "4,365.974 USD | 23.37%",
-          "adverseExcursion": "-6,849.386 USD | -36.66%"
-        },
-        {
-          "symbol": "BATS:UTSL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "32.52 USD",
-          "entryTime": "Dec 17, 2024",
-          "netPnl": "+2,006.893 USD | +13.58%",
-          "favorableExcursion": "2,441.376 USD | 16.52%",
-          "adverseExcursion": "-3,392.524 USD | -22.96%"
-        },
-        {
-          "symbol": "BATS:XLI",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "96.40 USD",
-          "entryTime": "Mar 16, 2023",
-          "netPnl": "+719.623 USD | +5.92%",
-          "favorableExcursion": "764.014 USD | 6.28%",
-          "adverseExcursion": "-164.606 USD | -1.35%"
-        },
-        {
-          "symbol": "ETHUSD",
+          "symbol": "AMEX:AGQ",
           "signal": "—",
-          "entryPrice": "82.33",
+          "entryPrice": "Unavailable",
           "entryTime": "No prior trade recorded",
           "netPnl": "Unavailable",
           "favorableExcursion": "Unavailable",
@@ -265,9 +1187,9 @@
           "wasOpen": false
         },
         {
-          "symbol": "NVDA",
+          "symbol": "AMEX:ERX",
           "signal": "—",
-          "entryPrice": "82.33",
+          "entryPrice": "Unavailable",
           "entryTime": "No prior trade recorded",
           "netPnl": "Unavailable",
           "favorableExcursion": "Unavailable",
@@ -275,9 +1197,9 @@
           "wasOpen": false
         },
         {
-          "symbol": "QQQ",
+          "symbol": "AMEX:EWO",
           "signal": "—",
-          "entryPrice": "82.33",
+          "entryPrice": "Unavailable",
           "entryTime": "No prior trade recorded",
           "netPnl": "Unavailable",
           "favorableExcursion": "Unavailable",
@@ -285,9 +1207,99 @@
           "wasOpen": false
         },
         {
-          "symbol": "SPY",
+          "symbol": "AMEX:MEXX",
           "signal": "—",
-          "entryPrice": "82.33",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:SOXL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:TNA",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:URTY",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "AMEX:XRP",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "CBOE:DRAM",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "CBOE:WQTM",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "CBOE:WTAI",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "LSE:0I9U",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NYSE:DXYZ",
+          "signal": "—",
+          "entryPrice": "Unavailable",
           "entryTime": "No prior trade recorded",
           "netPnl": "Unavailable",
           "favorableExcursion": "Unavailable",
@@ -299,644 +1311,716 @@
     {
       "watchlistName": "Swing 30min",
       "timeframe": "30",
-      "source": "tradingview_panel",
-      "symbolCount": 2,
+      "source": "baseline_watchlist",
+      "symbolCount": 6,
       "trades": [
         {
-          "symbol": "BATS:SOXL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "50.82 USD",
-          "entryTime": "Mar 12, 2026, 10:00 ET",
-          "netPnl": "+579.959 USD | +5.67%",
-          "favorableExcursion": "637.005 USD | 6.23%",
-          "adverseExcursion": "-376.035 USD | -3.68%"
+          "symbol": "BATS:FNGU",
+          "signal": "—",
+          "entryPrice": "28.48",
+          "entryTime": "07/12/2026, 03:49:58 PM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "COINBASE:BTCUSD",
+          "signal": "—",
+          "entryPrice": "64131.22",
+          "entryTime": "07/12/2026, 03:49:41 PM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "BATS:WTAI",
+          "signal": "—",
+          "entryPrice": "45",
+          "entryTime": "07/12/2026, 03:49:25 PM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "BATS:DXYZ",
+          "signal": "—",
+          "entryPrice": "27.59",
+          "entryTime": "07/12/2026, 03:49:08 PM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
           "symbol": "BATS:UVXY",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "46.00 USD",
-          "entryTime": "Mar 09, 2026, 16:00 ET",
-          "netPnl": "+1,103.058 USD | +7.39%",
-          "favorableExcursion": "1,339.416 USD | 8.98%",
-          "adverseExcursion": "-977.184 USD | -6.55%"
+          "signal": "—",
+          "entryPrice": "23.22",
+          "entryTime": "07/12/2026, 03:48:51 PM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "BATS:SOXL",
+          "signal": "—",
+          "entryPrice": "194.21",
+          "entryTime": "07/12/2026, 03:48:34 PM ET",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         }
       ]
     },
     {
       "watchlistName": "Swing 1H",
       "timeframe": "60",
-      "source": "baseline_history",
-      "symbolCount": 27,
+      "source": "scheduled_skip",
+      "symbolCount": 19,
       "trades": [
         {
-          "symbol": "BATS:EDC",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "56.90 USD",
-          "entryTime": "Mar 19, 2026, 09:00 ET",
-          "netPnl": "+416.408 USD | +3.31%",
-          "favorableExcursion": "855.955 USD | 6.80%",
-          "adverseExcursion": "-1,647.975 USD | -13.09%"
+          "symbol": "AMEX:ASHR",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:BRZU",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "96.46 USD",
-          "entryTime": "Mar 13, 2026, 16:00 ET",
-          "netPnl": "+976.778 USD | +8.65%",
-          "favorableExcursion": "1,104.894 USD | 9.78%",
-          "adverseExcursion": "-648.936 USD | -5.74%"
+          "symbol": "AMEX:EDC",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:SPXU",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "50.24 USD",
-          "entryTime": "Mar 10, 2026, 14:00 ET",
-          "netPnl": "+760.196 USD | +7.13%",
-          "favorableExcursion": "777.989 USD | 7.30%",
-          "adverseExcursion": "-14.891 USD | -0.14%"
+          "symbol": "AMEX:LABU",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:URTY",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "60.39 USD",
-          "entryTime": "Feb 23, 2026, 11:00 ET",
-          "netPnl": "+695.622 USD | +5.40%",
-          "favorableExcursion": "1,009.537 USD | 7.84%",
-          "adverseExcursion": "-196.043 USD | -1.52%"
+          "symbol": "AMEX:PILL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:SPXS",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "35.00 USD",
-          "entryTime": "Feb 18, 2026, 14:00 ET",
-          "netPnl": "-0.07 USD | -0.20%",
-          "favorableExcursion": "0 USD | 0.00%",
-          "adverseExcursion": "-0.035 USD | -0.10%"
+          "symbol": "AMEX:SPXL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:TNA",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "52.28 USD",
-          "entryTime": "Feb 12, 2026, 12:00 ET",
-          "netPnl": "+578.871 USD | +4.92%",
-          "favorableExcursion": "960.237 USD | 8.16%",
-          "adverseExcursion": "-225.513 USD | -1.92%"
+          "symbol": "AMEX:TECS",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:TQQQ",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "48.95 USD",
-          "entryTime": "Feb 12, 2026, 12:00 ET",
-          "netPnl": "+240.721 USD | +2.33%",
-          "favorableExcursion": "287.182 USD | 2.78%",
-          "adverseExcursion": "-544.158 USD | -5.26%"
+          "symbol": "AMEX:TMV",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:UDOW",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "62.69 USD",
-          "entryTime": "Feb 12, 2026, 12:00 ET",
-          "netPnl": "-38.973 USD | -0.36%",
-          "favorableExcursion": "165.615 USD | 1.53%",
-          "adverseExcursion": "-605.965 USD | -5.58%"
+          "symbol": "AMEX:TOPT",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:UPRO",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "115.24 USD",
-          "entryTime": "Feb 12, 2026, 12:00 ET",
-          "netPnl": "+58.774 USD | +0.54%",
-          "favorableExcursion": "175.252 USD | 1.60%",
-          "adverseExcursion": "-452.698 USD | -4.13%"
+          "symbol": "AMEX:TZA",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:USO",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "76.16 USD",
-          "entryTime": "Feb 12, 2026, 12:00 ET",
-          "netPnl": "+280.96 USD | +2.47%",
-          "favorableExcursion": "322.412 USD | 2.84%",
-          "adverseExcursion": "-157.368 USD | -1.39%"
+          "symbol": "AMEX:UDOW",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:SQQQ",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "68.00 USD",
-          "entryTime": "Feb 09, 2026, 12:00 ET",
-          "netPnl": "+626.172 USD | +5.93%",
-          "favorableExcursion": "724.16 USD | 6.86%",
-          "adverseExcursion": "-112.84 USD | -1.07%"
+          "symbol": "AMEX:UPRO",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:UVXY",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "35.60 USD",
-          "entryTime": "Feb 09, 2026, 11:00 ET",
-          "netPnl": "+877.295 USD | +8.10%",
-          "favorableExcursion": "1,120.058 USD | 10.34%",
-          "adverseExcursion": "-174.982 USD | -1.62%"
+          "symbol": "AMEX:URTY",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:TECS",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "17.68 USD",
-          "entryTime": "Feb 09, 2026, 10:00 ET",
-          "netPnl": "+445.572 USD | +4.20%",
-          "favorableExcursion": "588.41 USD | 5.55%",
-          "adverseExcursion": "-633.55 USD | -5.98%"
+          "symbol": "AMEX:USO",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:SDS",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "67.20 USD",
-          "entryTime": "Feb 06, 2026, 16:00 ET",
-          "netPnl": "+40.21 USD | +0.42%",
-          "favorableExcursion": "51.155 USD | 0.54%",
-          "adverseExcursion": "-184.315 USD | -1.94%"
+          "symbol": "AMEX:YANG",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:SH",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "35.75 USD",
-          "entryTime": "Feb 06, 2026, 16:00 ET",
-          "netPnl": "+18.936 USD | +0.19%",
-          "favorableExcursion": "28.877 USD | 0.29%",
-          "adverseExcursion": "-93.003 USD | -0.94%"
+          "symbol": "CBOE:XOVL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:INTC",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "48.24 USD",
-          "entryTime": "Feb 05, 2026, 12:00 ET",
-          "netPnl": "+726.177 USD | +5.70%",
-          "favorableExcursion": "795.105 USD | 6.24%",
-          "adverseExcursion": "-458.895 USD | -3.60%"
+          "symbol": "NASDAQ:INTC",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:UTSL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "39.67 USD",
-          "entryTime": "Feb 02, 2026, 14:00 ET",
-          "netPnl": "+835.029 USD | +7.88%",
-          "favorableExcursion": "894.538 USD | 8.44%",
-          "adverseExcursion": "-29.282 USD | -0.28%"
+          "symbol": "NASDAQ:SQQQ",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:FAZ",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "41.36 USD",
-          "entryTime": "Jan 30, 2026, 10:00 ET",
-          "netPnl": "+106.986 USD | +0.98%",
-          "favorableExcursion": "223.192 USD | 2.05%",
-          "adverseExcursion": "-565.808 USD | -5.20%"
+          "symbol": "NASDAQ:TQQQ",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:SPXL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "222.15 USD",
-          "entryTime": "Jan 29, 2026, 11:00 ET",
-          "netPnl": "+325.292 USD | +2.99%",
-          "favorableExcursion": "539.385 USD | 4.95%",
-          "adverseExcursion": "-737.555 USD | -6.77%"
-        },
-        {
-          "symbol": "BATS:LABU",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "173.49 USD",
-          "entryTime": "Jan 28, 2026, 15:00 ET",
-          "netPnl": "+107.135 USD | +0.71%",
-          "favorableExcursion": "280.706 USD | 1.86%",
-          "adverseExcursion": "-1,140.004 USD | -7.55%"
-        },
-        {
-          "symbol": "BATS:PILL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "11.80 USD",
-          "entryTime": "Jan 28, 2026, 12:00 ET",
-          "netPnl": "+580.315 USD | +4.54%",
-          "favorableExcursion": "745.321 USD | 5.83%",
-          "adverseExcursion": "-640.919 USD | -5.01%"
-        },
-        {
-          "symbol": "BATS:TZA",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "5.82 USD",
-          "entryTime": "Jan 21, 2026, 15:00 ET",
-          "netPnl": "+469.826 USD | +4.94%",
-          "favorableExcursion": "479.808 USD | 5.05%",
-          "adverseExcursion": "-384.622 USD | -4.05%"
-        },
-        {
-          "symbol": "BATS:YANG",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "21.89 USD",
-          "entryTime": "Jan 12, 2026, 10:00 ET",
-          "netPnl": "-0.044 USD | -0.20%",
-          "favorableExcursion": "0 USD | 0.00%",
-          "adverseExcursion": "-0.022 USD | -0.10%"
-        },
-        {
-          "symbol": "BATS:TMV",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "36.57 USD",
-          "entryTime": "Jan 07, 2026, 07:00 ET",
-          "netPnl": "+480.734 USD | +4.47%",
-          "favorableExcursion": "497.868 USD | 4.63%",
-          "adverseExcursion": "-334.152 USD | -3.10%"
-        },
-        {
-          "symbol": "BATS:QID",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "19.63 USD",
-          "entryTime": "Jan 06, 2026, 14:00 ET",
-          "netPnl": "+151.594 USD | +1.48%",
-          "favorableExcursion": "172.453 USD | 1.68%",
-          "adverseExcursion": "-192.947 USD | -1.88%"
-        },
-        {
-          "symbol": "BATS:GUSH",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "21.81 USD",
-          "entryTime": "Jan 05, 2026, 11:00 ET",
-          "netPnl": "+717.919 USD | +6.44%",
-          "favorableExcursion": "816.675 USD | 7.32%",
-          "adverseExcursion": "-522.145 USD | -4.68%"
-        },
-        {
-          "symbol": "BATS:WGMI",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "43.82 USD",
-          "entryTime": "Dec 11, 2025, 10:00 ET",
-          "netPnl": "-1,515.738 USD | -7.31%",
-          "favorableExcursion": "1,615.853 USD | 7.79%",
-          "adverseExcursion": "-3,554.037 USD | -17.13%"
+          "symbol": "NASDAQ:WGMI",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         }
       ]
     },
     {
       "watchlistName": "Swing 4H",
       "timeframe": "240",
-      "source": "tradingview_panel",
-      "symbolCount": 18,
+      "source": "scheduled_skip",
+      "symbolCount": 20,
       "trades": [
         {
-          "symbol": "BATS:MIDU",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "59.82 USD",
-          "entryTime": "Mar 03, 2026, 12:00 ET",
-          "netPnl": "-1,103.786 USD | -7.52%",
-          "favorableExcursion": "580.694 USD | 3.96%",
-          "adverseExcursion": "-3,020.806 USD | -20.59%"
+          "symbol": "AMEX:AGQ",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:PILL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "11.52 USD",
-          "entryTime": "Mar 03, 2026, 12:00 ET",
-          "netPnl": "-84.551 USD | -0.46%",
-          "favorableExcursion": "1,225.726 USD | 6.66%",
-          "adverseExcursion": "-4,372.725 USD | -23.77%"
+          "symbol": "AMEX:ASHR",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:EDC",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "48.90 USD",
-          "entryTime": "Dec 17, 2025, 16:00 ET",
-          "netPnl": "-0.098 USD | -0.20%",
-          "favorableExcursion": "0 USD | 0.00%",
-          "adverseExcursion": "-0.049 USD | -0.10%"
+          "symbol": "AMEX:EPI",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:YINN",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "44.47 USD",
-          "entryTime": "Sep 04, 2025, 12:00 ET",
-          "netPnl": "+1,532.319 USD | +11.83%",
-          "favorableExcursion": "1,593.379 USD | 12.30%",
-          "adverseExcursion": "-65.321 USD | -0.50%"
+          "symbol": "AMEX:EURL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:UTSL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "41.21 USD",
-          "entryTime": "Aug 25, 2025, 12:00 ET",
-          "netPnl": "+116.722 USD | +0.77%",
-          "favorableExcursion": "253.475 USD | 1.67%",
-          "adverseExcursion": "-1,623.325 USD | -10.69%"
+          "symbol": "AMEX:EWY",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:FAS",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "158.57 USD",
-          "entryTime": "Aug 01, 2025, 12:00 ET",
-          "netPnl": "+1,367.063 USD | +8.70%",
-          "favorableExcursion": "1,412.872 USD | 8.99%",
-          "adverseExcursion": "-328.538 USD | -2.09%"
+          "symbol": "AMEX:FAS",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:EURL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "31.39 USD",
-          "entryTime": "Jul 31, 2025, 16:00 ET",
-          "netPnl": "+2,254.037 USD | +13.54%",
-          "favorableExcursion": "2,506.163 USD | 15.05%",
-          "adverseExcursion": "-1,028.937 USD | -6.18%"
+          "symbol": "AMEX:GLD",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:GLD",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "305.26 USD",
-          "entryTime": "Jul 28, 2025, 12:00 ET",
-          "netPnl": "+272.482 USD | +2.23%",
-          "favorableExcursion": "340.59 USD | 2.79%",
-          "adverseExcursion": "-184.21 USD | -1.51%"
+          "symbol": "AMEX:GLTR",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:EPI",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "46.54 USD",
-          "entryTime": "Jul 22, 2025, 12:00 ET",
-          "netPnl": "-311.752 USD | -2.52%",
-          "favorableExcursion": "32.84 USD | 0.27%",
-          "adverseExcursion": "-778.46 USD | -6.28%"
+          "symbol": "AMEX:JNUG",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:UDOW",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "41.89 USD",
-          "entryTime": "Jun 20, 2025, 08:00 ET",
-          "netPnl": "+702.484 USD | +6.52%",
-          "favorableExcursion": "757.664 USD | 7.03%",
-          "adverseExcursion": "-211.226 USD | -1.96%"
+          "symbol": "AMEX:MEXX",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:TNA",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "27.83 USD",
-          "entryTime": "May 23, 2025, 12:00 ET",
-          "netPnl": "+1,238.834 USD | +14.07%",
-          "favorableExcursion": "1,321.566 USD | 15.01%",
-          "adverseExcursion": "-24.594 USD | -0.28%"
+          "symbol": "AMEX:MIDU",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:TMF",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "40.44 USD",
-          "entryTime": "Apr 08, 2025, 16:00 ET",
-          "netPnl": "+440.315 USD | +3.67%",
-          "favorableExcursion": "464.59 USD | 3.88%",
-          "adverseExcursion": "-1,364.69 USD | -11.39%"
+          "symbol": "AMEX:PILL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:MEXX",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "9.99 USD",
-          "entryTime": "Apr 04, 2025, 16:00 ET",
-          "netPnl": "+4,816.319 USD | +38.56%",
-          "favorableExcursion": "5,120.913 USD | 41.00%",
-          "adverseExcursion": "-1,960.917 USD | -15.70%"
+          "symbol": "AMEX:SOXL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:JNUG",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "56.54 USD",
-          "entryTime": "Apr 03, 2025, 08:00 ET",
-          "netPnl": "+2,347.898 USD | +16.73%",
-          "favorableExcursion": "2,443.658 USD | 17.41%",
-          "adverseExcursion": "-2,826.342 USD | -20.14%"
+          "symbol": "AMEX:TMF",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:ASHR",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "26.70 USD",
-          "entryTime": "Mar 28, 2025, 08:00 ET",
-          "netPnl": "-278.051 USD | -2.22%",
-          "favorableExcursion": "0 USD | 0.00%",
-          "adverseExcursion": "-1,644.642 USD | -13.12%"
+          "symbol": "AMEX:TNA",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:SOXL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "25.59 USD",
-          "entryTime": "Feb 25, 2025, 12:00 ET",
-          "netPnl": "-8,986.997 USD | -50.63%",
-          "favorableExcursion": "1,174.226 USD | 6.61%",
-          "adverseExcursion": "-12,831.304 USD | -72.28%"
+          "symbol": "AMEX:UDOW",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:AGQ",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "35.70 USD",
-          "entryTime": "Jan 27, 2025, 12:00 ET",
-          "netPnl": "+1,915.621 USD | +12.10%",
-          "favorableExcursion": "1,986.545 USD | 12.55%",
-          "adverseExcursion": "-197.445 USD | -1.25%"
+          "symbol": "AMEX:UTSL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:GLTR",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "109.55 USD",
-          "entryTime": "Dec 19, 2024, 08:00 ET",
-          "netPnl": "+683.049 USD | +5.15%",
-          "favorableExcursion": "697.014 USD | 5.25%",
-          "adverseExcursion": "-114.896 USD | -0.87%"
+          "symbol": "CBOE:WQTM",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:QTUM",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NYSE:DXYZ",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         }
       ]
     },
     {
       "watchlistName": "Swing 1D",
       "timeframe": "D",
-      "source": "tradingview_panel",
-      "symbolCount": 14,
+      "source": "scheduled_skip",
+      "symbolCount": 23,
       "trades": [
         {
-          "symbol": "BATS:GLD",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "400.24 USD",
-          "entryTime": "Mar 24, 2026",
-          "netPnl": "+1,230.23 USD | +10.24%",
-          "favorableExcursion": "1,441.793 USD | 12.00%",
-          "adverseExcursion": "-43.207 USD | -0.36%"
+          "symbol": "AMEX:AGQ",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:AGQ",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "108.24 USD",
-          "entryTime": "Mar 20, 2026",
-          "netPnl": "+3,229.29 USD | +22.24%",
-          "favorableExcursion": "4,757.236 USD | 32.77%",
-          "adverseExcursion": "-1,953.484 USD | -13.45%"
+          "symbol": "AMEX:GLD",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:MEXX",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "25.55 USD",
-          "entryTime": "Mar 20, 2026",
-          "netPnl": "+5,882.64 USD | +34.33%",
-          "favorableExcursion": "6,642.682 USD | 38.77%",
-          "adverseExcursion": "-1,337.019 USD | -7.80%"
+          "symbol": "AMEX:IYC",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:JNUG",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "159.53 USD",
-          "entryTime": "Mar 19, 2026",
-          "netPnl": "+10,728.487 USD | +48.33%",
-          "favorableExcursion": "13,281.516 USD | 59.84%",
-          "adverseExcursion": "-1,381.595 USD | -6.22%"
+          "symbol": "AMEX:IYG",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:NUGT",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "148.50 USD",
-          "entryTime": "Mar 19, 2026",
-          "netPnl": "+8,117.84 USD | +46.68%",
-          "favorableExcursion": "9,738.086 USD | 55.99%",
-          "adverseExcursion": "-965.074 USD | -5.55%"
+          "symbol": "AMEX:JNUG",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:MIDU",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "55.55 USD",
-          "entryTime": "Mar 10, 2026",
-          "netPnl": "+3,893.501 USD | +18.77%",
-          "favorableExcursion": "3,944.27 USD | 19.02%",
-          "adverseExcursion": "-3,049.48 USD | -14.70%"
+          "symbol": "AMEX:MEXX",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:URTY",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "55.48 USD",
-          "entryTime": "Mar 10, 2026",
-          "netPnl": "+4,405.786 USD | +24.71%",
-          "favorableExcursion": "5,131.031 USD | 28.78%",
-          "adverseExcursion": "-3,012.739 USD | -16.90%"
+          "symbol": "AMEX:MIDU",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:IYC",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "101.00 USD",
-          "entryTime": "Feb 13, 2026",
-          "netPnl": "+504.851 USD | +3.40%",
-          "favorableExcursion": "676.053 USD | 4.55%",
-          "adverseExcursion": "-1,045.317 USD | -7.03%"
+          "symbol": "AMEX:NUGT",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:MSFT",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "490.10 USD",
-          "entryTime": "Nov 19, 2025",
-          "netPnl": "-2,235.56 USD | -14.24%",
-          "favorableExcursion": "147.197 USD | 0.94%",
-          "adverseExcursion": "-4,297.923 USD | -27.38%"
+          "symbol": "AMEX:UDOW",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:IYG",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "75.34 USD",
-          "entryTime": "Mar 11, 2025",
-          "netPnl": "+1,182.034 USD | +9.11%",
-          "favorableExcursion": "1,268.442 USD | 9.78%",
-          "adverseExcursion": "-1,622.878 USD | -12.51%"
+          "symbol": "AMEX:URTY",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:TSLA",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "329.94 USD",
-          "entryTime": "Feb 12, 2025",
-          "netPnl": "-860.193 USD | -2.60%",
-          "favorableExcursion": "3,707.006 USD | 11.22%",
-          "adverseExcursion": "-11,601.994 USD | -35.13%"
+          "symbol": "AMEX:UTSL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:UDOW",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "44.87 USD",
-          "entryTime": "Jan 13, 2025",
-          "netPnl": "-311.617 USD | -1.67%",
-          "favorableExcursion": "4,365.974 USD | 23.37%",
-          "adverseExcursion": "-6,849.386 USD | -36.66%"
+          "symbol": "AMEX:XLI",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:UTSL",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "32.52 USD",
-          "entryTime": "Dec 17, 2024",
-          "netPnl": "+2,006.893 USD | +13.58%",
-          "favorableExcursion": "2,441.376 USD | 16.52%",
-          "adverseExcursion": "-3,392.524 USD | -22.96%"
+          "symbol": "CBOE:INTL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         },
         {
-          "symbol": "BATS:XLI",
-          "signal": "EXIT",
-          "wasOpen": false,
-          "entryPrice": "96.40 USD",
-          "entryTime": "Mar 16, 2023",
-          "netPnl": "+719.623 USD | +5.92%",
-          "favorableExcursion": "764.014 USD | 6.28%",
-          "adverseExcursion": "-164.606 USD | -1.35%"
+          "symbol": "CBOE:WQTM",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "CBOE:WTAI",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:AAPL",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:MSFT",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:MU",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:NVDA",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:PLTR",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:QTUM",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NASDAQ:TSLA",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
+        },
+        {
+          "symbol": "NYSE:DXYZ",
+          "signal": "—",
+          "entryPrice": "Unavailable",
+          "entryTime": "No prior trade recorded",
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         }
       ]
     }
-  ]
+  ],
+  "isPartialScan": false,
+  "scanProgress": null
 }

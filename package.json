@@ -14,6 +14,7 @@
   "scripts": {
     "start": "node src/server.js",
     "tv": "node src/cli/index.js",
+    "sync:watchlist": "node src/cli/index.js watchlist sync",
     "signals": "node scripts/run_signal_job.js",
     "dashboard": "node scripts/serve_signal_status.js",
     "test": "node --test tests/e2e.test.js tests/pine_analyze.test.js",

@@ -127,3 +127,26 @@ Claude Code ←→ MCP Server (stdio) ←→ CDP (localhost:9222) ←→ Trading
 ```
 
 Pine graphics path: `study._graphics._primitivesCollection.dwglines.get('lines').get(false)._primitivesDataById`
+
+## Automated Signal Scan — Status & Gotchas
+
+This project also runs a separate Windows-scheduled signal scanner (`TradingViewSignalScan15m` every 15 min, `TVWatchdog` every 5 min) independent of interactive MCP tool use. Full operational docs (how to suspend/resume, holiday list, desktop toggle shortcut) live in `USER_GUIDE.md`. Two things worth knowing if you're asked to debug it:
+
+1. **Two separate "off switches" exist and both must be checked.** The Windows Task Scheduler task can be Enabled while `rules.json` → `schedule.disabled: true` still silently no-ops every run ("Scheduled scanning disabled"). Always check both — `Get-ScheduledTaskInfo -TaskName TradingViewSignalScan15m` for the task, and `rules.json`'s `schedule.disabled` for the config gate.
+2. **The dashboard server does not hot-reload code.** If you edit `src/core/morning.js` (or anything it imports) while `scripts/serve_signal_status.js` is already running, the running process keeps executing the *old* in-memory code until it's restarted. Compare the server process's start time (`Get-CimInstance Win32_Process -Filter "Name='node.exe'"`) against the file's last-write time before trusting a scan result you just triggered.
+
+### Open-trade detection reliability (do not assume the Pine label is ground truth)
+
+The strategy's on-chart status label (`Mode: Fast (active bar)\nLast signal: X\nBars since signal: N\nPosition: Flat/Long/Short`) is **not** fully reliable evidence of a currently open position:
+
+- `Position: Flat` is safe to trust unconditionally (`strategy.position_size == 0` is unambiguous).
+- `Position: Long`/`Short` is computed on the **active, still-forming bar** and can run one bar ahead of the confirmed Strategy Tester "List of Trades" — e.g. a trailing-stop exit already closed the position in the trade list, but the label hasn't reset because no new opposite signal has fired yet. Treating `Long`/`Short` alone as confirmation of an open trade produces false positives.
+- The only trustworthy source for entry price/time/net P&L is a successful read of the Strategy Tester's trade table (`data_get_ohlcv`-adjacent trade-history tools / `getLatestTradeFromTester` in `src/core/data.js`). That DOM read is flaky under rapid multi-symbol automation (times out often) — when it fails, do not fabricate an entry from the label's incidental price (that price is just the label's chart-anchor coordinate, not a real trade price). Prefer preserving previously-known state or reporting the position as unconfirmed over guessing.
+- Symbols can also switch exchange prefix between scans for the same instrument (e.g. `AMEX:AGQ` vs `BATS:AGQ`) — match by ticker (strip the prefix) + timeframe when checking continuity of an existing position, not by exact symbol string.
+
+### Push notifications (ntfy) — gating and failure visibility
+
+- Notifications only fire when `runSignalJob` runs with `notify: true`. Only the real scheduled path sets that (`run_signal_job.ps1` → `run_signal_job.js --notify`) — every manual/dashboard-triggered scan (`/api/run-cron-now`, direct `runBrief` calls) explicitly passes `notify: false`, so ad-hoc testing/debugging can never leak a push.
+- Eligibility (`notify_signal_lines` in `src/core/morning.js`) requires `entry.trade?.signal === 'OPEN'` — the confirmed Strategy Tester trade-table read, not the unreliable `Position: Long/Short` label — plus `isRecentTradeSignal`/`isSameTradingDay` (same ET calendar day, entry within ~4 bars). This makes the notify path stricter than the raw Open Trades table, which is why the false-positive open-trade bug above never produced a spurious push.
+- The POST to `rules.ntfy.url` logs on failure (non-2xx response or fetch error) instead of swallowing it — check the console output / `signal-scan.log`. `run_signal_job.ps1` captures the job's stderr into `signal-scan.log` via a temp-file redirect (`2>$stderrFile`), not `2>&1` — this script has `$ErrorActionPreference = 'Stop'`, and `2>&1` on a native exe in PS 5.1 can turn a stderr line into a terminating error that aborts the whole script.
+- To validate the wiring live without waiting for a real signal: POST directly to `rules.ntfy.url` with `Content-Type: text/plain` and `Title`/`Priority` headers (same shape as the real call) and confirm HTTP 200.

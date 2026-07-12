@@ -1,5 +1,5 @@
 {
-  "strategy": "Swing Profile Strategy [BigBeluga] — Trailing Stop Exit",
+  "strategy": "Swing Profile Strategy [BigBeluga]",
 
   "watchlist": ["SOXL", "BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "SPY", "QQQ", "NVDA"],
 
@@ -12,6 +12,9 @@
     "trail_method": "Percent",
     "trail_pct": 2.0,
     "trade_direction": "Long Only"
+  },
+  "schedule": {
+  "disabled": false
   },
 
   "watchlists": {
@@ -28,7 +31,19 @@
     "timezone": "America/New_York",
     "open": "09:30",
     "close": "16:00",
-    "days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+    "days": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+    "holidays": [
+      "2026-01-01",
+      "2026-01-19",
+      "2026-02-16",
+      "2026-04-03",
+      "2026-05-25",
+      "2026-06-19",
+      "2026-07-03",
+      "2026-09-07",
+      "2026-11-26",
+      "2026-12-25"
+    ]
   },
 
   "bias_criteria": {
