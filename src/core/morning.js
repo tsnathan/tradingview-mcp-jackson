@@ -1526,6 +1526,7 @@ export function createDashboardStatus(result = {}) {
     priorSignals,
     isPartialScan: Boolean(result.is_partial_scan),
     scanProgress: result.scan_progress || null,
+    strategyMismatch: result.strategy_mismatch || null,
   };
 }
 
@@ -1677,7 +1678,7 @@ async function scanSymbol({ symbol, timeframe, studyFilter, watchlistName, watch
     data.getPineTables({ study_filter: studyFilter }),
   ]);
 
-  const latestTrade = await data.getLatestTradeFromTester({ timeout_ms: 14000 }).catch(() => ({ success: false, trade: null }));
+  const latestTrade = await data.getLatestTradeFromTester({ timeout_ms: 14000, study_filter: studyFilter }).catch(() => ({ success: false, trade: null }));
 
   const signal = detectSignalFromSnapshot({
     symbol: state?.symbol || symbol,
@@ -2253,6 +2254,48 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
   return enriched;
 }
 
+// Verifies the strategy indicator attached to the live chart matches rules.json's configured
+// `strategy` name before trusting any trade/signal data read off of it. It's common to swap in
+// a different strategy on the chart temporarily (testing, comparison) — if that's still attached
+// when a scan runs, every trade/signal read for that run would silently come from the wrong
+// script. There is deliberately no auto-repair: the configured strategy here is a private saved
+// script, and TradingView's `createStudy(name)` API can only add public/built-in indicators by
+// exact name — it can't restore a private script, so an "auto-repair" attempt would either fail
+// silently or, worse, add an unrelated public script of the same name. On mismatch, scanning is
+// suspended and flagged until the correct indicator is restored manually on the chart.
+async function checkStrategyIdentity({ rules, studyFilter }) {
+  let currentState;
+  try {
+    currentState = await chart.getState();
+  } catch {
+    // Connection issues are handled by the caller's own connection check; don't double-report.
+    return { suspend: false, mismatch: null };
+  }
+
+  const attachedNames = (currentState.studies || []).map((s) => s.name);
+  const expectedLower = studyFilter.toLowerCase();
+  const hasExpected = attachedNames.some((n) => n.toLowerCase().includes(expectedLower));
+  const unexpectedStrategyNames = attachedNames.filter(
+    (n) => /strategy/i.test(n) && !n.toLowerCase().includes(expectedLower),
+  );
+
+  if (hasExpected || unexpectedStrategyNames.length === 0) {
+    return { suspend: false, mismatch: null };
+  }
+
+  const mismatch = {
+    expected: rules.strategy,
+    found: unexpectedStrategyNames,
+    detected_at: new Date().toISOString(),
+  };
+
+  return {
+    suspend: true,
+    reason: `Strategy mismatch: chart has "${unexpectedStrategyNames.join(', ')}" but rules.json expects "${rules.strategy}". Scanning suspended until this is fixed on the chart.`,
+    mismatch,
+  };
+}
+
 export async function runSignalJob({
   rules_path,
   changed_only = true,
@@ -2313,6 +2356,20 @@ export async function runSignalJob({
     return errorResult;
   }
 
+  const strategyCheck = await checkStrategyIdentity({ rules, studyFilter });
+  if (strategyCheck.suspend) {
+    const skippedResult = buildOutsideHoursResult({
+      marketHours,
+      scanTargets,
+      baseline,
+      reason: strategyCheck.reason,
+    });
+    skippedResult.strategy_mismatch = strategyCheck.mismatch;
+    skippedResult.open_trades = enrichOpenTradesFromBaseline(skippedResult.open_trades, baseline.excursion_alerts);
+    writeLatestStatus(skippedResult);
+    return skippedResult;
+  }
+
   const syncResult = syncWatchlists
     ? await syncWatchlistSymbolsFromTradingView({ rules, baselinePath }).catch(() => null)
     : null;
@@ -2351,6 +2408,7 @@ export async function runSignalJob({
   result.watchlist_sync = Array.isArray(syncResult?.synced) ? syncResult.synced : [];
   result.watchlistOptions = Array.isArray(syncResult?.watchlistOptions) ? syncResult.watchlistOptions : [];
   result.activeWatchlistName = syncResult?.activeWatchlistName || null;
+  result.strategy_mismatch = strategyCheck.mismatch || null;
 
   if (notify && result.notify_signal_lines.length > 0 && rules.ntfy?.url) {
     try {

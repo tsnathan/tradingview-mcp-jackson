@@ -75,7 +75,183 @@ export function parseLatestTradeFromTesterText(text) {
   };
 }
 
-export async function getLatestTradeFromTester({ timeout_ms = 14000 } = {}) {
+// Reads the Strategy Tester's underlying report object directly off the chart's internal
+// JS model (strat.reportData()) instead of scraping the rendered "List of Trades" panel.
+// This is the same object the DOM table is built from, so it reflects the true state
+// immediately — no virtualized-list scrolling, no text parsing, no stability-polling.
+async function readStrategyReportData(study_filter) {
+  return evaluate(`
+    (function() {
+      try {
+        var chart = ${CHART_API}._chartWidget;
+        var sources = chart.model().model().dataSources();
+        var filterLower = ${JSON.stringify(String(study_filter || '').toLowerCase())};
+        var candidates = [];
+        for (var i = 0; i < sources.length; i++) {
+          var s = sources[i];
+          var meta = null;
+          try { meta = s.metaInfo ? s.metaInfo() : null; } catch(e) {}
+          var name = meta ? (meta.description || meta.shortDescription || meta.fullDescription || '') : '';
+          // Name match is the reliable signal — reportData/performance/ordersData methods exist
+          // on the generic Study base class too (e.g. "Dividends", "Splits"), not just strategies.
+          if (/strategy/i.test(name)) candidates.push({ source: s, name: name });
+        }
+        if (candidates.length === 0) return { error: 'no_strategy_on_chart', attachedNames: [] };
+        var matched = filterLower ? candidates.filter(function(c) { return c.name.toLowerCase().indexOf(filterLower) !== -1; }) : candidates;
+        var chosen = matched.length > 0 ? matched[0] : candidates[0];
+        var strat = chosen.source;
+        var rd = typeof strat.reportData === 'function' ? strat.reportData() : strat.reportData;
+        if (rd && typeof rd.value === 'function') rd = rd.value();
+        var attachedNames = candidates.map(function(c) { return c.name; });
+        if (!rd || !rd.performance) {
+          return { error: 'report_unavailable', studyName: chosen.name, matchedFilter: matched.length > 0, attachedNames: attachedNames };
+        }
+
+        var perf = rd.performance;
+        var totalOpenTrades = (perf.all && typeof perf.all.totalOpenTrades === 'number') ? perf.all.totalOpenTrades : 0;
+        var trades = Array.isArray(rd.trades) ? rd.trades : [];
+        var orders = Array.isArray(rd.filledOrders) ? rd.filledOrders : [];
+        var lastClosedTrade = trades.length > 0 ? trades[trades.length - 1] : null;
+        var openEntryOrder = null;
+        if (totalOpenTrades > 0 && orders.length > 0) {
+          var last = orders[orders.length - 1];
+          if (last && last.e && !/margin call/i.test(String(last.c || ''))) openEntryOrder = last;
+        }
+
+        return {
+          studyName: chosen.name,
+          matchedFilter: matched.length > 0,
+          attachedNames: attachedNames,
+          totalOpenTrades: totalOpenTrades,
+          openPL: perf.openPL || 0,
+          openPLPercent: perf.openPLPercent || 0,
+          lastClosedTrade: lastClosedTrade,
+          openEntryOrder: openEntryOrder,
+        };
+      } catch(e) { return { error: e.message, attachedNames: [] }; }
+    })()
+  `).catch((e) => ({ error: e.message, attachedNames: [] }));
+}
+
+function sideFromEntryCode(tp) {
+  if (tp === 'le' || tp === 'lx') return 'LONG';
+  if (tp === 'se' || tp === 'sx') return 'SHORT';
+  return null;
+}
+
+function usdText(n) {
+  if (n === null || n === undefined || !Number.isFinite(Number(n))) return '—';
+  const num = Number(n);
+  const sign = num > 0 ? '+' : '';
+  return `${sign}${num.toFixed(2)} USD`;
+}
+
+// A strategy freshly (re)attached to a chart, or just switched to a new symbol/timeframe,
+// takes a moment to finish recomputing across its whole bar history — reading reportData()
+// mid-recompute can catch a stale/incomplete snapshot. Poll a few times and require the same
+// trade identity twice in a row before trusting it. openPL is deliberately excluded from the
+// stability signature: for a genuinely open position it fluctuates with every live price tick,
+// so comparing it would either false-negative on stability or force waiting out real market
+// movement. Bounded well under the DOM path's cost — each internal-API read is near-instant.
+async function readStableStrategyReportData(study_filter, { maxAttempts = 6, intervalMs = 350 } = {}) {
+  let last = null;
+  let lastSignature = null;
+  let stableCount = 0;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const rd = await readStrategyReportData(study_filter);
+    last = rd;
+    if (rd?.error) return rd;
+
+    const o = rd.openEntryOrder;
+    const t = rd.lastClosedTrade;
+    const signature = JSON.stringify({
+      totalOpenTrades: rd.totalOpenTrades,
+      open: o ? [o.p, o.q, o.c] : null,
+      closed: t ? [t.e?.tm, t.e?.p, t.x?.tm, t.x?.p] : null,
+    });
+
+    if (signature === lastSignature) {
+      stableCount += 1;
+      if (stableCount >= 1) return rd;
+    } else {
+      stableCount = 0;
+    }
+    lastSignature = signature;
+    await sleep(intervalMs);
+  }
+
+  return last;
+}
+
+// Ground-truth open/flat detection and trade details straight from the strategy's internal
+// report object. `totalOpenTrades`/`openPL` are authoritative (same source the Strategy Tester
+// Overview tab reads) — no false positives from a lagging on-chart label, no false negatives
+// from a DOM read that timed out.
+export async function getStrategyPositionState({ study_filter } = {}) {
+  const rd = await readStableStrategyReportData(study_filter);
+  if (rd?.error) {
+    return {
+      success: false,
+      source: 'strategy_internal_api',
+      error: rd.error,
+      studyName: rd.studyName || null,
+      matchedFilter: Boolean(rd.matchedFilter),
+      attachedNames: rd.attachedNames || [],
+    };
+  }
+
+  const isOpen = rd.totalOpenTrades > 0;
+  let trade;
+  if (isOpen) {
+    const o = rd.openEntryOrder;
+    trade = {
+      tradeNumber: null,
+      side: o ? (o.b ? 'LONG' : 'SHORT') : null,
+      signal: 'OPEN',
+      // A real entry timestamp for the still-open position isn't exposed by this API path
+      // (filledOrders carries a sequence index, not a timestamp) — leave null so callers fall
+      // back to a previously-known value rather than fabricating one.
+      entryTime: null,
+      entryPrice: o && o.p != null ? String(o.p) : '—',
+      netPnl: usdText(rd.openPL),
+      favorableExcursion: '—',
+      adverseExcursion: '—',
+      rawText: null,
+    };
+  } else if (rd.lastClosedTrade) {
+    const t = rd.lastClosedTrade;
+    trade = {
+      tradeNumber: null,
+      side: sideFromEntryCode(t.e?.tp),
+      signal: 'EXIT',
+      entryTime: t.e?.tm ? new Date(t.e.tm).toISOString() : null,
+      entryPrice: t.e?.p != null ? String(t.e.p) : '—',
+      netPnl: usdText(t.tp?.v),
+      favorableExcursion: usdText(t.rn?.v),
+      adverseExcursion: usdText(t.dd?.v != null ? -Math.abs(t.dd.v) : t.dd?.v),
+      rawText: null,
+    };
+  } else {
+    trade = {
+      tradeNumber: null, side: null, signal: 'EXIT', entryTime: null,
+      entryPrice: '—', netPnl: '—', favorableExcursion: '—', adverseExcursion: '—', rawText: null,
+    };
+  }
+
+  return {
+    success: true,
+    source: 'strategy_internal_api',
+    studyName: rd.studyName,
+    matchedFilter: Boolean(rd.matchedFilter),
+    attachedNames: rd.attachedNames || [],
+    totalOpenTrades: rd.totalOpenTrades,
+    openPL: rd.openPL,
+    trade,
+  };
+}
+
+async function getLatestTradeFromTesterDom({ timeout_ms = 14000 } = {}) {
   try {
     await ui.keyboard({ key: 'Escape' }).catch(() => null);
     await ui.openPanel({ panel: 'strategy-tester', action: 'open' }).catch(() => null);
@@ -159,6 +335,43 @@ export async function getLatestTradeFromTester({ timeout_ms = 14000 } = {}) {
   }
 
   return { success: false, source: 'strategy_tester_dom', trade: null, error: 'Trade table did not finish loading in time.' };
+}
+
+// Primary entry point for reading the current trade/position state. Tries the internal-API
+// report object first (fast, authoritative open/flat status); only falls back to scraping the
+// DOM "List of Trades" panel when the internal API can't find a matching strategy source, or
+// when it found one open but couldn't recover the entry price/time and a DOM read might fill
+// that in. A DOM failure in that enrichment pass never discards the open/flat status already
+// established via the internal API — that was the source of the historical false positives.
+export async function getLatestTradeFromTester({ timeout_ms = 14000, study_filter } = {}) {
+  const apiResult = await getStrategyPositionState({ study_filter }).catch(() => null);
+
+  if (apiResult?.success) {
+    const needsEnrichment = apiResult.trade.signal === 'OPEN' && !apiResult.trade.entryTime;
+    if (needsEnrichment) {
+      // Bounded well below the full DOM-fallback timeout — this is a best-effort enrichment
+      // for a value the internal API can't provide, not the primary read. A slow/flaky DOM
+      // here should cost seconds, not the ~14s a cold "List of Trades" scroll can take, and
+      // must never delay or override the open/flat status already confirmed above.
+      const domResult = await getLatestTradeFromTesterDom({ timeout_ms: Math.min(timeout_ms, 5000) }).catch(() => null);
+      if (domResult?.success && domResult.trade && String(domResult.trade.signal).toUpperCase() === 'OPEN') {
+        return {
+          success: true,
+          source: 'strategy_internal_api+dom',
+          trade: {
+            ...apiResult.trade,
+            entryTime: domResult.trade.entryTime || apiResult.trade.entryTime,
+            entryPrice: domResult.trade.entryPrice || apiResult.trade.entryPrice,
+          },
+        };
+      }
+    }
+    return { success: true, source: apiResult.source, trade: apiResult.trade };
+  }
+
+  // Internal API found nothing usable (no strategy source, or reportData unavailable) —
+  // fall back to the DOM entirely.
+  return getLatestTradeFromTesterDom({ timeout_ms });
 }
 
 // Parse favorable/adverse excursion % from a single raw trade block.
@@ -585,8 +798,9 @@ export async function getStrategyResults() {
           var meta = null;
           try { meta = s.metaInfo ? s.metaInfo() : null; } catch(e) {}
           var name = meta ? (meta.description || meta.shortDescription || meta.fullDescription || '') : '';
-          var looksLikeStrategy = /strategy/i.test(name) || !!(s.reportData || s.performance || s.ordersData || s._strategyOrdersPaneView);
-          if (looksLikeStrategy) { strat = s; break; }
+          // Name match is the reliable signal — reportData/performance/ordersData methods exist
+          // on the generic Study base class too (e.g. "Dividends", "Splits"), not just strategies.
+          if (/strategy/i.test(name)) { strat = s; break; }
         }
         if (!strat) return {metrics: {}, source: 'internal_api', error: 'No strategy found on chart. Add a strategy indicator first.'};
         var metrics = {};
@@ -622,8 +836,7 @@ export async function getTrades({ max_trades } = {}) {
           var meta = null;
           try { meta = s.metaInfo ? s.metaInfo() : null; } catch(e) {}
           var name = meta ? (meta.description || meta.shortDescription || meta.fullDescription || '') : '';
-          var looksLikeStrategy = /strategy/i.test(name) || !!(s.ordersData || s.reportData || s._strategyOrdersPaneView);
-          if (looksLikeStrategy) { strat = s; break; }
+          if (/strategy/i.test(name)) { strat = s; break; }
         }
         if (!strat) return {trades: [], source: 'internal_api', error: 'No strategy found on chart.'};
         var orders = null;
@@ -662,8 +875,9 @@ export async function getEquity() {
           var meta = null;
           try { meta = s.metaInfo ? s.metaInfo() : null; } catch(e) {}
           var name = meta ? (meta.description || meta.shortDescription || meta.fullDescription || '') : '';
-          var looksLikeStrategy = /strategy/i.test(name) || !!(s.reportData || s.performance || s.ordersData || s._strategyOrdersPaneView);
-          if (looksLikeStrategy) { strat = s; break; }
+          // Name match is the reliable signal — reportData/performance/ordersData methods exist
+          // on the generic Study base class too (e.g. "Dividends", "Splits"), not just strategies.
+          if (/strategy/i.test(name)) { strat = s; break; }
         }
         if (!strat) return {data: [], source: 'internal_api', error: 'No strategy found on chart.'};
         var data = [];

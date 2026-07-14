@@ -95,6 +95,7 @@
         <span class="pill" id="watchlists">Watchlists: --</span>
       </div>
       <div id="watchdog-error" class="error hidden"></div>
+      <div id="strategy-mismatch-banner" class="error hidden"></div>
       <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <select id="cron-watchlist-top" class="control-select" style="min-width:160px;">
           <option value="">All Watchlists</option>
@@ -815,6 +816,15 @@
         watchdogEl.className = 'error';
       } else {
         watchdogEl.className = 'error hidden';
+      }
+
+      const mismatchEl = document.getElementById('strategy-mismatch-banner');
+      const mismatch = data.strategyMismatch;
+      if (mismatch) {
+        mismatchEl.textContent = `⚠ STRATEGY MISMATCH: chart has "${(mismatch.found || []).join(', ')}" but rules.json expects "${mismatch.expected}". Scanning suspended until this is fixed on the chart.`;
+        mismatchEl.className = 'error';
+      } else {
+        mismatchEl.className = 'error hidden';
       }
 
       const reg = data.regressionResult;
