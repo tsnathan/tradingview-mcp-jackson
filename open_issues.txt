@@ -1,0 +1,599 @@
+OPEN ISSUES / RECONCILIATION LOG
+Generated from the 2026-07-14/2026-07-23 working session. Each item lists the
+original symptom, what was found, what was changed, and a concrete way to
+verify it's actually fixed. Status is my assessment, not a guarantee - check
+the "Verify by" step yourself before trusting it.
+
+================================================================================
+ISSUE 1: "I don't see open trades for the 15m watchlist"
+================================================================================
+STATUS: Root cause fixed (see Issue 3), but original symptom report was itself
+        based on stale/wrong data - see Issue 2.
+
+Symptom:
+  Dashboard/status JSON showed openTrades: [] for the Swing 15m watchlist,
+  all 13 symbols recorded as signal_type "EXIT" in swing-signal-baseline.json.
+
+What was found:
+  At the time, this was literally true per the recorded baseline - last scan
+  had run ~13 min earlier and recorded EXIT for every 15m symbol. This part
+  turned out to be a symptom of Issue 2/3, not a standalone bug.
+
+Verify by:
+  Check status/latest-signal-status.json -> openTrades array during market
+  hours and confirm it's non-empty when you know a position is actually open
+  on the chart.
+
+================================================================================
+ISSUE 2: WTAI showed a real open Long position that the scan said didn't exist
+================================================================================
+STATUS: Fixed (root cause was Issue 4 - wrong indicator was being scanned).
+
+Symptom:
+  User's own TradingView screenshot showed WTAI 15m with "Swing Profile
+  Strategy [BigBeluga]" reporting Position: Long, entry 42.43, but the
+  baseline/dashboard had WTAI recorded as EXIT with a stale different entry
+  price (42.84).
+
+What was found:
+  The live chart's automated-scan path had "Supertrend Strategy" attached
+  instead of the configured "Swing Profile Strategy [BigBeluga]" - the scanner
+  was reading the wrong script's data entirely. Supertrend Strategy genuinely
+  showed 0 open trades for WTAI; BigBeluga genuinely showed 1 open Long.
+
+Fix:
+  Restored the correct indicator on the chart (manual, via pine_open + the
+  Pine Editor's "Add to chart" button - see Issue 5), and added the
+  strategy-identity guard (Issue 4) so this can't silently recur.
+
+Verify by:
+  chart_get_state (or MCP tool chart_get_state) on a live chart currently
+  being scanned - confirm the studies list shows "Swing Profile Strategy
+  [BigBeluga]", not any other strategy.
+
+================================================================================
+ISSUE 3: Open/flat trade detection relied on flaky DOM-scraping
+================================================================================
+STATUS: Fixed - code committed in baf7fa6.
+
+Symptom:
+  User's framing: "fix this overcoming the dom limitation otherwise this
+  whole project is scrap." getLatestTradeFromTester() in src/core/data.js
+  scraped rendered text from the Strategy Tester's "List of Trades" panel -
+  required scrolling a virtualized list, text-parsing heuristics, and a
+  stability-polling loop (3-14s). Could time out under automation and had
+  known false-positive/negative failure modes already documented in
+  CLAUDE.md before this session.
+
+Fix (src/core/data.js):
+  - Added getStrategyPositionState(), which reads the strategy's own
+    reportData() object directly off the chart's internal JS model
+    (chart.model().model().dataSources() -> source matching /strategy/i ->
+    .reportData()). performance.all.totalOpenTrades / performance.openPL are
+    now the ground-truth open/flat signal - same object the Strategy Tester
+    UI itself renders from, no DOM involved.
+  - getLatestTradeFromTester() now tries this first. DOM scraping
+    (getLatestTradeFromTesterDom, no longer exported) is used only as:
+      (a) full fallback when no strategy source can be found/matched at all
+      (b) a narrow, capped ~5s enrichment pass to recover an open position's
+          entry timestamp specifically (reportData()'s filledOrders only
+          carries a sequence index, not a real timestamp, for a still-open
+          trade) - a DOM failure here never discards the open/flat status
+          already established via the internal API.
+  - Bug found + fixed during this work: the study-matching filter
+    (`/strategy/i.test(name) || !!(s.reportData || s.performance ||
+    s.ordersData)`) was too loose - those methods exist on the generic Study
+    base class too (confirmed live: a "Dividends" study matched). Fixed in
+    getStrategyPositionState, getStrategyResults, getTrades, and getEquity to
+    match by name only.
+  - Bug found + fixed during this work: a freshly-attached or just-switched
+    strategy can return a mid-recompute snapshot if read once, immediately,
+    with no settling check. Added readStableStrategyReportData(), which polls
+    a few times (~350ms apart, bounded ~2s) and requires the trade-identity
+    signature (open entry price/qty/id, or last closed trade's entry+exit
+    price/time) to match twice in a row before trusting it. openPL is
+    deliberately excluded from that signature since it fluctuates every tick
+    for a genuinely open position.
+
+Validated live:
+  Ran a real scoped scan of the actual "Swing 15m" watchlist (all 13 symbols)
+  and confirmed WTAI came back as OPEN/LONG, entry 42.43, unrealized
+  +$113.40, source "strategy_internal_api" - matching the manually-confirmed
+  ground truth.
+
+NOT fully eliminated (by design, not an oversight):
+  - The narrow ~5s DOM enrichment pass for entry-timestamp-on-open-trade
+    still exists as a fallback. It can still fail/timeout; when it does, the
+    system now correctly still reports OPEN/flat status and price, just
+    without an entry timestamp for that one scan cycle - a much smaller
+    failure than before (where DOM failure could erase the open status
+    entirely).
+
+Verify by:
+  Check scan_results[].trade_source in the status JSON - should say
+  "strategy_internal_api" for the common case, "strategy_internal_api+dom"
+  only when the timestamp enrichment kicked in, and "strategy_tester_dom"
+  only if no matching strategy source was found at all (would indicate a
+  problem worth investigating, e.g. Issue 4 recurring).
+
+================================================================================
+ISSUE 4: Chart can silently have the wrong strategy indicator attached
+================================================================================
+STATUS: Fixed (detect + suspend only, no auto-repair - see Issue 5 for why).
+
+Symptom:
+  Root cause of Issue 2. It's normal to temporarily swap a different
+  strategy onto the chart for testing/comparison; if that's still attached
+  when an automated scan fires, every trade/signal read for that run
+  silently comes from the wrong script with no visible error.
+
+Fix (src/core/morning.js):
+  - Added checkStrategyIdentity(), called at the start of every
+    runSignalJob() (scheduled and manual/dashboard-triggered alike).
+    Compares chart.getState().studies names against rules.json's `strategy`
+    field.
+  - On mismatch: scanning is suspended immediately for that run (same
+    skipped:true early-exit path as schedule.disabled / outside-market-hours)
+    and the mismatch is written to the status JSON as `strategy_mismatch`
+    ({ expected, found, detected_at }).
+  - Dashboard: new banner in dashboard/index.html (#strategy-mismatch-banner)
+    surfaces this instead of it being invisible.
+  - Per your explicit decision: NO auto-repair attempt is made - see Issue 5
+    for why that was tried and removed.
+
+Verify by:
+  Temporarily swap a different strategy onto the chart, trigger a manual
+  scan (dashboard "Run Scan Now" or npm run signals), and confirm: (a) the
+  scan reports skipped with a strategy-mismatch reason, (b) the dashboard
+  shows the red mismatch banner, (c) no baseline/signal data gets updated
+  from the wrong strategy's readings. Then restore the correct indicator and
+  confirm scanning resumes normally on the next run.
+
+================================================================================
+ISSUE 5: Auto-repair attempt broke the live chart (found during Issue 4 build)
+================================================================================
+STATUS: Resolved by removing the auto-repair feature entirely (your decision).
+
+What happened:
+  While first building the guard, I tested the "auto-repair" path (remove
+  the wrong indicator, then chart_manage_indicator add the configured one
+  back via TradingView's createStudy() API). The remove succeeded; the add
+  silently failed (new_study_count: 0) - createStudy() can only add
+  public/built-in indicators by exact name, not a private saved script. This
+  left your live chart with zero indicators attached until I manually fixed
+  it.
+
+Manual recovery performed at the time:
+  - pine_list_scripts showed two saved scripts both titled "Swing Profile
+    Strategy [BigBeluga]" (ids ...29121199... and ...c0973319..., different
+    modified timestamps) - you confirmed which one was correct.
+  - pine_open() only loads the source into the Pine Editor, it does NOT add
+    it to the chart. Had to locate and click the editor's distinct
+    "Add to chart" button (title="Add to chart", separate from "Save script"
+    and "Share your script with community") via ui_evaluate button lookup -
+    pine_smart_compile's auto-detection had picked "Pine Save" instead and
+    reported study_added:false.
+  - Confirmed restored via chart_get_state showing "Swing Profile Strategy
+    [BigBeluga]" back on the chart with the same Position: Long / bars-since-
+    signal state as your original screenshot.
+
+Fix:
+  Auto-repair code path removed entirely from checkStrategyIdentity() (see
+  Issue 4) - it now only detects and suspends/flags, never touches
+  chart_manage_indicator.
+
+STILL OPEN / worth cleaning up:
+  You have two saved scripts with the identical title "Swing Profile
+  Strategy [BigBeluga]" in your TradingView account. This is a standing
+  ambiguity - worth renaming/deleting the stale one so a future manual
+  restore (or future me) can't pick the wrong one. Not fixed in this session.
+
+Verify by:
+  pine_list_scripts and check whether there are still two entries with this
+  title.
+
+================================================================================
+ISSUE 6: Signal dashboard (http://127.0.0.1:3030) wasn't loading
+================================================================================
+STATUS: Fixed for now, but NOT persistent - will recur after reboot/logout.
+
+Symptom:
+  Page wouldn't open.
+
+What was found:
+  scripts/serve_signal_status.js simply wasn't running - nothing listening
+  on port 3030. It is a manually-started process (`npm run dashboard`), not
+  a Windows service or scheduled task, so it does not survive a reboot or
+  logout on its own.
+
+Fix applied:
+  Started it manually in the background; confirmed HTTP 200 from
+  /api/status.
+
+STILL OPEN:
+  No auto-start on boot/login is configured. If you want this to survive
+  reboots, it would need a Scheduled Task (similar to TradingViewSignalScan15m
+  / TVWatchdog) or a Startup-folder shortcut running `npm run dashboard`.
+  Not set up - flagging as a decision for you, not done as part of this
+  session.
+
+Verify by:
+  Get-NetTCPConnection -LocalPort 3030 after a fresh reboot - if nothing's
+  listening, it needs to be started manually again (or set up to persist,
+  per above).
+
+================================================================================
+NOT INVESTIGATED / FLAGGED BUT UNRESOLVED (found incidentally, out of scope)
+================================================================================
+
+A) Exchange-prefix drift affecting computed signals
+   While testing, switching the same real instrument between "BATS:WTAI" and
+   "CBOE:WTAI" produced a strategy read from a completely different, much
+   older backtest window (price ~$81 vs ~$42) even though quote_get confirmed
+   both resolve to the same real WisdomTree AI ETF at the same current price.
+   This is consistent with the exchange-prefix-drift note already in
+   CLAUDE.md (different data-feed routing can carry a slightly different bar
+   history for "the same" instrument for the same ticker+timeframe), but this
+   session did not fix or further investigate it. If the automated scanner's
+   watchlist symbol lists mix prefixes (e.g. rules.json/baseline listing
+   "CBOE:WTAI" while the live chart uses "BATS:WTAI"), it could still produce
+   inconsistent trade histories between scans.
+
+B) Possible repainting behavior in "Swing Profile Strategy [BigBeluga]"
+   Two reads of the same live position minutes apart, without any of my code
+   changes in between, showed materially different computed state (Position:
+   Long / bars-since-signal 56 / entry 42.43, versus - during a scan that
+   happened to touch a different symbol string, see A above - Position: Flat
+   / bars-since-signal 74 / entry 81.20 for what should be the same
+   instrument+timeframe). This may just be explained by (A), or may indicate
+   the strategy's swing/pivot logic repaints (recalculates historical signals
+   as new bars arrive). Not investigated further - worth a dedicated look if
+   you want confidence that a "confirmed" signal stays confirmed.
+
+================================================================================
+ISSUE 7 (NEW, 2026-07-23): Open trades show scan time as entry date; fired
+signals missing from Current Signal; no ntfy push
+================================================================================
+STATUS: FIX APPLIED 2026-07-23 ~3:25 PM ET (uncommitted). Awaiting validation
+        against the next scheduled scans. This was a regression introduced by
+        the Issue 3 fix - the "smaller failure" I accepted there turned out
+        to have worse downstream effects than assessed.
+
+Fix applied:
+  - data.js getStrategyPositionState: OPEN branch now reads the last
+    trades[] element - real entryTime (ISO from e.tm), entryPrice, side,
+    live MFE/MAE (rn.v/dd.v). DOM enrichment pass deleted entirely.
+  - data.js readStableStrategyReportData: stability signature now keyed on
+    the open trade's ENTRY side only (its synthetic exit row is
+    mark-to-market and moves every bar).
+  - morning.js buildOpenTrades: `|| entry.scanned_at` fallback removed -
+    null entry time stays null, never fabricated.
+  - morning.js hasMeaningfulTradeValue: 'no prior trade recorded' added to
+    the exclusion list so placeholder rows can't render as dated opens.
+  - Baseline sanitized: entry_time nulled on all 48 OPEN entries (backup:
+    swing-signal-baseline.backup-20260723-122314.json). Real times
+    repopulate as each watchlist's next scan runs (1D tomorrow 9:31 ET).
+  - Dashboard server restarted (no hot reload) via /api/restart.
+  Live-verified pre-fix on DXYZ 15m: new reader returned real entry
+  2026-07-22T16:45:00Z @ 25.06 vs the fabricated "07/23 11:25:14 AM ET"
+  the dashboard had been showing.
+
+ROUND 2 (same day, found during validation of the 3:31 PM ET scan):
+  The scan-side fix worked (Current Signal showed 7 OPEN signals with real
+  bar-boundary entry times; user received the ntfy push), but the Open
+  Trades list still showed scan-time entry dates on 1H/4H/1D rows. Cause:
+  FOUR more fabrication fallbacks on the DISPLAY side of morning.js, all
+  substituting scan-adjacent timestamps (last_seen_at / baselineUpdatedAt /
+  scanned_at) for missing entry times:
+    - buildPriorSignalsByWatchlist keepOpenVisible gate (entry_time ||
+      last_seen_at || baselineUpdatedAt)
+    - buildPriorSignalsByWatchlist row entryTime (same chain)
+    - buildPriorSignalsByWatchlist fallback row (entry_time || last_seen_at)
+    - buildOpenTrades second pass from baseline (entry_time || last_seen_at)
+    - plus the synthetic fast-watchlist OPEN row using scanned_at
+  All five removed: a missing entry time now renders as 'No trade time' /
+  'No prior trade recorded' and the row is excluded from Open Trades until
+  a scan records the real time. Consequence: 1H/4H/1D open rows disappear
+  from Open Trades until each watchlist's next scan repopulates real entry
+  times (1H ~10:01 ET, 4H at its next 240-min slot, 1D ~9:31 ET tomorrow).
+
+VALIDATED so far (2026-07-23 3:31 PM ET scan, new code):
+  - Current Signal: 7 signals, all with real bar-boundary times ✓
+  - ntfy push received by user ✓
+  - trade_source strategy_internal_api on all 19 results ✓
+  - 15m/30min Open Trades rows show real entry times ✓
+  PENDING validation: 1H/4H/1D rows repopulating with real times on their
+  next scans; MFE/MAE + Alert Levels columns filling (Issue 8 path runs
+  during scheduled scans' createExcursionAlerts).
+
+Symptoms (all three are the same bug):
+  a) Dashboard Open Trades entry dates are wrong - e.g. EPI shows
+     "07/23/2026, 11:28:17 AM ET" while TradingView's trade list shows the
+     real entry Jul 22, 2026 12:00. All 11 trades scanned today show
+     sequential timestamps 11:24:38 -> 11:28:17, ~8-75s apart = these are
+     scan timestamps, not entry times.
+  b) TQQQ fired today, appears in Open Trades, but never appeared in the
+     Current Signal section and no ntfy push fired.
+  c) Open Trades ballooned to 45 rows ("Avg (45 open)").
+
+Root cause (verified against status/latest-signal-status.json + live probe):
+  - The internal-API reader (Issue 3 fix) returns entryTime: null for OPEN
+    positions, based on my assumption that only closed trades carry real
+    timestamps in reportData(). Status JSON confirms: every scan today used
+    trade_source "strategy_internal_api", every OPEN trade has no entryTime,
+    and the 5s DOM enrichment pass NEVER succeeded once under real
+    multi-symbol automation (zero "strategy_internal_api+dom" entries).
+  - Downstream, null entryTime is handled two contradictory ways:
+      * buildOpenTrades (src/core/morning.js ~line 1017) substitutes
+        entry.scanned_at -> symptom (a), and because every open trade now
+        looks "entered just now", the recency filters pass on first sighting
+        and rows accumulate in the baseline with fabricated dates ->
+        symptom (c).
+      * signalEntries/notifyEntries require isRecentTradeSignal /
+        isSameTradingDay on entry.trade.entryTime -> null parses to 0 ->
+        both false -> OPEN trades are silently excluded from Current Signal
+        and ntfy -> symptom (b).
+
+THE KEY DISCOVERY (live-probed on BATS:XRP 2026-07-23 ~2:40 PM ET):
+  My assumption was wrong. reportData().trades[] DOES include the still-open
+  trade, as the last element, with a REAL entry timestamp:
+    - trades.length (7) > performance.all.totalTrades (6) when a position
+      is open; last element = the open trade
+    - entry: { tm: 1784815200000 = 2026-07-23T14:00:00Z, price 12.41,
+      type "le", comment "Swing Low" }
+    - exit: synthesized mark-to-market row at current bar (this is what the
+      TV UI renders as "Exit: Open")
+    - rn (run-up = MFE) and dd (drawdown = MAE) are present for the open
+      trade too
+  So entry time, entry price, side, MFE, and MAE for open positions are ALL
+  available from the internal API. The DOM enrichment pass is unnecessary
+  and can be deleted, and the scanned_at fallback must be removed.
+  (CLAUDE.md's claim that "only paired, closed trades carry real epoch-ms
+  entry/exit times" is wrong and needs correcting as part of the fix.)
+
+Fix plan:
+  1. data.js getStrategyPositionState: when totalOpenTrades > 0, read the
+     last trades[] element for entryTime/entryPrice/side/MFE/MAE. Delete the
+     DOM enrichment pass.
+  2. morning.js buildOpenTrades: remove the `|| entry.scanned_at` fallback -
+     never fabricate an entry time.
+  3. One-time baseline sanitation: existing baseline entries carry fabricated
+     scan-time entry dates from the regression window (2026-07-15 onward);
+     they need to be re-read or cleared so the 45-row list reconciles.
+
+================================================================================
+ISSUE 8 (NEW, 2026-07-23): Hist. MFE/MAE avg/max and Alert Levels columns
+all blank
+================================================================================
+STATUS: FIX APPLIED 2026-07-23 ~3:25 PM ET (uncommitted). Awaiting validation.
+        getAllTradesExcursionStats now computes avg/max MFE/MAE from
+        reportData().trades[] (rn.p/dd.p fractions x100) - instant, no DOM,
+        no panel navigation; the old DOM scraper survives only as an
+        unexported fallback (getAllTradesExcursionStatsDom). Live-verified
+        on DXYZ 15m: {completedTrades: 11, avgFavorablePct: 3.31,
+        maxFavorablePct: 9.01, avgAdversePct: 7.98, maxAdversePct: 26}.
+        Note: the per-symbol chart navigation in createExcursionAlerts still
+        exists but each visit is now seconds, not 16-30s, so the 4-minute
+        budget is no longer the binding constraint.
+
+Symptom:
+  Every row in Open Trades shows "-" for Hist. MFE avg/max, Hist. MAE
+  avg/max, and Alert Levels.
+
+Root cause:
+  Those columns come from createExcursionAlerts ->
+  getAllTradesExcursionStats, which is STILL the old DOM scraper (it was not
+  migrated in the Issue 3 fix). With 45 open trades it must re-navigate and
+  scrape per symbol inside a 4-minute overall Promise.race budget - it blows
+  the budget or fails, falls back to baseline excursion_alerts, which has no
+  entries for these keys -> "-".
+
+Fix plan:
+  Compute historical MFE/MAE avg/max directly from reportData().trades[]
+  closed entries (rn.p / dd.p per trade) in the same internal-API read - no
+  DOM, no extra navigation, no 4-minute budget. Alert Levels then derive
+  from those stats as they already do.
+
+================================================================================
+ISSUE 9 (NEW, 2026-07-23): Scanner used stale watchlist symbol lists - removed
+symbols (XRP, DRAM, WQTM, SOXL, AGQ...) kept being scanned and alerted on
+================================================================================
+STATUS: FIXED 2026-07-23 ~4:05 PM ET (uncommitted). All five configured
+        watchlists now sync live from TradingView.
+
+Symptom (user report):
+  ntfy push and Current Signal fired for 15m symbols that were removed from
+  the TradingView "Swing 15m" watchlist long ago.
+
+Root cause (three layers, diagnosed live):
+  1. watchlist.select() in src/core/watchlist.js was broken for ALL lists:
+     its dropdown-open click was missing the
+     '[data-name="base-watchlist-widget-button"]' selector (the only one
+     that works in current TV builds), and its click->poll->match flow
+     spread across separate CDP round-trips lost the dropdown's open state.
+     Every select failed; resolveSymbolsForWatchlist silently fell back to
+     the baseline's stored symbol lists - fossilized from whenever select
+     last worked. Sync cadence was irrelevant: the twice-daily sync
+     (first scan after 9:15 ET + first scan after close, tracked in
+     status/watchlist-sync-state.json) and the per-scan live panel reads
+     were ALL failing silently.
+  2. Even with the button fixed, TradingView's list-picker items don't
+     respond to synthetic MouseEvents - and the "Open list..." dialog rows
+     don't respond to REAL CDP coordinate clicks either (verified live).
+  3. Only "recently used" lists appear in the dropdown; the rest are only
+     reachable via the Shift+W "Open list..." dialog.
+
+Fix (src/core/watchlist.js):
+  - select() now has an atomic page-side open->wait->find pass that returns
+    the item's coordinates, and the caller delivers a REAL mouse click
+    (works for recently-used items).
+  - Fallback for everything else: Shift+W opens the dialog with its
+    "Search lists" input auto-focused -> CDP insertText(name) filters ->
+    ArrowDown highlights -> Enter activates. Keyboard is the ONLY reliable
+    automation for this dialog.
+  - Verified live: all five configured lists (Swing 15m/30min/1H/4H/1D)
+    now select and sync. True memberships written to baseline:
+    15m=12, 30min=9, 1H=16, 4H=24, 1D=25 symbols.
+
+Notes / residual:
+  - Dialog inventory (Shift+W) confirmed all five configured names still
+    exist, alongside unconfigured lists: Swing 2H (19), Swing 3H (18),
+    Swing 45m (9), 3x Bull, 2x ETF, High Beta Stocks, Watchlist, Red list.
+    rules.json does NOT scan 2H/3H/45m - intentional? User to confirm.
+  - Small discrepancy: dialog header says Swing 30min has 14 entries but
+    the panel read returned 9 symbols - eyeball the list in TV (may contain
+    section dividers or the dialog count may be stale).
+  - Baseline signals for symbols no longer in any watchlist (e.g.
+    BATS:XRP:15) remain in swing-signal-baseline.json but are no longer
+    scanned; they will sit inert. Optional cleanup, not urgent.
+  - The silent fallback that hid this for weeks still exists by design
+    (scan continues with stored symbols when the panel read fails). Now
+    that select works the fallback is rarely hit, but a dashboard warning
+    when a watchlist's source is not 'tradingview_panel'/'data_attributes'
+    fresh-read would make future drift visible instead of silent.
+
+Verify by:
+  Next scheduled scan (or dashboard Run Scan Now): the Swing 15m scan
+  should show SYMBOLS: 12 and scan TNA, MEXX, EWO, FAS, WTAI, DUSL, EDC,
+  RETL, URTY, USLV, YINN, RY - no XRP/DRAM/WQTM/SOXL/AGQ. ntfy pushes
+  should only ever name symbols currently in a watchlist.
+
+================================================================================
+ISSUE 10 (NEW, 2026-07-23): Excursion alerts never created ("Pending" forever);
+no alert lifecycle (TV alerts never cleaned up after trade close)
+================================================================================
+STATUS: FIXED 2026-07-23 evening (uncommitted). Real create/delete schema
+        captured and wired in; full lifecycle validated live end-to-end
+        (create real alert -> confirm on account -> stage for cleanup ->
+        drain -> confirm deleted from account).
+
+SCHEMA CAPTURE (resolved the "STILL OPEN" item below):
+  Root cause of the "invalid_request" error was never a transport/auth
+  problem - it was captured correctly via CDP Network.requestWillBeSent
+  while the user manually created + deleted one alert in the TV Desktop app.
+  Two things were wrong in the old payload:
+    1. The endpoint wants a {"payload": {...}} wrapper containing a
+       `conditions` array (each condition: {type, frequency, series:
+       [{type:"barset"},{type:"value",value}], resolution}), not the old
+       flat {type, value} pair.
+    2. The encoded symbol string (the '={"...":"..."}'-prefixed JSON blob)
+       needs a `session` key ("extended") - omitting it was accepted
+       client-side but rejected server-side.
+  Endpoint: POST pricealerts.tradingview.com/create_alert, NO query params
+  needed. Content-Type must stay text/plain;charset=UTF-8 (application/json
+  still triggers the CORS-preflight failure noted below). Response on
+  success: {"s":"ok","id":"...","r":{...,"alert_id":<number>,...}}.
+  Delete: POST pricealerts.tradingview.com/delete_alerts, body
+  {"payload":{"alert_ids":[<number>,...]}}, response {"s":"ok","r":null}.
+  Only the "cross" condition type is confirmed live (fires once regardless
+  of approach direction - fine for stop/target levels). "greater"/"less"
+  are unverified best-effort guesses in toConditionType(), not load-bearing
+  for this project since createExcursionAlerts only ever uses the default.
+
+Changes shipped (src/core/alerts.js):
+  - create() rewritten to the real payload shape above. Returns
+    { success, alert_id, error, source: 'rest_api' } - alert_id is the real
+    numeric TradingView id needed for later deletion.
+  - deleteAlerts({ alert_ids }) now actually deletes via the REST endpoint
+    (previously only delete_all: true existed, and only opened a context
+    menu for manual confirmation - that DOM fallback is kept for delete_all).
+  - src/tools/alerts.js (alert_delete) and src/cli/commands/alerts.js
+    updated to accept alert_ids.
+  - morning.js: new drainPendingAlertCleanup(baselinePath), called at the
+    end of every runSignalJob() right after processLevelViolationsAndCleanup
+    populates baseline.pending_alert_cleanup on trade close. Deletes each
+    queued alert_ids batch via alerts.deleteAlerts(); entries that fail
+    (e.g. transient network error) stay queued and retry next run instead
+    of being dropped silently.
+
+Validated live (2026-07-23 evening):
+  1. alerts.create() on the live chart's active symbol -> real HTTP 200,
+     alert_id returned, confirmed present via alerts.list() (count 21->22).
+  2. alerts.deleteAlerts({alert_ids:[that id]}) -> HTTP 200, confirmed
+     removed via alerts.list() (count 22->21).
+  3. Full drainPendingAlertCleanup cycle: created a real throwaway alert,
+     staged it in a scratch baseline's pending_alert_cleanup, ran the drain
+     function, confirmed the baseline entry cleared AND the alert was
+     actually gone from the TradingView account afterward.
+  4. Quota concern turned out to be unfounded: the account had 21 total
+     alerts, but createExcursionAlerts' usedSlots already filters by
+     `a.active` - only 2 of those 21 are active (both pre-existing webhook
+     alerts tied to WATCHLIST ids, unrelated to this project's strategy
+     alerts; the other 19 are long-inactive/expired manual "Crossing"
+     alerts from Apr-Jun). MAX_ALERTS=20 leaves ample headroom; no config
+     change made.
+
+STILL OPEN (minor, unchanged from before):
+  - Symbols removed from a watchlist while a position is open never get a
+    closing EXIT scan, so their overflow entries (and any real TV alerts
+    they created) never reach pending_alert_cleanup at all. Same orphan
+    class as the delisted-symbol baseline signals noted in Issue 9. Not
+    fixed this session.
+
+PRE-FIX HISTORY (kept for context on how the schema was found):
+
+Symptoms:
+  - Dashboard Alert Levels column always "Pending" - all 43 baseline
+    excursion_alert entries have created:false since the feature was built.
+  - Nothing ever deletes TradingView alerts after a position closes (alert
+    ids were not even stored at creation).
+
+Root causes found (src/core/alerts.js create()):
+  1. Transport: POST to pricealerts.tradingview.com/create_alert with
+     Content-Type application/json triggers a CORS preflight the server
+     rejects -> fetch throws "Failed to fetch" on EVERY attempt. (GET
+     list_alerts works because simple GETs skip preflight.) Confirmed:
+     switching to a preflight-free content type gets HTTP 200.
+  2. Payload schema: with transport fixed the server returns
+     {"s":"error","err":{"code":"invalid_request"}} - the request shape in
+     alerts.js was never correct. The real schema is being captured via CDP
+     network sniffing while the user creates one alert manually in the TV
+     UI (pending). NOTE for that fix: keep the preflight-free content type,
+     and capture delete_alerts the same way (user deletes the test alert).
+  3. Quota: account had 21 alerts vs MAX_ALERTS=20 in createExcursionAlerts;
+     with 4 alerts/trade and 6+ open trades the design could not fit any
+     plan tier comfortably.
+
+Changes shipped (2026-07-23 evening, uncommitted):
+  - Alerts per trade reduced 4 -> 2 (avg stop + avg target only; user
+    decision). All four levels still computed/stored for the dashboard.
+  - alert ids from successful creates are now stored on the baseline entry
+    (alert_ids) so future cleanup can target them.
+  - NEW processLevelViolationsAndCleanup() in src/core/morning.js, run at
+    the end of every runSignalJob:
+      * Overflow monitoring: for each OPEN trade scanned this run, checks
+        the fresh quote against stored levels - always the max pair, plus
+        the avg pair while no TV alert exists (i.e. today: all four).
+        One-shot per level per trade entry via a `fired` map (preserved
+        across the entry rewrites in createExcursionAlerts). Violations
+        push to ntfy with Title "TradingView level alert" (scheduled runs
+        only, same notify gating as signals) and append to the dashboard
+        summary lines + levelViolations field.
+      * Lifecycle: when a scanned symbol's trade reads EXIT, the stored
+        entry is deleted (monitoring stops); any alert_ids are parked in
+        baseline.pending_alert_cleanup for TV-side deletion once the
+        delete_alerts schema is known.
+      * Granularity caveat (accepted): checks run at each watchlist's scan
+        cadence (15m trade -> every 15 min), not tick-level like real TV
+        alerts, and only during market hours while scans run.
+  - Validated against the last scan's real data: correctly flagged FAS 30m
+    (164.35 < stop 168.92) and TD 30m (167.87 < stop 168.49); fired flags
+    reset after the test so the next scheduled scan re-evaluates and
+    notifies.
+
+(The schema-capture and drain items once listed here are done - see the
+FIXED status and "Changes shipped" section at the top of this issue.)
+
+================================================================================
+COMMIT REFERENCE
+================================================================================
+Code changes for Issues 3, 4, 5 (fix side) are committed as:
+  baf7fa6 "Replace DOM-scraped trade detection with internal reportData()
+  reads; add strategy-identity guard"
+  Files: CLAUDE.md, dashboard/index.html, src/core/data.js, src/core/morning.js
+  Pushed to origin/main.
+
+Note: status/latest-signal-status.json, status/regression-status.json, and
+swing-signal-baseline.json had uncommitted changes at the time from the live
+scheduled scanner's normal operation - intentionally left out of that commit
+as unrelated runtime churn, not part of the fix.

@@ -110,12 +110,43 @@ async function readStrategyReportData(study_filter) {
         var perf = rd.performance;
         var totalOpenTrades = (perf.all && typeof perf.all.totalOpenTrades === 'number') ? perf.all.totalOpenTrades : 0;
         var trades = Array.isArray(rd.trades) ? rd.trades : [];
-        var orders = Array.isArray(rd.filledOrders) ? rd.filledOrders : [];
-        var lastClosedTrade = trades.length > 0 ? trades[trades.length - 1] : null;
-        var openEntryOrder = null;
-        if (totalOpenTrades > 0 && orders.length > 0) {
-          var last = orders[orders.length - 1];
-          if (last && last.e && !/margin call/i.test(String(last.c || ''))) openEntryOrder = last;
+        // When a position is open, TradingView appends it to trades[] as the LAST element,
+        // with a real entry timestamp (e.tm, epoch ms) and a synthesized mark-to-market exit
+        // row — the same row the Strategy Tester UI renders as Exit "Open". Verified live
+        // 2026-07-23 on BATS:XRP (tradesCount 7 vs totalTrades 6 with 1 open).
+        var openTrade = null;
+        var closedTrades = trades;
+        if (totalOpenTrades > 0 && trades.length > 0) {
+          openTrade = trades[trades.length - 1];
+          closedTrades = trades.slice(0, trades.length - 1);
+        }
+        var lastClosedTrade = closedTrades.length > 0 ? closedTrades[closedTrades.length - 1] : null;
+
+        // Historical MFE/MAE across closed trades. rn.p / dd.p are fractions of position
+        // value (0.038 = 3.8%), scaled x100 here to match the percent units the alert-level
+        // math expects (entry * (1 +/- pct/100)).
+        var favPcts = [], advPcts = [];
+        for (var ct = 0; ct < closedTrades.length; ct++) {
+          var tr = closedTrades[ct];
+          var fav = tr && tr.rn && typeof tr.rn.p === 'number' ? tr.rn.p * 100 : null;
+          var adv = tr && tr.dd && typeof tr.dd.p === 'number' ? Math.abs(tr.dd.p) * 100 : null;
+          if (fav !== null && fav > 0) favPcts.push(fav);
+          if (adv !== null) advPcts.push(adv);
+        }
+        var excursionStats = null;
+        if (favPcts.length > 0) {
+          var favSum = 0, advSum = 0, favMax = 0, advMax = 0;
+          for (var fi = 0; fi < favPcts.length; fi++) { favSum += favPcts[fi]; if (favPcts[fi] > favMax) favMax = favPcts[fi]; }
+          for (var ai = 0; ai < advPcts.length; ai++) { advSum += advPcts[ai]; if (advPcts[ai] > advMax) advMax = advPcts[ai]; }
+          var r2 = function(n) { return Math.round(n * 100) / 100; };
+          excursionStats = {
+            totalTrades: trades.length,
+            completedTrades: favPcts.length,
+            avgFavorablePct: r2(favSum / favPcts.length),
+            maxFavorablePct: r2(favMax),
+            avgAdversePct: advPcts.length ? r2(advSum / advPcts.length) : 0,
+            maxAdversePct: advPcts.length ? r2(advMax) : 0,
+          };
         }
 
         return {
@@ -126,7 +157,8 @@ async function readStrategyReportData(study_filter) {
           openPL: perf.openPL || 0,
           openPLPercent: perf.openPLPercent || 0,
           lastClosedTrade: lastClosedTrade,
-          openEntryOrder: openEntryOrder,
+          openTrade: openTrade,
+          excursionStats: excursionStats,
         };
       } catch(e) { return { error: e.message, attachedNames: [] }; }
     })()
@@ -163,11 +195,13 @@ async function readStableStrategyReportData(study_filter, { maxAttempts = 6, int
     last = rd;
     if (rd?.error) return rd;
 
-    const o = rd.openEntryOrder;
+    // Only the open trade's ENTRY side goes into the signature — its synthesized exit row
+    // is mark-to-market and changes with every live bar, which would never read as stable.
+    const o = rd.openTrade;
     const t = rd.lastClosedTrade;
     const signature = JSON.stringify({
       totalOpenTrades: rd.totalOpenTrades,
-      open: o ? [o.p, o.q, o.c] : null,
+      open: o ? [o.e?.tm, o.e?.p, o.q] : null,
       closed: t ? [t.e?.tm, t.e?.p, t.x?.tm, t.x?.p] : null,
     });
 
@@ -204,19 +238,19 @@ export async function getStrategyPositionState({ study_filter } = {}) {
   const isOpen = rd.totalOpenTrades > 0;
   let trade;
   if (isOpen) {
-    const o = rd.openEntryOrder;
+    // The still-open position is the last trades[] element — real entry timestamp, entry
+    // price, side, and live MFE (rn) / MAE (dd): the same data the Strategy Tester UI
+    // renders for the row whose Exit column reads "Open".
+    const t = rd.openTrade;
     trade = {
       tradeNumber: null,
-      side: o ? (o.b ? 'LONG' : 'SHORT') : null,
+      side: t ? sideFromEntryCode(t.e?.tp) : null,
       signal: 'OPEN',
-      // A real entry timestamp for the still-open position isn't exposed by this API path
-      // (filledOrders carries a sequence index, not a timestamp) — leave null so callers fall
-      // back to a previously-known value rather than fabricating one.
-      entryTime: null,
-      entryPrice: o && o.p != null ? String(o.p) : '—',
+      entryTime: t?.e?.tm ? new Date(t.e.tm).toISOString() : null,
+      entryPrice: t?.e?.p != null ? String(t.e.p) : '—',
       netPnl: usdText(rd.openPL),
-      favorableExcursion: '—',
-      adverseExcursion: '—',
+      favorableExcursion: usdText(t?.rn?.v),
+      adverseExcursion: usdText(t?.dd?.v != null ? -Math.abs(t.dd.v) : null),
       rawText: null,
     };
   } else if (rd.lastClosedTrade) {
@@ -247,6 +281,7 @@ export async function getStrategyPositionState({ study_filter } = {}) {
     attachedNames: rd.attachedNames || [],
     totalOpenTrades: rd.totalOpenTrades,
     openPL: rd.openPL,
+    excursionStats: rd.excursionStats || null,
     trade,
   };
 }
@@ -337,40 +372,18 @@ async function getLatestTradeFromTesterDom({ timeout_ms = 14000 } = {}) {
   return { success: false, source: 'strategy_tester_dom', trade: null, error: 'Trade table did not finish loading in time.' };
 }
 
-// Primary entry point for reading the current trade/position state. Tries the internal-API
-// report object first (fast, authoritative open/flat status); only falls back to scraping the
-// DOM "List of Trades" panel when the internal API can't find a matching strategy source, or
-// when it found one open but couldn't recover the entry price/time and a DOM read might fill
-// that in. A DOM failure in that enrichment pass never discards the open/flat status already
-// established via the internal API — that was the source of the historical false positives.
+// Primary entry point for reading the current trade/position state. The internal-API report
+// object covers everything — open/flat status, entry time/price, side, P&L, and MFE/MAE —
+// for both open and closed positions (the still-open trade is the last trades[] element).
+// The DOM "List of Trades" scrape survives only as a full fallback for the case where no
+// strategy source can be found or matched in the internal model at all.
 export async function getLatestTradeFromTester({ timeout_ms = 14000, study_filter } = {}) {
   const apiResult = await getStrategyPositionState({ study_filter }).catch(() => null);
 
   if (apiResult?.success) {
-    const needsEnrichment = apiResult.trade.signal === 'OPEN' && !apiResult.trade.entryTime;
-    if (needsEnrichment) {
-      // Bounded well below the full DOM-fallback timeout — this is a best-effort enrichment
-      // for a value the internal API can't provide, not the primary read. A slow/flaky DOM
-      // here should cost seconds, not the ~14s a cold "List of Trades" scroll can take, and
-      // must never delay or override the open/flat status already confirmed above.
-      const domResult = await getLatestTradeFromTesterDom({ timeout_ms: Math.min(timeout_ms, 5000) }).catch(() => null);
-      if (domResult?.success && domResult.trade && String(domResult.trade.signal).toUpperCase() === 'OPEN') {
-        return {
-          success: true,
-          source: 'strategy_internal_api+dom',
-          trade: {
-            ...apiResult.trade,
-            entryTime: domResult.trade.entryTime || apiResult.trade.entryTime,
-            entryPrice: domResult.trade.entryPrice || apiResult.trade.entryPrice,
-          },
-        };
-      }
-    }
     return { success: true, source: apiResult.source, trade: apiResult.trade };
   }
 
-  // Internal API found nothing usable (no strategy source, or reportData unavailable) —
-  // fall back to the DOM entirely.
   return getLatestTradeFromTesterDom({ timeout_ms });
 }
 
@@ -404,9 +417,18 @@ function parseTradeBlockStats(block) {
   };
 }
 
-// Read the full strategy tester panel and compute avg/max favorable and adverse
-// excursion % from all COMPLETED trades (open trade is excluded).
-export async function getAllTradesExcursionStats({ timeout_ms = 14000 } = {}) {
+// Compute avg/max favorable and adverse excursion % from all COMPLETED trades (open trade
+// excluded). Primary source is the internal reportData().trades[] read (rn/dd per trade) —
+// instant, no panel navigation. The DOM scrape below survives only as a fallback for when
+// no strategy source can be matched internally.
+export async function getAllTradesExcursionStats({ timeout_ms = 14000, study_filter } = {}) {
+  const rd = await readStableStrategyReportData(study_filter).catch(() => null);
+  if (rd && !rd.error) return rd.excursionStats || null;
+  return getAllTradesExcursionStatsDom({ timeout_ms });
+}
+
+// Legacy DOM path: read the full strategy tester panel text and parse per-trade excursions.
+async function getAllTradesExcursionStatsDom({ timeout_ms = 14000 } = {}) {
   try {
     await ui.keyboard({ key: 'Escape' }).catch(() => null);
     await ui.openPanel({ panel: 'strategy-tester', action: 'open' }).catch(() => null);

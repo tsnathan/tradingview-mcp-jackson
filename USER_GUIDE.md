@@ -197,16 +197,20 @@ The table includes three additional columns derived from the full trade history:
 
 - **Hist. MFE avg / max** — the average and maximum favorable excursion percentage across all completed trades for that symbol and timeframe. These represent how far price typically moved in your favor before the trade closed.
 - **Hist. MAE avg / max** — the average and maximum adverse excursion percentage. These represent how far price moved against you during historical trades.
-- **Alert Levels (avg / max)** — four TradingView price alerts are created automatically after each scan for newly detected open positions:
+- **Alert Levels (avg / max)** — all four levels are always computed and shown for context:
   - Stop avg and Stop max — entry price minus avg/max MAE%
   - Target avg and Target max — entry price plus avg/max MFE%
 
-  The status indicator shows:
-  - **✓ Alerts set** — alerts have been created in TradingView
-  - **Quota full (N/20 active)** — the TradingView Pro plan limit was reached; levels are shown but alerts were not created. They will be retried on the next scan if quota frees up.
+  Only the **avg pair** (Stop avg + Target avg) gets a real TradingView price alert per open trade — reduced from four to two so a handful of open trades doesn't burn through the account's alert quota. The status indicator shows:
+  - **✓ Alerts set** — the avg-pair alerts have been created in TradingView
+  - **Quota full (N/20 active)** — the configured quota ceiling was reached; levels are shown but alerts were not created. They will be retried on the next scan if quota frees up.
   - **⏳ Pending** — not yet processed in the current cycle
 
-Alerts are created via TradingView's internal price-alerts REST API and count against your plan's active alert limit. The Pro plan allows 20 active alerts, which supports up to 5 open trades with 4 alerts each. Alert creation is idempotent — once alerts are recorded for a `symbol|timeframe` key at a given entry price, subsequent scans skip that trade. If the entry price changes (a new trade on the same symbol), alerts are re-created.
+  Because only the avg pair has a real TradingView alert, the **max pair is monitored locally instead** — every scan checks the live quote against the stored max-MAE/max-MFE levels (and the avg pair too, until its real alert exists) and pushes an ntfy notification titled "TradingView level alert" the first time a level is hit. This runs at the watchlist's own scan cadence (e.g. every 15 minutes for a 15m trade), not tick-by-tick like a real TradingView alert, which is the accepted tradeoff for levels that don't fit the quota.
+
+  When a position closes, its real TradingView alerts are automatically deleted — no manual cleanup needed.
+
+Alerts are created via TradingView's internal price-alerts REST API and count against your plan's active alert limit — only genuinely *active* alerts count, so old expired/inactive ones don't eat into the quota. Alert creation is idempotent — once alerts are recorded for a `symbol|timeframe` key at a given entry price, subsequent scans skip that trade. If the entry price changes (a new trade on the same symbol), alerts are re-created.
 
 If an expected open position is not visible:
 - confirm TradingView is connected and the chart has finished loading

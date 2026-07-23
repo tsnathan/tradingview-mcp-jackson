@@ -25,8 +25,12 @@ register('alert', {
       description: 'Delete alerts',
       options: {
         all: { type: 'boolean', description: 'Delete all alerts' },
+        ids: { type: 'string', description: 'Comma-separated TradingView alert IDs to delete' },
       },
-      handler: (opts) => core.deleteAlerts({ delete_all: opts.all }),
+      handler: (opts) => core.deleteAlerts({
+        delete_all: opts.all,
+        alert_ids: opts.ids ? opts.ids.split(',').map(s => Number(s.trim())) : undefined,
+      }),
     }],
   ]),
 });

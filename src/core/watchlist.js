@@ -3,6 +3,7 @@
  * Uses TradingView's internal widget API with DOM fallback.
  */
 import { evaluate, evaluateAsync, getClient } from '../connection.js';
+import * as ui from './ui.js';
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -108,9 +109,129 @@ export async function select({ name }) {
     return { success: true, name: current.name, changed: false };
   }
 
+  // Atomic open→wait→click in ONE page-side async call. The legacy flow below spreads the
+  // button click, the render wait, and the item match across separate CDP round-trips, and
+  // the dropdown's open/closed state gets lost between them (toggle collisions) — that
+  // failure mode silently froze watchlist membership at the baseline's stored lists (Issue 9).
+  const atomic = await evaluateAsync(`
+    (async function() {
+      function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+      var wanted = ${JSON.stringify(wantedLower)};
+      function normName(t) {
+        return String(t || '').toLowerCase()
+          .replace(/minutes?/g, 'm').replace(/mins?/g, 'm')
+          .replace(/hours?/g, 'h').replace(/hrs?/g, 'h')
+          .replace(/days?/g, 'd').replace(/daily/g, 'd')
+          .replace(/[^a-z0-9]/g, '');
+      }
+      var wantedNorm = normName(wanted);
+      function isVisible(el) {
+        if (!el) return false;
+        if (el.offsetParent !== null) return true;
+        try { return !!(el.getClientRects && el.getClientRects().length > 0); } catch (e) { return false; }
+      }
+      function getText(n) { return (n && n.textContent ? n.textContent : '').trim().replace(/\\s+/g, ' '); }
+      function findItem() {
+        var candidates = Array.from(document.querySelectorAll(
+          '[role="menuitem"], [role="option"], ' +
+          '[class*="menu"] span, [class*="menu"] div, [class*="menu"] a, [class*="menu"] li, ' +
+          '[class*="popup"] span, [class*="popup"] div, [class*="dropdown"] span, [class*="dropdown"] div'
+        ));
+        var exact = [];
+        for (var i = 0; i < candidates.length; i++) {
+          var el = candidates[i];
+          if (!isVisible(el)) continue;
+          var t = getText(el);
+          if (!t || t.length > 60) continue;
+          if (t.toLowerCase() === wanted || normName(t) === wantedNorm) exact.push({ el: el, t: t });
+        }
+        if (exact.length === 0) return null;
+        exact.sort(function(a, b) { return a.t.length - b.t.length; });
+        return exact[0];
+      }
+      function rectOf(el) {
+        try { el.scrollIntoView({ block: 'center' }); } catch (e) {}
+        var r = el.getBoundingClientRect();
+        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
+      }
+      // Synthetic MouseEvents do NOT activate TradingView's React list items (verified live) —
+      // return the item's viewport coordinates instead so the caller can deliver a REAL mouse
+      // click via CDP Input, the same approach that works for the Pine Editor buttons.
+      // If the item is already visible (menu left open by an earlier attempt), use it directly —
+      // clicking the toggle button first would close the menu.
+      var pre = findItem();
+      if (pre) { var pr = rectOf(pre.el); return { found: true, selected: pre.t, mode: 'atomic_preopen', x: pr.x, y: pr.y }; }
+      var btn = document.querySelector('[data-name="base-watchlist-widget-button"]')
+        || document.querySelector('[data-name="watchlists-button"]')
+        || document.querySelector('[data-name="watchlist-button"]');
+      if (!btn) return { found: false, error: 'watchlist button not found' };
+      btn.click();
+      for (var p = 0; p < 25; p++) {
+        await sleep(120);
+        var item = findItem();
+        if (item) { var ir = rectOf(item.el); return { found: true, selected: item.t, mode: 'atomic', x: ir.x, y: ir.y }; }
+      }
+      // Close the dropdown we opened so it doesn't block later UI automation.
+      try { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); } catch (e) {}
+      return { found: false, error: 'item not found after opening menu' };
+    })()
+  `);
+  if (atomic?.found && Number.isFinite(atomic.x) && Number.isFinite(atomic.y)) {
+    await ui.mouseClick({ x: atomic.x, y: atomic.y });
+    let activeAtomic = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      await delay(350);
+      activeAtomic = await getActiveName();
+      if (activeAtomic?.name && normalizeWatchlistName(activeAtomic.name) === wantedNormalized) {
+        return { success: true, name: activeAtomic.name, changed: true };
+      }
+    }
+    throw new Error(`Watchlist selection did not stick: ${name}`);
+  }
+
+  // The dropdown only shows "Recently used" lists — anything else lives behind the
+  // "Open list…" dialog (Shift+W). Its "Search lists" input is auto-focused on open, so:
+  // type the name (CDP insertText), ArrowDown to highlight the first match, Enter to
+  // activate. The dialog's rows do NOT respond to coordinate clicks — synthetic or real
+  // CDP mouse input alike (verified live 2026-07-23) — the keyboard path is the only
+  // automation that reliably switches lists from this dialog.
+  await ui.keyboard({ key: 'Escape' }).catch(() => null);
+  await delay(250);
+  await ui.keyboard({ key: 'W', modifiers: ['shift'] }).catch(() => null);
+  await delay(900);
+  const dialogReady = await evaluate(`
+    (function() {
+      var ae = document.activeElement;
+      return { focusedSearch: !!(ae && ae.tagName === 'INPUT' && /search/i.test(ae.placeholder || '')) };
+    })()
+  `).catch(() => null);
+  if (dialogReady?.focusedSearch) {
+    const c = await getClient();
+    await c.Input.insertText({ text: wantedName });
+    await delay(600);
+    await ui.keyboard({ key: 'ArrowDown' }).catch(() => null);
+    await delay(250);
+    await ui.keyboard({ key: 'Enter' }).catch(() => null);
+    let activeDialog = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      await delay(350);
+      activeDialog = await getActiveName();
+      if (activeDialog?.name && normalizeWatchlistName(activeDialog.name) === wantedNormalized) {
+        return { success: true, name: activeDialog.name, changed: true };
+      }
+    }
+  }
+  // Close any dialog we left open before falling through to the legacy flow.
+  await ui.keyboard({ key: 'Escape' }).catch(() => null);
+
   const opened = await evaluate(`
     (function() {
+      // base-watchlist-widget-button must be FIRST — it's the button that actually opens the
+      // list-picker dropdown in current TradingView builds. Without it the aria-label/title
+      // fallbacks click a different element, no dropdown appears, and every select fails —
+      // which silently froze watchlist membership at the baseline's stored lists (Issue 9).
       var selectors = [
+        '[data-name="base-watchlist-widget-button"]',
         '[data-name="watchlists-button"]',
         '[data-name="watchlist-button"]',
         '[aria-label*="Watchlists"]',
@@ -168,6 +289,7 @@ export async function select({ name }) {
     await evaluate(`
       (function() {
         var selectors = [
+          '[data-name="base-watchlist-widget-button"]',
           '[data-name="watchlists-button"]',
           '[data-name="watchlist-button"]',
           '[aria-label*="Watchlists"]',

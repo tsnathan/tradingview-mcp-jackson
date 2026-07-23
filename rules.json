@@ -19,8 +19,11 @@
 
   "watchlists": {
     "Swing 15m":   "15",
-    "Swing 30min": "30",
+    "Swing 30m": "30",
+    "Swing 45m": "45",
     "Swing 1H":    "60",
+    "Swing 2H":    "120",
+    "Swing 3H":    "180",
     "Swing 4H":    "240",
     "Swing 1D":    "D"
   },

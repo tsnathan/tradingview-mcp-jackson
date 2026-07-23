@@ -610,6 +610,7 @@ function hasMeaningfulTradeValue(value) {
     && cleaned !== '-'
     && lowered !== 'n/a'
     && lowered !== 'no trade time'
+    && lowered !== 'no prior trade recorded'
     && lowered !== 'unavailable'
     && lowered !== 'in progress';
 }
@@ -873,7 +874,9 @@ export function buildPriorSignalsByWatchlist(
             signal: 'OPEN',
             wasOpen: true,
             entryPrice: normalizeTradeDisplay(signalBackedEntry.signal?.price ?? signalBackedEntry.quote?.last, 'n/a'),
-            entryTime: formatEntryTimeDisplay(signalBackedEntry.scanned_at || baselineUpdatedAt || new Date().toISOString(), timezone),
+            // Label-only signal, no trade read — there is no entry time to show, and the scan
+            // timestamp is not one (open_issues.txt Issue 7).
+            entryTime: 'No trade time',
             netPnl: 'In progress',
             favorableExcursion: 'In progress',
             adverseExcursion: 'In progress',
@@ -893,7 +896,10 @@ export function buildPriorSignalsByWatchlist(
           };
         }
 
-        const latestEntryTime = latest.entry_time || latest.last_seen_at || baselineUpdatedAt;
+        // Only a real recorded entry time counts here — last_seen_at and baselineUpdatedAt
+        // are scan timestamps, and substituting them fabricates entry dates that break the
+        // recency gates and mislabel Open Trades (open_issues.txt Issue 7).
+        const latestEntryTime = latest.entry_time || null;
         const latestSignal = normalizeTradeDisplay(latest.signal_type || 'EXIT').toUpperCase();
         const keepOpenVisible = latestSignal === 'OPEN'
           && isSameOrPreviousTradingDay(latestEntryTime, baselineUpdatedAt || new Date().toISOString(), timezone);
@@ -903,7 +909,7 @@ export function buildPriorSignalsByWatchlist(
           signal: resolvedSignal,
           wasOpen: latestSignal === 'OPEN',
           entryPrice: normalizeTradeDisplay(latest.entry_price ?? latest.last_price ?? 'n/a'),
-          entryTime: formatEntryTimeDisplay(latest.entry_time || latest.last_seen_at || baselineUpdatedAt, timezone),
+          entryTime: formatEntryTimeDisplay(latest.entry_time, timezone),
           netPnl: fillTradeMetric(latest.net_pnl, resolvedSignal),
           favorableExcursion: fillTradeMetric(latest.favorable_excursion, resolvedSignal),
           adverseExcursion: fillTradeMetric(latest.adverse_excursion, resolvedSignal),
@@ -913,7 +919,7 @@ export function buildPriorSignalsByWatchlist(
           symbol: latest.symbol || symbol,
           signal: '—',
           entryPrice: hasMeaningfulTradeValue(latest.entry_price ?? latest.last_price) ? normalizeTradeDisplay(latest.entry_price ?? latest.last_price) : 'Unavailable',
-          entryTime: hasMeaningfulTradeValue(latest.entry_time || latest.last_seen_at) ? formatEntryTimeDisplay(latest.entry_time || latest.last_seen_at || baselineUpdatedAt, timezone) : 'No prior trade recorded',
+          entryTime: hasMeaningfulTradeValue(latest.entry_time) ? formatEntryTimeDisplay(latest.entry_time, timezone) : 'No prior trade recorded',
           netPnl: hasMeaningfulTradeValue(latest.net_pnl) ? normalizeTradeDisplay(latest.net_pnl) : 'Unavailable',
           favorableExcursion: hasMeaningfulTradeValue(latest.favorable_excursion) ? normalizeTradeDisplay(latest.favorable_excursion) : 'Unavailable',
           adverseExcursion: hasMeaningfulTradeValue(latest.adverse_excursion) ? normalizeTradeDisplay(latest.adverse_excursion) : 'Unavailable',
@@ -1014,7 +1020,10 @@ export function buildOpenTrades(
         symbol: entry.state?.symbol || entry.symbol || 'n/a',
         signal: 'OPEN',
         entryPrice: normalizeTradeDisplay(entry.trade?.entryPrice ?? entry.signal?.price ?? entry.quote?.last),
-        entryTime: entry.trade?.entryTime || entry.scanned_at,
+        // Never substitute the scan timestamp for a missing entry time — that fabrication
+        // produced wrong dates in Open Trades and broke the recency-based signal/notify
+        // gates (open_issues.txt Issue 7). Null means "entry time unknown", full stop.
+        entryTime: entry.trade?.entryTime || null,
         netPnl: normalizeTradeDisplay(entry.trade?.netPnl, 'In progress'),
         favorableExcursion: normalizeTradeDisplay(entry.trade?.favorableExcursion, 'In progress'),
         adverseExcursion: normalizeTradeDisplay(entry.trade?.adverseExcursion, 'In progress'),
@@ -1092,12 +1101,14 @@ export function buildOpenTrades(
     if (!existingRow) continue;
 
     // overwrite:false — the first pass (live scan data) takes priority over baseline values.
+    // entry_time only: last_seen_at is a scan timestamp, not an entry time (Issue 7); a row
+    // without a real entry time is skipped by addRow until the next scan records one.
     addRow(matchingSection, {
       symbol,
       timeframe,
       signal: 'OPEN',
       entryPrice: entry?.entry_price,
-      entryTime: entry?.entry_time || entry?.last_seen_at,
+      entryTime: entry?.entry_time || null,
       netPnl: entry?.net_pnl,
       favorableExcursion: entry?.favorable_excursion,
       adverseExcursion: entry?.adverse_excursion,
@@ -1527,6 +1538,7 @@ export function createDashboardStatus(result = {}) {
     isPartialScan: Boolean(result.is_partial_scan),
     scanProgress: result.scan_progress || null,
     strategyMismatch: result.strategy_mismatch || null,
+    levelViolations: Array.isArray(result.level_violations) ? result.level_violations : [],
   };
 }
 
@@ -2112,7 +2124,7 @@ function parseEntryPriceNum(str) {
 // For each open trade that does not yet have excursion alerts in the baseline:
 //   1. Switch to that symbol + timeframe
 //   2. Read all historical trades to compute avg/max excursion stats
-//   3. Create 4 TradingView price alerts (avg stop, max stop, avg target, max target)
+//   3. Create 2 TradingView price alerts (avg stop, avg target)
 //   4. Mark as done in the baseline so subsequent scans skip this block
 //
 // Returns openTrades array augmented with excursionStats and alertLevels fields.
@@ -2211,11 +2223,12 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
 
     const sym = symbol.replace(/^[^:]+:/, '');
     const tf  = timeframe === 'D' ? '1D' : timeframe === 'W' ? '1W' : `${timeframe}m`;
+    // Two alerts per open trade (avg stop + avg target) — the max-MAE/max-MFE pair was
+    // dropped to fit the account's alert quota (user decision 2026-07-23). All four levels
+    // are still computed and stored in the baseline for the dashboard's Alert Levels column.
     const alertDefs = [
       { price: levels.stopAvg,   msg: `${sym} ${tf} | Stop avg MAE ${stats.avgAdversePct}% | Entry ${entryNum}` },
-      { price: levels.stopMax,   msg: `${sym} ${tf} | Stop max MAE ${stats.maxAdversePct}% | Entry ${entryNum}` },
       { price: levels.targetAvg, msg: `${sym} ${tf} | Target avg MFE ${stats.avgFavorablePct}% | Entry ${entryNum}` },
-      { price: levels.targetMax, msg: `${sym} ${tf} | Target max MFE ${stats.maxFavorablePct}% | Entry ${entryNum}` },
     ];
 
     // Respect alert quota — save levels to baseline so the dashboard can show
@@ -2224,17 +2237,28 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
       const skipReason = `Quota full (${usedSlots}/${MAX_ALERTS} active)`;
       const raw = parseJsonFile(baselinePath, {});
       if (!raw.excursion_alerts) raw.excursion_alerts = {};
-      raw.excursion_alerts[key] = { created: false, created_at: new Date().toISOString(), entry_price: entryNum, stats, levels, skip_reason: skipReason };
+      raw.excursion_alerts[key] = {
+        created: false,
+        created_at: new Date().toISOString(),
+        entry_price: entryNum,
+        stats,
+        levels,
+        skip_reason: skipReason,
+        ...(stored?.alert_ids ? { alert_ids: stored.alert_ids } : {}),
+        ...(stored?.fired ? { fired: stored.fired } : {}),
+      };
       writeJsonFile(baselinePath, raw);
       enriched.push({ ...trade, excursionStats: stats, alertLevels: levels, alertsCreated: false, alertsSkipReason: skipReason });
       continue;
     }
 
     let allCreated = true;
+    const createdIds = [];
     for (const def of alertDefs) {
       try {
         const r = await alerts.create({ price: def.price, message: def.msg, symbol, timeframe });
-        if (!r?.success) allCreated = false;
+        if (r?.success) { if (r.alert_id != null) createdIds.push(r.alert_id); }
+        else allCreated = false;
         await new Promise(res => setTimeout(res, 800));
       } catch {
         allCreated = false;
@@ -2245,13 +2269,149 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
 
     const raw = parseJsonFile(baselinePath, {});
     if (!raw.excursion_alerts) raw.excursion_alerts = {};
-    raw.excursion_alerts[key] = { created: allCreated, created_at: new Date().toISOString(), entry_price: entryNum, stats, levels };
+    // Preserve fired-level dedup flags and any previously created TradingView alert ids
+    // across rewrites — this entry is rewritten on every retry while creation keeps
+    // failing, and losing `fired` would re-push the same level violation every scan.
+    raw.excursion_alerts[key] = {
+      created: allCreated,
+      created_at: new Date().toISOString(),
+      entry_price: entryNum,
+      stats,
+      levels,
+      alert_ids: [...new Set([...(stored?.alert_ids || []), ...createdIds])],
+      ...(stored?.fired ? { fired: stored.fired } : {}),
+    };
     writeJsonFile(baselinePath, raw);
 
     enriched.push({ ...trade, excursionStats: stats, alertLevels: levels, alertsCreated: allCreated });
   }
 
   return enriched;
+}
+
+// Local "overflow" level monitoring + lifecycle cleanup. Runs on every scan and consumes no
+// TradingView alert quota. All four excursion levels are computed and stored in the baseline;
+// only the avg pair is covered by real TradingView alerts (when creation works). This pass:
+//   1. For each OPEN trade scanned this run, checks the fresh quote against its stored
+//      levels — always the max pair (never TV-backed), plus the avg pair while no TV alert
+//      exists for it — and emits a one-time notify line per level per trade entry
+//      (deduplicated via a `fired` map on the baseline entry).
+//   2. When a scanned symbol's trade reads EXIT (position closed), the stored entry is
+//      removed so monitoring stops; any TradingView alert ids it carried are parked in
+//      baseline.pending_alert_cleanup for deletion once the delete_alerts API schema is
+//      captured (see open_issues.txt — create/delete REST schemas still unknown).
+// Checks run at each watchlist's own scan cadence — a 15m trade is checked every 15 minutes,
+// a 4H trade every 4 hours. That granularity (vs TradingView's tick-level alerts) is the
+// accepted tradeoff for levels that don't fit the alert quota.
+export function processLevelViolationsAndCleanup({ results = [], baselinePath, timezone = DEFAULT_MARKET_HOURS.timezone } = {}) {
+  const raw = parseJsonFile(baselinePath, {});
+  if (!raw.excursion_alerts || Object.keys(raw.excursion_alerts).length === 0) {
+    return { violation_lines: [], violations: [], cleaned: [] };
+  }
+
+  const findStored = (symbol, timeframe) => {
+    const key = `${symbol}|${timeframe}`;
+    if (raw.excursion_alerts[key]) return [key, raw.excursion_alerts[key]];
+    const ticker = String(symbol || '').split(':').pop()?.toUpperCase() || '';
+    const hit = Object.entries(raw.excursion_alerts).find(([k]) => {
+      const pipe = k.lastIndexOf('|');
+      if (pipe < 0) return false;
+      return k.slice(0, pipe).split(':').pop()?.toUpperCase() === ticker && k.slice(pipe + 1) === String(timeframe);
+    });
+    return hit || [null, null];
+  };
+
+  const violations = [];
+  const cleaned = [];
+  let dirty = false;
+
+  for (const entry of results) {
+    if (!entry || entry.error) continue;
+    const symbol = entry.state?.symbol || entry.symbol;
+    const timeframe = String(entry.timeframe || '');
+    const [key, stored] = findStored(symbol, timeframe);
+    if (!key || !stored) continue;
+
+    const signal = String(entry.trade?.signal || '').toUpperCase();
+
+    // Position confirmed closed — release the overflow entry. A null/failed trade read is
+    // NOT treated as closed; only an explicit EXIT is.
+    if (signal === 'EXIT') {
+      if (Array.isArray(stored.alert_ids) && stored.alert_ids.length > 0) {
+        if (!Array.isArray(raw.pending_alert_cleanup)) raw.pending_alert_cleanup = [];
+        raw.pending_alert_cleanup.push({ key, alert_ids: stored.alert_ids, closed_at: new Date().toISOString() });
+      }
+      delete raw.excursion_alerts[key];
+      cleaned.push(key);
+      dirty = true;
+      continue;
+    }
+
+    if (signal !== 'OPEN') continue;
+    const last = Number(entry.quote?.last);
+    const levels = stored.levels;
+    if (!Number.isFinite(last) || !levels) continue;
+    // Levels belong to a specific entry price — skip if the position was re-entered at a
+    // different price and stats/levels haven't been recomputed for it yet.
+    const currentEntry = parseEntryPriceNum(entry.trade?.entryPrice);
+    if (currentEntry && stored.entry_price && Math.abs(currentEntry - stored.entry_price) > 0.005) continue;
+
+    const fired = stored.fired || {};
+    const tvCovered = stored.created === true;
+    const checks = [
+      { name: 'stopMax',   label: 'Stop max',   dir: 'below', level: levels.stopMax,   monitor: true },
+      { name: 'targetMax', label: 'Target max', dir: 'above', level: levels.targetMax, monitor: true },
+      { name: 'stopAvg',   label: 'Stop avg',   dir: 'below', level: levels.stopAvg,   monitor: !tvCovered },
+      { name: 'targetAvg', label: 'Target avg', dir: 'above', level: levels.targetAvg, monitor: !tvCovered },
+    ];
+
+    for (const check of checks) {
+      if (!check.monitor || fired[check.name] || !Number.isFinite(Number(check.level))) continue;
+      const hit = check.dir === 'below' ? last <= check.level : last >= check.level;
+      if (!hit) continue;
+      fired[check.name] = new Date().toISOString();
+      stored.fired = fired;
+      dirty = true;
+      violations.push({
+        key,
+        symbol,
+        timeframe,
+        level_name: check.name,
+        level: check.level,
+        last,
+        entry_price: stored.entry_price,
+        line: `${formatTimestamp(new Date(), timezone)} ET | LEVEL HIT: ${symbol} ${timeframe} | ${check.label} ${check.level} (last ${last}) | Entry ${stored.entry_price}`,
+      });
+    }
+  }
+
+  if (dirty) writeJsonFile(baselinePath, raw);
+  return { violation_lines: violations.map((v) => v.line), violations, cleaned };
+}
+
+// Drains baseline.pending_alert_cleanup — TradingView alert ids left behind by trades that
+// closed while carrying real TV alerts (see processLevelViolationsAndCleanup above). Runs on
+// every scan; entries that fail to delete (e.g. transient network error) stay queued and are
+// retried on the next call rather than being dropped.
+export async function drainPendingAlertCleanup(baselinePath) {
+  const raw = parseJsonFile(baselinePath, {});
+  const pending = Array.isArray(raw.pending_alert_cleanup) ? raw.pending_alert_cleanup : [];
+  if (pending.length === 0) return { drained: [], remaining: 0 };
+
+  const stillPending = [];
+  const drained = [];
+  for (const item of pending) {
+    try {
+      const r = await alerts.deleteAlerts({ alert_ids: item.alert_ids });
+      if (r?.success) drained.push(item.key);
+      else stillPending.push(item);
+    } catch {
+      stillPending.push(item);
+    }
+  }
+  raw.pending_alert_cleanup = stillPending;
+  writeJsonFile(baselinePath, raw);
+  return { drained, remaining: stillPending.length };
 }
 
 // Verifies the strategy indicator attached to the live chart matches rules.json's configured
@@ -2410,6 +2570,24 @@ export async function runSignalJob({
   result.activeWatchlistName = syncResult?.activeWatchlistName || null;
   result.strategy_mismatch = strategyCheck.mismatch || null;
 
+  // Local overflow-level monitoring + closed-trade cleanup (see processLevelViolationsAndCleanup).
+  const levelCheck = processLevelViolationsAndCleanup({
+    results: result.all_scan_results,
+    baselinePath,
+    timezone: marketHours.timezone || DEFAULT_MARKET_HOURS.timezone,
+  });
+  result.level_violations = levelCheck.violations;
+  if (levelCheck.violation_lines.length > 0) {
+    result.watchlist_summary_lines = [...(result.watchlist_summary_lines || []), ...levelCheck.violation_lines];
+    result.summary_line = [result.summary_line, ...levelCheck.violation_lines].filter(Boolean).join('\n');
+  }
+
+  try {
+    result.alert_cleanup = await drainPendingAlertCleanup(baselinePath);
+  } catch {
+    result.alert_cleanup = { drained: [], remaining: null };
+  }
+
   if (notify && result.notify_signal_lines.length > 0 && rules.ntfy?.url) {
     try {
       const ntfyResponse = await fetch(rules.ntfy.url, {
@@ -2426,6 +2604,27 @@ export async function runSignalJob({
       }
     } catch (err) {
       console.error(`ntfy push failed: ${err?.message || String(err)}`);
+    }
+  }
+
+  // Level violations push separately with their own title so a stop/target hit is
+  // distinguishable from a new-signal notification at a glance.
+  if (notify && levelCheck.violation_lines.length > 0 && rules.ntfy?.url) {
+    try {
+      const levelResp = await fetch(rules.ntfy.url, {
+        method: "POST",
+        body: levelCheck.violation_lines.join("\n"),
+        headers: {
+          "Content-Type": "text/plain",
+          Title: "TradingView level alert",
+          Priority: String(rules.ntfy.priority || "default"),
+        },
+      });
+      if (!levelResp.ok) {
+        console.error(`ntfy level-alert push failed: HTTP ${levelResp.status} ${levelResp.statusText}`);
+      }
+    } catch (err) {
+      console.error(`ntfy level-alert push failed: ${err?.message || String(err)}`);
     }
   }
 
