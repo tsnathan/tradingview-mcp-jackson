@@ -5,6 +5,19 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { createDashboardStatus, ensureTradingViewConnection, exportMetricsScan, runBrief, runSignalJob, syncWatchlistSymbolsFromTradingView } from '../src/core/morning.js';
 import { runRegression } from '../src/core/regression.js';
+import { buildEdgeAnalysis } from '../src/core/edge_analysis.js';
+import { readPerfSnapshots, listRuleTypes } from '../src/core/trade_log.js';
+import { simulatePortfolio, sweepMaxPositions } from '../src/core/portfolio_sim.js';
+import {
+  loadWebhookCredentials,
+  loadWebhookSettings,
+  buildWebhookPayload,
+  sendTradeWebhook,
+  sentKey,
+  alreadySent,
+  recordSent,
+  readSentState,
+} from '../src/core/trade_webhook.js';
 
 // Keep the server alive if the scan throws an unexpected error.
 process.on('uncaughtException', (err) => console.error('[server] uncaughtException:', err));
@@ -13,6 +26,20 @@ process.on('unhandledRejection', (reason) => console.error('[server] unhandledRe
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STATUS_FILE = join(ROOT, 'status', 'latest-signal-status.json');
 const REGRESSION_FILE = join(ROOT, 'status', 'regression-status.json');
+
+/**
+ * Resolve the `rule` query param to a rule_type filter.
+ *
+ * Defaults to the most-traded variant rather than pooling everything, because pooling is only ever
+ * correct before an A/B run exists and silently becomes wrong the moment one does. `rule=all` opts
+ * into pooling explicitly.
+ */
+function resolveRuleType(q) {
+  const asked = q.get('rule');
+  if (asked === 'all') return null;
+  if (asked) return asked;
+  return listRuleTypes()[0]?.rule_type ?? null;
+}
 
 function etDateString(isoOrDate) {
   const d = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
@@ -299,6 +326,74 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.url === '/api/edge-analysis' || req.url.startsWith('/api/edge-analysis?')) {
+    try {
+      const url = new URL(req.url, 'http://localhost');
+      const minTrades = Number(url.searchParams.get('min') || 4);
+      // Drawdown and open P&L come from the per-symbol snapshot written by each scan; the CSVs
+      // hold closed trades only and cannot supply either.
+      const snapshots = readPerfSnapshots();
+      const openBySymbolTf = {};
+      for (const [key, perf] of Object.entries(snapshots)) {
+        openBySymbolTf[key] = {
+          openPct: (perf.openPLPercent || 0) * 100,
+          maxDDPct: (perf.maxDDPercent || 0) * 100,
+        };
+      }
+      sendJson(res, 200, buildEdgeAnalysis({ openBySymbolTf, minTrades, ruleType: resolveRuleType(url.searchParams) }));
+    } catch (err) {
+      sendJson(res, 500, { available: false, error: err?.message || 'edge analysis failed' });
+    }
+    return;
+  }
+
+  if (req.url.startsWith('/api/portfolio-sim')) {
+    try {
+      const url = new URL(req.url, 'http://localhost');
+      const q = url.searchParams;
+      const csv = (k) => {
+        const v = q.get(k);
+        return v ? v.split(',').map((s) => s.trim()).filter(Boolean) : null;
+      };
+      const capital = Number(q.get('capital') || 100000);
+      const maxPositions = Number(q.get('maxPositions') || 5);
+      const timeframes = csv('timeframes');
+      const tickers = csv('tickers');
+      const priority = q.get('priority') || 'chronological';
+      const commissionPerTrade = Number(q.get('commission') || 0);
+      const ruleType = resolveRuleType(q);
+
+      // Rank priority needs a score per symbol/timeframe; reuse CAGR/DD from the edge analysis so
+      // both tabs agree on what "better" means.
+      let rankBy = {};
+      if (priority === 'rank') {
+        const snaps = readPerfSnapshots();
+        const openBySymbolTf = {};
+        for (const [key, perf] of Object.entries(snaps)) {
+          openBySymbolTf[key] = {
+            openPct: (perf.openPLPercent || 0) * 100,
+            maxDDPct: (perf.maxDDPercent || 0) * 100,
+          };
+        }
+        // Same variant as the simulation, or the ranking would order symbols by an edge measured
+        // under a different exit rule than the one being simulated.
+        const edge = buildEdgeAnalysis({ openBySymbolTf, minTrades: 4, ruleType });
+        if (edge.available) {
+          for (const s of edge.symbols) if (s.cagrDd !== null) rankBy[s.key] = s.cagrDd;
+        }
+      }
+
+      const result = simulatePortfolio({ capital, maxPositions, timeframes, tickers, priority, rankBy, commissionPerTrade, ruleType });
+      const sweep = q.get('sweep') === '1'
+        ? sweepMaxPositions({ capital, timeframes, tickers, priority, rankBy, ruleType })
+        : null;
+      sendJson(res, 200, { ...result, sweep, ruleType, ruleTypes: listRuleTypes() });
+    } catch (err) {
+      sendJson(res, 500, { available: false, error: err?.message || 'portfolio sim failed' });
+    }
+    return;
+  }
+
   if (req.url === '/api/watchlists') {
     try {
       const rules = loadRulesFile() || {};
@@ -306,6 +401,93 @@ const server = http.createServer((req, res) => {
     } catch (err) {
       sendJson(res, 500, { success: false, error: err?.message || 'Failed to read rules' });
     }
+    return;
+  }
+
+  // Webhook arming state + delivery ledger. The secret is never included in any response — only
+  // whether one is configured — so the dashboard can show status without the browser ever holding
+  // a credential that places live trades.
+  if (req.url === '/api/webhook-config') {
+    try {
+      const rules = loadRulesFile() || {};
+      const settings = loadWebhookSettings(rules);
+      const creds = loadWebhookCredentials();
+      sendJson(res, 200, {
+        success: true,
+        configured: creds.configured,
+        hasUrl: Boolean(creds.url),
+        hasSecret: Boolean(creds.secret),
+        group: settings.group,
+        enabledTimeframes: settings.enabledTimeframes,
+        watchlists: rules.watchlists || {},
+        sent: readSentState().sent,
+      });
+    } catch (err) {
+      sendJson(res, 500, { success: false, error: err?.message || 'Failed to read webhook config' });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/api/webhook-toggle') {
+    readJsonBody(req).then((body) => {
+      const timeframe = String(body?.timeframe ?? '').trim();
+      if (!timeframe) {
+        sendJson(res, 400, { success: false, error: 'timeframe is required' });
+        return;
+      }
+      const rules = loadRulesFile();
+      if (!rules) {
+        sendJson(res, 500, { success: false, error: 'rules.json not found or invalid' });
+        return;
+      }
+      const current = new Set(loadWebhookSettings(rules).enabledTimeframes);
+      const enable = Boolean(body?.enabled);
+      if (enable) current.add(timeframe); else current.delete(timeframe);
+      rules.webhook = {
+        ...(rules.webhook || {}),
+        group: rules.webhook?.group || 'swing',
+        enabled_timeframes: [...current],
+      };
+      writeRulesFile(rules);
+      console.log(`[webhook] ${enable ? 'ARMED' : 'disarmed'} timeframe ${timeframe} (now: ${[...current].join(',') || 'none'})`);
+      sendJson(res, 200, { success: true, enabledTimeframes: [...current] });
+    }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+    return;
+  }
+
+  // Manual one-off send for a single row. Goes through the same dedupe ledger as the auto path, so
+  // clicking Send on a row the scheduled scan already fired is refused rather than double-ordering.
+  if (req.method === 'POST' && req.url === '/api/send-webhook') {
+    readJsonBody(req).then(async (body) => {
+      const creds = loadWebhookCredentials();
+      if (!creds.configured) {
+        sendJson(res, 400, { success: false, error: 'Webhook URL/secret not configured (set TRADE_WEBHOOK_URL + TRADE_WEBHOOK_SECRET, or fill webhook.local.json)' });
+        return;
+      }
+      const { symbol, side, timeframe, price, entryTime } = body || {};
+      if (!symbol || !timeframe) {
+        sendJson(res, 400, { success: false, error: 'symbol and timeframe are required' });
+        return;
+      }
+      const rules = loadRulesFile() || {};
+      const settings = loadWebhookSettings(rules);
+      const key = sentKey({ symbol, timeframe, entryTime });
+      if (key && alreadySent(key) && !body.force) {
+        sendJson(res, 409, { success: false, error: 'Already sent for this entry', alreadySent: true });
+        return;
+      }
+      const payload = buildWebhookPayload({ symbol, side, timeframe, price, group: settings.group, secret: creds.secret });
+      const result = await sendTradeWebhook({ url: creds.url, payload });
+      if (result.success) {
+        recordSent(key, { symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price, source: 'manual' });
+        console.log(`[webhook] manual send ${payload.side} ${payload.symbol} (${payload.tag}) @ ${payload.price}`);
+      } else {
+        console.error(`[webhook] manual send FAILED ${payload.symbol}: ${result.error}`);
+      }
+      // Echo the payload back with the secret stripped so the UI can show exactly what went out.
+      const { secret, ...safePayload } = payload;
+      sendJson(res, result.success ? 200 : 502, { ...result, payload: safePayload });
+    }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
     return;
   }
 

@@ -11,6 +11,16 @@ import * as data from "./data.js";
 import * as alerts from "./alerts.js";
 import { launch as launchTradingView } from "./health.js";
 import * as watchlist from "./watchlist.js";
+import * as tradeLog from "./trade_log.js";
+import {
+  loadWebhookCredentials,
+  loadWebhookSettings,
+  buildWebhookPayload,
+  sendTradeWebhook,
+  sentKey,
+  alreadySent,
+  recordSent,
+} from "./trade_webhook.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../");
@@ -1692,6 +1702,17 @@ async function scanSymbol({ symbol, timeframe, studyFilter, watchlistName, watch
 
   const latestTrade = await data.getLatestTradeFromTester({ timeout_ms: 14000, study_filter: studyFilter }).catch(() => ({ success: false, trade: null }));
 
+  // Harvest closed-trade history into trade-log/trades-<tf>.csv. The chart is already parked on
+  // this symbol/timeframe, so this costs one extra CDP read and nothing else. Deduplicated by
+  // entry timestamp, so re-scanning appends only genuinely new closures. Never allowed to fail a
+  // scan — the log is an analysis artifact, not part of the signal path.
+  const tradeLogResult = await tradeLog
+    .logClosedTrades({ symbol, timeframe, watchlist_name: watchlistName || "Default", study_filter: studyFilter })
+    .catch((err) => ({ success: false, error: err?.message || String(err), appended: 0 }));
+  if (tradeLogResult?.error) {
+    console.error(`[trade-log] ${symbol}|${timeframe}: ${tradeLogResult.error}`);
+  }
+
   const signal = detectSignalFromSnapshot({
     symbol: state?.symbol || symbol,
     timeframe,
@@ -1714,6 +1735,7 @@ async function scanSymbol({ symbol, timeframe, studyFilter, watchlistName, watch
     signal,
     trade: latestTrade?.trade || null,
     trade_source: latestTrade?.source || null,
+    trade_log_appended: tradeLogResult?.appended ?? 0,
   };
 }
 
@@ -2069,6 +2091,17 @@ export async function runBrief({
     signal_lines: signalLines,
     changed_signal_lines: changedSignalLines,
     notify_signal_lines: notifySignalLines,
+    // Structured twin of notify_signal_lines. The lines are formatted for a phone lock screen and
+    // can't be parsed back into fields reliably; the trade webhook needs real symbol/side/price, so
+    // it consumes this instead. Same entries, same gating — never a looser set.
+    notify_signal_events: notifyEntries.map((entry) => ({
+      symbol: entry.state?.symbol || entry.symbol || null,
+      timeframe: entry.timeframe,
+      watchlist_name: entry.watchlist_name || null,
+      side: entry.trade?.side || null,
+      entry_price: entry.trade?.entryPrice ?? entry.signal?.price ?? entry.quote?.last ?? null,
+      entry_time: entry.trade?.entryTime || null,
+    })),
     watchlist_summary_lines: watchlistSummaryLines,
     summary_line: watchlistSummaryLines.join("\n") || noSignalLines.join("\n"),
     instruction: signals_only
@@ -2133,6 +2166,9 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
 
   const baseline = loadBaseline(baselinePath);
   const enriched = [];
+  // Trades that hit the quota this run — labeled "Local alert i/n" only once the full
+  // overflow set for this run is known (see after the loop), since n isn't known upfront.
+  const quotaOverflow = [];
 
   // Check current active alert count once upfront so we can gate each batch.
   const MAX_ALERTS = 20;
@@ -2231,24 +2267,14 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
       { price: levels.targetAvg, msg: `${sym} ${tf} | Target avg MFE ${stats.avgFavorablePct}% | Entry ${entryNum}` },
     ];
 
-    // Respect alert quota — save levels to baseline so the dashboard can show
-    // them even when alerts cannot be created yet.
+    // Respect alert quota — save levels to baseline so the dashboard can show them even
+    // when a real TradingView alert can't be created. These trades fall back to local-only
+    // overflow monitoring (see processLevelViolationsAndCleanup), so the label is deferred
+    // to "Local alert i/n" (computed after the loop) rather than exposing the raw quota math.
     if (usedSlots + alertDefs.length > MAX_ALERTS) {
-      const skipReason = `Quota full (${usedSlots}/${MAX_ALERTS} active)`;
-      const raw = parseJsonFile(baselinePath, {});
-      if (!raw.excursion_alerts) raw.excursion_alerts = {};
-      raw.excursion_alerts[key] = {
-        created: false,
-        created_at: new Date().toISOString(),
-        entry_price: entryNum,
-        stats,
-        levels,
-        skip_reason: skipReason,
-        ...(stored?.alert_ids ? { alert_ids: stored.alert_ids } : {}),
-        ...(stored?.fired ? { fired: stored.fired } : {}),
-      };
-      writeJsonFile(baselinePath, raw);
-      enriched.push({ ...trade, excursionStats: stats, alertLevels: levels, alertsCreated: false, alertsSkipReason: skipReason });
+      const enrichedIndex = enriched.length;
+      enriched.push({ ...trade, excursionStats: stats, alertLevels: levels, alertsCreated: false, alertsSkipReason: null });
+      quotaOverflow.push({ enrichedIndex, key, entryNum, stats, levels, stored });
       continue;
     }
 
@@ -2284,6 +2310,27 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
     writeJsonFile(baselinePath, raw);
 
     enriched.push({ ...trade, excursionStats: stats, alertLevels: levels, alertsCreated: allCreated });
+  }
+
+  if (quotaOverflow.length > 0) {
+    const raw = parseJsonFile(baselinePath, {});
+    if (!raw.excursion_alerts) raw.excursion_alerts = {};
+    const n = quotaOverflow.length;
+    quotaOverflow.forEach(({ enrichedIndex, key, entryNum, stats, levels, stored }, i) => {
+      const skipReason = `Local alert ${i + 1}/${n}`;
+      raw.excursion_alerts[key] = {
+        created: false,
+        created_at: new Date().toISOString(),
+        entry_price: entryNum,
+        stats,
+        levels,
+        skip_reason: skipReason,
+        ...(stored?.alert_ids ? { alert_ids: stored.alert_ids } : {}),
+        ...(stored?.fired ? { fired: stored.fired } : {}),
+      };
+      enriched[enrichedIndex].alertsSkipReason = skipReason;
+    });
+    writeJsonFile(baselinePath, raw);
   }
 
   return enriched;
@@ -2456,6 +2503,30 @@ async function checkStrategyIdentity({ rules, studyFilter }) {
   };
 }
 
+// Sends one ntfy push per line rather than joining them into a single multi-line body — a
+// batch of several signals/violations in one notification renders as an unreadable wall of
+// text on a phone lock screen, so each gets its own push instead.
+async function pushNtfyLines(lines, { url, title, priority, logPrefix }) {
+  for (const line of lines) {
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        body: line,
+        headers: {
+          'Content-Type': 'text/plain',
+          Title: title,
+          Priority: String(priority || 'default'),
+        },
+      });
+      if (!resp.ok) {
+        console.error(`${logPrefix} failed: HTTP ${resp.status} ${resp.statusText}`);
+      }
+    } catch (err) {
+      console.error(`${logPrefix} failed: ${err?.message || String(err)}`);
+    }
+  }
+}
+
 export async function runSignalJob({
   rules_path,
   changed_only = true,
@@ -2589,47 +2660,95 @@ export async function runSignalJob({
   }
 
   if (notify && result.notify_signal_lines.length > 0 && rules.ntfy?.url) {
-    try {
-      const ntfyResponse = await fetch(rules.ntfy.url, {
-        method: "POST",
-        body: result.notify_signal_lines.join("\n"),
-        headers: {
-          "Content-Type": "text/plain",
-          Title: "TradingView signal scan",
-          Priority: String(rules.ntfy.priority || "default"),
-        },
-      });
-      if (!ntfyResponse.ok) {
-        console.error(`ntfy push failed: HTTP ${ntfyResponse.status} ${ntfyResponse.statusText}`);
-      }
-    } catch (err) {
-      console.error(`ntfy push failed: ${err?.message || String(err)}`);
-    }
+    await pushNtfyLines(result.notify_signal_lines, {
+      url: rules.ntfy.url,
+      title: "TradingView signal scan",
+      priority: rules.ntfy.priority,
+      logPrefix: "ntfy push",
+    });
   }
 
   // Level violations push separately with their own title so a stop/target hit is
   // distinguishable from a new-signal notification at a glance.
   if (notify && levelCheck.violation_lines.length > 0 && rules.ntfy?.url) {
-    try {
-      const levelResp = await fetch(rules.ntfy.url, {
-        method: "POST",
-        body: levelCheck.violation_lines.join("\n"),
-        headers: {
-          "Content-Type": "text/plain",
-          Title: "TradingView level alert",
-          Priority: String(rules.ntfy.priority || "default"),
-        },
-      });
-      if (!levelResp.ok) {
-        console.error(`ntfy level-alert push failed: HTTP ${levelResp.status} ${levelResp.statusText}`);
-      }
-    } catch (err) {
-      console.error(`ntfy level-alert push failed: ${err?.message || String(err)}`);
-    }
+    await pushNtfyLines(levelCheck.violation_lines, {
+      url: rules.ntfy.url,
+      title: "TradingView level alert",
+      priority: rules.ntfy.priority,
+      logPrefix: "ntfy level-alert push",
+    });
   }
+
+  // Auto-fire the trade webhook for armed timeframes. Gated on `notify` for the same reason the
+  // ntfy push is: only the real scheduled path (run_signal_job.js --notify) sets it, so no
+  // dashboard-triggered or ad-hoc scan can ever place a live order while debugging.
+  result.webhook_dispatch = notify
+    ? await dispatchTradeWebhooks(result.notify_signal_events || [], rules)
+    : { sent: [], skipped: [], failed: [], armed: [] };
 
   writeLatestStatus(result);
   return result;
+}
+
+/**
+ * Send the trade webhook for every eligible new OPEN signal whose timeframe is armed.
+ *
+ * Three independent gates have to pass, and each exists for its own reason:
+ *   1. the caller passed `notify` (real scheduled scan only — see call site),
+ *   2. the signal's timeframe is in `webhook.enabled_timeframes` (explicit per-timeframe opt-in),
+ *   3. this exact ticker|tag|entryTime has not already been sent (survives restarts via the ledger).
+ * Gate 3 is what makes re-scanning safe: the same OPEN position is re-detected on every scan for as
+ * long as it stays open, so without it a 15-minute cadence would re-order the same entry all day.
+ */
+async function dispatchTradeWebhooks(events, rules) {
+  const out = { sent: [], skipped: [], failed: [], armed: [] };
+  if (!Array.isArray(events) || events.length === 0) return out;
+
+  const settings = loadWebhookSettings(rules);
+  out.armed = settings.enabledTimeframes;
+  if (settings.enabledTimeframes.length === 0) return out;
+
+  const creds = loadWebhookCredentials();
+  if (!creds.configured) {
+    console.error("[webhook] armed timeframes exist but URL/secret are not configured — nothing sent. Set TRADE_WEBHOOK_URL/TRADE_WEBHOOK_SECRET or fill webhook.local.json.");
+    out.skipped.push({ reason: "not_configured", count: events.length });
+    return out;
+  }
+
+  for (const ev of events) {
+    if (!settings.enabledTimeframes.includes(String(ev.timeframe))) continue;
+    const key = sentKey({ symbol: ev.symbol, timeframe: ev.timeframe, entryTime: ev.entry_time });
+    // A null key means the entry time is unknown; the notify gates should already have excluded it,
+    // so treat it as a hard skip rather than sending something we cannot deduplicate later.
+    if (!key) {
+      out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "no_entry_time" });
+      continue;
+    }
+    if (alreadySent(key)) {
+      out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "already_sent" });
+      continue;
+    }
+
+    const payload = buildWebhookPayload({
+      symbol: ev.symbol,
+      side: ev.side,
+      timeframe: ev.timeframe,
+      price: ev.entry_price,
+      group: settings.group,
+      secret: creds.secret,
+    });
+    const res = await sendTradeWebhook({ url: creds.url, payload });
+    if (res.success) {
+      recordSent(key, { symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price, source: "auto" });
+      out.sent.push({ symbol: payload.symbol, tag: payload.tag, side: payload.side });
+      console.log(`[webhook] sent ${payload.side} ${payload.symbol} (${payload.tag}) @ ${payload.price}`);
+    } else {
+      // Deliberately NOT recorded as sent, so the next scan retries.
+      out.failed.push({ symbol: payload.symbol, tag: payload.tag, error: res.error });
+      console.error(`[webhook] FAILED ${payload.symbol} (${payload.tag}): ${res.error}`);
+    }
+  }
+  return out;
 }
 
 export async function exportMetricsScan({ onProgress, baselinePath, scanTargets } = {}) {

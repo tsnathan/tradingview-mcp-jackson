@@ -178,6 +178,19 @@ function usdText(n) {
   return `${sign}${num.toFixed(2)} USD`;
 }
 
+// "+96.00 USD | +3.87%" — pctFraction is reportData()'s raw fraction of position value
+// (e.g. 0.0387), scaled x100 here. Matches the "USD | PCT%" shape the dashboard's
+// parseMetric() already expects for netPnl.
+function usdPctText(n, pctFraction) {
+  const base = usdText(n);
+  if (base === '—' || pctFraction === null || pctFraction === undefined || !Number.isFinite(Number(pctFraction))) {
+    return base;
+  }
+  const pct = Number(pctFraction) * 100;
+  const sign = pct > 0 ? '+' : '';
+  return `${base} | ${sign}${pct.toFixed(2)}%`;
+}
+
 // A strategy freshly (re)attached to a chart, or just switched to a new symbol/timeframe,
 // takes a moment to finish recomputing across its whole bar history — reading reportData()
 // mid-recompute can catch a stale/incomplete snapshot. Poll a few times and require the same
@@ -248,7 +261,7 @@ export async function getStrategyPositionState({ study_filter } = {}) {
       signal: 'OPEN',
       entryTime: t?.e?.tm ? new Date(t.e.tm).toISOString() : null,
       entryPrice: t?.e?.p != null ? String(t.e.p) : '—',
-      netPnl: usdText(rd.openPL),
+      netPnl: usdPctText(rd.openPL, rd.openPLPercent),
       favorableExcursion: usdText(t?.rn?.v),
       adverseExcursion: usdText(t?.dd?.v != null ? -Math.abs(t.dd.v) : null),
       rawText: null,
@@ -261,7 +274,7 @@ export async function getStrategyPositionState({ study_filter } = {}) {
       signal: 'EXIT',
       entryTime: t.e?.tm ? new Date(t.e.tm).toISOString() : null,
       entryPrice: t.e?.p != null ? String(t.e.p) : '—',
-      netPnl: usdText(t.tp?.v),
+      netPnl: usdPctText(t.tp?.v, t.tp?.p),
       favorableExcursion: usdText(t.rn?.v),
       adverseExcursion: usdText(t.dd?.v != null ? -Math.abs(t.dd.v) : t.dd?.v),
       rawText: null,

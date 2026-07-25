@@ -1,0 +1,637 @@
+// This work is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+// https://creativecommons.org/licenses/by-nc-sa/4.0/
+// © BigBeluga — Strategy conversion
+
+//@version=6
+strategy("Swing Profile Strategy [BigBeluga]", overlay = true,
+     max_labels_count = 500, max_boxes_count = 500,
+     calc_bars_count = 2000, max_bars_back = 5000,
+     initial_capital = 10000,
+     default_qty_type = strategy.percent_of_equity,
+     // 95 rather than 100 to leave headroom for the 0.1% commission and for entry-bar gaps.
+     // Order size is computed from the signal bar's price but filled at the next bar's open; at
+     // 100% of equity any gap up (or the commission alone) makes the fill cost more cash than the
+     // account holds, and TradingView force-liquidates the shortfall as a "Margin call" exit.
+     // That produced 88 junk rows across 1485 trades — each a 1-8 share round trip closed on the
+     // entry bar at the entry price, costing only commission (-0.1998%, $14.82 in total).
+     // 5% headroom absorbs the commission plus a normal opening gap.
+     default_qty_value = 95,
+     pyramiding = 2,
+     commission_type = strategy.commission.percent,
+     commission_value = 0.1)
+
+
+// INPUTS ---------------------------------------------------------------------
+
+swingLen = input.int(50, "Swing Length", minval = 10)
+
+swingColorUp   = input.color(color.lime,   "▲", inline = "colors")
+swingColorDown = input.color(color.orange, "▼", inline = "colors")
+
+showProfile = input.bool(true,  "Profile",  group = "Swing Volume Profile")
+showHeatMap = input.bool(false, "HeatMap",  group = "Swing Volume Profile")
+
+showZigZag        = input.bool(true,     "ZigZag",  inline = "Zz")
+zigZagStyleInput  = input.string("Dotted", "",       ["Dotted", "Dashed", "Solid"], inline = "Zz")
+
+showPOC      = input.bool(true,       "PoC", "", inline = "Poc", group = "Point of Control")
+pocWidthInput = input.int(2,          "",    inline = "Poc", group = "Point of Control")
+pocColor     = input.color(color.red, "",    inline = "Poc", group = "Point of Control")
+
+transparentNA = color.new(color.black, 100)
+
+string dataSizeInput = input.string("Small", title = "Data Size", options = ["Tiny", "Small", "Normal", "Large", "Huge"])
+
+// Strategy settings
+tradeDirection = input.string("Long Only", "Trade Direction", options = ["Long Only", "Short Only", "Both"], group = "Strategy")
+exitOnFlip     = input.bool(true, "Exit on Direction Flip", group = "Strategy",
+     tooltip = "Close the current position when the swing direction reverses.")
+useConfirmedBarSignals = input.bool(false, "Use Confirmed-Bar Signals (A/B)", group = "Strategy",
+    tooltip = "OFF = current behavior (reacts on the active bar). ON = trade only on flips confirmed by the previous closed bar.")
+showABDiagnostics = input.bool(true, "Show A/B Diagnostics", group = "Strategy")
+
+
+// EXIT RULES (A/B) -----------------------------------------------------------
+// Both default OFF, so leaving them alone reproduces the original flip-only behaviour exactly.
+// Each fires with its own comment ("Time Stop" / "Stop Loss") so the exit reason lands in the
+// trade log's exit_signal column and the existing analysis can measure it directly.
+GRP_EXIT = "Exit Rules (A/B)"
+
+useTimeStop  = input.bool(false, "Time Stop", group = GRP_EXIT,
+     tooltip = "Close the position once it has been open this many bars. Measured on closed-trade " +
+               "history: expected return conditional on still holding turns negative at bar 50-60 on " +
+               "every timeframe, which matches the 50-bar Swing Length this strategy is built on.")
+timeStopBars = input.int(60, "    Bars in trade", minval = 5, maxval = 500, group = GRP_EXIT)
+timeStopOnlyIfLosing = input.bool(false, "    Only if position is losing", group = GRP_EXIT,
+     tooltip = "OFF = hard time limit. ON = only exit when the open position is underwater at that bar. " +
+               "Untested: long trades historically recover a long way from their worst point " +
+               "(avg 13.4% adverse excursion vs -2.5% final), so this variant may be worse than the hard limit.")
+
+useStopLoss  = input.bool(false, "Stop Loss", group = GRP_EXIT,
+     tooltip = "Percent stop from average entry price.")
+stopAutoByTf = input.bool(true, "    Auto level per timeframe", group = GRP_EXIT,
+     tooltip = "Uses the 95th percentile of WINNERS' adverse excursion for each timeframe - the level " +
+               "that spares 95% of historical winners: 15m 6%, 30m 13%, 45m 10%, 1H 12%, 2H 16%, " +
+               "3H 12%, 4H 16%, 1D 33%.")
+stopLossPct  = input.float(12.0, "    Manual stop %", minval = 0.5, maxval = 90, step = 0.5, group = GRP_EXIT)
+
+GRP_PYR = "Pyramid (A/B)"
+useDoPyramid = input.bool(false, "Pyramid Add", group = GRP_PYR,
+     tooltip = "Add to the position once it moves against entry by the level chosen in 'Add trigger' " +
+               "below. When ON, the BASE entry is automatically sized down to " +
+               "95/(1+add%) of equity (e.g. 76% at the default 25% add) so base + add together still " +
+               "total ~95% — leaving the base at the full 95% and adding on top would need 118.75% of " +
+               "equity, which fails margin on every add. Simulated on closed-trade history: alone this " +
+               "improved expectancy (+10%) and reduced trades below -10%/-20%, but combined with a stop " +
+               "it was worse than doing nothing and roughly tripled the tail, since the stop then " +
+               "realizes loss on the larger (125%) position. Test with Stop Loss OFF first.")
+addFracPct   = input.float(25.0, "    Add size % of original", minval = 5, maxval = 100, step = 5, group = GRP_PYR)
+pyrTrigMode  = input.string("Fixed per timeframe", "    Add trigger",
+     options = ["Fixed per timeframe", "% of symbol MAE"], group = GRP_PYR,
+     tooltip = "Fixed uses the same pooled per-timeframe level as the auto Stop Loss (15m 6%, 4H " +
+               "16.1%, 1D 32.5%). That level is a 95th percentile of WINNERS' excursion measured " +
+               "across ALL symbols, so on a symbol whose own moves are small it is never reached: " +
+               "at 15m only 15% of positions ever touched it, leaving 85% holding the add's idle " +
+               "cash reserve for nothing. '% of symbol MAE' instead tracks THIS symbol's own " +
+               "average adverse excursion as trades close and places the add at MAE trigger % of " +
+               "it — at 15m that lifts add fill rate from 15% to ~51%.")
+pyrMaePct    = input.float(75.0, "    MAE trigger %", minval = 10, maxval = 200, step = 5, group = GRP_PYR,
+     tooltip = "Fraction of the symbol's measured average MAE at which to add. 75 means add once " +
+               "price has given back three quarters of what a typical position on this symbol " +
+               "gives back. Lower = adds sooner, more often, at a smaller discount.")
+pyrMaeMinTrades = input.int(3, "    Min closed trades before adaptive", minval = 1, maxval = 50, group = GRP_PYR,
+     tooltip = "Until this symbol has closed this many positions there is no MAE sample to work " +
+               "from, so the fixed per-timeframe level is used instead. Kept low because 15m " +
+               "symbols only carry 9-22 closed trades in the backtest window — a high warmup " +
+               "would leave most of the sample running the fixed rule and dilute the comparison.")
+
+
+// HELPER FUNCTIONS -----------------------------------------------------------
+
+getLabelSize() =>
+    switch dataSizeInput
+        "Small"  => size.small
+        "Normal" => size.normal
+        "Large"  => size.large
+        "Huge"   => size.huge
+        => size.tiny
+
+getZigZagLineStyle() =>
+    switch zigZagStyleInput
+        "Dotted" => line.style_dotted
+        "Dashed" => line.style_dashed
+        "Solid"  => line.style_solid
+
+// Winners' 95th-percentile adverse excursion per timeframe, measured over 1,397 closed trades.
+// Placing the stop here spares 95% of trades that went on to win. Keyed off the chart's own
+// resolution so one setting works across every watchlist without per-symbol tuning.
+autoStopPct() =>
+    s = timeframe.in_seconds()
+    switch
+        s <= 900   =>  6.0   // 15m
+        s <= 1800  => 13.0   // 30m
+        s <= 2700  =>  9.7   // 45m
+        s <= 3600  => 12.0   // 1H
+        s <= 7200  => 15.7   // 2H
+        s <= 10800 => 12.2   // 3H
+        s <= 14400 => 16.1   // 4H
+        =>            32.5   // 1D and above
+
+
+// PERSISTENT STORAGE ---------------------------------------------------------
+
+var polyline profilePoly   = na
+var dataLabel = label(na)
+var pocLineHandle = line(na)
+var profileBoxes  = array.new<box>()
+
+type SwingData
+    float price
+    int   index
+
+var highSwing = SwingData.new(na, na)
+var lowSwing  = SwingData.new(na, na)
+
+// Direction flag: true = down move, false = up move
+var isDownMove = false
+
+
+// CALCULATIONS ---------------------------------------------------------------
+
+highestSwingHigh = ta.highest(swingLen)
+lowestSwingLow   = ta.lowest(swingLen)
+
+if high == highestSwingHigh
+    isDownMove := true
+if low == lowestSwingLow
+    isDownMove := false
+
+if high[1] == highestSwingHigh[1] and high < highestSwingHigh
+    highSwing.index := bar_index[1]
+    highSwing.price := high[1]
+
+if low[1] == lowestSwingLow[1] and low > lowestSwingLow
+    lowSwing.index := bar_index[1]
+    lowSwing.price := low[1]
+
+priceBinSize = ta.atr(200) * 0.5
+
+
+// STRATEGY ENTRIES / EXITS ---------------------------------------------------
+
+directionFlipped = isDownMove != isDownMove[1]
+
+// For A/B testing:
+// OFF -> current-bar flip behavior.
+// ON  -> previous-bar confirmed flip behavior (reduces intrabar repaint-like effects).
+strategyDirectionFlipped = useConfirmedBarSignals ? (bar_index > 1 and directionFlipped[1]) : directionFlipped
+strategyIsDownMove       = useConfirmedBarSignals ? isDownMove[1] : isDownMove
+
+var int  lastSignalBarIndex = na
+var int  lastSignalDir = 0   // -1 = short, +1 = long, 0 = none
+
+// When Pyramid Add is enabled, the base entry must be sized DOWN so base + add together still land
+// at the same ~95% headroom used everywhere else. Leaving the base at the global 95% (default_qty_value)
+// and adding 25% on top would need 118.75% of equity in total — over 100%, which margin_long/short =
+// 100 (cash-secured, no leverage) cannot supply. Solving for the price level at which the add becomes
+// affordable at 95% base sizing requires a ~79% drop, far beyond any real trigger level (6-32.5%), so
+// unfixed this would fail margin on every single add. 95/(1+addFracPct/100) reserves exactly enough:
+// checked against every timeframe's trigger level, the reduced base clears the actual margin
+// requirement with room to spare (post-add notional stays 5-10 points under available equity).
+basePct = useDoPyramid ? (95.0 / (1 + addFracPct / 100)) : 95.0
+baseQty = strategy.equity * (basePct / 100) / close
+
+if strategyDirectionFlipped
+    // isDownMove just turned true  → swing high confirmed → SHORT
+    // isDownMove just turned false → swing low confirmed  → LONG
+
+    if strategyIsDownMove
+        lastSignalBarIndex := bar_index
+        lastSignalDir := -1
+        if exitOnFlip
+            strategy.close("Long", comment = "Flip Short")
+        if tradeDirection == "Short Only" or tradeDirection == "Both"
+            strategy.entry("Short", strategy.short, qty = useDoPyramid ? baseQty : na, comment = "Swing High")
+    else
+        lastSignalBarIndex := bar_index
+        lastSignalDir := 1
+        if exitOnFlip
+            strategy.close("Short", comment = "Flip Long")
+        if tradeDirection == "Long Only" or tradeDirection == "Both"
+            strategy.entry("Long", strategy.long, qty = useDoPyramid ? baseQty : na, comment = "Swing Low")
+
+// EXIT RULES ------------------------------------------------------------------
+// Placed AFTER the flip logic so an entry made on this bar is visible to the position functions
+// below, and so a flip exit always takes precedence over these on the same bar.
+
+// Bars the current position has been open. entry_bar_index(0) is only valid while a trade is
+// open, so it is read inside the guard rather than in a ternary.
+var int openEntryBar = na
+if strategy.opentrades > 0
+    openEntryBar := strategy.opentrades.entry_bar_index(0)
+else
+    openEntryBar := na
+
+barsInTrade = na(openEntryBar) ? na : bar_index - openEntryBar
+
+if useTimeStop and strategy.opentrades > 0 and not na(barsInTrade) and barsInTrade >= timeStopBars
+    if not timeStopOnlyIfLosing or strategy.openprofit < 0
+        strategy.close_all(comment = "Time Stop")
+
+// Re-issued every bar so the level tracks the current average entry price; TradingView cancels it
+// automatically when the referenced entry closes.
+effStopPct = stopAutoByTf ? autoStopPct() : stopLossPct
+if useStopLoss and strategy.position_size != 0
+    avgEntry = strategy.position_avg_price
+    if strategy.position_size > 0
+        strategy.exit("SL-L", from_entry = "Long", stop = avgEntry * (1 - effStopPct / 100), comment = "Stop Loss")
+    else
+        strategy.exit("SL-S", from_entry = "Short", stop = avgEntry * (1 + effStopPct / 100), comment = "Stop Loss")
+
+// Per-symbol adverse-excursion tracker, feeding the adaptive add trigger below.
+//
+// Runs unconditionally so the sample is already warm whenever Pyramid Add is switched on. Only
+// positions that have CLOSED before the current bar contribute, so there is no lookahead.
+//
+// Three details that are easy to get wrong here:
+//   - A flip goes long -> short without position_size ever reading 0 on a bar boundary, and a flip
+//     is this strategy's dominant exit. Detecting a close by "position_size == 0" would therefore
+//     miss nearly every trade, so closes are detected by a change of SIGN instead.
+//   - Excursion is measured from the position's FIRST entry price, held in pyrPosEntry, not from
+//     strategy.position_avg_price. An add moves the average, and measuring against a yardstick the
+//     add itself shifted would understate the dip that triggered it.
+//   - The average is over whole positions, not tranches. reportData().trades[] lists each pyramid
+//     leg separately, so a stat built from closed-trade indices would mix short-lived add legs into
+//     a base-entry statistic; tracking the position directly sidesteps that entirely.
+var float pyrMaeSum   = 0.0
+var int   pyrMaeCount = 0
+var float pyrPosEntry = na
+var float pyrPosMae   = 0.0
+var float pyrPrevSign = 0.0
+
+pyrSign = math.sign(strategy.position_size)
+if pyrSign != pyrPrevSign
+    if pyrPrevSign != 0 and not na(pyrPosEntry)
+        pyrMaeSum   += pyrPosMae
+        pyrMaeCount += 1
+    pyrPosEntry := pyrSign != 0 ? strategy.position_avg_price : na
+    pyrPosMae   := 0.0
+    pyrPrevSign := pyrSign
+if pyrSign != 0 and not na(pyrPosEntry) and pyrPosEntry > 0
+    pyrAdverse = pyrSign > 0 ? (pyrPosEntry - low) / pyrPosEntry * 100 : (high - pyrPosEntry) / pyrPosEntry * 100
+    pyrPosMae := math.max(pyrPosMae, pyrAdverse)
+
+pyrAvgMae     = pyrMaeCount > 0 ? pyrMaeSum / pyrMaeCount : na
+pyrAdaptive   = pyrTrigMode == "% of symbol MAE" and pyrMaeCount >= pyrMaeMinTrades and not na(pyrAvgMae) and pyrAvgMae > 0
+pyrTriggerPct = pyrAdaptive ? pyrAvgMae * (pyrMaePct / 100) : autoStopPct()
+
+// Adds addFracPct% of the original position once price moves against entry by pyrTriggerPct. qty is
+// sized off the current position rather than left to default_qty_type's percent_of_equity, so the
+// add is a fixed fraction of the ORIGINAL tranche and does not drift with account equity over time.
+// opentrades == 1 caps it at one add, matching pyramiding = 2 in the strategy() declaration above.
+if useDoPyramid and strategy.position_size != 0 and strategy.opentrades == 1
+    avgEntryPyr = strategy.position_avg_price
+    addQty = math.abs(strategy.position_size) * (addFracPct / 100)
+    if strategy.position_size > 0 and low <= avgEntryPyr * (1 - pyrTriggerPct / 100)
+        strategy.entry("Long", strategy.long, qty = addQty, comment = "Pyramid Add")
+    else if strategy.position_size < 0 and high >= avgEntryPyr * (1 + pyrTriggerPct / 100)
+        strategy.entry("Short", strategy.short, qty = addQty, comment = "Pyramid Add")
+
+
+// A/B diagnostics for live monitoring.
+barsSinceSignal = na(lastSignalBarIndex) ? na : bar_index - lastSignalBarIndex
+modeLabel = useConfirmedBarSignals ? "Confirmed (prev bar)" : "Fast (active bar)"
+lastSignalLabel = lastSignalDir == -1 ? "Short" : lastSignalDir == 1 ? "Long" : "None"
+positionLabel = strategy.position_size > 0 ? "Long" : strategy.position_size < 0 ? "Short" : "Flat"
+
+if showABDiagnostics and barstate.islast
+    var label diagLabel = na
+    label.delete(diagLabel)
+    // The first four lines are a fixed contract: morning.js parses "Position:" from this label,
+    // and a secondary keyword scan matches the words Long/Short anywhere in the text — so appended
+    // lines must never contain them.
+    exitRuleLabel = (useTimeStop ? "TimeStop " + str.tostring(timeStopBars) + "b" + (timeStopOnlyIfLosing ? " (losing only)" : "") : "") +
+      (useTimeStop and useStopLoss ? " + " : "") +
+      (useStopLoss ? "SL " + str.tostring(effStopPct, "#.#") + "%" : "")
+
+    diagText = "Mode: " + modeLabel +
+      "\nLast signal: " + lastSignalLabel +
+      "\nBars since signal: " + str.tostring(barsSinceSignal) +
+      "\nPosition: " + positionLabel +
+      "\nBars in trade: " + (na(barsInTrade) ? "-" : str.tostring(barsInTrade)) +
+      "\nExit rules: " + (exitRuleLabel == "" ? "flip only" : exitRuleLabel) +
+      "\nPyramid: " + (useDoPyramid ? "add " + str.tostring(addFracPct, "#") + "% @ " + str.tostring(pyrTriggerPct, "#.##") + "%" +
+           (pyrTrigMode == "% of symbol MAE"
+                ? " [mae " + str.tostring(pyrMaePct, "#") + "% of " + str.tostring(nz(pyrAvgMae), "#.##") + "% n=" + str.tostring(pyrMaeCount) + (pyrAdaptive ? "" : " WARMUP") + "]"
+                : " [fixed]") : "off")
+    diagY = na(highSwing.price) ? high : highSwing.price
+    diagLabel := label.new(bar_index, diagY, diagText,
+      style = label.style_label_left,
+      color = color.new(color.black, 75),
+      textcolor = color.white,
+      textalign = text.align_left,
+      size = size.small)
+
+
+// HISTORICAL SWING LEG -------------------------------------------------------
+
+if directionFlipped
+
+    profilePoly.delete()
+    dataLabel.delete()
+    for b in profileBoxes
+        b.delete()
+    profileBoxes.clear()
+
+    swingMainColor = isDownMove ? swingColorDown : swingColorUp
+
+    if showZigZag
+        line.new(highSwing.index, highSwing.price, lowSwing.index, lowSwing.price,
+             color = swingMainColor, style = getZigZagLineStyle())
+
+    swingBottom = math.min(highSwing.price, lowSwing.price)
+    swingTop    = math.max(highSwing.price, lowSwing.price)
+
+    binCount = int(math.abs(highSwing.price - lowSwing.price) / priceBinSize)
+    binStep  = math.abs(highSwing.price - lowSwing.price) / binCount
+
+    lastSwingIndex = math.max(highSwing.index, lowSwing.index)
+    prevSwingIndex = math.min(highSwing.index, lowSwing.index)
+
+    volumeBins     = array.new<float>(binCount, 0.)
+    profilePoints  = array.new<chart.point>()
+    buyVolumeBins  = array.new<float>(binCount, 0.)
+    sellVolumeBins = array.new<float>(binCount, 0.)
+
+    barOffset = bar_index - lastSwingIndex
+
+    for i = barOffset to (lastSwingIndex - prevSwingIndex) + barOffset
+        candleClose = close[i]
+        candleOpen  = open[i]
+        candleVol   = volume[i]
+
+        for k = 0 to binCount - 1
+            binMidPrice = swingBottom + (k * binStep) + (binStep / 2)
+            if math.abs(binMidPrice - candleClose) < binStep
+                volumeBins.set(k, volumeBins.get(k) + candleVol)
+                if candleClose > candleOpen
+                    buyVolumeBins.set(k, buyVolumeBins.get(k) + candleVol)
+                else
+                    sellVolumeBins.set(k, sellVolumeBins.get(k) + candleVol)
+
+    for k = 0 to binCount - 1
+        binLow  = swingBottom + (k * binStep)
+        binHigh = binLow + binStep
+
+        volumeRatio  = volumeBins.get(k) / volumeBins.max()
+        profileWidth = int(volumeRatio * ((lastSwingIndex - prevSwingIndex) / 2))
+
+        if volumeRatio == 1 and showPOC
+            line.new(showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+                 math.avg(binLow, binHigh), lastSwingIndex, math.avg(binLow, binHigh),
+                 color = pocColor, width = pocWidthInput)
+
+        box.new(
+             showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+             binHigh,
+             showHeatMap ? lastSwingIndex : prevSwingIndex,
+             binLow,
+             transparentNA, 0,
+             bgcolor = showProfile or showHeatMap
+                  ? color.from_gradient(volumeRatio, 0, 1,
+                       color.new(swingMainColor, 90),
+                       color.new(volumeRatio == 1 and showPOC ? pocColor : swingMainColor, 50))
+                  : transparentNA,
+             text = showHeatMap ? "" : volumeRatio == 1 ? str.tostring(volumeBins.max(), format.volume) : "")
+
+        if k == 0
+            profilePoints.push(chart.point.from_index(prevSwingIndex, binLow))
+        profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binLow))
+        profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binHigh))
+        if k == binCount - 1
+            profilePoints.push(chart.point.from_index(prevSwingIndex, binHigh))
+
+    if showProfile
+        polyline.new(profilePoints, false, true,
+             line_color = showHeatMap ? color.new(swingMainColor, 50) : swingMainColor)
+
+    swingArrowText = isDownMove ? "▼" : "▲"
+    swingTooltip =
+          "Total Volume: "  + str.tostring(volumeBins.sum(),     format.volume)
+         + "\nBuy Volume: " + str.tostring(buyVolumeBins.sum(),  format.volume)
+         + "\nSell Volume: "+ str.tostring(sellVolumeBins.sum(), format.volume)
+         + "\nDelta Volume: "+ str.tostring(
+              (buyVolumeBins.sum() - sellVolumeBins.sum()) / volumeBins.sum() * 100,
+              format.percent)
+
+    label.new(prevSwingIndex, isDownMove ? swingTop : swingBottom, swingArrowText,
+         style    = isDownMove ? label.style_label_down : label.style_label_up,
+         color    = transparentNA,
+         textcolor = swingMainColor,
+         size     = getLabelSize(),
+         tooltip  = swingTooltip)
+
+
+// REAL-TIME SWING LEG --------------------------------------------------------
+
+if not isDownMove
+    for b in profileBoxes
+        b.delete()
+    profileBoxes.clear()
+
+    if barstate.islast
+        swingMainColor = chart.fg_color
+        line.delete(line.new(highSwing.index, highSwing.price, lowSwing.index, lowSwing.price,
+             color = swingMainColor, style = line.style_dashed)[1])
+
+        swingBottom = math.min(highSwing.price, lowSwing.price)
+        swingTop    = math.max(highSwing.price, lowSwing.price)
+        binCount    = int(math.abs(highSwing.price - lowSwing.price) / priceBinSize)
+        binStep     = math.abs(highSwing.price - lowSwing.price) / binCount
+
+        lastSwingIndex = math.max(highSwing.index, lowSwing.index)
+        prevSwingIndex = math.min(highSwing.index, lowSwing.index)
+
+        volumeBins     = array.new<float>(binCount, 0.)
+        profilePoints  = array.new<chart.point>()
+        buyVolumeBins  = array.new<float>(binCount, 0.)
+        sellVolumeBins = array.new<float>(binCount, 0.)
+        barOffset      = bar_index - lastSwingIndex
+
+        for i = barOffset to (lastSwingIndex - prevSwingIndex) + barOffset
+            candleClose = close[i]
+            candleOpen  = open[i]
+            candleVol   = volume[i]
+            for k = 0 to binCount - 1
+                binMidPrice = swingBottom + (k * binStep) + (binStep / 2)
+                if math.abs(binMidPrice - candleClose) < binStep
+                    volumeBins.set(k, volumeBins.get(k) + candleVol)
+                    if candleClose > candleOpen
+                        buyVolumeBins.set(k, buyVolumeBins.get(k) + candleVol)
+                    else
+                        sellVolumeBins.set(k, sellVolumeBins.get(k) + candleVol)
+
+        for k = 0 to binCount - 1
+            binLow  = swingBottom + (k * binStep)
+            binHigh = binLow + binStep
+            volumeRatio  = volumeBins.get(k) / volumeBins.max()
+            profileWidth = int(volumeRatio * ((lastSwingIndex - prevSwingIndex) / 2))
+
+            if volumeRatio == 1 and showPOC
+                pocLineHandle := line.new(showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+                     math.avg(binLow, binHigh), lastSwingIndex, math.avg(binLow, binHigh),
+                     color = pocColor, width = pocWidthInput)
+                line.delete(pocLineHandle[1])
+
+            profileBoxes.push(box.new(
+                 showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+                 binHigh,
+                 showHeatMap ? lastSwingIndex : prevSwingIndex,
+                 binLow,
+                 transparentNA, 0,
+                 bgcolor = showProfile or showHeatMap
+                      ? color.from_gradient(volumeRatio, 0, 1,
+                           color.new(swingMainColor, 90),
+                           color.new(volumeRatio == 1 and showPOC ? pocColor : swingMainColor, 50))
+                      : transparentNA,
+                 text = showHeatMap ? "" : volumeRatio == 1 ? str.tostring(volumeBins.max(), format.volume) : ""))
+
+            if k == 0
+                profilePoints.push(chart.point.from_index(prevSwingIndex, binLow))
+            profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binLow))
+            profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binHigh))
+            if k == binCount - 1
+                profilePoints.push(chart.point.from_index(prevSwingIndex, binHigh))
+
+        if showProfile
+            polyline.delete(profilePoly[1])
+            profilePoly := polyline.new(profilePoints, false, true,
+                 line_color = showHeatMap ? color.new(swingMainColor, 50) : swingMainColor)
+
+        swingTooltip  = "T - Total Volume\nB - Buy Volume\nS - Sell Volume\nD - Delta Volume"
+        swingDataText =
+              "T: " + str.tostring(volumeBins.sum(),     format.volume)
+             + "\nB: " + str.tostring(buyVolumeBins.sum(),  format.volume)
+             + "\nS: " + str.tostring(sellVolumeBins.sum(), format.volume)
+             + "\nD: " + str.tostring(
+                  (buyVolumeBins.sum() - sellVolumeBins.sum()) / volumeBins.sum() * 100,
+                  format.percent)
+
+        dataLabel := label.new(prevSwingIndex, not isDownMove ? swingTop : swingBottom, swingDataText,
+             style     = not isDownMove ? label.style_label_down : label.style_label_up,
+             color     = transparentNA,
+             textcolor = swingMainColor,
+             size      = getLabelSize(),
+             tooltip   = swingTooltip,
+             textalign = text.align_left)
+        label.delete(dataLabel[1])
+
+else
+    for b in profileBoxes
+        b.delete()
+    profileBoxes.clear()
+
+    if barstate.islast
+        swingMainColor = chart.fg_color
+        line.delete(line.new(highSwing.index, highSwing.price, lowSwing.index, lowSwing.price,
+             color = swingMainColor, style = line.style_dashed)[1])
+
+        swingBottom = math.min(highSwing.price, lowSwing.price)
+        swingTop    = math.max(highSwing.price, lowSwing.price)
+        binCount    = int(math.abs(highSwing.price - lowSwing.price) / priceBinSize)
+        binStep     = math.abs(highSwing.price - lowSwing.price) / binCount
+
+        lastSwingIndex = math.max(highSwing.index, lowSwing.index)
+        prevSwingIndex = math.min(highSwing.index, lowSwing.index)
+
+        volumeBins     = array.new<float>(binCount, 0.)
+        profilePoints  = array.new<chart.point>()
+        buyVolumeBins  = array.new<float>(binCount, 0.)
+        sellVolumeBins = array.new<float>(binCount, 0.)
+        barOffset      = bar_index - lastSwingIndex
+
+        for i = barOffset to (lastSwingIndex - prevSwingIndex) + barOffset
+            candleClose = close[i]
+            candleOpen  = open[i]
+            candleVol   = volume[i]
+            for k = 0 to binCount - 1
+                binMidPrice = swingBottom + (k * binStep) + (binStep / 2)
+                if math.abs(binMidPrice - candleClose) < binStep
+                    volumeBins.set(k, volumeBins.get(k) + candleVol)
+                    if candleClose > candleOpen
+                        buyVolumeBins.set(k, buyVolumeBins.get(k) + candleVol)
+                    else
+                        sellVolumeBins.set(k, sellVolumeBins.get(k) + candleVol)
+
+        for k = 0 to binCount - 1
+            binLow  = swingBottom + (k * binStep)
+            binHigh = binLow + binStep
+            volumeRatio  = volumeBins.get(k) / volumeBins.max()
+            profileWidth = int(volumeRatio * ((lastSwingIndex - prevSwingIndex) / 2))
+
+            if volumeRatio == 1 and showPOC
+                pocLineHandle := line.new(showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+                     math.avg(binLow, binHigh), lastSwingIndex, math.avg(binLow, binHigh),
+                     color = pocColor, width = pocWidthInput)
+                line.delete(pocLineHandle[1])
+
+            profileBoxes.push(box.new(
+                 showProfile ? prevSwingIndex + profileWidth : prevSwingIndex,
+                 binHigh,
+                 showHeatMap ? lastSwingIndex : prevSwingIndex,
+                 binLow,
+                 transparentNA, 0,
+                 bgcolor = showProfile or showHeatMap
+                      ? color.from_gradient(volumeRatio, 0, 1,
+                           color.new(swingMainColor, 90),
+                           color.new(volumeRatio == 1 and showPOC ? pocColor : swingMainColor, 50))
+                      : transparentNA,
+                 text = showHeatMap ? "" : volumeRatio == 1 ? str.tostring(volumeBins.max(), format.volume) : ""))
+
+            if k == 0
+                profilePoints.push(chart.point.from_index(prevSwingIndex, binLow))
+            profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binLow))
+            profilePoints.push(chart.point.from_index(prevSwingIndex + profileWidth, binHigh))
+            if k == binCount - 1
+                profilePoints.push(chart.point.from_index(prevSwingIndex, binHigh))
+
+        if showProfile
+            polyline.delete(profilePoly[1])
+            profilePoly := polyline.new(profilePoints, false, true,
+                 line_color = showHeatMap ? color.new(swingMainColor, 50) : swingMainColor)
+
+        swingTooltip  = "T - Total Volume\nB - Buy Volume\nS - Sell Volume\nD - Delta Volume"
+        swingDataText =
+              "T: " + str.tostring(volumeBins.sum(),     format.volume)
+             + "\nB: " + str.tostring(buyVolumeBins.sum(),  format.volume)
+             + "\nS: " + str.tostring(sellVolumeBins.sum(), format.volume)
+             + "\nD: " + str.tostring(
+                  (buyVolumeBins.sum() - sellVolumeBins.sum()) / volumeBins.sum() * 100,
+                  format.percent)
+
+        dataLabel := label.new(prevSwingIndex, not isDownMove ? swingTop : swingBottom, swingDataText,
+             style     = not isDownMove ? label.style_label_down : label.style_label_up,
+             color     = transparentNA,
+             textcolor = swingMainColor,
+             size      = getLabelSize(),
+             tooltip   = swingTooltip,
+             textalign = text.align_left)
+        label.delete(dataLabel[1])
+
+
+// MOVING AVERAGE -------------------------------------------------------------
+
+GRP = "Moving Average"
+maTypeInput   = input.string("None", "Type", options = ["None", "SMA", "EMA", "SMMA (RMA)", "WMA", "VWMA"], group = GRP, display = display.none)
+maLengthInput = input.int(25, "Length", group = GRP, display = display.none, active = maTypeInput != "None")
+src           = input(close, title = "Source", group = GRP, active = maTypeInput != "None")
+
+ma(source, length, MAtype) =>
+    switch MAtype
+        "SMA"        => ta.sma(source, length)
+        "EMA"        => ta.ema(source, length)
+        "SMMA (RMA)" => ta.rma(source, length)
+        "WMA"        => ta.wma(source, length)
+        "VWMA"       => ta.vwma(source, length)
+
+plot(ma(src, maLengthInput, maTypeInput), color = color.yellow, title = "MA")

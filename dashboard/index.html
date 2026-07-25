@@ -77,10 +77,63 @@
     body.ta-only-mode #prior-signals-card {
       display: none !important;
     }
+
+    /* ---- Tabs ---- */
+    .tabbar { display:flex; gap:6px; margin-bottom:16px; border-bottom:1px solid #24314f; flex-wrap:wrap; }
+    .tabbtn {
+      background:transparent; border:1px solid transparent; border-bottom:none;
+      color:#98a7c6; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;
+      border-radius:10px 10px 0 0; margin-bottom:-1px;
+    }
+    .tabbtn:hover { color:#e5eefc; background:#121a2b; }
+    .tabbtn.active { color:#e5eefc; background:#121a2b; border-color:#24314f; border-bottom:1px solid #121a2b; }
+
+    /* ---- Edge analysis ---- */
+    .metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:14px 0; }
+    .metric-box { background:#0f1728; border:1px solid #24314f; border-radius:12px; padding:12px 14px; }
+    .metric-box .mv { font-size:22px; font-weight:700; color:#e5eefc; }
+    .metric-box .ml { font-size:12px; color:#98a7c6; margin-top:2px; }
+    .bar-row { display:grid; grid-template-columns:56px 1fr 92px; align-items:center; gap:10px; margin:7px 0; }
+    .bar-track { background:#0f1728; border-radius:6px; height:22px; overflow:hidden; position:relative; border:1px solid #24314f; }
+    .bar-fill { height:100%; border-radius:5px 0 0 5px; transition:width .3s; }
+    .bar-pos { background:linear-gradient(90deg,#15803d,#4ade80); }
+    .bar-neg { background:linear-gradient(90deg,#7f1d1d,#f87171); }
+    .bar-val { text-align:right; font-family:monospace; font-size:13px; font-weight:700; }
+    .tf-label { font-weight:700; color:#e5eefc; font-size:13px; }
+    .rec-box { background:#0d1f2a; border:1px solid #164e63; border-left:4px solid #22d3ee; border-radius:10px; padding:14px 16px; margin:12px 0; }
+    .rec-box h3 { margin:0 0 8px; font-size:15px; color:#67e8f9; }
+    .rec-box p { margin:6px 0; line-height:1.55; }
+    .warn-box { background:#2a1f0d; border:1px solid #78350f; border-left:4px solid #f59e0b; border-radius:10px; padding:14px 16px; margin:12px 0; }
+    .warn-box h3 { margin:0 0 8px; font-size:15px; color:#fbbf24; }
+    .warn-box p { margin:6px 0; line-height:1.55; }
+    .num { font-family:monospace; text-align:right; }
+    .pos { color:#6ee7a8; } .neg { color:#fca5a5; } .dim { color:#98a7c6; }
+    .tag { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+    .tag-keep { background:#123524; color:#86efac; }
+    .tag-watch { background:#2a2410; color:#fcd34d; }
+    .tag-drop { background:#3a1520; color:#fca5a5; }
+    .tag-thin { background:#1e293b; color:#94a3b8; }
+    .edge-table-wrap { overflow-x:auto; }
+    .edge-table th { cursor:pointer; user-select:none; white-space:nowrap; }
+    .edge-table th:hover { color:#e5eefc; }
+    .edge-table td, .edge-table th { padding:7px 8px; font-size:13px; }
+    .filter-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:12px 0; }
+    .chip {
+      background:#1e293b; border:1px solid #334155; color:#98a7c6; border-radius:999px;
+      padding:5px 13px; font-size:12px; font-weight:600; cursor:pointer;
+    }
+    .chip.active { background:#0b6b3a; border-color:#15803d; color:#e5eefc; }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <div class="tabbar">
+      <button type="button" class="tabbtn active" data-pane="pane-signals">Signals</button>
+      <button type="button" class="tabbtn" data-pane="pane-edge">Edge Analysis</button>
+      <button type="button" class="tabbtn" data-pane="pane-portfolio">Portfolio Sim</button>
+    </div>
+
+    <div id="pane-signals" class="tabpane">
     <div id="regression-banner" class="hidden"></div>
     <div class="card">
       <h1>Current Signal</h1>
@@ -218,6 +271,175 @@
         <div id="ta-metrics-content" style="margin-top:16px;"></div>
       </details>
     </div>
+    </div><!-- /pane-signals -->
+
+    <div id="pane-edge" class="tabpane hidden">
+      <div class="card">
+        <h1>Edge Analysis</h1>
+        <p class="muted" style="margin:0 0 4px;">
+          Annualized return per unit of drawdown, computed from the closed-trade log
+          (<code>trade-log/trades-&lt;tf&gt;.csv</code>) plus live open P&amp;L and max drawdown.
+        </p>
+        <p class="muted" style="margin:0;font-size:12px;">
+          Timeframes cannot be compared on total return — TradingView loads a bounded bar count, so
+          a 15m chart spans months where a 1D chart spans years. Everything here is annualized.
+        </p>
+        <div class="filter-row" id="edge-rule-row">
+          <span class="control-label">Exit rule:</span>
+          <span id="edge-rule-chips"></span>
+          <span id="edge-rule-note" class="toggle-meta"></span>
+        </div>
+        <div class="filter-row">
+          <span class="control-label">Min closed trades:</span>
+          <select id="edge-min-trades" class="control-select" style="min-width:80px;padding:6px 8px;">
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="6">6</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+          </select>
+          <button id="edge-refresh" class="btn" type="button">Refresh</button>
+          <span id="edge-status" class="action-message" style="margin-top:0;"></span>
+        </div>
+        <div id="edge-empty" class="hidden">
+          <div class="warn-box">
+            <h3>No trades logged yet</h3>
+            <p>Run <code>node scripts/backfill_trade_log.js</code> to populate the log from every
+            watchlist symbol, or wait for the next scheduled scan to start filling it.</p>
+          </div>
+        </div>
+        <div id="edge-summary"></div>
+      </div>
+
+      <div class="card" id="edge-tf-card">
+        <h2>Timeframe Comparison <span class="muted" style="font-size:13px;font-weight:400;">(CAGR over each timeframe's full available history)</span></h2>
+        <p class="muted" style="margin:0 0 4px;">Median across symbols, so one hyperactive ticker can't
+        carry a timeframe. CAGR includes unrealized P&amp;L on open positions.</p>
+        <div id="edge-tf-bars"></div>
+        <div class="edge-table-wrap"><div id="edge-tf-table"></div></div>
+      </div>
+
+      <div class="card" id="edge-exit-card">
+        <h2>Exit Reasons</h2>
+        <p class="muted" style="margin:0 0 4px;">What actually closes trades — the direct test of whether
+        a stop ever fires, and where margin calls are happening.</p>
+        <div class="edge-table-wrap"><div id="edge-exit-table"></div></div>
+      </div>
+
+      <div class="card" id="edge-sym-card">
+        <h2>Symbol Ranking <span class="muted" style="font-size:13px;font-weight:400;">— by CAGR / max drawdown</span></h2>
+        <p class="muted" style="margin:0 0 4px;">
+          Every symbol on a given timeframe shares that timeframe's window, so ranking
+          <em>within</em> a timeframe is a clean like-for-like comparison — era differences cancel out.
+          Filter to one timeframe before picking candidates.
+        </p>
+        <div class="filter-row" id="edge-tf-chips"></div>
+        <p class="muted" style="margin:0 0 4px;font-size:12px;">Click any column header to sort.
+        Greyed rows fall below the min-trades threshold — ranked but not trustworthy.</p>
+        <div class="edge-table-wrap"><div id="edge-sym-table"></div></div>
+      </div>
+
+      <div class="card" id="edge-window-card">
+        <details>
+          <summary class="section-toggle">Reference · Same-Window Comparison
+            <span class="toggle-meta">secondary view — truncates slow timeframes to tiny samples</span></summary>
+          <p class="muted" style="margin:10px 0 4px;">
+            Restricts every timeframe to the same trailing window. Kept for reference only: it costs
+            the slower timeframes most of their data (1D falls to ~23 trades over 12 months, barely
+            one per symbol), so it is a weaker basis for selection than CAGR/DD over full history.
+            TradingView's bar limit means the longer histories simply do not exist at fast timeframes.
+          </p>
+          <div class="filter-row" id="edge-window-chips"></div>
+          <div id="edge-window-bars"></div>
+          <div class="edge-table-wrap"><div id="edge-window-table"></div></div>
+          <div class="edge-table-wrap" style="margin-top:16px;"><div id="edge-coverage-table"></div></div>
+        </details>
+      </div>
+    </div><!-- /pane-edge -->
+
+    <div id="pane-portfolio" class="tabpane hidden">
+      <div class="card">
+        <h1>Portfolio Simulation</h1>
+        <p class="muted" style="margin:0 0 4px;">
+          Replays the logged trades through a capacity-limited account. Position slots are a scarce
+          resource — a symbol with a great CAGR contributes nothing if its signals always arrive
+          while every slot is full, and portfolio drawdown depends on how many positions are losing
+          <em>at the same time</em>, which no per-symbol statistic captures.
+        </p>
+        <p class="muted" style="margin:0;font-size:12px;">
+          Reads <code>trade-log/*.csv</code> only — no TradingView connection needed.
+        </p>
+
+        <div class="controls" style="margin-top:14px;">
+          <div class="control-group">
+            <span class="control-label">Capital ($)</span>
+            <input id="ps-capital" class="control-input" type="number" value="100000" min="1000" step="1000" />
+          </div>
+          <div class="control-group">
+            <span class="control-label">Max positions</span>
+            <input id="ps-max" class="control-input" type="number" value="5" min="1" max="60" step="1" />
+          </div>
+          <div class="control-group">
+            <span class="control-label">Commission / trade ($)</span>
+            <input id="ps-commission" class="control-input" type="number" value="0" min="0" step="0.5" />
+          </div>
+          <div class="control-group">
+            <span class="control-label">Slot contention</span>
+            <select id="ps-priority" class="control-select">
+              <option value="chronological">First signal wins (realistic)</option>
+              <option value="rank">Higher CAGR/DD wins</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <button id="ps-run" class="btn btn-primary" type="button">Run Simulation</button>
+          </div>
+        </div>
+
+        <div class="filter-row" id="ps-rule-row">
+          <span class="control-label">Exit rule:</span>
+          <span id="ps-rule-chips"></span>
+          <span id="ps-rule-note" class="toggle-meta"></span>
+        </div>
+        <div class="filter-row">
+          <span class="control-label">Timeframes:</span>
+          <span id="ps-tf-chips"></span>
+        </div>
+        <div class="filter-row">
+          <span class="control-label">Symbols:</span>
+          <button type="button" class="chip" id="ps-sym-all">All</button>
+          <button type="button" class="chip" id="ps-sym-top20">Top 20 by CAGR/DD</button>
+          <span id="ps-sym-note" class="toggle-meta"></span>
+        </div>
+        <div id="ps-status" class="action-message"></div>
+        <div id="ps-warn"></div>
+        <div id="ps-metrics"></div>
+      </div>
+
+      <div class="card" id="ps-capital-card">
+        <h2>Capital Utilization <span class="muted" style="font-size:13px;font-weight:400;">(time-weighted, not event-count)</span></h2>
+        <p class="muted" style="margin:0 0 4px;">A slot count alone doesn't say how much of the calendar
+        it actually held — being full for an afternoon and full for six months look identical to a plain
+        event tally. This integrates position count and deployed capital over the actual elapsed time.</p>
+        <div id="ps-capital"></div>
+      </div>
+
+      <div class="card" id="ps-curve-card">
+        <h2>Equity Curve</h2>
+        <div id="ps-curve"></div>
+      </div>
+
+      <div class="card" id="ps-sweep-card">
+        <h2>Capacity Sweep</h2>
+        <p class="muted" style="margin:0 0 4px;">Same selection at different slot counts. Shows where
+        adding capacity stops helping — and where it starts hurting by diluting into weaker signals.</p>
+        <div id="ps-sweep"></div>
+      </div>
+
+      <div class="card" id="ps-detail-card">
+        <h2>Contribution &amp; Contention</h2>
+        <div class="edge-table-wrap"><div id="ps-detail"></div></div>
+      </div>
+    </div><!-- /pane-portfolio -->
   </div>
 
   <script>
@@ -284,6 +506,17 @@
       const cleaned = String(value || '').replace(/\s+ET$/i, '').trim();
       const parsed = Date.parse(cleaned);
       return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    // Ranks a timeframe string by minutes so groups can be ordered 15m -> 1D chronologically
+    // instead of alphabetically or by recency.
+    function timeframeRankMinutes(tf) {
+      const s = String(tf || '').toUpperCase();
+      if (s === 'D') return 1440;
+      if (s === 'W') return 1440 * 7;
+      if (s === 'M') return 1440 * 30;
+      const n = parseInt(s, 10);
+      return Number.isFinite(n) ? n : 999999;
     }
 
     function colorNum(n, s) {
@@ -379,10 +612,11 @@
 
       return `
         <tr style="border-bottom:2px solid #334466;background:#0d1525;font-weight:600;font-size:12px;color:#98a7c6;">
-          <td colspan="5" style="color:#98a7c6;padding:8px 8px;">Avg (${rows.length} open)</td>
+          <td colspan="4" style="color:#98a7c6;padding:8px 8px;">Avg (${rows.length} open)</td>
           <td>${fmtMetricAvg(avgPnlUsd, avgPnlPct)}</td>
           <td>${mfeCell}</td>
           <td>${maeCell}</td>
+          <td></td>
           <td></td>
         </tr>
       `;
@@ -401,7 +635,6 @@
           : '—';
         return `
           <tr class="row-open">
-            <td>${row.watchlistName || '—'}</td>
             <td>${row.symbol || '—'}</td>
             <td class="status-open">OPEN</td>
             <td>${row.entryTime || '—'}</td>
@@ -410,20 +643,163 @@
             <td>${mfe}</td>
             <td>${mae}</td>
             <td style="font-size:12px;line-height:1.6">${alertCell}</td>
+            <td>${buildWebhookCell(row)}</td>
           </tr>
         `;
       }).join('');
     }
 
+    /* ---------- Trade webhook (Railway executor) ---------- */
+    // Mirrors the payload TradingView's own watchlist alerts send, for the timeframes the 2-alert
+    // subscription limit cannot cover. The secret never reaches the browser — the server holds it
+    // and the UI only ever sends {symbol, side, timeframe, price, entryTime}.
+    let webhookConfig = { configured: false, enabledTimeframes: [], sent: {} };
+
+    function webhookTag(tf) {
+      const map = { '1':'1m','3':'3m','5':'5m','15':'15m','30':'30m','45':'45m','60':'1h','120':'2h','180':'3h','240':'4h','360':'6h','480':'8h','720':'12h' };
+      const raw = String(tf ?? '').trim();
+      if (map[raw]) return map[raw];
+      const u = raw.toUpperCase();
+      if (u === 'D' || u === '1D') return '1d';
+      if (u === 'W' || u === '1W') return '1w';
+      return raw.toLowerCase();
+    }
+
+    function webhookBareTicker(sym) {
+      const s = String(sym ?? '').trim();
+      const i = s.indexOf(':');
+      return i === -1 ? s : s.slice(i + 1);
+    }
+
+    function webhookSentKey(row) {
+      if (!row.entryTime) return null;
+      return `${webhookBareTicker(row.symbol)}|${webhookTag(row.timeframe)}|${row.entryTime}`;
+    }
+
+    function buildWebhookCell(row) {
+      if (!webhookConfig.configured) {
+        return '<span class="muted" style="font-size:11px;" title="Set TRADE_WEBHOOK_URL + TRADE_WEBHOOK_SECRET, or fill webhook.local.json">not configured</span>';
+      }
+      const key = webhookSentKey(row);
+      if (!key) {
+        // Entry time unknown means there is no stable dedupe key, so a send could be repeated on
+        // every refresh with no way to detect it. Refuse rather than risk a duplicate order.
+        return '<span class="muted" style="font-size:11px;" title="No entry time — cannot dedupe a send">—</span>';
+      }
+      const sent = webhookConfig.sent?.[key];
+      if (sent) {
+        const when = sent.at ? new Date(sent.at).toLocaleString() : '';
+        return `<span style="font-size:11px;color:#6ee7a8;" title="${sent.source || ''} @ ${when}">✓ sent ${sent.side || ''}</span>`;
+      }
+      const payload = {
+        symbol: webhookBareTicker(row.symbol),
+        side: String(row.side || '').toUpperCase() === 'SHORT' ? 'SHORT' : 'LONG',
+        timeframe: String(row.timeframe ?? ''),
+        price: row.entryPrice ?? '',
+        entryTime: row.entryTime,
+      };
+      return `<button type="button" class="btn webhook-send-btn" style="padding:3px 9px;font-size:11px;" data-payload='${JSON.stringify(payload).replace(/'/g, '&#39;')}'>Send</button>`;
+    }
+
+    async function loadWebhookConfig() {
+      try {
+        const resp = await fetch('/api/webhook-config');
+        const data = await resp.json();
+        if (data?.success) webhookConfig = data;
+      } catch { /* dashboard still works without it */ }
+    }
+
+    function wireWebhookButtons(container) {
+      container.querySelectorAll('.webhook-send-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          let payload;
+          try { payload = JSON.parse(btn.dataset.payload); } catch { return; }
+          if (!confirm(`Send ${payload.side} ${payload.symbol} (${webhookTag(payload.timeframe)}) @ ${payload.price} to the trade executor?\n\nThis places a real order.`)) return;
+          btn.disabled = true;
+          btn.textContent = 'Sending…';
+          try {
+            const resp = await fetch('/api/send-webhook', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            const data = await resp.json();
+            if (data?.success) {
+              btn.outerHTML = '<span style="font-size:11px;color:#6ee7a8;">✓ sent</span>';
+              await loadWebhookConfig();
+            } else {
+              btn.disabled = false;
+              btn.textContent = 'Retry';
+              btn.title = data?.error || 'Send failed';
+              alert(`Webhook failed: ${data?.error || 'unknown error'}`);
+            }
+          } catch (err) {
+            btn.disabled = false;
+            btn.textContent = 'Retry';
+            alert(`Webhook failed: ${err?.message || err}`);
+          }
+        });
+      });
+    }
+
+    function buildWebhookArmToggle(timeframe, watchlistName) {
+      if (!webhookConfig.configured) return '';
+      const tf = String(timeframe ?? '');
+      if (!tf) return '';
+      const armed = (webhookConfig.enabledTimeframes || []).includes(tf);
+      return `<label class="webhook-arm" style="font-size:11px;font-weight:500;display:inline-flex;align-items:center;gap:5px;margin-left:12px;color:${armed ? '#6ee7a8' : '#98a7c6'};cursor:pointer;"
+        title="When armed, the scheduled scan POSTs the trade webhook automatically for new OPEN signals on this timeframe">
+        <input type="checkbox" data-tf="${tf}" ${armed ? 'checked' : ''} style="cursor:pointer;" /> auto-send ${armed ? '(ARMED)' : ''}</label>`;
+    }
+
+    function wireWebhookArmToggles(container) {
+      // The toggle lives inside <summary>, where any click would otherwise also collapse/expand the
+      // group. Swallow it on the label so only the checkbox state changes.
+      container.querySelectorAll('.webhook-arm').forEach((label) => {
+        label.addEventListener('click', (e) => e.stopPropagation());
+      });
+      container.querySelectorAll('.webhook-arm input[type=checkbox]').forEach((cb) => {
+        cb.addEventListener('change', async () => {
+          const tf = cb.dataset.tf;
+          const enabled = cb.checked;
+          if (enabled && !confirm(`Arm auto-send for ${webhookTag(tf)}?\n\nEvery new OPEN signal on this timeframe will place a REAL order automatically on the next scheduled scan, with no further confirmation.`)) {
+            cb.checked = false;
+            return;
+          }
+          cb.disabled = true;
+          try {
+            const resp = await fetch('/api/webhook-toggle', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ timeframe: tf, enabled }),
+            });
+            const data = await resp.json();
+            if (data?.success) {
+              webhookConfig.enabledTimeframes = data.enabledTimeframes || [];
+              renderOpenTrades(lastOpenTrades);
+            } else {
+              cb.checked = !enabled;
+              alert(`Could not update: ${data?.error || 'unknown error'}`);
+            }
+          } catch (err) {
+            cb.checked = !enabled;
+            alert(`Could not update: ${err?.message || err}`);
+          } finally {
+            cb.disabled = false;
+          }
+        });
+      });
+    }
+
+    let lastOpenTrades = [];
+
     function renderOpenTrades(items) {
       const container = document.getElementById('open-trades');
       container.innerHTML = '';
-      const rows = [...(Array.isArray(items) ? items : [])]
-        .sort((a, b) => parseDisplayTimestamp(b.entryTime) - parseDisplayTimestamp(a.entryTime)
-          || String(a.watchlistName || '').localeCompare(String(b.watchlistName || ''))
-          || String(a.symbol || '').localeCompare(String(b.symbol || '')));
+      const allRows = Array.isArray(items) ? items : [];
+      lastOpenTrades = allRows;
 
-      if (!rows.length) {
+      if (!allRows.length) {
         const div = document.createElement('div');
         div.className = 'muted';
         div.textContent = 'No open trades across the tracked time frames.';
@@ -431,26 +807,82 @@
         return;
       }
 
-      const openSummary = buildOpenTradesSummaryRow(rows);
+      // Group by watchlist; within each group, sort by entry date descending.
+      const groups = new Map();
+      for (const row of allRows) {
+        const name = row.watchlistName || 'Unknown';
+        if (!groups.has(name)) groups.set(name, []);
+        groups.get(name).push(row);
+      }
+      for (const rows of groups.values()) {
+        rows.sort((a, b) => parseDisplayTimestamp(b.entryTime) - parseDisplayTimestamp(a.entryTime)
+          || String(a.symbol || '').localeCompare(String(b.symbol || '')));
+      }
+      // Order the groups themselves by timeframe ascending (15m -> 1D), not by recency.
+      const groupNames = [...groups.keys()].sort((a, b) => {
+        const aTf = timeframeRankMinutes(groups.get(a)[0]?.timeframe);
+        const bTf = timeframeRankMinutes(groups.get(b)[0]?.timeframe);
+        return aTf - bTf || a.localeCompare(b);
+      });
+
+      const openSummary = buildOpenTradesSummaryRow(allRows);
+      const groupCountLabel = `${groupNames.length} watchlist${groupNames.length === 1 ? '' : 's'}`;
+
+      const groupsHtml = groupNames.map((name) => {
+        const rows = groups.get(name);
+        const shouldCollapse = rows.length > 5;
+        const rowCountLabel = `${rows.length} open trade${rows.length === 1 ? '' : 's'}`;
+        const groupSummary = buildOpenTradesSummaryRow(rows);
+        const tableHtml = `
+          <table>
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Signal</th>
+                <th>Entry Date / Time</th>
+                <th>Entry Price</th>
+                <th>Net P&amp;L</th>
+                <th>Hist. MFE avg / max</th>
+                <th>Hist. MAE avg / max</th>
+                <th>Alert Levels (avg / max)</th>
+                <th>Trade Webhook</th>
+              </tr>
+              ${groupSummary || ''}
+            </thead>
+            <tbody>${buildOpenTradeRows(rows)}</tbody>
+          </table>
+        `;
+        return `
+          <details class="open-trades-group watchlist-section"${shouldCollapse ? '' : ' open'}>
+            <summary class="section-toggle">${name}<span class="toggle-meta">${rowCountLabel}</span>${buildWebhookArmToggle(rows[0]?.timeframe, name)}</summary>
+            ${tableHtml}
+          </details>
+        `;
+      }).join('');
+
       container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Watchlist</th>
-              <th>Symbol</th>
-              <th>Signal</th>
-              <th>Entry Date / Time</th>
-              <th>Entry Price</th>
-              <th>Net P&amp;L</th>
-              <th>Hist. MFE avg / max</th>
-              <th>Hist. MAE avg / max</th>
-              <th>Alert Levels (avg / max)</th>
-            </tr>
-            ${openSummary || ''}
-          </thead>
-          <tbody>${buildOpenTradeRows(rows)}</tbody>
-        </table>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <span class="muted" style="font-size:13px;">${allRows.length} open trade${allRows.length === 1 ? '' : 's'} across ${groupCountLabel}</span>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn" id="open-trades-expand-all" style="padding:4px 10px;font-size:12px;">Expand all</button>
+            <button type="button" class="btn" id="open-trades-collapse-all" style="padding:4px 10px;font-size:12px;">Collapse all</button>
+          </div>
+        </div>
+        ${openSummary ? `<table style="margin-top:0;margin-bottom:14px;"><tbody>${openSummary}</tbody></table>` : ''}
+        ${groupsHtml}
       `;
+
+      const expandBtn = document.getElementById('open-trades-expand-all');
+      const collapseBtn = document.getElementById('open-trades-collapse-all');
+      if (expandBtn) expandBtn.addEventListener('click', () => {
+        container.querySelectorAll('details.open-trades-group').forEach((d) => { d.open = true; });
+      });
+      if (collapseBtn) collapseBtn.addEventListener('click', () => {
+        container.querySelectorAll('details.open-trades-group').forEach((d) => { d.open = false; });
+      });
+
+      wireWebhookButtons(container);
+      wireWebhookArmToggles(container);
     }
 
     function renderPriorSignals(items) {
@@ -781,6 +1213,9 @@
       const res = await fetch('/api/status', { cache: 'no-store' });
       const data = await res.json();
       window.__latestDashboardStatus = data;
+      // Refreshed alongside status so the "✓ sent" markers reflect what the scheduled scan fired
+      // while the page was open, not just what was clicked in this browser session.
+      await loadWebhookConfig();
 
       // Always check scanRunning before the early-return guard — the clock must stop
       // even when updatedAt hasn't changed (e.g. cron-finished SSE was missed).
@@ -1220,6 +1655,744 @@
 
     // Polling backstop: catches any SSE or fs.watch misses (common on Windows).
     setInterval(() => refresh(false), 30_000);
+
+    /* =====================  EDGE ANALYSIS TAB  ===================== */
+
+    let edgeData = null;
+    let edgeTfFilter = 'all';
+    let edgeSort = { col: 'expectancyPct', dir: -1 };
+    let edgeLoaded = false;
+
+    document.querySelectorAll('.tabbtn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tabbtn').forEach((b) => b.classList.toggle('active', b === btn));
+        // Select panes by the shared class, not a hardcoded id list — an id list silently fails to
+        // reveal any pane added later, which is exactly how the Portfolio Sim tab shipped invisible.
+        document.querySelectorAll('.tabpane').forEach((p) => {
+          p.classList.toggle('hidden', p.id !== btn.dataset.pane);
+        });
+        // Deferred until first view: the analysis reads and compounds every logged trade, and
+        // most visits to this dashboard never open this tab.
+        if (btn.dataset.pane === 'pane-edge' && !edgeLoaded) loadEdgeAnalysis();
+        if (btn.dataset.pane === 'pane-portfolio' && !psLoaded) initPortfolioSim();
+      });
+    });
+
+    document.getElementById('edge-refresh').addEventListener('click', () => loadEdgeAnalysis());
+    document.getElementById('edge-min-trades').addEventListener('change', () => loadEdgeAnalysis());
+
+    const n1 = (v) => (Number.isFinite(v) ? v.toFixed(1) : '—');
+    const n2 = (v) => (Number.isFinite(v) ? v.toFixed(2) : '—');
+    const n0 = (v) => (Number.isFinite(v) ? Math.round(v).toString() : '—');
+    const cls = (v) => (v > 0 ? 'pos' : v < 0 ? 'neg' : 'dim');
+    // Hold days span sub-hour (15m scalps) to multi-week (1D swings), so a fixed decimal format
+    // reads wrong at one end or the other — switch units instead of just rounding.
+    const fmtHold = (d) => {
+      if (!Number.isFinite(d)) return '—';
+      if (d < 1) return Math.round(d * 24) + 'h';
+      if (d < 30) return d.toFixed(1) + 'd';
+      return (d / 30).toFixed(1) + 'mo';
+    };
+
+    // Exit-rule variant ("rule_type" in the trade log). Shared by both analysis tabs so they can
+    // never describe two different strategies at once. `null` = let the server pick the most-traded
+    // variant; the first response tells us what that resolved to.
+    let selectedRule = null;
+
+    function ruleParam() {
+      return selectedRule === null ? '' : `&rule=${encodeURIComponent(selectedRule)}`;
+    }
+
+    /**
+     * Render the variant selector. A single logged variant offers no real choice, so the chips are
+     * suppressed and only the label is shown — but it is always shown, because "which exit rule do
+     * these numbers describe" must never be implicit.
+     */
+    function renderRuleChips(chipsId, noteId, data, onPick) {
+      const chipsEl = document.getElementById(chipsId);
+      const noteEl = document.getElementById(noteId);
+      const variants = data?.ruleTypes || [];
+      if (!chipsEl || !noteEl) return;
+
+      if (variants.length <= 1) {
+        const only = variants[0];
+        chipsEl.innerHTML = only
+          ? `<span class="chip active" style="cursor:default;">${only.rule_type}</span>`
+          : '';
+        noteEl.textContent = only ? `${only.trades} trades · only variant logged` : '';
+        return;
+      }
+
+      const pooled = variants.reduce((n, v) => n + v.trades, 0);
+      chipsEl.innerHTML = variants.map((v) =>
+        `<button type="button" class="chip ${selectedRule === v.rule_type ? 'active' : ''}" data-rule="${v.rule_type}">${v.rule_type} <span class="muted">${v.trades}</span></button>`
+      ).join('') +
+        `<button type="button" class="chip ${selectedRule === 'all' ? 'active' : ''}" data-rule="all">All pooled <span class="muted">${pooled}</span></button>`;
+
+      const active = variants.find((v) => v.rule_type === selectedRule);
+      noteEl.textContent = selectedRule === 'all'
+        ? 'Pooled — mixes exit rules, not a single strategy'
+        : active
+          ? `${active.tickers} tickers · ${active.timeframes.join(', ')}`
+          : '';
+
+      chipsEl.querySelectorAll('.chip').forEach((c) => {
+        c.addEventListener('click', () => {
+          if (c.dataset.rule === selectedRule) return;
+          selectedRule = c.dataset.rule;
+          // Both tabs cache the edge payload; leaving it in place would let the other tab keep
+          // rendering the previous variant's numbers under the new variant's label.
+          edgeData = null;
+          edgeLoaded = false;
+          psLoaded = false;
+          // A Top-20 ticker list derived from another variant is not a valid selection here, since
+          // those rankings were measured under a different exit rule.
+          if (psTickers) {
+            psTickers = null;
+            document.getElementById('ps-sym-note').textContent = '';
+            document.getElementById('ps-sym-all').classList.add('active');
+            document.getElementById('ps-sym-top20').classList.remove('active');
+          }
+          onPick();
+        });
+      });
+    }
+
+    async function loadEdgeAnalysis() {
+      const statusEl = document.getElementById('edge-status');
+      statusEl.textContent = 'Loading…';
+      statusEl.classList.remove('action-message-error');
+      try {
+        const min = document.getElementById('edge-min-trades').value;
+        const resp = await fetch(`/api/edge-analysis?min=${encodeURIComponent(min)}${ruleParam()}`);
+        const data = await resp.json();
+        edgeLoaded = true;
+        // Adopt whatever the server resolved so the chips highlight the variant actually measured.
+        if (selectedRule === null && data.ruleType) selectedRule = data.ruleType;
+        renderRuleChips('edge-rule-chips', 'edge-rule-note', data, loadEdgeAnalysis);
+        if (!data.available) {
+          document.getElementById('edge-empty').classList.remove('hidden');
+          ['edge-tf-card', 'edge-sym-card', 'edge-exit-card'].forEach((id) => document.getElementById(id).classList.add('hidden'));
+          statusEl.textContent = data.reason === 'no_trades_for_rule_type'
+            ? `No trades logged for exit rule "${data.ruleType}" yet.`
+            : '';
+          return;
+        }
+        document.getElementById('edge-empty').classList.add('hidden');
+        ['edge-tf-card', 'edge-sym-card', 'edge-exit-card'].forEach((id) => document.getElementById(id).classList.remove('hidden'));
+        edgeData = data;
+        renderEdge();
+        const ruleLabel = data.ruleType ? `${data.ruleType} · ` : 'all variants pooled · ';
+        statusEl.textContent = `${ruleLabel}${data.totalClosedTrades} closed trades · updated ${new Date(data.generated_at).toLocaleTimeString()}`;
+      } catch (err) {
+        statusEl.textContent = `Failed: ${err.message}`;
+        statusEl.classList.add('action-message-error');
+      }
+    }
+
+    let edgeWindow = 12;
+
+    function renderEdge() {
+      renderEdgeSummary();
+      renderEdgeWindowChips();
+      renderEdgeWindow();
+      renderEdgeCoverage();
+      renderEdgeTfBars();
+      renderEdgeTfTable();
+      renderEdgeExitTable();
+      renderEdgeChips();
+      renderEdgeSymTable();
+    }
+
+    function renderEdgeWindowChips() {
+      const opts = Object.keys(edgeData.windows || {}).map(Number).sort((a, b) => a - b);
+      document.getElementById('edge-window-chips').innerHTML =
+        `<span class="control-label">Window:</span>` +
+        opts.map((m) => `<button type="button" class="chip ${edgeWindow === m ? 'active' : ''}" data-w="${m}">last ${m} months</button>`).join('');
+      document.querySelectorAll('#edge-window-chips .chip').forEach((c) => {
+        c.addEventListener('click', () => {
+          edgeWindow = Number(c.dataset.w);
+          renderEdgeWindowChips(); renderEdgeWindow();
+        });
+      });
+    }
+
+    function renderEdgeWindow() {
+      const list = (edgeData.windows || {})[edgeWindow] || [];
+      if (!list.length) {
+        document.getElementById('edge-window-bars').innerHTML = '';
+        document.getElementById('edge-window-table').innerHTML = '<p class="muted">No trades in this window.</p>';
+        return;
+      }
+      const maxV = Math.max(...list.map((t) => Math.abs(t.medianReturnPct)), 0.01);
+      document.getElementById('edge-window-bars').innerHTML = `
+        <p class="muted" style="margin:14px 0 6px;font-size:12px;font-weight:600;">
+          MEDIAN RETURN PER SYMBOL · LAST ${edgeWindow} MONTHS</p>
+        ${list.map((t) => {
+          const w = (Math.abs(t.medianReturnPct) / maxV) * 100;
+          return `<div class="bar-row">
+            <span class="tf-label">${t.tfDisplay}</span>
+            <div class="bar-track"><div class="bar-fill ${t.medianReturnPct >= 0 ? 'bar-pos' : 'bar-neg'}" style="width:${w}%"></div></div>
+            <span class="bar-val ${cls(t.medianReturnPct)}">${n1(t.medianReturnPct)}%</span>
+          </div>`;
+        }).join('')}`;
+
+      document.getElementById('edge-window-table').innerHTML = `
+        <table class="edge-table">
+          <thead><tr>
+            <th>TF</th><th class="num">syms</th><th class="num">trades</th>
+            <th class="num">median ret</th><th class="num">annualized</th>
+            <th class="num">win%</th><th class="num">PF</th>
+            <th class="num">profitable</th><th class="num">margin calls</th>
+          </tr></thead>
+          <tbody>${list.map((t) => `
+            <tr>
+              <td><strong>${t.tfDisplay}</strong></td>
+              <td class="num">${t.symbols}</td>
+              <td class="num">${t.trades}</td>
+              <td class="num ${cls(t.medianReturnPct)}"><strong>${n1(t.medianReturnPct)}%</strong></td>
+              <td class="num ${cls(t.annualizedPct)}">${n1(t.annualizedPct)}%</td>
+              <td class="num">${n0(t.winRate)}%</td>
+              <td class="num">${t.profitFactor === null ? '∞' : n2(t.profitFactor)}</td>
+              <td class="num">${t.profitableSymbols}/${t.symbols}</td>
+              <td class="num ${t.marginCalls ? 'neg' : 'dim'}">${t.marginCalls || '—'}</td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+    }
+
+    function renderEdgeCoverage() {
+      const cov = edgeData.coverage || [];
+      document.getElementById('edge-coverage-table').innerHTML = `
+        <p class="muted" style="margin:0 0 4px;font-size:12px;font-weight:600;">DATA COVERAGE</p>
+        <p class="muted" style="margin:0 0 8px;font-size:12px;">How far back the log actually reaches
+        per timeframe. A window longer than a timeframe's span silently compares partial data — check
+        here before trusting a long-window row.</p>
+        <table class="edge-table">
+          <thead><tr><th>TF</th><th class="num">trades</th><th class="num">earliest</th><th class="num">latest</th><th class="num">span</th></tr></thead>
+          <tbody>${cov.map((c) => `
+            <tr>
+              <td><strong>${c.tfDisplay}</strong></td>
+              <td class="num">${c.trades}</td>
+              <td class="num dim">${c.from}</td>
+              <td class="num dim">${c.to}</td>
+              <td class="num ${c.spanYears < 1 ? 'neg' : ''}">${n1(c.spanYears)}y</td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+    }
+
+    function renderEdgeSummary() {
+      const tfs = edgeData.timeframes.filter((t) => Number.isFinite(t.medianCagrDd));
+      const best = [...tfs].sort((a, b) => b.medianCagrDd - a.medianCagrDd)[0];
+      const worst = [...tfs].sort((a, b) => a.medianCagrDd - b.medianCagrDd)[0];
+      const qualified = edgeData.symbols.filter((s) => s.enoughData);
+      const totalMarginCalls = edgeData.timeframes.reduce((s, t) => s + (t.marginCalls || 0), 0);
+      const openDrag = edgeData.symbols.reduce((s, x) => s + (x.openPct || 0), 0);
+
+      // A CAGR built from only a few months of history is an extrapolation, not a measurement:
+      // compounding a short window magnifies noise. Surfaced up front so the ranking isn't
+      // read as more certain than it is.
+      const shortSpan = qualified.filter((s) => s.years < 1).length;
+
+      document.getElementById('edge-summary').innerHTML = `
+        <div class="metric-grid">
+          <div class="metric-box"><div class="mv">${edgeData.totalClosedTrades}</div><div class="ml">closed trades logged</div></div>
+          <div class="metric-box"><div class="mv">${qualified.length}</div><div class="ml">symbols with ≥${edgeData.minTrades} trades</div></div>
+          <div class="metric-box"><div class="mv pos">${best ? best.tfDisplay : '—'}</div><div class="ml">best CAGR/DD (${best ? n2(best.medianCagrDd) : '—'})</div></div>
+          <div class="metric-box"><div class="mv neg">${worst ? worst.tfDisplay : '—'}</div><div class="ml">worst CAGR/DD (${worst ? n2(worst.medianCagrDd) : '—'})</div></div>
+          <div class="metric-box"><div class="mv ${cls(-totalMarginCalls)}">${totalMarginCalls}</div><div class="ml">margin-call exits</div></div>
+          <div class="metric-box"><div class="mv ${cls(openDrag)}">${n0(openDrag)}%</div><div class="ml">unrealized drag (sum)</div></div>
+          <div class="metric-box"><div class="mv">${fmtHold(edgeData.medianHoldDays)}</div><div class="ml">median hold period (avg ${fmtHold(edgeData.avgHoldDays)})</div></div>
+        </div>
+        <div class="rec-box">
+          <h3>How to read this</h3>
+          <p><strong>Symbols are ranked by expectancy per trade</strong> (percentile within their own
+          timeframe), not CAGR/DD. Measured, not assumed: a walk-forward test (rank on the first half
+          of a symbol's history, score the second half) found CAGR/DD ranks slightly <em>worse</em>
+          than random — max drawdown over a handful of trades is mostly the luck of the worst one.
+          CAGR/DD is still shown per row and is the right lens for a whole <strong>portfolio's</strong>
+          equity path (see the Portfolio Sim tab's slot sweep); it just isn't fit for ranking one
+          symbol on a dozen trades.</p>
+          <p>Rank <strong>within a timeframe</strong>, not across. Expectancy scales with timeframe
+          (a 15m trade and a 1D trade are not the same size of bet), so within-timeframe comparison is
+          the only like-for-like one available.</p>
+          <p>Median hold period is shown alongside the mean because hold time is right-skewed — most
+          positions exit on a quick signal flip, but a few ride out much longer and pull the mean up.</p>
+        </div>
+        ${shortSpan > 0 ? `
+        <div class="warn-box">
+          <h3>${shortSpan} of ${qualified.length} symbols have under a year of history</h3>
+          <p>Annualizing a few months magnifies noise — a good 3-month run becomes a spectacular CAGR
+          that will not repeat. This does not distort ranking <em>within</em> a timeframe (all its
+          symbols share the same window), but treat the absolute CAGR of a short-span row as
+          indicative rather than predictive.</p>
+        </div>` : ''}
+        ${totalMarginCalls > 0 ? `
+        <div class="warn-box">
+          <h3>${totalMarginCalls} margin-call exits detected</h3>
+          <p>Margin calls fire on the <em>same bar as entry</em>, liquidating a token quantity — the
+          strategy is requesting more size than buying power allows. This is position sizing set at
+          ~100% of equity on leveraged ETFs, not a signal-quality problem.</p>
+        </div>` : ''}
+      `;
+    }
+
+    function renderEdgeTfBars() {
+      const tfs = edgeData.timeframes.filter((t) => Number.isFinite(t.medianCagrDd));
+      if (!tfs.length) { document.getElementById('edge-tf-bars').innerHTML = ''; return; }
+      const max = Math.max(...tfs.map((t) => Math.abs(t.medianCagrDd)), 0.01);
+      document.getElementById('edge-tf-bars').innerHTML = `
+        <p class="muted" style="margin:14px 0 6px;font-size:12px;font-weight:600;">MEDIAN CAGR / MAX DRAWDOWN</p>
+        ${tfs.map((t) => {
+          const w = (Math.abs(t.medianCagrDd) / max) * 100;
+          return `<div class="bar-row">
+            <span class="tf-label">${t.tfDisplay}</span>
+            <div class="bar-track"><div class="bar-fill ${t.medianCagrDd >= 0 ? 'bar-pos' : 'bar-neg'}" style="width:${w}%"></div></div>
+            <span class="bar-val ${cls(t.medianCagrDd)}">${n2(t.medianCagrDd)}</span>
+          </div>`;
+        }).join('')}
+        <p class="muted" style="margin:14px 0 6px;font-size:12px;font-weight:600;">MEDIAN CAGR %</p>
+        ${(() => {
+          const maxC = Math.max(...tfs.map((t) => Math.abs(t.medianCagr || 0)), 1);
+          return tfs.map((t) => {
+            const w = (Math.abs(t.medianCagr || 0) / maxC) * 100;
+            return `<div class="bar-row">
+              <span class="tf-label">${t.tfDisplay}</span>
+              <div class="bar-track"><div class="bar-fill ${(t.medianCagr || 0) >= 0 ? 'bar-pos' : 'bar-neg'}" style="width:${w}%"></div></div>
+              <span class="bar-val ${cls(t.medianCagr)}">${n1(t.medianCagr)}%</span>
+            </div>`;
+          }).join('');
+        })()}
+      `;
+    }
+
+    function renderEdgeTfTable() {
+      const rows = edgeData.timeframes.map((t) => `
+        <tr>
+          <td><strong>${t.tfDisplay}</strong></td>
+          <td class="num">${t.symbols}</td>
+          <td class="num">${t.trades}</td>
+          <td class="num">${n1(t.avgSpanYears)}y</td>
+          <td class="num ${cls(t.medianCagr)}"><strong>${n1(t.medianCagr)}%</strong></td>
+          <td class="num ${cls(t.medianCagrDd)}"><strong>${n2(t.medianCagrDd)}</strong></td>
+          <td class="num">${n1(t.avgMaxDD)}%</td>
+          <td class="num">${n0(t.winRate)}%</td>
+          <td class="num">${t.profitFactor === null ? '∞' : n2(t.profitFactor)}</td>
+          <td class="num">${n1(t.avgMfePct)}%</td>
+          <td class="num neg">${n1(t.avgMaePct)}%</td>
+          <td class="num">${fmtHold(t.medianHoldDays)}</td>
+          <td class="num ${cls(t.openDragPct)}">${n0(t.openDragPct)}%</td>
+          <td class="num">${t.profitableSymbols}/${t.symbols}</td>
+        </tr>`).join('');
+      document.getElementById('edge-tf-table').innerHTML = `
+        <table class="edge-table">
+          <thead><tr>
+            <th>TF</th><th class="num">syms</th><th class="num">trades</th><th class="num">span</th>
+            <th class="num">med CAGR</th><th class="num">CAGR/DD</th><th class="num">avg DD</th>
+            <th class="num">win%</th><th class="num">PF</th><th class="num">MFE</th><th class="num">MAE</th>
+            <th class="num">hold</th><th class="num">open drag</th><th class="num">profitable</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p class="muted" style="margin-top:8px;font-size:12px;">
+          PF here counts every closed loser in the denominator, unlike TradingView's own profit
+          factor which excludes still-open losers entirely.
+        </p>`;
+    }
+
+    function renderEdgeExitTable() {
+      const tfs = Object.keys(edgeData.exitReasons).sort(
+        (a, b) => (edgeData.timeframes.find((t) => t.timeframe === a)?.rank ?? 99) -
+                  (edgeData.timeframes.find((t) => t.timeframe === b)?.rank ?? 99));
+      const allReasons = [...new Set(Object.values(edgeData.exitReasons).flatMap((o) => Object.keys(o)))].sort();
+      const rows = tfs.map((tf) => {
+        const counts = edgeData.exitReasons[tf];
+        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+        const disp = edgeData.timeframes.find((t) => t.timeframe === tf)?.tfDisplay || tf;
+        return `<tr><td><strong>${disp}</strong></td>${allReasons.map((r) => {
+          const c = counts[r] || 0;
+          const pctv = total ? (c / total) * 100 : 0;
+          const isBad = /margin call/i.test(r);
+          return `<td class="num ${c === 0 ? 'dim' : isBad ? 'neg' : ''}">${c || '—'}${c ? `<br><span class="dim" style="font-size:11px;">${pctv.toFixed(0)}%</span>` : ''}</td>`;
+        }).join('')}<td class="num">${total}</td></tr>`;
+      }).join('');
+      document.getElementById('edge-exit-table').innerHTML = `
+        <table class="edge-table">
+          <thead><tr><th>TF</th>${allReasons.map((r) => `<th class="num">${r}</th>`).join('')}<th class="num">total</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    function renderEdgeChips() {
+      const tfs = edgeData.timeframes.map((t) => ({ v: t.timeframe, l: t.tfDisplay }));
+      document.getElementById('edge-tf-chips').innerHTML =
+        [{ v: 'all', l: 'All' }, ...tfs].map((t) =>
+          `<button type="button" class="chip ${edgeTfFilter === t.v ? 'active' : ''}" data-tf="${t.v}">${t.l}</button>`).join('');
+      document.querySelectorAll('#edge-tf-chips .chip').forEach((c) => {
+        c.addEventListener('click', () => { edgeTfFilter = c.dataset.tf; renderEdgeChips(); renderEdgeSymTable(); });
+      });
+    }
+
+    // Verdict is a RELATIVE call on expectancy within the symbol's own timeframe, not an absolute
+    // threshold on cagrDd. Two reasons, both measured: cagrDd ranks symbols slightly worse than
+    // random out-of-sample (see the sort comment in edge_analysis.js), and expectancy scales with
+    // timeframe, so any fixed cutoff would tag 15m rows weak and 4H rows strong regardless of
+    // merit. Anything too thin to rank stays "thin" rather than being judged on a noisy estimate.
+    function edgeVerdict(s) {
+      if (!s.rankable || s.years < 0.5) return { t: 'thin', c: 'tag-thin' };
+      if (s.expectancyPct <= 0) return { t: 'drop', c: 'tag-drop' };
+      if (s.expPercentile === null || s.expPercentile === undefined) return { t: 'watch', c: 'tag-watch' };
+      if (s.expPercentile >= 0.67) return { t: 'keep', c: 'tag-keep' };
+      if (s.expPercentile < 0.33) return { t: 'drop', c: 'tag-drop' };
+      return { t: 'watch', c: 'tag-watch' };
+    }
+
+    function renderEdgeSymTable() {
+      let list = edgeData.symbols.filter((s) => edgeTfFilter === 'all' || s.timeframe === edgeTfFilter);
+      const { col, dir } = edgeSort;
+      list = [...list].sort((a, b) => {
+        const av = a[col], bv = b[col];
+        if (av === null || av === undefined) return 1;
+        if (bv === null || bv === undefined) return -1;
+        if (typeof av === 'string') return av.localeCompare(bv) * dir;
+        return (av - bv) * dir;
+      });
+
+      const cols = [
+        ['ticker', 'Symbol', false], ['tfDisplay', 'TF', false], ['trades', 'n', true],
+        ['years', 'span', true], ['cagr', 'CAGR', true], ['cagrDd', 'CAGR/DD', true],
+        ['maxDDPct', 'maxDD', true], ['totalReturnPct', 'total', true], ['openPct', 'open', true],
+        ['winRate', 'win%', true], ['profitFactor', 'PF', true], ['expectancyPct', 'exp/trade', true],
+        ['avgMaePct', 'MAE', true], ['medianHoldDays', 'hold', true], ['marginCalls', 'MC', true],
+      ];
+
+      const rows = list.map((s) => {
+        const v = edgeVerdict(s);
+        return `<tr style="${s.enoughData ? '' : 'opacity:.5;'}">
+          <td><strong>${s.ticker}</strong></td>
+          <td>${s.tfDisplay}</td>
+          <td class="num">${s.trades}</td>
+          <td class="num">${n1(s.years)}y</td>
+          <td class="num ${cls(s.cagr)}"><strong>${n1(s.cagr)}%</strong></td>
+          <td class="num ${cls(s.cagrDd)}"><strong>${n2(s.cagrDd)}</strong></td>
+          <td class="num">${n1(s.maxDDPct)}%</td>
+          <td class="num ${cls(s.totalReturnPct)}">${n1(s.totalReturnPct)}%</td>
+          <td class="num ${cls(s.openPct)}">${s.openPct ? n1(s.openPct) + '%' : '—'}</td>
+          <td class="num">${n0(s.winRate)}%</td>
+          <td class="num">${s.profitFactor === null ? '∞' : n2(s.profitFactor)}</td>
+          <td class="num ${cls(s.expectancyPct)}">${n1(s.expectancyPct)}%</td>
+          <td class="num neg">${n1(s.avgMaePct)}%</td>
+          <td class="num" title="avg ${fmtHold(s.avgHoldDays)}">${fmtHold(s.medianHoldDays)}</td>
+          <td class="num ${s.marginCalls ? 'neg' : 'dim'}">${s.marginCalls || '—'}</td>
+          <td><span class="tag ${v.c}">${v.t}</span></td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('edge-sym-table').innerHTML = `
+        <table class="edge-table">
+          <thead><tr>${cols.map(([k, label, isNum]) =>
+            `<th class="${isNum ? 'num' : ''}" data-col="${k}">${label}${edgeSort.col === k ? (edgeSort.dir === -1 ? ' ▾' : ' ▴') : ''}</th>`).join('')}<th>verdict</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      document.querySelectorAll('#edge-sym-table th[data-col]').forEach((th) => {
+        th.addEventListener('click', () => {
+          const c = th.dataset.col;
+          edgeSort = { col: c, dir: edgeSort.col === c ? -edgeSort.dir : -1 };
+          renderEdgeSymTable();
+        });
+      });
+    }
+
+    /* =====================  PORTFOLIO SIM TAB  ===================== */
+
+    let psLoaded = false;
+    let psTfSelected = new Set();
+    let psTickers = null;       // null = all
+    let psAllTimeframes = [];
+    const usd = (v) => (Number.isFinite(v) ? '$' + Math.round(v).toLocaleString() : '—');
+
+    async function initPortfolioSim() {
+      psLoaded = true;
+      // The timeframe list and the Top-20 shortcut both come from the edge analysis, so the two
+      // tabs never disagree about what exists or what ranks well.
+      try {
+        const resp = await fetch(`/api/edge-analysis?min=4${ruleParam()}`);
+        const data = await resp.json();
+        if (selectedRule === null && data.ruleType) selectedRule = data.ruleType;
+        if (data.available) {
+          edgeData = edgeData || data;
+          psAllTimeframes = data.timeframes.map((t) => ({ v: t.timeframe, l: t.tfDisplay }));
+          psTfSelected = new Set(psAllTimeframes.map((t) => t.v));
+        }
+      } catch {}
+      renderPsTfChips();
+      runPortfolioSim();
+    }
+
+    function renderPsTfChips() {
+      document.getElementById('ps-tf-chips').innerHTML =
+        `<button type="button" class="chip ${psTfSelected.size === psAllTimeframes.length ? 'active' : ''}" data-all="1">All</button>` +
+        psAllTimeframes.map((t) => `<button type="button" class="chip ${psTfSelected.has(t.v) ? 'active' : ''}" data-tf="${t.v}">${t.l}</button>`).join('');
+      document.querySelectorAll('#ps-tf-chips .chip').forEach((c) => {
+        c.addEventListener('click', () => {
+          if (c.dataset.all) psTfSelected = new Set(psAllTimeframes.map((t) => t.v));
+          else {
+            const v = c.dataset.tf;
+            if (psTfSelected.has(v)) psTfSelected.delete(v); else psTfSelected.add(v);
+            if (psTfSelected.size === 0) psTfSelected = new Set(psAllTimeframes.map((t) => t.v));
+          }
+          renderPsTfChips();
+        });
+      });
+    }
+
+    document.getElementById('ps-run').addEventListener('click', () => runPortfolioSim());
+    document.getElementById('ps-sym-all').addEventListener('click', () => {
+      psTickers = null;
+      document.getElementById('ps-sym-note').textContent = 'all logged symbols';
+      document.getElementById('ps-sym-all').classList.add('active');
+      document.getElementById('ps-sym-top20').classList.remove('active');
+      runPortfolioSim();
+    });
+    document.getElementById('ps-sym-top20').addEventListener('click', async () => {
+      if (!edgeData) {
+        try { edgeData = await (await fetch(`/api/edge-analysis?min=5${ruleParam()}`)).json(); } catch { return; }
+      }
+      // One timeframe per ticker: the same name on two timeframes is one position plus commission.
+      // Ranked on expectancy PERCENTILE within each timeframe, not raw expectancy. This picker is
+      // inherently cross-timeframe, and raw expectancy scales with timeframe — 4H/1D trades are
+      // simply bigger — so ranking on it globally would return an all-slow-timeframe list
+      // regardless of merit, the mirror image of the fast-timeframe bias cagrDd used to impose
+      // (its old top 10 was almost entirely 15m-1H, including one symbol earning 0.57% a trade).
+      // Percentile asks "how good is this symbol against the ones it actually competes with",
+      // which is the question this list is used to answer.
+      const score = (s) => (s.expPercentile ?? -1);
+      const best = new Map();
+      for (const s of edgeData.symbols) {
+        if (!s.rankable || s.expectancyPct <= 0) continue;
+        const prev = best.get(s.ticker);
+        if (!prev || score(s) > score(prev)) best.set(s.ticker, s);
+      }
+      const top = [...best.values()].sort((a, b) => score(b) - score(a)).slice(0, 20);
+      psTickers = top.map((s) => s.ticker);
+      document.getElementById('ps-sym-note').textContent = `${psTickers.length} symbols: ${psTickers.join(', ')}`;
+      document.getElementById('ps-sym-top20').classList.add('active');
+      document.getElementById('ps-sym-all').classList.remove('active');
+      runPortfolioSim();
+    });
+
+    async function runPortfolioSim() {
+      const st = document.getElementById('ps-status');
+      st.textContent = 'Simulating…';
+      st.classList.remove('action-message-error');
+      const p = new URLSearchParams({
+        capital: document.getElementById('ps-capital').value || '100000',
+        maxPositions: document.getElementById('ps-max').value || '5',
+        commission: document.getElementById('ps-commission').value || '0',
+        priority: document.getElementById('ps-priority').value,
+        sweep: '1',
+      });
+      if (psTfSelected.size && psTfSelected.size < psAllTimeframes.length) p.set('timeframes', [...psTfSelected].join(','));
+      if (psTickers) p.set('tickers', psTickers.join(','));
+      if (selectedRule !== null) p.set('rule', selectedRule);
+      try {
+        const r = await (await fetch(`/api/portfolio-sim?${p}`)).json();
+        if (selectedRule === null && r.ruleType) selectedRule = r.ruleType;
+        renderRuleChips('ps-rule-chips', 'ps-rule-note', r, runPortfolioSim);
+        if (!r.available) {
+          st.textContent = r.reason === 'no_trades_in_selection' ? 'No trades match this selection.' : (r.error || 'Simulation unavailable.');
+          st.classList.add('action-message-error');
+          ['ps-metrics', 'ps-capital', 'ps-curve', 'ps-sweep', 'ps-detail', 'ps-warn'].forEach((id) => document.getElementById(id).innerHTML = '');
+          return;
+        }
+        const ruleLabel = r.ruleType ? `${r.ruleType} · ` : 'all variants pooled · ';
+        st.textContent = `${ruleLabel}${r.startAt} → ${r.endAt} (${r.years.toFixed(1)}y)`;
+        renderPsMetrics(r);
+        renderPsCurve(r);
+        renderPsSweep(r);
+        renderPsDetail(r);
+      } catch (err) {
+        st.textContent = `Failed: ${err.message}`;
+        st.classList.add('action-message-error');
+      }
+    }
+
+    function renderPsMetrics(r) {
+      document.getElementById('ps-metrics').innerHTML = `
+        <div class="metric-grid">
+          <div class="metric-box"><div class="mv ${cls(r.totalReturnPct)}">${usd(r.finalEquity)}</div><div class="ml">final equity</div></div>
+          <div class="metric-box"><div class="mv ${cls(r.cagr)}">${n1(r.cagr)}%</div><div class="ml">CAGR</div></div>
+          <div class="metric-box"><div class="mv neg">${n1(r.maxDrawdownPct)}%</div><div class="ml">max drawdown (realized)</div></div>
+          <div class="metric-box"><div class="mv ${cls(r.cagrDd)}">${n2(r.cagrDd)}</div><div class="ml">CAGR / DD</div></div>
+          <div class="metric-box"><div class="mv">${n1(r.totalReturnPct)}%</div><div class="ml">total return</div></div>
+          <div class="metric-box"><div class="mv ${r.fillRate < 50 ? 'neg' : ''}">${n0(r.fillRate)}%</div><div class="ml">signals filled</div></div>
+          <div class="metric-box"><div class="mv">${n0(r.winRate)}%</div><div class="ml">win rate</div></div>
+          <div class="metric-box"><div class="mv">${r.profitFactor === null ? '∞' : n2(r.profitFactor)}</div><div class="ml">profit factor</div></div>
+        </div>
+        <table class="edge-table" style="margin-top:4px;">
+          <tbody>
+            <tr><td class="dim">Signals taken / available</td><td class="num"><strong>${r.signalsTaken}</strong> / ${r.signalsAvailable}
+              &nbsp;<span class="dim">(${r.signalsSkipped} skipped — no free slot)</span></td></tr>
+            <tr><td class="dim">Trades per year</td><td class="num">${n1(r.tradesPerYear)}</td></tr>
+            <tr><td class="dim">Avg win / avg loss</td><td class="num"><span class="pos">${usd(r.avgWinUsd)}</span> / <span class="neg">${usd(r.avgLossUsd)}</span></td></tr>
+            <tr><td class="dim">Expectancy per trade</td><td class="num ${cls(r.expectancyUsd)}">${usd(r.expectancyUsd)}</td></tr>
+            <tr><td class="dim">Drawdown, MAE-based worst case</td><td class="num neg">${n1(r.maeDrawdownEst)}%</td></tr>
+            <tr><td class="dim">Margin-call rows excluded</td><td class="num">${r.marginCallsExcluded}</td></tr>
+          </tbody>
+        </table>`;
+      renderPsCapitalUtilization(r);
+
+      const warns = [];
+      if (r.fillRate < 50) {
+        warns.push(`<h3>Capacity is the binding constraint</h3>
+          <p>Only ${n0(r.fillRate)}% of signals could be taken — ${r.signalsSkipped} were skipped because every
+          slot was occupied. At this slot count you are not trading the strategy, you are trading a
+          near-arbitrary subset of it, chosen by arrival time. Check the Capacity Sweep below.</p>`);
+      }
+      if (r.maeDrawdownEst > r.maxDrawdownPct * 1.5) {
+        warns.push(`<h3>True drawdown is worse than the curve shows</h3>
+          <p>The equity curve is marked only at exits, so it cannot show pain felt while positions were
+          still open. Using each trade's logged MAE and assuming concurrent positions bottom together
+          gives ${n1(r.maeDrawdownEst)}% against the realized ${n1(r.maxDrawdownPct)}%. Reality sits between
+          the two — size for the higher number.</p>`);
+      }
+      warns.push(`<h3>Closed trades only</h3>
+        <p>Positions still open are absent from the log, and they are disproportionately losers — winners
+        close, losers ride. This simulation is therefore optimistic by an amount it cannot measure. The
+        open positions currently carrying −25% or worse are the ones missing here.</p>`);
+      document.getElementById('ps-warn').innerHTML = warns.map((w) => `<div class="warn-box">${w}</div>`).join('');
+    }
+
+    function renderPsCapitalUtilization(r) {
+      const cu = r.capitalUtilization;
+      const el = document.getElementById('ps-capital');
+      if (!cu) { el.innerHTML = '<p class="muted">Not available.</p>'; return; }
+      const maxPos = r.inputs.maxPositions;
+
+      const headline = `
+        <div class="metric-grid">
+          <div class="metric-box"><div class="mv">${n1(cu.avgCapitalDeployedPct)}%</div><div class="ml">capital deployed, avg</div></div>
+          <div class="metric-box"><div class="mv">${n1(cu.avgCashPct)}%</div><div class="ml">sitting in cash, avg</div></div>
+          <div class="metric-box"><div class="mv">${n1(cu.avgPositionsOpen)} / ${maxPos}</div><div class="ml">positions open, avg</div></div>
+          <div class="metric-box"><div class="mv">${n1(cu.fullyIdlePct)}%</div><div class="ml">time fully idle (0 open)</div></div>
+          <div class="metric-box"><div class="mv">${n1(cu.fullyDeployedPct)}%</div><div class="ml">time fully deployed (${maxPos}/${maxPos})</div></div>
+        </div>`;
+
+      // Occupancy distribution: % of calendar time spent holding exactly k positions, k = 0..maxPositions.
+      const dist = cu.timeAtOccupancyPct;
+      const maxPct = Math.max(...dist, 0.001);
+      const bars = dist.map((pct, k) => `<div class="bar-row">
+          <span class="tf-label">${k}</span>
+          <div class="bar-track"><div class="bar-fill bar-pos" style="width:${(pct / maxPct) * 100}%"></div></div>
+          <span class="bar-val">${n1(pct)}%</span>
+        </div>`).join('');
+
+      el.innerHTML = headline + `
+        <p class="muted" style="margin:14px 0 4px;font-size:12px;">% OF CALENDAR TIME AT EACH POSITION COUNT</p>
+        ${bars}`;
+    }
+
+    // Inline SVG rather than a chart library: the CSP on this page blocks external scripts, and a
+    // line + drawdown shading is not worth a bundled dependency.
+    function renderPsCurve(r) {
+      const c = r.equityCurve;
+      if (!c || c.length < 2) { document.getElementById('ps-curve').innerHTML = '<p class="muted">Not enough points.</p>'; return; }
+      const W = 1000, H = 300, PAD = 46;
+      const t0 = c[0].t, t1 = c[c.length - 1].t;
+      const eqs = c.map((p) => p.equity);
+      const lo = Math.min(...eqs, r.inputs.capital), hi = Math.max(...eqs);
+      const x = (t) => PAD + ((t - t0) / Math.max(t1 - t0, 1)) * (W - PAD - 12);
+      const y = (v) => H - PAD - ((v - lo) / Math.max(hi - lo, 1)) * (H - PAD - 14);
+
+      // Running peak, so the shaded band is literally the underwater region.
+      let peak = -Infinity;
+      const peaks = c.map((p) => { peak = Math.max(peak, p.equity); return { t: p.t, v: peak }; });
+      const line = c.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.equity).toFixed(1)}`).join(' ');
+      const band = peaks.map((p, i) => `${i ? 'L' : 'M'}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ') +
+        ' ' + [...c].reverse().map((p) => `L${x(p.t).toFixed(1)},${y(p.equity).toFixed(1)}`).join(' ') + ' Z';
+      const ticks = 5;
+      const gridY = Array.from({ length: ticks + 1 }, (_, i) => lo + ((hi - lo) * i) / ticks);
+      const yr = (ms) => new Date(ms).toISOString().slice(0, 7);
+
+      document.getElementById('ps-curve').innerHTML = `
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;margin-top:8px;">
+          ${gridY.map((v) => `<line x1="${PAD}" y1="${y(v).toFixed(1)}" x2="${W - 12}" y2="${y(v).toFixed(1)}" stroke="#24314f" stroke-width="1"/>
+            <text x="${PAD - 6}" y="${(y(v) + 4).toFixed(1)}" fill="#98a7c6" font-size="11" text-anchor="end">${Math.round(v / 1000)}k</text>`).join('')}
+          <line x1="${PAD}" y1="${y(r.inputs.capital).toFixed(1)}" x2="${W - 12}" y2="${y(r.inputs.capital).toFixed(1)}" stroke="#64748b" stroke-width="1" stroke-dasharray="4,4"/>
+          <path d="${band}" fill="rgba(248,113,113,.16)" stroke="none"/>
+          <path d="${line}" fill="none" stroke="#4ade80" stroke-width="2"/>
+          <text x="${PAD}" y="${H - 14}" fill="#98a7c6" font-size="11">${yr(t0)}</text>
+          <text x="${W - 12}" y="${H - 14}" fill="#98a7c6" font-size="11" text-anchor="end">${yr(t1)}</text>
+        </svg>
+        <p class="muted" style="font-size:12px;margin:6px 0 0;">
+          Green = equity at each exit. Red shading = drawdown from the running peak. Dashed line = starting
+          capital. Marked only at exits, so intra-trade dips are invisible here.
+        </p>`;
+    }
+
+    function renderPsSweep(r) {
+      const s = r.sweep || [];
+      if (!s.length) { document.getElementById('ps-sweep').innerHTML = ''; return; }
+      const best = s.reduce((a, b) => ((b.cagrDd ?? -Infinity) > (a.cagrDd ?? -Infinity) ? b : a), s[0]);
+      const maxRatio = Math.max(...s.map((x) => Math.abs(x.cagrDd ?? 0)), 0.01);
+      document.getElementById('ps-sweep').innerHTML = `
+        ${s.map((x) => {
+          const w = (Math.abs(x.cagrDd ?? 0) / maxRatio) * 100;
+          const isBest = x.maxPositions === best.maxPositions;
+          return `<div class="bar-row">
+            <span class="tf-label">${x.maxPositions} slot${x.maxPositions > 1 ? 's' : ''}</span>
+            <div class="bar-track"><div class="bar-fill ${(x.cagrDd ?? 0) >= 0 ? 'bar-pos' : 'bar-neg'}" style="width:${w}%"></div></div>
+            <span class="bar-val ${cls(x.cagrDd)}">${n2(x.cagrDd)}${isBest ? ' ★' : ''}</span>
+          </div>`;
+        }).join('')}
+        <div class="edge-table-wrap"><table class="edge-table">
+          <thead><tr><th class="num">slots</th><th class="num">CAGR</th><th class="num">maxDD</th>
+            <th class="num">CAGR/DD</th><th class="num">final equity</th><th class="num">fill%</th>
+            <th class="num">taken</th><th class="num">skipped</th><th class="num">win%</th></tr></thead>
+          <tbody>${s.map((x) => `
+            <tr style="${x.maxPositions === best.maxPositions ? 'background:rgba(34,197,94,.12);' : ''}">
+              <td class="num"><strong>${x.maxPositions}</strong></td>
+              <td class="num ${cls(x.cagr)}">${n1(x.cagr)}%</td>
+              <td class="num neg">${n1(x.maxDrawdownPct)}%</td>
+              <td class="num ${cls(x.cagrDd)}"><strong>${n2(x.cagrDd)}</strong></td>
+              <td class="num">${usd(x.finalEquity)}</td>
+              <td class="num ${x.fillRate < 50 ? 'neg' : ''}">${n0(x.fillRate)}%</td>
+              <td class="num">${x.signalsTaken}</td>
+              <td class="num dim">${x.signalsSkipped}</td>
+              <td class="num">${n0(x.winRate)}%</td>
+            </tr>`).join('')}</tbody>
+        </table></div>
+        <p class="muted" style="font-size:12px;margin-top:8px;">
+          ★ best CAGR/DD. More slots cut drawdown through diversification but dilute into weaker signals,
+          so the ratio usually peaks in the middle rather than at either extreme.
+        </p>`;
+    }
+
+    function renderPsDetail(r) {
+      const contrib = (r.perSymbol || []).slice(0, 25);
+      const contention = Object.entries(r.skippedByKey || {}).sort((a, b) => b[1] - a[1]).slice(0, 25);
+      const occ = Object.entries(r.occupancy || {}).sort((a, b) => Number(a[0]) - Number(b[0]));
+      const occTotal = occ.reduce((s, [, v]) => s + v, 0);
+      document.getElementById('ps-detail').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
+          <div>
+            <p class="muted" style="margin:0 0 6px;font-size:12px;font-weight:600;">TOP CONTRIBUTORS (P&amp;L)</p>
+            <table class="edge-table"><thead><tr><th>Symbol</th><th>TF</th><th class="num">trades</th><th class="num">P&amp;L</th><th class="num">win%</th></tr></thead>
+            <tbody>${contrib.map((s) => `<tr><td><strong>${s.ticker}</strong></td><td>${s.timeframe}</td>
+              <td class="num">${s.trades}</td><td class="num ${cls(s.pnlUsd)}">${usd(s.pnlUsd)}</td>
+              <td class="num">${n0((s.wins / s.trades) * 100)}%</td></tr>`).join('')}</tbody></table>
+          </div>
+          <div>
+            <p class="muted" style="margin:0 0 6px;font-size:12px;font-weight:600;">MOST-SKIPPED SIGNALS (lost to contention)</p>
+            <table class="edge-table"><thead><tr><th>Symbol|TF</th><th class="num">skipped</th></tr></thead>
+            <tbody>${contention.map(([k, v]) => `<tr><td>${k}</td><td class="num neg">${v}</td></tr>`).join('')}</tbody></table>
+            <p class="muted" style="margin:8px 0 6px;font-size:12px;font-weight:600;">SLOT OCCUPANCY (at exits)</p>
+            <table class="edge-table"><thead><tr><th class="num">open</th><th class="num">observations</th><th class="num">share</th></tr></thead>
+            <tbody>${occ.map(([k, v]) => `<tr><td class="num">${k}</td><td class="num">${v}</td>
+              <td class="num">${n0((v / occTotal) * 100)}%</td></tr>`).join('')}</tbody></table>
+          </div>
+        </div>`;
+    }
   </script>
 </body>
 </html>

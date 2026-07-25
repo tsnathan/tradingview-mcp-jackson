@@ -1,40 +1,49 @@
 {
   "strategy": "Swing Profile Strategy [BigBeluga]",
-
-  "watchlist": ["SOXL", "BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "SPY", "QQQ", "NVDA"],
-
+  "watchlist": [
+    "SOXL",
+    "BTCUSD",
+    "ETHUSD",
+    "SOLUSD",
+    "XRPUSD",
+    "SPY",
+    "QQQ",
+    "NVDA"
+  ],
   "default_timeframe": "30",
-
   "chart": {
     "primary_symbol": "BATS:SOXL",
     "primary_timeframe": "30",
     "exit_mode": "Trail Only",
     "trail_method": "Percent",
-    "trail_pct": 2.0,
+    "trail_pct": 2,
     "trade_direction": "Long Only"
   },
   "schedule": {
-  "disabled": false
+    "disabled": false
   },
-
   "watchlists": {
-    "Swing 15m":   "15",
+    "Swing 15m": "15",
     "Swing 30m": "30",
     "Swing 45m": "45",
-    "Swing 1H":    "60",
-    "Swing 2H":    "120",
-    "Swing 3H":    "180",
-    "Swing 4H":    "240",
-    "Swing 1D":    "D"
+    "Swing 1H": "60",
+    "Swing 2H": "120",
+    "Swing 3H": "180",
+    "Swing 4H": "240",
+    "Swing 1D": "D"
   },
-
   "baseline_file": "C:/Users/tsnat/tradingview-mcp-jackson/swing-signal-baseline.json",
-
   "market_hours": {
     "timezone": "America/New_York",
     "open": "09:30",
     "close": "16:00",
-    "days": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+    "days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri"
+    ],
     "holidays": [
       "2026-01-01",
       "2026-01-19",
@@ -48,7 +57,6 @@
       "2026-12-25"
     ]
   },
-
   "bias_criteria": {
     "bullish": [
       "Swing Profile shows Long signal (▲ label) on 1H or 4H",
@@ -68,7 +76,6 @@
       "Price consolidating inside a profile zone (no clear breakout)"
     ]
   },
-
   "risk_rules": [
     "Only take trades where R:R is at least 1:2",
     "No trading in the first 15 minutes of the NY session open (9:30 AM ET)",
@@ -77,11 +84,17 @@
     "Use trailing stop exit — Trail % = 2.0 (Percent method)",
     "Exit mode: Trail Only — do NOT exit on direction flip alone"
   ],
-
-  "trail_sweep_values": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0],
-
+  "trail_sweep_values": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    10
+  ],
   "partial_flip_pct": 50,
-
   "morning_brief_format": {
     "include": [
       "Current price and % change for primary symbol (SOXL)",
@@ -94,13 +107,15 @@
       "Best trail % from sweep table (highest win rate)"
     ]
   },
-
   "ntfy": {
     "topic": "swing-signals-tsnat",
     "url": "https://ntfy.sh/swing-signals-tsnat",
     "priority": "high",
     "signal_format": "[{timeframe}] {symbol} → {direction} @ {price}"
   },
-
-  "notes": "Swing Profile Strategy [BigBeluga] modified to use trailing stop exit. IS/OOS split 66/34 visible on chart (bottom-right table). Parameter sweep testing 8 trail % values simultaneously (top-right table). Pine script: C:/Users/tsnat/tradingview-mcp-jackson/swing-profile-trailing.pine"
+  "notes": "Swing Profile Strategy [BigBeluga] modified to use trailing stop exit. IS/OOS split 66/34 visible on chart (bottom-right table). Parameter sweep testing 8 trail % values simultaneously (top-right table). Pine script: C:/Users/tsnat/tradingview-mcp-jackson/swing-profile-trailing.pine",
+  "webhook": {
+    "group": "swing",
+    "enabled_timeframes": []
+  }
 }

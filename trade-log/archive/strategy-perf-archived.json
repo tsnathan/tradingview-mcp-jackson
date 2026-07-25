@@ -1,0 +1,15 @@
+{
+  "NFLX|4h": {
+    "maxDDPercent": 0.43005086896206723,
+    "openPLPercent": -0.2508052792138551,
+    "openPL": -2823.8700000000003,
+    "netProfitPercent": 0.12592127600000022,
+    "netProfit": 1259.2127600000022,
+    "totalTrades": 11,
+    "sharpe": -0.07099039598477147,
+    "sortino": -0.07904888563780037,
+    "symbol": "NASDAQ:NFLX",
+    "watchlist": "ADHOC-TEST",
+    "updated_at": "2026-07-25T01:12:50.952Z"
+  }
+}

@@ -4,3 +4,15 @@ scripts/current.pine
 temp_*
 *.log
 discovery-log.json
+
+# Trade-execution webhook URL + shared secret. Never commit these: rules.json is tracked,
+# so credentials live here (or in TRADE_WEBHOOK_URL / TRADE_WEBHOOK_SECRET) instead.
+webhook.local.json
+
+# Claude Code's own local session state (permission allow-lists, scheduler lock file) — machine-
+# local, not project source.
+.claude/
+
+# One-off manual safety copies made before risky operations; git history is the real backup.
+*.backup-*
+trade-log/*.pre-*

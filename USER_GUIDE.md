@@ -325,6 +325,67 @@ Reads the currently-visible TradingView watchlist panel and writes its symbols i
 
 Make sure the correct watchlist is visible in TradingView before running. Omit the name to use whatever watchlist is currently active.
 
+### Closed-trade log (per timeframe)
+
+Every scan writes the strategy's closed trades to a CSV per timeframe under `trade-log/`:
+
+```
+trade-log/trades-15m.csv
+trade-log/trades-30m.csv
+trade-log/trades-1h.csv
+trade-log/trades-3h.csv
+trade-log/trades-4h.csv
+trade-log/trades-1d.csv
+```
+
+Rows are deduplicated by exit rule + ticker + timeframe + entry timestamp + exit timestamp, so rescanning the same symbol never double-logs. Only **closed** trades are written — the still-open position is skipped, because its exit price is a live mark-to-market figure that changes on every bar.
+
+**Why this exists:** TradingView's Strategy Tester only shows trades inside the currently-loaded bar history for the symbol on screen, and its headline Profit Factor / Percent Profitable exclude still-open losers entirely. A strategy that closes winners and lets losers ride therefore reads as near-perfect. The CSV log is durable and realized-only, so timeframes can be compared honestly over time.
+
+Three columns exist nowhere else in the project:
+
+- **`exit_signal`** — the strategy's own reason for exiting (`Flip Short`, `Trailing Stop`, …). This is how you tell whether a stop is actually firing or whether every trade exits on a signal flip.
+- **`bars_held`** — exact bar count from the strategy's bar indices, not a wall-clock estimate.
+- **`rule_type`** — which exit-rule variant produced the trade. See below.
+
+#### Comparing exit rules (`rule_type`)
+
+The strategy's exit-rule toggles (Time Stop, Stop Loss) live on the chart, and `rule_type` records what they were set to when each trade was logged — read from the chart itself, so it can't disagree with reality. Values look like `flip-only` (no stop of any kind), `ts60` (time stop at 60 bars), `ts60-losing`, `sl-auto` (stop loss, auto level per timeframe), `sl12.0` (manual 12%), or `ts60+sl-auto`.
+
+**To A/B test a rule:** flip the toggle on the chart, run a scan, and the resulting trades are tagged with that variant automatically. Flip it back and the baseline resumes. Both sets accumulate side by side in the same files and never overwrite each other, so you can switch back and forth freely and still compare cleanly afterwards.
+
+The Edge Analysis and Portfolio Simulation tabs both show an **Exit rule** chip row, and default to whichever variant has the most trades. The two tabs share one selection on purpose — otherwise one tab could report a baseline number next to the other's test number. Selecting **All pooled** averages the variants together, which describes no single strategy and is almost never what you want.
+
+From the command line:
+
+```powershell
+node .\scripts\analyze_trade_log.js --rules            # what variants are logged
+node .\scripts\analyze_trade_log.js --rule ts60        # analyse one variant
+node .\scripts\analyze_trade_log.js --rule all         # pool everything (rarely useful)
+```
+
+Also logged per trade: side, entry/exit signal + price + ET timestamp, quantity, position value, net P&L in USD and %, MFE (run-up), MAE (drawdown), and commission.
+
+**Backfill the full history once** (walks every watchlist symbol; safe to re-run, appends only new closures):
+
+```powershell
+node .\scripts\backfill_trade_log.js
+node .\scripts\backfill_trade_log.js --tf 15,240   # only these timeframes
+```
+
+**Analyze it:**
+
+```powershell
+node .\scripts\analyze_trade_log.js                # per-timeframe summary
+node .\scripts\analyze_trade_log.js --by symbol    # rank symbol|timeframe by expectancy
+node .\scripts\analyze_trade_log.js --by exit      # what actually closes trades
+node .\scripts\analyze_trade_log.js --tf 15 --min 6
+```
+
+The per-timeframe summary reports real Profit Factor (every closed loser in the denominator), expectancy per trade, average win/loss %, average MFE/MAE, and average bars held split by winners vs losers.
+
+The CSVs are plain text — open them in Excel, or query them with anything that reads CSV.
+
 ### Regression check
 
 After the first successful scan of each trading day (or after a TradingView reconnection), the scan job automatically runs a regression pass that validates all open trades against stored prior-signal history. This catches stale positions that should have exited and updates the dashboard banner accordingly.
