@@ -360,6 +360,8 @@ Verified 2026-07-28: `webhookSentKeys` correctly resolves `TD`'s entry (`already
 
 Also marks the alert message itself: a webhook-sent position's stop/target alerts get `| Open Pos` inserted (e.g. `TD 30m | Open Pos | Stop avg MAE 8.79% | Entry 933.13`), computed from the same `isWebhookSent` check, so a real order is identifiable straight from the TradingView alert list/push notification without cross-referencing the dashboard. Confirmed nothing in this codebase parses alert `message` text back for logic (unlike Pine chart labels, which the signal-detection path does read) — purely a human-facing marker, safe to change format on freely.
 
+**Historical view**: Symbol Lookup's Closed Trades table also shows a `webhook` column per row (`webhookStatusForRow()` in `symbol_lookup.js`), reusing the exact same `sentKey()` computation — trade-log rows already carry `ticker`/`timeframe` in the bare/label form `sentKey()`/`timeframeTag()`/`bareTicker()` are idempotent over, so only `entry_time_ms → ISO` needs converting. Verified the key this produces for a hypothetical closed TD 30m row matches the real, already-migrated ledger key exactly. Shows `✓ entry only` vs `✓ entry+exit` vs `—` (never sent) — a read of what the ledger recorded for that entry, not a live status.
+
 ### Push notifications (ntfy) — gating and failure visibility
 
 - Notifications only fire when `runSignalJob` runs with `notify: true`. Only the real scheduled path sets that (`run_signal_job.ps1` → `run_signal_job.js --notify`) — every manual/dashboard-triggered scan (`/api/run-cron-now`, direct `runBrief` calls) explicitly passes `notify: false`, so ad-hoc testing/debugging can never leak a push.

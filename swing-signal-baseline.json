@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-28T19:38:41.580Z",
+  "last_updated": "2026-07-28T19:52:55.417Z",
   "market_hours": {
     "timezone": "America/New_York",
     "open": "09:30",
@@ -103,7 +103,7 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 82.27,
-      "last_seen_at": "2026-07-28T19:37:04.538Z",
+      "last_seen_at": "2026-07-28T19:52:03.576Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-28T14:00:00.000Z",
       "entry_price": "78.87",
@@ -117,7 +117,7 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 69.4,
-      "last_seen_at": "2026-07-28T19:36:33.047Z",
+      "last_seen_at": "2026-07-28T19:51:33.169Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-28T14:00:00.000Z",
       "entry_price": "67.67",
@@ -187,11 +187,11 @@
       "label_count": 22,
       "last_signal": "▲",
       "last_price": 37.89,
-      "last_seen_at": "2026-07-28T19:36:48.788Z",
+      "last_seen_at": "2026-07-28T19:51:48.289Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-23T13:30:00.000Z",
       "entry_price": "40.63",
-      "net_pnl": "-878.62 USD | -9.19%",
+      "net_pnl": "-898.69 USD | -9.40%",
       "favorable_excursion": "+151.50 USD",
       "adverse_excursion": "-1153.05 USD"
     },
@@ -775,11 +775,11 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 41.15,
-      "last_seen_at": "2026-07-28T19:36:41.251Z",
+      "last_seen_at": "2026-07-28T19:51:40.816Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-27T14:45:00.000Z",
       "entry_price": "41.43",
-      "net_pnl": "-67.25 USD | -0.57%",
+      "net_pnl": "-83.39 USD | -0.71%",
       "favorable_excursion": "+5.00 USD",
       "adverse_excursion": "-140.26 USD"
     },
@@ -816,8 +816,8 @@
       "timeframe": "15",
       "label_count": 25,
       "last_signal": "▼",
-      "last_price": 30.15,
-      "last_seen_at": "2026-07-28T19:36:37.233Z",
+      "last_price": 31.25,
+      "last_seen_at": "2026-07-28T19:51:37.226Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-08T13:45:00.000Z",
       "entry_price": "27.31",
@@ -1699,7 +1699,7 @@
       "label_count": 23,
       "last_signal": "▼",
       "last_price": 174.8,
-      "last_seen_at": "2026-07-28T19:36:44.846Z",
+      "last_seen_at": "2026-07-28T19:51:44.467Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-17T18:30:00.000Z",
       "entry_price": "168.42",
@@ -1713,7 +1713,7 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 101.51,
-      "last_seen_at": "2026-07-28T19:36:52.503Z",
+      "last_seen_at": "2026-07-28T19:51:51.867Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-07T14:15:00.000Z",
       "entry_price": "97.75",
@@ -1726,8 +1726,8 @@
       "timeframe": "15",
       "label_count": 25,
       "last_signal": "▲",
-      "last_price": 64.73,
-      "last_seen_at": "2026-07-28T19:36:56.595Z",
+      "last_price": 76.12,
+      "last_seen_at": "2026-07-28T19:51:55.474Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-23T15:15:00.000Z",
       "entry_price": "71.45",
@@ -1741,7 +1741,7 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 10.22,
-      "last_seen_at": "2026-07-28T19:37:00.294Z",
+      "last_seen_at": "2026-07-28T19:51:59.445Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-20T14:15:00.000Z",
       "entry_price": "9.45",
@@ -1755,7 +1755,7 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 67.83,
-      "last_seen_at": "2026-07-28T19:37:08.292Z",
+      "last_seen_at": "2026-07-28T19:52:07.638Z",
       "signal_type": "EXIT",
       "entry_time": "2026-06-01T07:15:00.000Z",
       "entry_price": "61.02",
@@ -1769,7 +1769,7 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 29.47,
-      "last_seen_at": "2026-07-28T19:37:12.052Z",
+      "last_seen_at": "2026-07-28T19:52:11.911Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-21T11:15:00.000Z",
       "entry_price": "28.6",
@@ -1783,7 +1783,7 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 296.11,
-      "last_seen_at": "2026-07-28T19:37:17.817Z",
+      "last_seen_at": "2026-07-28T19:52:16.966Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-28T14:00:00.000Z",
       "entry_price": "293.6",
@@ -2385,7 +2385,7 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 37.89,
-      "last_seen_at": "2026-07-28T19:08:04.764Z",
+      "last_seen_at": "2026-07-28T19:52:23.010Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-24T14:45:00.000Z",
       "entry_price": "39.06",
@@ -2413,7 +2413,7 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 70.51,
-      "last_seen_at": "2026-07-28T19:08:08.182Z",
+      "last_seen_at": "2026-07-28T19:52:26.822Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-23T12:30:00.000Z",
       "entry_price": "67.6",
@@ -2427,7 +2427,7 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 174.8,
-      "last_seen_at": "2026-07-28T19:08:11.806Z",
+      "last_seen_at": "2026-07-28T19:52:30.981Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-17T18:30:00.000Z",
       "entry_price": "168.42",
@@ -2441,11 +2441,11 @@
       "label_count": 20,
       "last_signal": "▲",
       "last_price": 166.37,
-      "last_seen_at": "2026-07-28T19:08:16.012Z",
+      "last_seen_at": "2026-07-28T19:52:35.276Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-20T19:15:00.000Z",
       "entry_price": "169.32",
-      "net_pnl": "+19.20 USD | +0.17%",
+      "net_pnl": "+23.04 USD | +0.20%",
       "favorable_excursion": "+129.32 USD",
       "adverse_excursion": "-158.68 USD"
     },
@@ -2455,11 +2455,11 @@
       "label_count": 22,
       "last_signal": "▲",
       "last_price": 49.83,
-      "last_seen_at": "2026-07-28T19:08:19.767Z",
+      "last_seen_at": "2026-07-28T19:52:39.111Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-24T14:00:00.000Z",
       "entry_price": "63.71",
-      "net_pnl": "-3074.24 USD | -21.87%",
+      "net_pnl": "-3224.00 USD | -22.94%",
       "favorable_excursion": "+989.31 USD",
       "adverse_excursion": "-3886.21 USD"
     },
@@ -2483,7 +2483,7 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 11.85,
-      "last_seen_at": "2026-07-28T19:08:23.339Z",
+      "last_seen_at": "2026-07-28T19:52:42.835Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-22T20:45:00.000Z",
       "entry_price": "11.19",
@@ -3140,8 +3140,8 @@
         "TSX:RY"
       ],
       "symbol_count": 12,
-      "updated_at": "2026-07-28T19:38:41.580Z",
-      "last_scanned_at": "2026-07-28T19:37:17.821Z",
+      "updated_at": "2026-07-28T19:52:55.417Z",
+      "last_scanned_at": "2026-07-28T19:52:16.966Z",
       "source": "data_attributes"
     },
     "Swing 30min": {
@@ -3175,7 +3175,7 @@
         "TSX:TD"
       ],
       "symbol_count": 9,
-      "updated_at": "2026-07-28T19:38:41.580Z",
+      "updated_at": "2026-07-28T19:52:55.417Z",
       "last_scanned_at": "2026-07-28T19:38:28.738Z",
       "source": "data_attributes"
     },
@@ -3213,13 +3213,13 @@
         "NSE:TATASTEEL"
       ],
       "symbol_count": 29,
-      "updated_at": "2026-07-28T19:38:41.580Z",
+      "updated_at": "2026-07-28T19:52:55.417Z",
       "last_scanned_at": "2026-07-28T18:23:53.416Z",
       "source": "data_attributes"
     },
     "Swing 1D": {
       "timeframe": "D",
-      "updated_at": "2026-07-28T19:38:41.580Z",
+      "updated_at": "2026-07-28T19:52:55.417Z",
       "symbols": [
         "AMEX:GLD",
         "AMEX:IYC",
@@ -3251,7 +3251,7 @@
     },
     "Swing 30m": {
       "timeframe": "30",
-      "updated_at": "2026-07-28T19:38:41.580Z",
+      "updated_at": "2026-07-28T19:52:55.417Z",
       "symbols": [
         "CBOE:WTAI",
         "AMEX:EWY",
@@ -3267,7 +3267,7 @@
     },
     "Swing 45m": {
       "timeframe": "45",
-      "updated_at": "2026-07-28T19:38:41.580Z",
+      "updated_at": "2026-07-28T19:52:55.417Z",
       "symbols": [
         "CBOE:WTAI",
         "AMEX:UDOW",
@@ -3278,11 +3278,11 @@
       ],
       "symbol_count": 6,
       "source": "data_attributes",
-      "last_scanned_at": "2026-07-28T19:08:23.339Z"
+      "last_scanned_at": "2026-07-28T19:52:42.835Z"
     },
     "Swing 2H": {
       "timeframe": "120",
-      "updated_at": "2026-07-28T19:38:41.580Z",
+      "updated_at": "2026-07-28T19:52:55.417Z",
       "symbols": [
         "AMEX:SPXL",
         "AMEX:TNA",
@@ -3310,7 +3310,7 @@
     },
     "Swing 3H": {
       "timeframe": "180",
-      "updated_at": "2026-07-28T19:38:41.580Z",
+      "updated_at": "2026-07-28T19:52:55.417Z",
       "symbols": [
         "AMEX:MEXX",
         "NASDAQ:QTUM",
@@ -3344,7 +3344,7 @@
   "excursion_alerts": {
     "BATS:EWY|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 188.31,
       "stats": {
         "totalTrades": 10,
@@ -3368,7 +3368,7 @@
     },
     "BATS:WQTM|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 35.74,
       "stats": {
         "totalTrades": 3,
@@ -3392,7 +3392,7 @@
     },
     "BATS:TNA|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 68.1,
       "stats": {
         "totalTrades": 17,
@@ -3412,7 +3412,7 @@
     },
     "BATS:TMF|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 34.76,
       "stats": {
         "totalTrades": 14,
@@ -3432,7 +3432,7 @@
     },
     "BATS:SOXL|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 189.9,
       "stats": {
         "totalTrades": 15,
@@ -3455,7 +3455,7 @@
     },
     "BATS:QTUM|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 155.06,
       "stats": {
         "totalTrades": 11,
@@ -3478,7 +3478,7 @@
     },
     "BATS:GLD|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 413.89,
       "stats": {
         "totalTrades": 12,
@@ -3501,7 +3501,7 @@
     },
     "BATS:EPI|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 41.98,
       "stats": {
         "totalTrades": 13,
@@ -3521,7 +3521,7 @@
     },
     "BATS:URTY|60": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 82.03,
       "stats": {
         "totalTrades": 16,
@@ -3541,7 +3541,7 @@
     },
     "BATS:UPRO|60": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 137.32,
       "stats": {
         "totalTrades": 13,
@@ -3561,7 +3561,7 @@
     },
     "BATS:INTL|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 29.91,
       "stats": {
         "totalTrades": 15,
@@ -3581,7 +3581,7 @@
     },
     "BATS:NVDA|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 193.12,
       "stats": {
         "totalTrades": 2,
@@ -3601,7 +3601,7 @@
     },
     "BATS:WTAI|15": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.310Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 40.63,
       "stats": {
         "totalTrades": 10,
@@ -3792,7 +3792,7 @@
     },
     "BATS:EDC|15": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.310Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 71.45,
       "stats": {
         "totalTrades": 10,
@@ -3838,7 +3838,7 @@
     },
     "TSX_DLY:TD|60": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 169.32,
       "stats": {
         "totalTrades": 12,
@@ -3858,7 +3858,7 @@
     },
     "BATS:UDOW|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 70.69,
       "stats": {
         "totalTrades": 17,
@@ -3878,7 +3878,7 @@
     },
     "BATS:BE|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 231.38,
       "stats": {
         "totalTrades": 10,
@@ -3898,7 +3898,7 @@
     },
     "BATS:BE|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 246.42,
       "stats": {
         "totalTrades": 14,
@@ -3922,7 +3922,7 @@
     },
     "BATS:MU|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 991.1,
       "stats": {
         "totalTrades": 11,
@@ -3945,7 +3945,7 @@
     },
     "BATS:IYC|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 99.68,
       "stats": {
         "totalTrades": 9,
@@ -3965,7 +3965,7 @@
     },
     "BATS:GLD|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 400.24,
       "stats": {
         "totalTrades": 7,
@@ -3988,7 +3988,7 @@
     },
     "BATS:MEXX|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 25.55,
       "stats": {
         "totalTrades": 4,
@@ -4008,7 +4008,7 @@
     },
     "BATS:JNUG|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 159.53,
       "stats": {
         "totalTrades": 7,
@@ -4031,7 +4031,7 @@
     },
     "BATS:MNST|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 94.42,
       "stats": {
         "totalTrades": 14,
@@ -4051,7 +4051,7 @@
     },
     "BATS:GOOGL|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 350.52,
       "stats": {
         "totalTrades": 13,
@@ -4074,7 +4074,7 @@
     },
     "BSE_DLY:CIPLA|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 1408.2,
       "stats": {
         "totalTrades": 17,
@@ -4094,7 +4094,7 @@
     },
     "BATS:UDOW|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 70.92,
       "stats": {
         "totalTrades": 16,
@@ -4114,7 +4114,7 @@
     },
     "BATS:WTAI|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 42.2,
       "stats": {
         "totalTrades": 12,
@@ -4137,7 +4137,7 @@
     },
     "BATS:EWY|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 195.23,
       "stats": {
         "totalTrades": 13,
@@ -4161,7 +4161,7 @@
     },
     "BATS:BE|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 269.01,
       "stats": {
         "totalTrades": 12,
@@ -4185,7 +4185,7 @@
     },
     "BATS:QTUM|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 157.03,
       "stats": {
         "totalTrades": 9,
@@ -4208,7 +4208,7 @@
     },
     "BATS:TQQQ|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 76.96,
       "stats": {
         "totalTrades": 12,
@@ -4231,7 +4231,7 @@
     },
     "BATS:MEXX|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 28.56,
       "stats": {
         "totalTrades": 8,
@@ -4251,7 +4251,7 @@
     },
     "BATS:WQTM|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 37.15,
       "stats": {
         "totalTrades": 6,
@@ -4275,7 +4275,7 @@
     },
     "BATS:AMDL|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 61.65,
       "stats": {
         "totalTrades": 13,
@@ -4298,7 +4298,7 @@
     },
     "BATS:ASHR|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 34.74,
       "stats": {
         "totalTrades": 14,
@@ -4318,7 +4318,7 @@
     },
     "BATS:EDC|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 78.53,
       "stats": {
         "totalTrades": 15,
@@ -4341,7 +4341,7 @@
     },
     "BATS:GLTR|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 212.51,
       "stats": {
         "totalTrades": 14,
@@ -4387,7 +4387,7 @@
     },
     "BATS:WTAI|45": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.310Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 39.06,
       "stats": {
         "totalTrades": 16,
@@ -4410,7 +4410,7 @@
     },
     "BATS:AMDL|45": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.310Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 63.71,
       "stats": {
         "totalTrades": 11,
@@ -4433,7 +4433,7 @@
     },
     "BSE_DLY:SBIN|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 1012.7,
       "stats": {
         "totalTrades": 15,
@@ -4453,7 +4453,7 @@
     },
     "TSX_DLY:TD|45": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 169.32,
       "stats": {
         "totalTrades": 10,
@@ -4473,7 +4473,7 @@
     },
     "BATS:QTUM|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 142.85,
       "stats": {
         "totalTrades": 10,
@@ -4493,7 +4493,7 @@
     },
     "BATS:WTAI|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 40.22,
       "stats": {
         "totalTrades": 9,
@@ -4513,7 +4513,7 @@
     },
     "BATS:GOOGL|120": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 349.25,
       "stats": {
         "totalTrades": 13,
@@ -4536,7 +4536,7 @@
     },
     "BATS:SPXL|120": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 267.16,
       "stats": {
         "totalTrades": 14,
@@ -4556,7 +4556,7 @@
     },
     "NSE_DLY:LT|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 3868,
       "stats": {
         "totalTrades": 14,
@@ -4576,7 +4576,7 @@
     },
     "NSE_DLY:LT|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 3868,
       "stats": {
         "totalTrades": 15,
@@ -4596,7 +4596,7 @@
     },
     "BATS:TNA|120": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 68.7,
       "stats": {
         "totalTrades": 11,
@@ -4616,7 +4616,7 @@
     },
     "NSE_DLY:LT|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 3969.4,
       "stats": {
         "totalTrades": 17,
@@ -4636,7 +4636,7 @@
     },
     "BATS:EDC|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 82.59,
       "stats": {
         "totalTrades": 17,
@@ -4659,7 +4659,7 @@
     },
     "BATS:ASHR|120": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 35.77,
       "stats": {
         "totalTrades": 15,
@@ -4683,7 +4683,7 @@
     },
     "BATS:BE|120": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 281.44,
       "stats": {
         "totalTrades": 13,
@@ -4707,7 +4707,7 @@
     },
     "BATS:EDC|120": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 82.78,
       "stats": {
         "totalTrades": 13,
@@ -4730,7 +4730,7 @@
     },
     "BATS:QTUM|120": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.311Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 160.39,
       "stats": {
         "totalTrades": 9,
@@ -4754,7 +4754,7 @@
     },
     "BATS:EWY|120": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 197.74,
       "stats": {
         "totalTrades": 12,
@@ -4778,7 +4778,7 @@
     },
     "BATS:PLTR|D": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 120.15,
       "stats": {
         "totalTrades": 10,
@@ -4798,7 +4798,7 @@
     },
     "NSE_DLY:HINDZINC|120": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 613.7,
       "stats": {
         "totalTrades": 12,
@@ -4821,7 +4821,7 @@
     },
     "TSX_DLY:TD|180": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.310Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 167.62,
       "stats": {
         "totalTrades": 12,
@@ -4841,7 +4841,7 @@
     },
     "BATS:MU|120": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.310Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 839.99,
       "stats": {
         "totalTrades": 15,
@@ -4861,7 +4861,7 @@
     },
     "NSE_DLY:TATASTEEL|240": {
       "created": false,
-      "created_at": "2026-07-28T19:38:42.312Z",
+      "created_at": "2026-07-28T19:52:55.944Z",
       "entry_price": 204.69,
       "stats": {
         "totalTrades": 12,

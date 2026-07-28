@@ -10,6 +10,20 @@
  */
 import { readAllTradeLogs, listRuleTypes } from "./trade_log.js";
 import { buildEdgeAnalysis } from "./edge_analysis.js";
+import { sentKey, readSentState } from "./trade_webhook.js";
+
+/**
+ * Webhook send status for one closed trade row, keyed exactly the way the webhook ledger is:
+ * bareTicker|timeframeTag|rawEntryTimeISO. `row.ticker`/`row.timeframe` from the trade log are
+ * already in bare/label form (idempotent through bareTicker()/timeframeTag()), so entry_time_ms
+ * converted to ISO is the only transform needed — confirmed live against TD's real sent entry.
+ */
+function webhookStatusForRow(row, sentState) {
+  if (!row.entry_time_ms) return { webhookSent: false, webhookExitSent: false };
+  const key = sentKey({ symbol: row.ticker, timeframe: row.timeframe, entryTime: new Date(row.entry_time_ms).toISOString() });
+  const sent = key ? sentState.sent[key] : null;
+  return { webhookSent: Boolean(sent), webhookExitSent: Boolean(sent?.exit) };
+}
 
 export function normalizeTicker(value) {
   return String(value ?? "").trim().split(":").pop()?.toUpperCase() || "";
@@ -57,7 +71,10 @@ export function lookupSymbol(query, { baseline = {}, openTrades = [], openBySymb
 
   const allClosed = readAllTradeLogs({ ruleType }).filter((r) => normalizeTicker(r.ticker) === ticker);
   allClosed.sort((a, b) => (b.exit_time_ms || 0) - (a.exit_time_ms || 0));
-  const closedTrades = allClosed.slice(0, closedTradeLimit);
+  // Webhook status is only computed for the slice actually returned, not the full history —
+  // no need to touch the ledger for rows that will never be displayed.
+  const sentState = readSentState();
+  const closedTrades = allClosed.slice(0, closedTradeLimit).map((row) => ({ ...row, ...webhookStatusForRow(row, sentState) }));
 
   return {
     available: true,

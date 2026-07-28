@@ -2666,10 +2666,17 @@
           <thead><tr>
             <th>TF</th><th>Side</th><th>Entry</th><th class="num">Entry $</th>
             <th>Exit</th><th class="num">Exit $</th><th>Exit reason</th>
-            <th class="num">P&amp;L%</th><th class="num">hold</th><th>rule</th>
+            <th class="num">P&amp;L%</th><th class="num">hold</th><th>rule</th><th>webhook</th>
           </tr></thead>
           <tbody>${rows.map((t) => {
             const holdDays = (t.exit_time_ms && t.entry_time_ms) ? (t.exit_time_ms - t.entry_time_ms) / 864e5 : NaN;
+            // Historical record of whether a real order was ever placed for this position — not a
+            // live status, just what the sent-state ledger shows for this exact entry today.
+            const webhookCell = !t.webhookSent
+              ? '<span class="muted" style="font-size:11px;">—</span>'
+              : t.webhookExitSent
+                ? '<span style="font-size:11px;color:#6ee7a8;" title="Entry and exit orders both sent">✓ entry+exit</span>'
+                : '<span style="font-size:11px;color:#facc15;" title="Entry order sent; no matching exit order recorded">✓ entry only</span>';
             return `<tr>
               <td>${t.timeframe}</td>
               <td>${t.side || '—'}</td>
@@ -2681,6 +2688,7 @@
               <td class="num ${cls(t.pnl_pct)}"><strong>${n2(t.pnl_pct)}%</strong></td>
               <td class="num">${fmtHold(holdDays)}</td>
               <td><span class="muted" style="font-size:11px;">${t.rule_type || '—'}</span></td>
+              <td>${webhookCell}</td>
             </tr>`;
           }).join('')}</tbody>
         </table>`;

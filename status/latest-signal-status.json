@@ -1,27 +1,27 @@
 {
-  "updatedAt": "2026-07-28T19:38:41.590Z",
-  "formattedTimestampEt": "07/28/2026, 03:38:41 PM",
-  "nextScheduledRunEt": "07/28/2026, 03:46:41 PM ET",
+  "updatedAt": "2026-07-28T19:52:55.427Z",
+  "formattedTimestampEt": "07/28/2026, 03:52:55 PM",
+  "nextScheduledRunEt": "07/29/2026, 09:31:55 AM ET",
   "scanMode": "changed_signals_only",
   "hasSignals": true,
   "signalsFound": 3,
   "changedSignals": 0,
   "lines": [
-    "07/28/2026, 03:37:17 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 12 | SCAN: 51.0s | SIGNAL\n  EXIT: BATS:URTY | P&L: +295.81 USD | +2.22% | AT: 2026-07-28T17:00:00.000Z\n  EXIT: BATS:TNA | P&L: +246.00 USD | +2.17% | AT: 2026-07-28T15:45:00.000Z\n  EXIT: TSX_DLY:RY | P&L: +65.29 USD | +0.65% | AT: 2026-07-28T14:30:00.000Z",
-    "07/28/2026, 03:37:48 PM ET | WATCHLIST: Swing 30m | SYMBOLS: 7 | SCAN: 31.0s | NO SIGNAL",
-    "07/28/2026, 03:38:42 PM ET | WATCHLIST: Swing 45m | SYMBOLS: 6 | SCAN: 0.0s | WAITING FOR NEXT 45 BAR",
-    "07/28/2026, 03:38:28 PM ET | WATCHLIST: Swing 1H | SYMBOLS: 9 | SCAN: 39.9s | NO SIGNAL",
-    "07/28/2026, 03:38:42 PM ET | WATCHLIST: Swing 2H | SYMBOLS: 19 | SCAN: 0.0s | WAITING FOR NEXT 120 BAR",
-    "07/28/2026, 03:38:42 PM ET | WATCHLIST: Swing 3H | SYMBOLS: 23 | SCAN: 0.0s | WAITING FOR NEXT 180 BAR",
-    "07/28/2026, 03:38:42 PM ET | WATCHLIST: Swing 4H | SYMBOLS: 29 | SCAN: 0.0s | WAITING FOR NEXT 240 BAR",
-    "07/28/2026, 03:38:42 PM ET | WATCHLIST: Swing 1D | SYMBOLS: 23 | SCAN: 0.0s | WAITING FOR NEXT D BAR"
+    "07/28/2026, 03:52:16 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 12 | SCAN: 50.2s | SIGNAL\n  EXIT: BATS:URTY | P&L: +295.81 USD | +2.22% | AT: 2026-07-28T17:00:00.000Z\n  EXIT: BATS:TNA | P&L: +246.00 USD | +2.17% | AT: 2026-07-28T15:45:00.000Z\n  EXIT: TSX_DLY:RY | P&L: +65.29 USD | +0.65% | AT: 2026-07-28T14:30:00.000Z",
+    "07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 30m | SYMBOLS: 7 | SCAN: 0.0s | WAITING FOR NEXT 30 BAR",
+    "07/28/2026, 03:52:42 PM ET | WATCHLIST: Swing 45m | SYMBOLS: 6 | SCAN: 25.9s | NO SIGNAL",
+    "07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 1H | SYMBOLS: 9 | SCAN: 0.0s | WAITING FOR NEXT 60 BAR",
+    "07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 2H | SYMBOLS: 19 | SCAN: 0.0s | WAITING FOR NEXT 120 BAR",
+    "07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 3H | SYMBOLS: 23 | SCAN: 0.0s | WAITING FOR NEXT 180 BAR",
+    "07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 4H | SYMBOLS: 29 | SCAN: 0.0s | WAITING FOR NEXT 240 BAR",
+    "07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 1D | SYMBOLS: 23 | SCAN: 0.0s | WAITING FOR NEXT D BAR"
   ],
-  "summary": "07/28/2026, 03:37:17 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 12 | SCAN: 51.0s | SIGNAL\n  EXIT: BATS:URTY | P&L: +295.81 USD | +2.22% | AT: 2026-07-28T17:00:00.000Z\n  EXIT: BATS:TNA | P&L: +246.00 USD | +2.17% | AT: 2026-07-28T15:45:00.000Z\n  EXIT: TSX_DLY:RY | P&L: +65.29 USD | +0.65% | AT: 2026-07-28T14:30:00.000Z\n07/28/2026, 03:37:48 PM ET | WATCHLIST: Swing 30m | SYMBOLS: 7 | SCAN: 31.0s | NO SIGNAL\n07/28/2026, 03:38:42 PM ET | WATCHLIST: Swing 45m | SYMBOLS: 6 | SCAN: 0.0s | WAITING FOR NEXT 45 BAR\n07/28/2026, 03:38:28 PM ET | WATCHLIST: Swing 1H | SYMBOLS: 9 | SCAN: 39.9s | NO SIGNAL\n07/28/2026, 03:38:42 PM ET | WATCHLIST: Swing 2H | SYMBOLS: 19 | SCAN: 0.0s | WAITING FOR NEXT 120 BAR\n07/28/2026, 03:38:42 PM ET | WATCHLIST: Swing 3H | SYMBOLS: 23 | SCAN: 0.0s | WAITING FOR NEXT 180 BAR\n07/28/2026, 03:38:42 PM ET | WATCHLIST: Swing 4H | SYMBOLS: 29 | SCAN: 0.0s | WAITING FOR NEXT 240 BAR\n07/28/2026, 03:38:42 PM ET | WATCHLIST: Swing 1D | SYMBOLS: 23 | SCAN: 0.0s | WAITING FOR NEXT D BAR",
+  "summary": "07/28/2026, 03:52:16 PM ET | WATCHLIST: Swing 15m | SYMBOLS: 12 | SCAN: 50.2s | SIGNAL\n  EXIT: BATS:URTY | P&L: +295.81 USD | +2.22% | AT: 2026-07-28T17:00:00.000Z\n  EXIT: BATS:TNA | P&L: +246.00 USD | +2.17% | AT: 2026-07-28T15:45:00.000Z\n  EXIT: TSX_DLY:RY | P&L: +65.29 USD | +0.65% | AT: 2026-07-28T14:30:00.000Z\n07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 30m | SYMBOLS: 7 | SCAN: 0.0s | WAITING FOR NEXT 30 BAR\n07/28/2026, 03:52:42 PM ET | WATCHLIST: Swing 45m | SYMBOLS: 6 | SCAN: 25.9s | NO SIGNAL\n07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 1H | SYMBOLS: 9 | SCAN: 0.0s | WAITING FOR NEXT 60 BAR\n07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 2H | SYMBOLS: 19 | SCAN: 0.0s | WAITING FOR NEXT 120 BAR\n07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 3H | SYMBOLS: 23 | SCAN: 0.0s | WAITING FOR NEXT 180 BAR\n07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 4H | SYMBOLS: 29 | SCAN: 0.0s | WAITING FOR NEXT 240 BAR\n07/28/2026, 03:52:55 PM ET | WATCHLIST: Swing 1D | SYMBOLS: 23 | SCAN: 0.0s | WAITING FOR NEXT D BAR",
   "skipped": false,
   "reason": null,
   "connectionError": false,
   "errorMessage": null,
-  "symbolsScanned": 28,
+  "symbolsScanned": 18,
   "scheduleDisabled": false,
   "scanResults": [
     {
@@ -29,7 +29,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:36:33.047Z",
+      "scanned_at": "2026-07-28T19:51:33.169Z",
       "state": {
         "success": true,
         "symbol": "BATS:TNA",
@@ -50,13 +50,13 @@
       "quote": {
         "success": true,
         "symbol": "BATS:TNA",
-        "time": 1785267000,
-        "open": 69.37,
-        "high": 69.37,
-        "low": 69.15,
-        "close": 69.15,
-        "last": 69.15,
-        "volume": 1801,
+        "time": 1785267900,
+        "open": 69.12,
+        "high": 69.2,
+        "low": 69,
+        "close": 69.105,
+        "last": 69.105,
+        "volume": 6140,
         "description": "Direxion Daily Small Cap Bull 3X ETF",
         "exchange": "Cboe One",
         "type": "fund"
@@ -210,7 +210,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:36:37.233Z",
+      "scanned_at": "2026-07-28T19:51:37.226Z",
       "state": {
         "success": true,
         "symbol": "BATS:MEXX",
@@ -248,17 +248,9 @@
         "studies": [
           {
             "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 33,
+            "total_labels": 35,
             "showing": 25,
             "labels": [
-              {
-                "text": "▼",
-                "price": 37.6
-              },
-              {
-                "text": "▲",
-                "price": 30.87
-              },
               {
                 "text": "▼",
                 "price": 37.06
@@ -350,6 +342,14 @@
               {
                 "text": "▼",
                 "price": 30.15
+              },
+              {
+                "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 25\nPosition: Flat\nBars in trade: -\nExit rules: flip only\nPyramid: off",
+                "price": 31.25
+              },
+              {
+                "text": "T: 23.029K\nB: 7.854K\nS: 15.175K\nD: -31.79%",
+                "price": 26.5
               }
             ]
           }
@@ -363,12 +363,12 @@
       "signal": {
         "hasSignal": true,
         "direction": "bearish",
-        "price": 30.15,
+        "price": 31.25,
         "source": "label",
         "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▼",
+        "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 25\nPosition: Flat\nBars in trade: -\nExit rules: flip only\nPyramid: off",
         "labelCount": 25,
-        "positionState": null
+        "positionState": "flat"
       },
       "trade": {
         "tradeNumber": null,
@@ -391,7 +391,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:36:41.251Z",
+      "scanned_at": "2026-07-28T19:51:40.816Z",
       "state": {
         "success": true,
         "symbol": "BATS:EWO",
@@ -412,13 +412,13 @@
       "quote": {
         "success": true,
         "symbol": "BATS:EWO",
-        "time": 1785267000,
-        "open": 41.18,
-        "high": 41.18,
-        "low": 41.18,
-        "close": 41.18,
-        "last": 41.18,
-        "volume": 1,
+        "time": 1785267900,
+        "open": 41.12,
+        "high": 41.12,
+        "low": 41.12,
+        "close": 41.12,
+        "last": 41.12,
+        "volume": 100,
         "description": "iShares MSCI Austria ETF",
         "exchange": "Cboe One",
         "type": "fund"
@@ -557,7 +557,7 @@
         "signal": "OPEN",
         "entryTime": "2026-07-27T14:45:00.000Z",
         "entryPrice": "41.43",
-        "netPnl": "-67.25 USD | -0.57%",
+        "netPnl": "-83.39 USD | -0.71%",
         "favorableExcursion": "+5.00 USD",
         "adverseExcursion": "-140.26 USD",
         "rawText": null
@@ -570,7 +570,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:36:44.846Z",
+      "scanned_at": "2026-07-28T19:51:44.467Z",
       "state": {
         "success": true,
         "symbol": "BATS:FAS",
@@ -591,13 +591,13 @@
       "quote": {
         "success": true,
         "symbol": "BATS:FAS",
-        "time": 1785267000,
-        "open": 178.75,
-        "high": 179.58,
-        "low": 178.75,
-        "close": 179.58,
-        "last": 179.58,
-        "volume": 459,
+        "time": 1785267900,
+        "open": 179.57,
+        "high": 179.75,
+        "low": 179.25,
+        "close": 179.35,
+        "last": 179.35,
+        "volume": 1720,
         "description": "Direxion Daily Financial Bull 3X ETF",
         "exchange": "Cboe One",
         "type": "fund"
@@ -743,7 +743,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:36:48.788Z",
+      "scanned_at": "2026-07-28T19:51:48.289Z",
       "state": {
         "success": true,
         "symbol": "BATS:WTAI",
@@ -764,13 +764,13 @@
       "quote": {
         "success": true,
         "symbol": "BATS:WTAI",
-        "time": 1785267000,
+        "time": 1785267900,
         "open": 36.66,
-        "high": 36.69,
-        "low": 36.66,
-        "close": 36.69,
-        "last": 36.69,
-        "volume": 116,
+        "high": 36.66,
+        "low": 36.6,
+        "close": 36.6,
+        "last": 36.6,
+        "volume": 5134,
         "description": "WisdomTree Artificial Intelligence and Innovation Fund",
         "exchange": "Cboe One",
         "type": "fund"
@@ -897,7 +897,7 @@
         "signal": "OPEN",
         "entryTime": "2026-07-23T13:30:00.000Z",
         "entryPrice": "40.63",
-        "netPnl": "-878.62 USD | -9.19%",
+        "netPnl": "-898.69 USD | -9.40%",
         "favorableExcursion": "+151.50 USD",
         "adverseExcursion": "-1153.05 USD",
         "rawText": null
@@ -910,7 +910,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:36:52.503Z",
+      "scanned_at": "2026-07-28T19:51:51.867Z",
       "state": {
         "success": true,
         "symbol": "BATS:DUSL",
@@ -1091,7 +1091,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:36:56.595Z",
+      "scanned_at": "2026-07-28T19:51:55.474Z",
       "state": {
         "success": true,
         "symbol": "BATS:EDC",
@@ -1129,17 +1129,9 @@
         "studies": [
           {
             "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 30,
+            "total_labels": 32,
             "showing": 25,
             "labels": [
-              {
-                "text": "▲",
-                "price": 70.36
-              },
-              {
-                "text": "▼",
-                "price": 78.16
-              },
               {
                 "text": "▲",
                 "price": 72.91
@@ -1231,6 +1223,14 @@
               {
                 "text": "▲",
                 "price": 64.73
+              },
+              {
+                "text": "Mode: Fast (active bar)\nLast signal: Long\nBars since signal: 68\nPosition: Long\nBars in trade: 67\nExit rules: flip only\nPyramid: off",
+                "price": 76.12
+              },
+              {
+                "text": "T: 16.093K\nB: 8.521K\nS: 7.572K\nD: 5.90%",
+                "price": 76.12
               }
             ]
           }
@@ -1244,12 +1244,12 @@
       "signal": {
         "hasSignal": true,
         "direction": "bullish",
-        "price": 64.73,
+        "price": 76.12,
         "source": "label",
         "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▲",
+        "text": "Mode: Fast (active bar)\nLast signal: Long\nBars since signal: 68\nPosition: Long\nBars in trade: 67\nExit rules: flip only\nPyramid: off",
         "labelCount": 25,
-        "positionState": null
+        "positionState": "long"
       },
       "trade": {
         "tradeNumber": null,
@@ -1270,7 +1270,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:37:00.294Z",
+      "scanned_at": "2026-07-28T19:51:59.445Z",
       "state": {
         "success": true,
         "symbol": "BATS:RETL",
@@ -1291,13 +1291,13 @@
       "quote": {
         "success": true,
         "symbol": "BATS:RETL",
-        "time": 1785267000,
-        "open": 10.03,
-        "high": 10.125,
-        "low": 10.03,
-        "close": 10.125,
-        "last": 10.125,
-        "volume": 2667,
+        "time": 1785267900,
+        "open": 10.075,
+        "high": 10.11,
+        "low": 10.075,
+        "close": 10.11,
+        "last": 10.11,
+        "volume": 1374,
         "description": "Direxion Daily Retail Bull 3X ETF",
         "exchange": "Cboe One",
         "type": "fund"
@@ -1451,7 +1451,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:37:04.538Z",
+      "scanned_at": "2026-07-28T19:52:03.576Z",
       "state": {
         "success": true,
         "symbol": "BATS:URTY",
@@ -1472,13 +1472,13 @@
       "quote": {
         "success": true,
         "symbol": "BATS:URTY",
-        "time": 1785267000,
-        "open": 80.49,
-        "high": 80.495,
-        "low": 80.49,
-        "close": 80.495,
-        "last": 80.495,
-        "volume": 40,
+        "time": 1785267900,
+        "open": 80.36,
+        "high": 80.45,
+        "low": 80.35,
+        "close": 80.4,
+        "last": 80.4,
+        "volume": 61,
         "description": "ProShares UltraPro Russell2000",
         "exchange": "Cboe One",
         "type": "fund"
@@ -1632,7 +1632,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:37:08.292Z",
+      "scanned_at": "2026-07-28T19:52:07.638Z",
       "state": {
         "success": true,
         "symbol": "LSE_DLY:USLV",
@@ -1813,7 +1813,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:37:12.052Z",
+      "scanned_at": "2026-07-28T19:52:11.911Z",
       "state": {
         "success": true,
         "symbol": "BATS:YINN",
@@ -1834,13 +1834,13 @@
       "quote": {
         "success": true,
         "symbol": "BATS:YINN",
-        "time": 1785267000,
-        "open": 30.305,
-        "high": 30.335,
-        "low": 30.25,
-        "close": 30.25,
-        "last": 30.25,
-        "volume": 1754,
+        "time": 1785267900,
+        "open": 30.235,
+        "high": 30.32,
+        "low": 30.215,
+        "close": 30.28,
+        "last": 30.28,
+        "volume": 4022,
         "description": "Direxion Daily FTSE China Bull 3X ETF",
         "exchange": "Cboe One",
         "type": "fund"
@@ -1994,7 +1994,7 @@
       "timeframe": "15",
       "watchlist_name": "Swing 15m",
       "watchlist_symbol_count": 12,
-      "scanned_at": "2026-07-28T19:37:17.817Z",
+      "scanned_at": "2026-07-28T19:52:16.966Z",
       "state": {
         "success": true,
         "symbol": "TSX_DLY:RY",
@@ -2015,13 +2015,13 @@
       "quote": {
         "success": true,
         "symbol": "TSX_DLY:RY",
-        "time": 1785266100,
-        "open": 299.21,
-        "high": 299.4,
-        "low": 299.18,
-        "close": 299.35,
-        "last": 299.35,
-        "volume": 13000,
+        "time": 1785267000,
+        "open": 299.16,
+        "high": 299.44,
+        "low": 299.14,
+        "close": 299.31,
+        "last": 299.31,
+        "volume": 18100,
         "description": "Royal Bank of Canada",
         "exchange": "TSX",
         "type": "stock"
@@ -2172,14 +2172,14 @@
     },
     {
       "symbol": "CBOE:WTAI",
-      "timeframe": "30",
-      "watchlist_name": "Swing 30m",
-      "watchlist_symbol_count": 7,
-      "scanned_at": "2026-07-28T19:37:24.551Z",
+      "timeframe": "45",
+      "watchlist_name": "Swing 45m",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-28T19:52:23.010Z",
       "state": {
         "success": true,
         "symbol": "BATS:WTAI",
-        "resolution": "30",
+        "resolution": "45",
         "chartType": 19,
         "studies": [
           {
@@ -2196,13 +2196,13 @@
       "quote": {
         "success": true,
         "symbol": "BATS:WTAI",
-        "time": 1785267000,
-        "open": 36.66,
-        "high": 36.69,
-        "low": 36.65,
-        "close": 36.65,
-        "last": 36.65,
-        "volume": 366,
+        "time": 1785266100,
+        "open": 36.78,
+        "high": 36.78,
+        "low": 36.6,
+        "close": 36.6,
+        "last": 36.6,
+        "volume": 6900,
         "description": "WisdomTree Artificial Intelligence and Innovation Fund",
         "exchange": "Cboe One",
         "type": "fund"
@@ -2213,12 +2213,28 @@
         "studies": [
           {
             "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 26,
+            "total_labels": 32,
             "showing": 25,
             "labels": [
               {
                 "text": "▲",
-                "price": null
+                "price": 28.96
+              },
+              {
+                "text": "▼",
+                "price": 30.79
+              },
+              {
+                "text": "▲",
+                "price": 29.47
+              },
+              {
+                "text": "▼",
+                "price": 31.58
+              },
+              {
+                "text": "▲",
+                "price": 28
               },
               {
                 "text": "▼",
@@ -2246,14 +2262,6 @@
               },
               {
                 "text": "▼",
-                "price": 30.19
-              },
-              {
-                "text": "▲",
-                "price": 28.74
-              },
-              {
-                "text": "▼",
                 "price": 30.25
               },
               {
@@ -2270,15 +2278,7 @@
               },
               {
                 "text": "▼",
-                "price": 32.12
-              },
-              {
-                "text": "▲",
-                "price": 29.55
-              },
-              {
-                "text": "▼",
-                "price": 41.96
+                "price": 44.23
               },
               {
                 "text": "▲",
@@ -2339,369 +2339,11 @@
         "tradeNumber": null,
         "side": "LONG",
         "signal": "OPEN",
-        "entryTime": "2026-07-24T14:00:00.000Z",
-        "entryPrice": "39.37",
-        "netPnl": "-783.36 USD | -6.55%",
-        "favorableExcursion": "+121.14 USD",
-        "adverseExcursion": "-1125.90 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "AMEX:EWY",
-      "timeframe": "30",
-      "watchlist_name": "Swing 30m",
-      "watchlist_symbol_count": 7,
-      "scanned_at": "2026-07-28T19:37:28.733Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:EWY",
-        "resolution": "30",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:EWY",
-        "time": 1785267000,
-        "open": 153.37,
-        "high": 153.77,
-        "low": 152.83,
-        "close": 152.91,
-        "last": 152.91,
-        "volume": 113593,
-        "description": "iShares MSCI South Korea ETF",
-        "exchange": "Cboe One",
-        "type": "fund"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 28,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▲",
-                "price": 175.2
-              },
-              {
-                "text": "▼",
-                "price": 194.52
-              },
-              {
-                "text": "▲",
-                "price": 173.6
-              },
-              {
-                "text": "▼",
-                "price": 191.96
-              },
-              {
-                "text": "▲",
-                "price": 167.17
-              },
-              {
-                "text": "▼",
-                "price": 187.4
-              },
-              {
-                "text": "▲",
-                "price": 181.51
-              },
-              {
-                "text": "▼",
-                "price": 217.88
-              },
-              {
-                "text": "▲",
-                "price": 173.84
-              },
-              {
-                "text": "▼",
-                "price": 195.92
-              },
-              {
-                "text": "▲",
-                "price": 173.62
-              },
-              {
-                "text": "▼",
-                "price": 213.78
-              },
-              {
-                "text": "▲",
-                "price": 204.49
-              },
-              {
-                "text": "▼",
-                "price": 220.89
-              },
-              {
-                "text": "▲",
-                "price": 191.37
-              },
-              {
-                "text": "▼",
-                "price": 214.28
-              },
-              {
-                "text": "▲",
-                "price": 188.72
-              },
-              {
-                "text": "▼",
-                "price": 202.89
-              },
-              {
-                "text": "▲",
-                "price": 174.44
-              },
-              {
-                "text": "▼",
-                "price": 192.22
-              },
-              {
-                "text": "▲",
-                "price": 168.34
-              },
-              {
-                "text": "▼",
-                "price": 186.3
-              },
-              {
-                "text": "▲",
-                "price": 164.8
-              },
-              {
-                "text": "▼",
-                "price": 179.12
-              },
-              {
-                "text": "▲",
-                "price": 154.19
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bullish",
-        "price": 154.19,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▲",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "OPEN",
-        "entryTime": "2026-07-24T08:30:00.000Z",
-        "entryPrice": "169.21",
-        "netPnl": "-1173.60 USD | -9.10%",
-        "favorableExcursion": "+126.06 USD",
-        "adverseExcursion": "-1499.70 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "AMEX:KORU",
-      "timeframe": "30",
-      "watchlist_name": "Swing 30m",
-      "watchlist_symbol_count": 7,
-      "scanned_at": "2026-07-28T19:37:32.780Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:KORU",
-        "resolution": "30",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:KORU",
-        "time": 1785267000,
-        "open": 14.75,
-        "high": 14.87,
-        "low": 14.58,
-        "close": 14.59,
-        "last": 14.59,
-        "volume": 151795,
-        "description": "Direxion Daily MSCI South Korea Bull 3X ETF",
-        "exchange": "Cboe One",
-        "type": "fund"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 28,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▲",
-                "price": 37.3
-              },
-              {
-                "text": "▼",
-                "price": 50.35
-              },
-              {
-                "text": "▲",
-                "price": 34.5
-              },
-              {
-                "text": "▼",
-                "price": 46.95
-              },
-              {
-                "text": "▲",
-                "price": 30.35
-              },
-              {
-                "text": "▼",
-                "price": 42.55
-              },
-              {
-                "text": "▲",
-                "price": 38.7
-              },
-              {
-                "text": "▼",
-                "price": 64.25
-              },
-              {
-                "text": "▲",
-                "price": 29.95
-              },
-              {
-                "text": "▼",
-                "price": 41.4
-              },
-              {
-                "text": "▲",
-                "price": 29
-              },
-              {
-                "text": "▼",
-                "price": 51.4
-              },
-              {
-                "text": "▲",
-                "price": 44.9
-              },
-              {
-                "text": "▼",
-                "price": 55.55
-              },
-              {
-                "text": "▲",
-                "price": 34.23
-              },
-              {
-                "text": "▼",
-                "price": 46.58
-              },
-              {
-                "text": "▲",
-                "price": 31.99
-              },
-              {
-                "text": "▼",
-                "price": 39.6
-              },
-              {
-                "text": "▲",
-                "price": 24.27
-              },
-              {
-                "text": "▼",
-                "price": 32.33
-              },
-              {
-                "text": "▲",
-                "price": 21.73
-              },
-              {
-                "text": "▼",
-                "price": 29.31
-              },
-              {
-                "text": "▲",
-                "price": 20
-              },
-              {
-                "text": "▼",
-                "price": 25.75
-              },
-              {
-                "text": "▲",
-                "price": 15.46
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bullish",
-        "price": 15.46,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▲",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "OPEN",
-        "entryTime": "2026-07-24T08:30:00.000Z",
-        "entryPrice": "20.23",
-        "netPnl": "-5160.60 USD | -26.48%",
-        "favorableExcursion": "+576.24 USD",
-        "adverseExcursion": "-6450.96 USD",
+        "entryTime": "2026-07-24T14:45:00.000Z",
+        "entryPrice": "39.06",
+        "netPnl": "-720.78 USD | -5.97%",
+        "favorableExcursion": "+214.17 USD",
+        "adverseExcursion": "-1054.52 USD",
         "rawText": null
       },
       "trade_source": "strategy_internal_api",
@@ -2709,14 +2351,14 @@
     },
     {
       "symbol": "AMEX:UDOW",
-      "timeframe": "30",
-      "watchlist_name": "Swing 30m",
-      "watchlist_symbol_count": 7,
-      "scanned_at": "2026-07-28T19:37:36.479Z",
+      "timeframe": "45",
+      "watchlist_name": "Swing 45m",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-28T19:52:26.822Z",
       "state": {
         "success": true,
         "symbol": "BATS:UDOW",
-        "resolution": "30",
+        "resolution": "45",
         "chartType": 19,
         "studies": [
           {
@@ -2733,13 +2375,13 @@
       "quote": {
         "success": true,
         "symbol": "BATS:UDOW",
-        "time": 1785267000,
-        "open": 71.47,
-        "high": 71.55,
-        "low": 71.46,
-        "close": 71.55,
-        "last": 71.55,
-        "volume": 1327,
+        "time": 1785266100,
+        "open": 71.54,
+        "high": 71.61,
+        "low": 71.4,
+        "close": 71.46,
+        "last": 71.46,
+        "volume": 6403,
         "description": "ProShares UltraPro Dow30",
         "exchange": "Cboe One",
         "type": "fund"
@@ -2755,1110 +2397,6 @@
             "labels": [
               {
                 "text": "▼",
-                "price": 62.3
-              },
-              {
-                "text": "▲",
-                "price": 58.28
-              },
-              {
-                "text": "▼",
-                "price": 62.64
-              },
-              {
-                "text": "▲",
-                "price": 59.6
-              },
-              {
-                "text": "▼",
-                "price": 62.85
-              },
-              {
-                "text": "▲",
-                "price": 59.28
-              },
-              {
-                "text": "▼",
-                "price": 65.4
-              },
-              {
-                "text": "▲",
-                "price": 63.21
-              },
-              {
-                "text": "▼",
-                "price": 67.26
-              },
-              {
-                "text": "▲",
-                "price": 64.56
-              },
-              {
-                "text": "▼",
-                "price": 68.62
-              },
-              {
-                "text": "▲",
-                "price": 60.75
-              },
-              {
-                "text": "▼",
-                "price": 70.5
-              },
-              {
-                "text": "▲",
-                "price": 66.49
-              },
-              {
-                "text": "▼",
-                "price": 71.6
-              },
-              {
-                "text": "▲",
-                "price": 67.46
-              },
-              {
-                "text": "▼",
-                "price": 70.5
-              },
-              {
-                "text": "▲",
-                "price": 69.08
-              },
-              {
-                "text": "▼",
-                "price": 74.26
-              },
-              {
-                "text": "▲",
-                "price": 69.02
-              },
-              {
-                "text": "▼",
-                "price": 72.06
-              },
-              {
-                "text": "▲",
-                "price": 68.7
-              },
-              {
-                "text": "▼",
-                "price": 72
-              },
-              {
-                "text": "▲",
-                "price": 67.79
-              },
-              {
-                "text": "▼",
-                "price": 70.51
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bearish",
-        "price": 70.51,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▼",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "EXIT",
-        "entryTime": "2026-07-23T10:00:00.000Z",
-        "entryPrice": "68.6",
-        "exitTime": "2026-07-27T08:30:00.000Z",
-        "exitPrice": "70",
-        "netPnl": "+199.30 USD | +1.84%",
-        "favorableExcursion": "+210.36 USD",
-        "adverseExcursion": "-318.94 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "AMEX:FAS",
-      "timeframe": "30",
-      "watchlist_name": "Swing 30m",
-      "watchlist_symbol_count": 7,
-      "scanned_at": "2026-07-28T19:37:40.664Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:FAS",
-        "resolution": "30",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:FAS",
-        "time": 1785267000,
-        "open": 178.75,
-        "high": 179.65,
-        "low": 178.75,
-        "close": 179.65,
-        "last": 179.65,
-        "volume": 464,
-        "description": "Direxion Daily Financial Bull 3X ETF",
-        "exchange": "Cboe One",
-        "type": "fund"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 31,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▼",
-                "price": 141.41
-              },
-              {
-                "text": "▲",
-                "price": 131.7
-              },
-              {
-                "text": "▼",
-                "price": 138.19
-              },
-              {
-                "text": "▲",
-                "price": 127.22
-              },
-              {
-                "text": "▼",
-                "price": 133.71
-              },
-              {
-                "text": "▲",
-                "price": 127
-              },
-              {
-                "text": "▼",
-                "price": 134.12
-              },
-              {
-                "text": "▲",
-                "price": 126.47
-              },
-              {
-                "text": "▼",
-                "price": 137.19
-              },
-              {
-                "text": "▲",
-                "price": 127.88
-              },
-              {
-                "text": "▼",
-                "price": 133.5
-              },
-              {
-                "text": "▲",
-                "price": 127.37
-              },
-              {
-                "text": "▼",
-                "price": 132.5
-              },
-              {
-                "text": "▲",
-                "price": 123.85
-              },
-              {
-                "text": "▼",
-                "price": 138.29
-              },
-              {
-                "text": "▲",
-                "price": 134
-              },
-              {
-                "text": "▼",
-                "price": 140.7
-              },
-              {
-                "text": "▲",
-                "price": 134.83
-              },
-              {
-                "text": "▼",
-                "price": 157.55
-              },
-              {
-                "text": "▲",
-                "price": 145.4
-              },
-              {
-                "text": "▼",
-                "price": 156.33
-              },
-              {
-                "text": "▲",
-                "price": 144.11
-              },
-              {
-                "text": "▼",
-                "price": 172.43
-              },
-              {
-                "text": "▲",
-                "price": 157.7
-              },
-              {
-                "text": "▼",
-                "price": 174.8
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bearish",
-        "price": 174.8,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▼",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "EXIT",
-        "entryTime": "2026-07-17T14:00:00.000Z",
-        "entryPrice": "173.11",
-        "exitTime": "2026-07-24T15:30:00.000Z",
-        "exitPrice": "169.11",
-        "netPnl": "-290.93 USD | -2.51%",
-        "favorableExcursion": "+21.23 USD",
-        "adverseExcursion": "-795.50 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "TSX:TD",
-      "timeframe": "30",
-      "watchlist_name": "Swing 30m",
-      "watchlist_symbol_count": 7,
-      "scanned_at": "2026-07-28T19:37:44.307Z",
-      "state": {
-        "success": true,
-        "symbol": "TSX_DLY:TD",
-        "resolution": "30",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "TSX_DLY:TD",
-        "time": 1785265200,
-        "open": 169.36,
-        "high": 169.73,
-        "low": 169.3,
-        "close": 169.64,
-        "last": 169.64,
-        "volume": 94300,
-        "description": "Toronto-Dominion Bank",
-        "exchange": "TSX",
-        "type": "stock"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 32,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▲",
-                "price": 127.82
-              },
-              {
-                "text": "▼",
-                "price": 133.64
-              },
-              {
-                "text": "▲",
-                "price": 129.86
-              },
-              {
-                "text": "▼",
-                "price": 136.49
-              },
-              {
-                "text": "▲",
-                "price": 130.2
-              },
-              {
-                "text": "▼",
-                "price": 135.41
-              },
-              {
-                "text": "▲",
-                "price": 127.79
-              },
-              {
-                "text": "▼",
-                "price": 132.29
-              },
-              {
-                "text": "▲",
-                "price": 125.73
-              },
-              {
-                "text": "▼",
-                "price": 130.9
-              },
-              {
-                "text": "▲",
-                "price": 126.46
-              },
-              {
-                "text": "▼",
-                "price": 145.9
-              },
-              {
-                "text": "▲",
-                "price": 142.3
-              },
-              {
-                "text": "▼",
-                "price": 147
-              },
-              {
-                "text": "▲",
-                "price": 144.09
-              },
-              {
-                "text": "▼",
-                "price": 149.08
-              },
-              {
-                "text": "▲",
-                "price": 145.09
-              },
-              {
-                "text": "▼",
-                "price": 157.16
-              },
-              {
-                "text": "▲",
-                "price": 153.94
-              },
-              {
-                "text": "▼",
-                "price": 157.7
-              },
-              {
-                "text": "▲",
-                "price": 152.81
-              },
-              {
-                "text": "▼",
-                "price": 172.98
-              },
-              {
-                "text": "▲",
-                "price": 168.4
-              },
-              {
-                "text": "▼",
-                "price": 172.36
-              },
-              {
-                "text": "▲",
-                "price": 166.37
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bullish",
-        "price": 166.37,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▲",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "OPEN",
-        "entryTime": "2026-07-20T14:30:00.000Z",
-        "entryPrice": "170.35",
-        "netPnl": "-46.86 USD | -0.39%",
-        "favorableExcursion": "+74.56 USD",
-        "adverseExcursion": "-231.68 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "NASDAQ:AMDL",
-      "timeframe": "30",
-      "watchlist_name": "Swing 30m",
-      "watchlist_symbol_count": 7,
-      "scanned_at": "2026-07-28T19:37:48.819Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:AMDL",
-        "resolution": "30",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:AMDL",
-        "time": 1785267000,
-        "open": 50.3,
-        "high": 50.4,
-        "low": 48.94,
-        "close": 49.035,
-        "last": 49.035,
-        "volume": 3971,
-        "description": "GraniteShares 2x Long AMD Daily ETF",
-        "exchange": "Cboe One",
-        "type": "fund"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 30,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▲",
-                "price": 43.75
-              },
-              {
-                "text": "▼",
-                "price": 59.87
-              },
-              {
-                "text": "▲",
-                "price": 41.16
-              },
-              {
-                "text": "▼",
-                "price": 70.24
-              },
-              {
-                "text": "▲",
-                "price": 61.88
-              },
-              {
-                "text": "▼",
-                "price": 72.84
-              },
-              {
-                "text": "▲",
-                "price": 61.93
-              },
-              {
-                "text": "▼",
-                "price": 78
-              },
-              {
-                "text": "▲",
-                "price": 53.66
-              },
-              {
-                "text": "▼",
-                "price": 65.25
-              },
-              {
-                "text": "▲",
-                "price": 48.28
-              },
-              {
-                "text": "▼",
-                "price": 78.27
-              },
-              {
-                "text": "▲",
-                "price": 63.7
-              },
-              {
-                "text": "▼",
-                "price": 78.6
-              },
-              {
-                "text": "▲",
-                "price": 62.75
-              },
-              {
-                "text": "▼",
-                "price": 74.76
-              },
-              {
-                "text": "▲",
-                "price": 60.5
-              },
-              {
-                "text": "▼",
-                "price": 83.75
-              },
-              {
-                "text": "▲",
-                "price": 62.05
-              },
-              {
-                "text": "▼",
-                "price": 78.84
-              },
-              {
-                "text": "▲",
-                "price": 59.64
-              },
-              {
-                "text": "▼",
-                "price": 75.08
-              },
-              {
-                "text": "▲",
-                "price": 66.28
-              },
-              {
-                "text": "▼",
-                "price": 78.32
-              },
-              {
-                "text": "▲",
-                "price": 49.83
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bullish",
-        "price": 49.83,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▲",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "OPEN",
-        "entryTime": "2026-07-24T14:00:00.000Z",
-        "entryPrice": "63.71",
-        "netPnl": "-4239.63 USD | -21.78%",
-        "favorableExcursion": "+1374.57 USD",
-        "adverseExcursion": "-5399.59 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "NASDAQ:INTC",
-      "timeframe": "60",
-      "watchlist_name": "Swing 1H",
-      "watchlist_symbol_count": 9,
-      "scanned_at": "2026-07-28T19:37:57.046Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:INTC",
-        "resolution": "60",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:INTC",
-        "time": 1785265200,
-        "open": 86.53,
-        "high": 88.09,
-        "low": 86.525,
-        "close": 86.96,
-        "last": 86.96,
-        "volume": 858119,
-        "description": "Intel Corporation",
-        "exchange": "Cboe One",
-        "type": "stock"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 30,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▲",
-                "price": 42.88
-              },
-              {
-                "text": "▼",
-                "price": 47.33
-              },
-              {
-                "text": "▲",
-                "price": 42.14
-              },
-              {
-                "text": "▼",
-                "price": 46.48
-              },
-              {
-                "text": "▲",
-                "price": 41.65
-              },
-              {
-                "text": "▼",
-                "price": 48.83
-              },
-              {
-                "text": "▲",
-                "price": 44.85
-              },
-              {
-                "text": "▼",
-                "price": 49.17
-              },
-              {
-                "text": "▲",
-                "price": 43.65
-              },
-              {
-                "text": "▼",
-                "price": 47.55
-              },
-              {
-                "text": "▲",
-                "price": 42.85
-              },
-              {
-                "text": "▼",
-                "price": 47.85
-              },
-              {
-                "text": "▲",
-                "price": 40.64
-              },
-              {
-                "text": "▼",
-                "price": 70.32
-              },
-              {
-                "text": "▲",
-                "price": 64.98
-              },
-              {
-                "text": "▼",
-                "price": 134.95
-              },
-              {
-                "text": "▲",
-                "price": 102.4
-              },
-              {
-                "text": "▼",
-                "price": 125.62
-              },
-              {
-                "text": "▲",
-                "price": 116.31
-              },
-              {
-                "text": "▼",
-                "price": 126.62
-              },
-              {
-                "text": "▲",
-                "price": 96.81
-              },
-              {
-                "text": "▼",
-                "price": 141.44
-              },
-              {
-                "text": "▲",
-                "price": 118.51
-              },
-              {
-                "text": "▼",
-                "price": 142.34
-              },
-              {
-                "text": "▲",
-                "price": 89.6
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bullish",
-        "price": 89.6,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▲",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "OPEN",
-        "entryTime": "2026-07-24T14:00:00.000Z",
-        "entryPrice": "96.41",
-        "netPnl": "-1285.20 USD | -9.25%",
-        "favorableExcursion": "+222.17 USD",
-        "adverseExcursion": "-1823.27 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "AMEX:PILL",
-      "timeframe": "60",
-      "watchlist_name": "Swing 1H",
-      "watchlist_symbol_count": 9,
-      "scanned_at": "2026-07-28T19:38:00.761Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:PILL",
-        "resolution": "60",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:PILL",
-        "time": 1785265200,
-        "open": 19.46,
-        "high": 19.46,
-        "low": 19.46,
-        "close": 19.46,
-        "last": 19.46,
-        "volume": 20,
-        "description": "Direxion Daily Pharmaceutical & Medical Bull 3X ETF",
-        "exchange": "Cboe One",
-        "type": "fund"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 27,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▼",
-                "price": 8.82
-              },
-              {
-                "text": "▲",
-                "price": 7.41
-              },
-              {
-                "text": "▼",
-                "price": 8.95
-              },
-              {
-                "text": "▲",
-                "price": 7.77
-              },
-              {
-                "text": "▼",
-                "price": 11.7
-              },
-              {
-                "text": "▲",
-                "price": 10.27
-              },
-              {
-                "text": "▼",
-                "price": 13.13
-              },
-              {
-                "text": "▲",
-                "price": 11.63
-              },
-              {
-                "text": "▼",
-                "price": 13.44
-              },
-              {
-                "text": "▲",
-                "price": 11.11
-              },
-              {
-                "text": "▼",
-                "price": 13
-              },
-              {
-                "text": "▲",
-                "price": 11.27
-              },
-              {
-                "text": "▼",
-                "price": 13.55
-              },
-              {
-                "text": "▲",
-                "price": 11.22
-              },
-              {
-                "text": "▼",
-                "price": 13.25
-              },
-              {
-                "text": "▲",
-                "price": 12.08
-              },
-              {
-                "text": "▼",
-                "price": 13.67
-              },
-              {
-                "text": "▲",
-                "price": 8.79
-              },
-              {
-                "text": "▼",
-                "price": 13.56
-              },
-              {
-                "text": "▲",
-                "price": 11.43
-              },
-              {
-                "text": "▼",
-                "price": 14.25
-              },
-              {
-                "text": "▲",
-                "price": 10.7
-              },
-              {
-                "text": "▼",
-                "price": 12.9
-              },
-              {
-                "text": "▲",
-                "price": 10.7
-              },
-              {
-                "text": "▼",
-                "price": 21.02
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bearish",
-        "price": 21.02,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▼",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "EXIT",
-        "entryTime": "2026-07-13T14:00:00.000Z",
-        "entryPrice": "18.22",
-        "exitTime": "2026-07-27T14:00:00.000Z",
-        "exitPrice": "20.09",
-        "netPnl": "+1414.06 USD | +10.04%",
-        "favorableExcursion": "+1429.57 USD",
-        "adverseExcursion": "-461.83 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "AMEX:UDOW",
-      "timeframe": "60",
-      "watchlist_name": "Swing 1H",
-      "watchlist_symbol_count": 9,
-      "scanned_at": "2026-07-28T19:38:04.475Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:UDOW",
-        "resolution": "60",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:UDOW",
-        "time": 1785265200,
-        "open": 71.57,
-        "high": 71.61,
-        "low": 71.46,
-        "close": 71.55,
-        "last": 71.55,
-        "volume": 4808,
-        "description": "ProShares UltraPro Dow30",
-        "exchange": "Cboe One",
-        "type": "fund"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 31,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▼",
-                "price": 63.29
-              },
-              {
-                "text": "▲",
-                "price": 51.75
-              },
-              {
-                "text": "▼",
-                "price": 57.3
-              },
-              {
-                "text": "▲",
-                "price": 51.13
-              },
-              {
-                "text": "▼",
-                "price": 54.44
-              },
-              {
-                "text": "▲",
-                "price": 46.17
-              },
-              {
-                "text": "▼",
                 "price": 56.71
               },
               {
@@ -3872,6 +2410,14 @@
               {
                 "text": "▲",
                 "price": 57.48
+              },
+              {
+                "text": "▼",
+                "price": 62.3
+              },
+              {
+                "text": "▲",
+                "price": 58.28
               },
               {
                 "text": "▼",
@@ -3932,6 +2478,22 @@
               {
                 "text": "▼",
                 "price": 72.06
+              },
+              {
+                "text": "▲",
+                "price": 68.7
+              },
+              {
+                "text": "▼",
+                "price": 72
+              },
+              {
+                "text": "▲",
+                "price": 67.79
+              },
+              {
+                "text": "▼",
+                "price": 70.51
               }
             ]
           }
@@ -3945,7 +2507,7 @@
       "signal": {
         "hasSignal": true,
         "direction": "bearish",
-        "price": 72.06,
+        "price": 70.51,
         "source": "label",
         "study": "Swing Profile Strategy [BigBeluga]",
         "text": "▼",
@@ -3956,371 +2518,13 @@
         "tradeNumber": null,
         "side": "LONG",
         "signal": "EXIT",
-        "entryTime": "2026-07-14T12:00:00.000Z",
-        "entryPrice": "69.47",
-        "exitTime": "2026-07-27T13:00:00.000Z",
-        "exitPrice": "70.56",
-        "netPnl": "+167.19 USD | +1.37%",
-        "favorableExcursion": "+433.05 USD",
-        "adverseExcursion": "-508.55 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "AMEX:UPRO",
-      "timeframe": "60",
-      "watchlist_name": "Swing 1H",
-      "watchlist_symbol_count": 9,
-      "scanned_at": "2026-07-28T19:38:08.323Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:UPRO",
-        "resolution": "60",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:UPRO",
-        "time": 1785265200,
-        "open": 137.79,
-        "high": 137.92,
-        "low": 137.61,
-        "close": 137.75,
-        "last": 137.75,
-        "volume": 3336,
-        "description": "ProShares UltraPro S&P500",
-        "exchange": "Cboe One",
-        "type": "fund"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 26,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▲",
-                "price": 108.74
-              },
-              {
-                "text": "▼",
-                "price": 121.72
-              },
-              {
-                "text": "▲",
-                "price": 110.59
-              },
-              {
-                "text": "▼",
-                "price": 117.5
-              },
-              {
-                "text": "▲",
-                "price": 112.42
-              },
-              {
-                "text": "▼",
-                "price": 120.01
-              },
-              {
-                "text": "▲",
-                "price": 102.56
-              },
-              {
-                "text": "▼",
-                "price": 113.41
-              },
-              {
-                "text": "▲",
-                "price": 102.49
-              },
-              {
-                "text": "▼",
-                "price": 108.77
-              },
-              {
-                "text": "▲",
-                "price": 88.16
-              },
-              {
-                "text": "▼",
-                "price": 126.43
-              },
-              {
-                "text": "▲",
-                "price": 120.94
-              },
-              {
-                "text": "▼",
-                "price": 128.3
-              },
-              {
-                "text": "▲",
-                "price": 123.62
-              },
-              {
-                "text": "▼",
-                "price": 145.93
-              },
-              {
-                "text": "▲",
-                "price": 135.4
-              },
-              {
-                "text": "▼",
-                "price": 151.4
-              },
-              {
-                "text": "▲",
-                "price": 128.5
-              },
-              {
-                "text": "▼",
-                "price": 147.87
-              },
-              {
-                "text": "▲",
-                "price": 131.2
-              },
-              {
-                "text": "▼",
-                "price": 145
-              },
-              {
-                "text": "▲",
-                "price": 137.46
-              },
-              {
-                "text": "▼",
-                "price": 146.58
-              },
-              {
-                "text": "▲",
-                "price": 137.75
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bullish",
-        "price": 137.75,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▲",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "OPEN",
-        "entryTime": "2026-07-23T13:00:00.000Z",
-        "entryPrice": "137.32",
-        "netPnl": "+33.11 USD | +0.30%",
-        "favorableExcursion": "+234.29 USD",
-        "adverseExcursion": "-240.03 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "AMEX:URTY",
-      "timeframe": "60",
-      "watchlist_name": "Swing 1H",
-      "watchlist_symbol_count": 9,
-      "scanned_at": "2026-07-28T19:38:12.321Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:URTY",
-        "resolution": "60",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:URTY",
-        "time": 1785265200,
-        "open": 80.33,
-        "high": 80.77,
-        "low": 80.33,
-        "close": 80.495,
-        "last": 80.495,
-        "volume": 8606,
-        "description": "ProShares UltraPro Russell2000",
-        "exchange": "Cboe One",
-        "type": "fund"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 32,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▲",
-                "price": 59.95
-              },
-              {
-                "text": "▼",
-                "price": 66.09
-              },
-              {
-                "text": "▲",
-                "price": 59.53
-              },
-              {
-                "text": "▼",
-                "price": 65.21
-              },
-              {
-                "text": "▲",
-                "price": 50.62
-              },
-              {
-                "text": "▼",
-                "price": 55.18
-              },
-              {
-                "text": "▲",
-                "price": 46.28
-              },
-              {
-                "text": "▼",
-                "price": 55.61
-              },
-              {
-                "text": "▲",
-                "price": 46
-              },
-              {
-                "text": "▼",
-                "price": 73.21
-              },
-              {
-                "text": "▲",
-                "price": 67.14
-              },
-              {
-                "text": "▼",
-                "price": 71.85
-              },
-              {
-                "text": "▲",
-                "price": 65.85
-              },
-              {
-                "text": "▼",
-                "price": 80.01
-              },
-              {
-                "text": "▲",
-                "price": 65.24
-              },
-              {
-                "text": "▼",
-                "price": 82.3
-              },
-              {
-                "text": "▲",
-                "price": 76.7
-              },
-              {
-                "text": "▼",
-                "price": 81.92
-              },
-              {
-                "text": "▲",
-                "price": 69.36
-              },
-              {
-                "text": "▼",
-                "price": 85.87
-              },
-              {
-                "text": "▲",
-                "price": 78.31
-              },
-              {
-                "text": "▼",
-                "price": 88.41
-              },
-              {
-                "text": "▲",
-                "price": 82.52
-              },
-              {
-                "text": "▼",
-                "price": 89.41
-              },
-              {
-                "text": "▲",
-                "price": 80.2
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bullish",
-        "price": 80.2,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▲",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "OPEN",
-        "entryTime": "2026-07-17T14:00:00.000Z",
-        "entryPrice": "82.03",
-        "netPnl": "-281.52 USD | -1.77%",
-        "favorableExcursion": "+271.95 USD",
-        "adverseExcursion": "-736.37 USD",
+        "entryTime": "2026-07-23T12:30:00.000Z",
+        "entryPrice": "67.6",
+        "exitTime": "2026-07-27T08:45:00.000Z",
+        "exitPrice": "70.07",
+        "netPnl": "+422.15 USD | +3.45%",
+        "favorableExcursion": "+434.83 USD",
+        "adverseExcursion": "-184.19 USD",
         "rawText": null
       },
       "trade_source": "strategy_internal_api",
@@ -4328,14 +2532,14 @@
     },
     {
       "symbol": "AMEX:FAS",
-      "timeframe": "60",
-      "watchlist_name": "Swing 1H",
-      "watchlist_symbol_count": 9,
-      "scanned_at": "2026-07-28T19:38:16.164Z",
+      "timeframe": "45",
+      "watchlist_name": "Swing 45m",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-28T19:52:30.981Z",
       "state": {
         "success": true,
         "symbol": "BATS:FAS",
-        "resolution": "60",
+        "resolution": "45",
         "chartType": 19,
         "studies": [
           {
@@ -4352,13 +2556,13 @@
       "quote": {
         "success": true,
         "symbol": "BATS:FAS",
-        "time": 1785265200,
-        "open": 178.95,
-        "high": 179.65,
+        "time": 1785266100,
+        "open": 179.11,
+        "high": 179.75,
         "low": 178.75,
-        "close": 179.53,
-        "last": 179.53,
-        "volume": 1253,
+        "close": 179.24,
+        "last": 179.24,
+        "volume": 3338,
         "description": "Direxion Daily Financial Bull 3X ETF",
         "exchange": "Cboe One",
         "type": "fund"
@@ -4372,22 +2576,6 @@
             "total_labels": 31,
             "showing": 25,
             "labels": [
-              {
-                "text": "▼",
-                "price": 137.54
-              },
-              {
-                "text": "▲",
-                "price": 113.03
-              },
-              {
-                "text": "▼",
-                "price": 124.01
-              },
-              {
-                "text": "▲",
-                "price": 112.14
-              },
               {
                 "text": "▼",
                 "price": 126
@@ -4426,6 +2614,14 @@
               },
               {
                 "text": "▲",
+                "price": 131.7
+              },
+              {
+                "text": "▼",
+                "price": 138.19
+              },
+              {
+                "text": "▲",
                 "price": 127
               },
               {
@@ -4443,6 +2639,14 @@
               {
                 "text": "▲",
                 "price": 123.85
+              },
+              {
+                "text": "▼",
+                "price": 138.29
+              },
+              {
+                "text": "▲",
+                "price": 134
               },
               {
                 "text": "▼",
@@ -4495,373 +2699,13 @@
         "tradeNumber": null,
         "side": "LONG",
         "signal": "EXIT",
-        "entryTime": "2026-07-20T14:00:00.000Z",
-        "entryPrice": "167.29",
-        "exitTime": "2026-07-24T16:00:00.000Z",
-        "exitPrice": "167.93",
-        "netPnl": "+26.21 USD | +0.18%",
-        "favorableExcursion": "+146.43 USD",
-        "adverseExcursion": "-520.07 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "AMEX:DUSL",
-      "timeframe": "60",
-      "watchlist_name": "Swing 1H",
-      "watchlist_symbol_count": 9,
-      "scanned_at": "2026-07-28T19:38:20.546Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:DUSL",
-        "resolution": "60",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:DUSL",
-        "time": 1785261600,
-        "open": 97.94,
-        "high": 97.94,
-        "low": 97.73,
-        "close": 97.73,
-        "last": 97.73,
-        "volume": 8,
-        "description": "Direxion Daily Industrials Bull 3X ETF",
-        "exchange": "Cboe One",
-        "type": "fund"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 31,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▼",
-                "price": 76.59
-              },
-              {
-                "text": "▲",
-                "price": 68.4
-              },
-              {
-                "text": "▼",
-                "price": 73.97
-              },
-              {
-                "text": "▲",
-                "price": 69.6
-              },
-              {
-                "text": "▼",
-                "price": 78.1
-              },
-              {
-                "text": "▲",
-                "price": 67.3
-              },
-              {
-                "text": "▼",
-                "price": 78.38
-              },
-              {
-                "text": "▲",
-                "price": 64.6
-              },
-              {
-                "text": "▼",
-                "price": 75.37
-              },
-              {
-                "text": "▲",
-                "price": 65.03
-              },
-              {
-                "text": "▼",
-                "price": 71.07
-              },
-              {
-                "text": "▲",
-                "price": 67.46
-              },
-              {
-                "text": "▼",
-                "price": 83.66
-              },
-              {
-                "text": "▲",
-                "price": 77.6
-              },
-              {
-                "text": "▼",
-                "price": 100.93
-              },
-              {
-                "text": "▲",
-                "price": 66.1
-              },
-              {
-                "text": "▼",
-                "price": 91.5
-              },
-              {
-                "text": "▲",
-                "price": 81.7
-              },
-              {
-                "text": "▼",
-                "price": 94.6
-              },
-              {
-                "text": "▲",
-                "price": 80.12
-              },
-              {
-                "text": "▼",
-                "price": 91.47
-              },
-              {
-                "text": "▲",
-                "price": 81.34
-              },
-              {
-                "text": "▼",
-                "price": 106.92
-              },
-              {
-                "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 19\nPosition: Flat\nBars in trade: -\nExit rules: flip only\nPyramid: off",
-                "price": 101.51
-              },
-              {
-                "text": "T: 3.138K\nB: 938\nS: 2.2K\nD: -40.22%",
-                "price": 91.8
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bearish",
-        "price": 101.51,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "Mode: Fast (active bar)\nLast signal: Short\nBars since signal: 19\nPosition: Flat\nBars in trade: -\nExit rules: flip only\nPyramid: off",
-        "labelCount": 25,
-        "positionState": "flat"
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "EXIT",
-        "entryTime": "2026-07-07T15:00:00.000Z",
-        "entryPrice": "96.9",
-        "exitTime": "2026-07-23T15:00:00.000Z",
-        "exitPrice": "97.9",
-        "netPnl": "+110.31 USD | +0.83%",
-        "favorableExcursion": "+362.10 USD",
-        "adverseExcursion": "-711.98 USD",
-        "rawText": null
-      },
-      "trade_source": "strategy_internal_api",
-      "trade_log_appended": 0
-    },
-    {
-      "symbol": "NYSE:BE",
-      "timeframe": "60",
-      "watchlist_name": "Swing 1H",
-      "watchlist_symbol_count": 9,
-      "scanned_at": "2026-07-28T19:38:24.784Z",
-      "state": {
-        "success": true,
-        "symbol": "BATS:BE",
-        "resolution": "60",
-        "chartType": 19,
-        "studies": [
-          {
-            "id": "uRwXUS",
-            "name": "Swing Profile Strategy [BigBeluga]"
-          }
-        ]
-      },
-      "indicators": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "quote": {
-        "success": true,
-        "symbol": "BATS:BE",
-        "time": 1785265200,
-        "open": 162.28,
-        "high": 170.84,
-        "low": 162.28,
-        "close": 168.8,
-        "last": 168.8,
-        "volume": 270728,
-        "description": "Bloom Energy Corporation Class A",
-        "exchange": "Cboe One",
-        "type": "stock"
-      },
-      "labels": {
-        "success": true,
-        "study_count": 1,
-        "studies": [
-          {
-            "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 30,
-            "showing": 25,
-            "labels": [
-              {
-                "text": "▲",
-                "price": 131.01
-              },
-              {
-                "text": "▼",
-                "price": 180.88
-              },
-              {
-                "text": "▲",
-                "price": 130.12
-              },
-              {
-                "text": "▼",
-                "price": 165.34
-              },
-              {
-                "text": "▲",
-                "price": 149.3
-              },
-              {
-                "text": "▼",
-                "price": 164.44
-              },
-              {
-                "text": "▲",
-                "price": 148.53
-              },
-              {
-                "text": "▼",
-                "price": 169.25
-              },
-              {
-                "text": "▲",
-                "price": 116.5
-              },
-              {
-                "text": "▼",
-                "price": 229.51
-              },
-              {
-                "text": "▲",
-                "price": 200.26
-              },
-              {
-                "text": "▼",
-                "price": 246.02
-              },
-              {
-                "text": "▲",
-                "price": 216.1
-              },
-              {
-                "text": "▼",
-                "price": 307.38
-              },
-              {
-                "text": "▲",
-                "price": 249.15
-              },
-              {
-                "text": "▼",
-                "price": 310
-              },
-              {
-                "text": "▲",
-                "price": 241.86
-              },
-              {
-                "text": "▼",
-                "price": 326.68
-              },
-              {
-                "text": "▲",
-                "price": 268.22
-              },
-              {
-                "text": "▼",
-                "price": 305.38
-              },
-              {
-                "text": "▲",
-                "price": 223.8
-              },
-              {
-                "text": "▼",
-                "price": 351.25
-              },
-              {
-                "text": "▲",
-                "price": 247.94
-              },
-              {
-                "text": "▼",
-                "price": 349.88
-              },
-              {
-                "text": "▲",
-                "price": 194.1
-              }
-            ]
-          }
-        ]
-      },
-      "tables": {
-        "success": true,
-        "study_count": 0,
-        "studies": []
-      },
-      "signal": {
-        "hasSignal": true,
-        "direction": "bullish",
-        "price": 194.1,
-        "source": "label",
-        "study": "Swing Profile Strategy [BigBeluga]",
-        "text": "▲",
-        "labelCount": 25,
-        "positionState": null
-      },
-      "trade": {
-        "tradeNumber": null,
-        "side": "LONG",
-        "signal": "OPEN",
-        "entryTime": "2026-07-24T14:00:00.000Z",
-        "entryPrice": "202.17",
-        "netPnl": "-2469.38 USD | -15.69%",
-        "favorableExcursion": "+176.70 USD",
-        "adverseExcursion": "-3309.44 USD",
+        "entryTime": "2026-07-17T18:30:00.000Z",
+        "entryPrice": "168.42",
+        "exitTime": "2026-07-24T15:30:00.000Z",
+        "exitPrice": "169.11",
+        "netPnl": "+25.03 USD | +0.21%",
+        "favorableExcursion": "+114.42 USD",
+        "adverseExcursion": "-509.67 USD",
         "rawText": null
       },
       "trade_source": "strategy_internal_api",
@@ -4869,14 +2713,14 @@
     },
     {
       "symbol": "TSX:TD",
-      "timeframe": "60",
-      "watchlist_name": "Swing 1H",
-      "watchlist_symbol_count": 9,
-      "scanned_at": "2026-07-28T19:38:28.737Z",
+      "timeframe": "45",
+      "watchlist_name": "Swing 45m",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-28T19:52:35.276Z",
       "state": {
         "success": true,
         "symbol": "TSX_DLY:TD",
-        "resolution": "60",
+        "resolution": "45",
         "chartType": 19,
         "studies": [
           {
@@ -4893,13 +2737,13 @@
       "quote": {
         "success": true,
         "symbol": "TSX_DLY:TD",
-        "time": 1785265200,
-        "open": 169.36,
-        "high": 169.73,
-        "low": 169.3,
-        "close": 169.7,
-        "last": 169.7,
-        "volume": 98500,
+        "time": 1785266100,
+        "open": 169.55,
+        "high": 169.79,
+        "low": 169.52,
+        "close": 169.66,
+        "last": 169.66,
+        "volume": 121200,
         "description": "Toronto-Dominion Bank",
         "exchange": "TSX",
         "type": "stock"
@@ -4910,8 +2754,8 @@
         "studies": [
           {
             "name": "Swing Profile Strategy [BigBeluga]",
-            "total_labels": 24,
-            "showing": 24,
+            "total_labels": 20,
+            "showing": 20,
             "labels": [
               {
                 "text": "▼",
@@ -4923,35 +2767,19 @@
               },
               {
                 "text": "▼",
-                "price": 108.68
-              },
-              {
-                "text": "▲",
-                "price": 100.01
-              },
-              {
-                "text": "▼",
-                "price": 111.11
-              },
-              {
-                "text": "▲",
-                "price": 107.6
-              },
-              {
-                "text": "▼",
-                "price": 114.24
-              },
-              {
-                "text": "▲",
-                "price": 109.5
-              },
-              {
-                "text": "▼",
                 "price": 116.49
               },
               {
                 "text": "▲",
                 "price": 112.26
+              },
+              {
+                "text": "▼",
+                "price": 126.92
+              },
+              {
+                "text": "▲",
+                "price": 124.56
               },
               {
                 "text": "▼",
@@ -5025,18 +2853,366 @@
         "source": "label",
         "study": "Swing Profile Strategy [BigBeluga]",
         "text": "▲",
-        "labelCount": 24,
+        "labelCount": 20,
         "positionState": null
       },
       "trade": {
         "tradeNumber": null,
         "side": "LONG",
         "signal": "OPEN",
-        "entryTime": "2026-07-20T20:00:00.000Z",
+        "entryTime": "2026-07-20T19:15:00.000Z",
         "entryPrice": "169.32",
-        "netPnl": "+26.22 USD | +0.21%",
-        "favorableExcursion": "+139.43 USD",
-        "adverseExcursion": "-171.07 USD",
+        "netPnl": "+23.04 USD | +0.20%",
+        "favorableExcursion": "+129.32 USD",
+        "adverseExcursion": "-158.68 USD",
+        "rawText": null
+      },
+      "trade_source": "strategy_internal_api",
+      "trade_log_appended": 0
+    },
+    {
+      "symbol": "NASDAQ:AMDL",
+      "timeframe": "45",
+      "watchlist_name": "Swing 45m",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-28T19:52:39.111Z",
+      "state": {
+        "success": true,
+        "symbol": "BATS:AMDL",
+        "resolution": "45",
+        "chartType": 19,
+        "studies": [
+          {
+            "id": "uRwXUS",
+            "name": "Swing Profile Strategy [BigBeluga]"
+          }
+        ]
+      },
+      "indicators": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "quote": {
+        "success": true,
+        "symbol": "BATS:AMDL",
+        "time": 1785266100,
+        "open": 49,
+        "high": 50.4,
+        "low": 48.211,
+        "close": 48.211,
+        "last": 48.211,
+        "volume": 19881,
+        "description": "GraniteShares 2x Long AMD Daily ETF",
+        "exchange": "Cboe One",
+        "type": "fund"
+      },
+      "labels": {
+        "success": true,
+        "study_count": 1,
+        "studies": [
+          {
+            "name": "Swing Profile Strategy [BigBeluga]",
+            "total_labels": 22,
+            "showing": 22,
+            "labels": [
+              {
+                "text": "▼",
+                "price": null
+              },
+              {
+                "text": "▲",
+                "price": null
+              },
+              {
+                "text": "▼",
+                "price": 14.6
+              },
+              {
+                "text": "▲",
+                "price": 11
+              },
+              {
+                "text": "▼",
+                "price": 35.7
+              },
+              {
+                "text": "▲",
+                "price": 27
+              },
+              {
+                "text": "▼",
+                "price": 37.4
+              },
+              {
+                "text": "▲",
+                "price": 31.59
+              },
+              {
+                "text": "▼",
+                "price": 59.87
+              },
+              {
+                "text": "▲",
+                "price": 41.16
+              },
+              {
+                "text": "▼",
+                "price": 78
+              },
+              {
+                "text": "▲",
+                "price": 48.28
+              },
+              {
+                "text": "▼",
+                "price": 78.27
+              },
+              {
+                "text": "▲",
+                "price": 63.7
+              },
+              {
+                "text": "▼",
+                "price": 78.6
+              },
+              {
+                "text": "▲",
+                "price": 62.75
+              },
+              {
+                "text": "▼",
+                "price": 74.76
+              },
+              {
+                "text": "▲",
+                "price": 60.5
+              },
+              {
+                "text": "▼",
+                "price": 83.75
+              },
+              {
+                "text": "▲",
+                "price": 59.64
+              },
+              {
+                "text": "▼",
+                "price": 78.32
+              },
+              {
+                "text": "▲",
+                "price": 49.83
+              }
+            ]
+          }
+        ]
+      },
+      "tables": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "signal": {
+        "hasSignal": true,
+        "direction": "bullish",
+        "price": 49.83,
+        "source": "label",
+        "study": "Swing Profile Strategy [BigBeluga]",
+        "text": "▲",
+        "labelCount": 22,
+        "positionState": null
+      },
+      "trade": {
+        "tradeNumber": null,
+        "side": "LONG",
+        "signal": "OPEN",
+        "entryTime": "2026-07-24T14:00:00.000Z",
+        "entryPrice": "63.71",
+        "netPnl": "-3224.00 USD | -22.94%",
+        "favorableExcursion": "+989.31 USD",
+        "adverseExcursion": "-3886.21 USD",
+        "rawText": null
+      },
+      "trade_source": "strategy_internal_api",
+      "trade_log_appended": 0
+    },
+    {
+      "symbol": "AMEX:DRN",
+      "timeframe": "45",
+      "watchlist_name": "Swing 45m",
+      "watchlist_symbol_count": 6,
+      "scanned_at": "2026-07-28T19:52:42.835Z",
+      "state": {
+        "success": true,
+        "symbol": "BATS:DRN",
+        "resolution": "45",
+        "chartType": 19,
+        "studies": [
+          {
+            "id": "uRwXUS",
+            "name": "Swing Profile Strategy [BigBeluga]"
+          }
+        ]
+      },
+      "indicators": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "quote": {
+        "success": true,
+        "symbol": "BATS:DRN",
+        "time": 1785266100,
+        "open": 12.01,
+        "high": 12.01,
+        "low": 11.93,
+        "close": 11.95,
+        "last": 11.95,
+        "volume": 2361,
+        "description": "Direxion Daily Real Estate Bull 3X ETF",
+        "exchange": "Cboe One",
+        "type": "fund"
+      },
+      "labels": {
+        "success": true,
+        "study_count": 1,
+        "studies": [
+          {
+            "name": "Swing Profile Strategy [BigBeluga]",
+            "total_labels": 29,
+            "showing": 25,
+            "labels": [
+              {
+                "text": "▼",
+                "price": 8.77
+              },
+              {
+                "text": "▲",
+                "price": 8.31
+              },
+              {
+                "text": "▼",
+                "price": 8.9
+              },
+              {
+                "text": "▲",
+                "price": 8.21
+              },
+              {
+                "text": "▼",
+                "price": 9.75
+              },
+              {
+                "text": "▲",
+                "price": 8.67
+              },
+              {
+                "text": "▼",
+                "price": 9.19
+              },
+              {
+                "text": "▲",
+                "price": 8.51
+              },
+              {
+                "text": "▼",
+                "price": 10.81
+              },
+              {
+                "text": "▲",
+                "price": 9.3
+              },
+              {
+                "text": "▼",
+                "price": 10.01
+              },
+              {
+                "text": "▲",
+                "price": 8.05
+              },
+              {
+                "text": "▼",
+                "price": 11.15
+              },
+              {
+                "text": "▲",
+                "price": 10.01
+              },
+              {
+                "text": "▼",
+                "price": 11.23
+              },
+              {
+                "text": "▲",
+                "price": 9.9
+              },
+              {
+                "text": "▼",
+                "price": 11.21
+              },
+              {
+                "text": "▲",
+                "price": 9.84
+              },
+              {
+                "text": "▼",
+                "price": 11.6
+              },
+              {
+                "text": "▲",
+                "price": 10.21
+              },
+              {
+                "text": "▼",
+                "price": 11.48
+              },
+              {
+                "text": "▲",
+                "price": 10.5
+              },
+              {
+                "text": "▼",
+                "price": 11.3
+              },
+              {
+                "text": "▲",
+                "price": 10.51
+              },
+              {
+                "text": "▼",
+                "price": 11.85
+              }
+            ]
+          }
+        ]
+      },
+      "tables": {
+        "success": true,
+        "study_count": 0,
+        "studies": []
+      },
+      "signal": {
+        "hasSignal": true,
+        "direction": "bearish",
+        "price": 11.85,
+        "source": "label",
+        "study": "Swing Profile Strategy [BigBeluga]",
+        "text": "▼",
+        "labelCount": 25,
+        "positionState": null
+      },
+      "trade": {
+        "tradeNumber": null,
+        "side": "LONG",
+        "signal": "EXIT",
+        "entryTime": "2026-07-22T20:45:00.000Z",
+        "entryPrice": "11.19",
+        "exitTime": "2026-07-24T14:00:00.000Z",
+        "exitPrice": "11.81",
+        "netPnl": "+628.04 USD | +5.33%",
+        "favorableExcursion": "+640.47 USD",
+        "adverseExcursion": "-201.13 USD",
         "rawText": null
       },
       "trade_source": "strategy_internal_api",
@@ -5045,8 +3221,7 @@
   ],
   "watchlistsChecked": [
     "Swing 15m",
-    "Swing 30m",
-    "Swing 1H"
+    "Swing 45m"
   ],
   "watchlistSync": [
     {
@@ -5455,7 +3630,7 @@
       "entryPrice": "41.43",
       "entryTime": "07/27/2026, 10:45:00 AM ET",
       "entryTimeRaw": "2026-07-27T14:45:00.000Z",
-      "netPnl": "-67.25 USD | -0.57%",
+      "netPnl": "-83.39 USD | -0.71%",
       "favorableExcursion": "+5.00 USD",
       "adverseExcursion": "-140.26 USD",
       "excursionStats": {
@@ -5630,7 +3805,7 @@
       "entryPrice": "63.71",
       "entryTime": "07/24/2026, 10:00:00 AM ET",
       "entryTimeRaw": "2026-07-24T14:00:00.000Z",
-      "netPnl": "-3074.24 USD | -21.87%",
+      "netPnl": "-3224.00 USD | -22.94%",
       "favorableExcursion": "+989.31 USD",
       "adverseExcursion": "-3886.21 USD",
       "excursionStats": {
@@ -5748,7 +3923,7 @@
       "entryPrice": "40.63",
       "entryTime": "07/23/2026, 09:30:00 AM ET",
       "entryTimeRaw": "2026-07-23T13:30:00.000Z",
-      "netPnl": "-878.62 USD | -9.19%",
+      "netPnl": "-898.69 USD | -9.40%",
       "favorableExcursion": "+151.50 USD",
       "adverseExcursion": "-1153.05 USD",
       "excursionStats": {
@@ -5957,7 +4132,7 @@
       "entryPrice": "169.32",
       "entryTime": "07/20/2026, 03:15:00 PM ET",
       "entryTimeRaw": "2026-07-20T19:15:00.000Z",
-      "netPnl": "+19.20 USD | +0.17%",
+      "netPnl": "+23.04 USD | +0.20%",
       "favorableExcursion": "+129.32 USD",
       "adverseExcursion": "-158.68 USD",
       "excursionStats": {
@@ -7462,7 +5637,7 @@
           "entryPrice": "41.43",
           "entryTime": "07/27/2026, 10:45:00 AM ET",
           "entryTimeRaw": "2026-07-27T14:45:00.000Z",
-          "netPnl": "-67.25 USD | -0.57%",
+          "netPnl": "-83.39 USD | -0.71%",
           "favorableExcursion": "+5.00 USD",
           "adverseExcursion": "-140.26 USD"
         },
@@ -7484,7 +5659,7 @@
           "entryPrice": "40.63",
           "entryTime": "07/23/2026, 09:30:00 AM ET",
           "entryTimeRaw": "2026-07-23T13:30:00.000Z",
-          "netPnl": "-878.62 USD | -9.19%",
+          "netPnl": "-898.69 USD | -9.40%",
           "favorableExcursion": "+151.50 USD",
           "adverseExcursion": "-1153.05 USD"
         },
@@ -7592,12 +5767,12 @@
     {
       "watchlistName": "Swing 30m",
       "timeframe": "30",
-      "source": "tradingview_panel",
+      "source": "scheduled_skip",
       "symbolCount": 7,
       "trades": [
         {
           "symbol": "BATS:AMDL",
-          "signal": "OPEN",
+          "signal": "EXIT",
           "wasOpen": true,
           "entryPrice": "63.71",
           "entryTime": "07/24/2026, 10:00:00 AM ET",
@@ -7607,19 +5782,8 @@
           "adverseExcursion": "-5399.59 USD"
         },
         {
-          "symbol": "BATS:WTAI",
-          "signal": "OPEN",
-          "wasOpen": true,
-          "entryPrice": "39.37",
-          "entryTime": "07/24/2026, 10:00:00 AM ET",
-          "entryTimeRaw": "2026-07-24T14:00:00.000Z",
-          "netPnl": "-783.36 USD | -6.55%",
-          "favorableExcursion": "+121.14 USD",
-          "adverseExcursion": "-1125.90 USD"
-        },
-        {
           "symbol": "BATS:EWY",
-          "signal": "OPEN",
+          "signal": "EXIT",
           "wasOpen": true,
           "entryPrice": "169.21",
           "entryTime": "07/24/2026, 04:30:00 AM ET",
@@ -7630,7 +5794,7 @@
         },
         {
           "symbol": "BATS:KORU",
-          "signal": "OPEN",
+          "signal": "EXIT",
           "wasOpen": true,
           "entryPrice": "20.23",
           "entryTime": "07/24/2026, 04:30:00 AM ET",
@@ -7638,17 +5802,6 @@
           "netPnl": "-5160.60 USD | -26.48%",
           "favorableExcursion": "+576.24 USD",
           "adverseExcursion": "-6450.96 USD"
-        },
-        {
-          "symbol": "TSX_DLY:TD",
-          "signal": "OPEN",
-          "wasOpen": true,
-          "entryPrice": "170.35",
-          "entryTime": "07/20/2026, 10:30:00 AM ET",
-          "entryTimeRaw": "2026-07-20T14:30:00.000Z",
-          "netPnl": "-46.86 USD | -0.39%",
-          "favorableExcursion": "+74.56 USD",
-          "adverseExcursion": "-231.68 USD"
         },
         {
           "symbol": "BATS:UDOW",
@@ -7662,6 +5815,17 @@
           "adverseExcursion": "-318.94 USD"
         },
         {
+          "symbol": "TSX_DLY:TD",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "170.35",
+          "entryTime": "07/20/2026, 10:30:00 AM ET",
+          "entryTimeRaw": "2026-07-20T14:30:00.000Z",
+          "netPnl": "-46.86 USD | -0.39%",
+          "favorableExcursion": "+74.56 USD",
+          "adverseExcursion": "-231.68 USD"
+        },
+        {
           "symbol": "BATS:FAS",
           "signal": "EXIT",
           "wasOpen": false,
@@ -7671,18 +5835,29 @@
           "netPnl": "-290.93 USD | -2.51%",
           "favorableExcursion": "+21.23 USD",
           "adverseExcursion": "-795.50 USD"
+        },
+        {
+          "symbol": "CBOE:WTAI",
+          "signal": "—",
+          "entryPrice": "164.05",
+          "entryTime": "No prior trade recorded",
+          "entryTimeRaw": null,
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         }
       ]
     },
     {
       "watchlistName": "Swing 45m",
       "timeframe": "45",
-      "source": "scheduled_skip",
+      "source": "tradingview_panel",
       "symbolCount": 6,
       "trades": [
         {
           "symbol": "BATS:WTAI",
-          "signal": "EXIT",
+          "signal": "OPEN",
           "wasOpen": true,
           "entryPrice": "39.06",
           "entryTime": "07/24/2026, 10:45:00 AM ET",
@@ -7693,14 +5868,25 @@
         },
         {
           "symbol": "BATS:AMDL",
-          "signal": "EXIT",
+          "signal": "OPEN",
           "wasOpen": true,
           "entryPrice": "63.71",
           "entryTime": "07/24/2026, 10:00:00 AM ET",
           "entryTimeRaw": "2026-07-24T14:00:00.000Z",
-          "netPnl": "-3074.24 USD | -21.87%",
+          "netPnl": "-3224.00 USD | -22.94%",
           "favorableExcursion": "+989.31 USD",
           "adverseExcursion": "-3886.21 USD"
+        },
+        {
+          "symbol": "TSX_DLY:TD",
+          "signal": "OPEN",
+          "wasOpen": true,
+          "entryPrice": "169.32",
+          "entryTime": "07/20/2026, 03:15:00 PM ET",
+          "entryTimeRaw": "2026-07-20T19:15:00.000Z",
+          "netPnl": "+23.04 USD | +0.20%",
+          "favorableExcursion": "+129.32 USD",
+          "adverseExcursion": "-158.68 USD"
         },
         {
           "symbol": "BATS:UDOW",
@@ -7725,17 +5911,6 @@
           "adverseExcursion": "-201.13 USD"
         },
         {
-          "symbol": "TSX_DLY:TD",
-          "signal": "EXIT",
-          "wasOpen": true,
-          "entryPrice": "169.32",
-          "entryTime": "07/20/2026, 03:15:00 PM ET",
-          "entryTimeRaw": "2026-07-20T19:15:00.000Z",
-          "netPnl": "+19.20 USD | +0.17%",
-          "favorableExcursion": "+129.32 USD",
-          "adverseExcursion": "-158.68 USD"
-        },
-        {
           "symbol": "BATS:FAS",
           "signal": "EXIT",
           "wasOpen": false,
@@ -7751,12 +5926,12 @@
     {
       "watchlistName": "Swing 1H",
       "timeframe": "60",
-      "source": "tradingview_panel",
+      "source": "scheduled_skip",
       "symbolCount": 9,
       "trades": [
         {
           "symbol": "BATS:BE",
-          "signal": "OPEN",
+          "signal": "EXIT",
           "wasOpen": true,
           "entryPrice": "202.17",
           "entryTime": "07/24/2026, 10:00:00 AM ET",
@@ -7766,19 +5941,8 @@
           "adverseExcursion": "-3309.44 USD"
         },
         {
-          "symbol": "BATS:INTC",
-          "signal": "OPEN",
-          "wasOpen": true,
-          "entryPrice": "96.41",
-          "entryTime": "07/24/2026, 10:00:00 AM ET",
-          "entryTimeRaw": "2026-07-24T14:00:00.000Z",
-          "netPnl": "-1285.20 USD | -9.25%",
-          "favorableExcursion": "+222.17 USD",
-          "adverseExcursion": "-1823.27 USD"
-        },
-        {
           "symbol": "BATS:UPRO",
-          "signal": "OPEN",
+          "signal": "EXIT",
           "wasOpen": true,
           "entryPrice": "137.32",
           "entryTime": "07/23/2026, 09:00:00 AM ET",
@@ -7789,7 +5953,7 @@
         },
         {
           "symbol": "TSX_DLY:TD",
-          "signal": "OPEN",
+          "signal": "EXIT",
           "wasOpen": true,
           "entryPrice": "169.32",
           "entryTime": "07/20/2026, 04:00:00 PM ET",
@@ -7797,17 +5961,6 @@
           "netPnl": "+26.22 USD | +0.21%",
           "favorableExcursion": "+139.43 USD",
           "adverseExcursion": "-171.07 USD"
-        },
-        {
-          "symbol": "BATS:URTY",
-          "signal": "OPEN",
-          "wasOpen": true,
-          "entryPrice": "82.03",
-          "entryTime": "07/17/2026, 10:00:00 AM ET",
-          "entryTimeRaw": "2026-07-17T14:00:00.000Z",
-          "netPnl": "-281.52 USD | -1.77%",
-          "favorableExcursion": "+271.95 USD",
-          "adverseExcursion": "-736.37 USD"
         },
         {
           "symbol": "BATS:FAS",
@@ -7819,6 +5972,17 @@
           "netPnl": "+26.21 USD | +0.18%",
           "favorableExcursion": "+146.43 USD",
           "adverseExcursion": "-520.07 USD"
+        },
+        {
+          "symbol": "BATS:URTY",
+          "signal": "EXIT",
+          "wasOpen": true,
+          "entryPrice": "82.03",
+          "entryTime": "07/17/2026, 10:00:00 AM ET",
+          "entryTimeRaw": "2026-07-17T14:00:00.000Z",
+          "netPnl": "-281.52 USD | -1.77%",
+          "favorableExcursion": "+271.95 USD",
+          "adverseExcursion": "-736.37 USD"
         },
         {
           "symbol": "BATS:UDOW",
@@ -7852,6 +6016,17 @@
           "netPnl": "+110.31 USD | +0.83%",
           "favorableExcursion": "+362.10 USD",
           "adverseExcursion": "-711.98 USD"
+        },
+        {
+          "symbol": "NASDAQ:INTC",
+          "signal": "—",
+          "entryPrice": "164.05",
+          "entryTime": "No prior trade recorded",
+          "entryTimeRaw": null,
+          "netPnl": "Unavailable",
+          "favorableExcursion": "Unavailable",
+          "adverseExcursion": "Unavailable",
+          "wasOpen": false
         }
       ]
     },
