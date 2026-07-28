@@ -23,6 +23,18 @@
  * is NOT what symbols are ranked by — measured on this data it ranks them slightly *worse* than
  * random. See the sort in `buildEdgeAnalysis` for the walk-forward numbers. Expectancy per trade
  * is the ranking dimension; treat cagrDd as a diagnostic column, not a score.
+ *
+ * `expectedPct` is a second, deliberately non-compounding annualized figure alongside CAGR. CAGR
+ * takes the observed calendar span (which, for a sparsely-traded symbol, is mostly idle time
+ * waiting for the next signal) and compounds the return to the power of (1/years) — over a short
+ * span that exponent inflates a modest run into a headline number that reads as far punchier than
+ * the trade-by-trade record supports. `expectedPct` instead asks "if trades like this kept
+ * arriving at the rate this symbol's own average hold period implies, what would a year of them
+ * add up to, added not compounded": `expectancyPct * (365.25 / avgHoldDays)`. Example: 3 trades
+ * averaging ~2.7%/trade (summing to 8%) that each hold ~30 days imply about 12 such trades/year,
+ * so expected = 2.7% * 12 = ~32% — versus CAGR's compounded ~36% for the same sample. Neither
+ * number is "the" truth; CAGR is the compounding portfolio-equity lens, expectedPct is the
+ * trade-frequency lens, and they're shown side by side for that reason.
  */
 import { readAllTradeLogs, listRuleTypes } from "./trade_log.js";
 
@@ -181,6 +193,11 @@ export function buildEdgeAnalysis({ openBySymbolTf = {}, minTrades = 4, ruleType
     if (!ann) continue;
     const stats = basicStats(trades);
     const maxDDPct = Number(live.maxDDPct || 0);
+    // Trades/year implied by how long this symbol's positions actually run, not by how much
+    // history happened to be captured — see the module docstring for why this differs from CAGR.
+    const expectedPct = stats.avgHoldDays && stats.avgHoldDays > 0
+      ? stats.expectancyPct * (365.25 / stats.avgHoldDays)
+      : null;
     symbols.push({
       key,
       ticker,
@@ -192,6 +209,7 @@ export function buildEdgeAnalysis({ openBySymbolTf = {}, minTrades = 4, ruleType
       openPct,
       maxDDPct,
       cagrDd: maxDDPct > 0 ? ann.cagr / maxDDPct : null,
+      expectedPct,
       enoughData: trades.length >= minTrades,
       rankable: trades.length >= RANK_MIN_TRADES,
     });
@@ -228,6 +246,7 @@ export function buildEdgeAnalysis({ openBySymbolTf = {}, minTrades = 4, ruleType
     const allTrades = pool.flatMap((s) => bySymbolTf.get(s.key) || []);
     const stats = basicStats(allTrades);
     const cagrs = pool.map((s) => s.cagr).filter(Number.isFinite);
+    const expecteds = pool.map((s) => s.expectedPct).filter(Number.isFinite);
     const ddRatios = pool.map((s) => s.cagrDd).filter((v) => v !== null && Number.isFinite(v));
     timeframes.push({
       timeframe: tf,
@@ -237,6 +256,8 @@ export function buildEdgeAnalysis({ openBySymbolTf = {}, minTrades = 4, ruleType
       ...stats,
       medianCagr: median(cagrs),
       meanCagr: cagrs.length ? cagrs.reduce((a, b) => a + b, 0) / cagrs.length : null,
+      medianExpected: median(expecteds),
+      meanExpected: expecteds.length ? expecteds.reduce((a, b) => a + b, 0) / expecteds.length : null,
       medianCagrDd: median(ddRatios),
       avgMaxDD: pool.reduce((s, x) => s + (x.maxDDPct || 0), 0) / (pool.length || 1),
       avgSpanYears: pool.reduce((s, x) => s + x.years, 0) / (pool.length || 1),

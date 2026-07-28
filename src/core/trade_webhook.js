@@ -93,10 +93,27 @@ export function orderAction(side) {
   return "buy";
 }
 
-export function buildWebhookPayload({ symbol, side, timeframe, price, group, secret }) {
+/**
+ * Closing order action — the inverse of orderAction()'s entry mapping. Closing a LONG position is a
+ * sell (give the shares back); closing a SHORT is a buy (cover). Reusing orderAction() unmodified for
+ * an exit would send the same side as the entry, which reads to the receiver as adding to the
+ * position rather than closing it.
+ */
+export function exitOrderAction(side) {
+  const s = String(side ?? "").toUpperCase();
+  if (s === "SHORT" || s === "SE") return "buy";
+  return "sell";
+}
+
+/**
+ * `action`, when given, is sent as-is instead of being derived from `side` via orderAction() — used
+ * by the exit dispatch path, which has already computed the closing action via exitOrderAction() and
+ * would otherwise have it re-derived (wrongly, as an entry) from the position's original side.
+ */
+export function buildWebhookPayload({ symbol, side, action, timeframe, price, group, secret }) {
   return {
     symbol: bareTicker(symbol),
-    side: orderAction(side),
+    side: action || orderAction(side),
     group: group || "swing",
     tag: timeframeTag(timeframe),
     // Sent as a string because TradingView's own placeholder expansion produces a string, and the
@@ -159,12 +176,11 @@ export function sentKey({ symbol, timeframe, entryTime }) {
   return `${bareTicker(symbol)}|${timeframeTag(timeframe)}|${entryTime}`;
 }
 
-export function recordSent(key, record) {
-  if (!key) return;
-  const state = readSentState();
-  state.sent[key] = { ...record, at: new Date().toISOString() };
+function persistSentState(state) {
   // Keep the ledger from growing without bound; 500 entries is far more than any plausible
-  // look-back and keeps the file small enough for the dashboard to fetch on every poll.
+  // look-back and keeps the file small enough for the dashboard to fetch on every poll. Sorted by
+  // the ENTRY's `at` (top-level), so a position with a since-added `.exit` still ages out as one
+  // unit rather than the entry and exit halves drifting apart in the trim.
   const keys = Object.keys(state.sent);
   if (keys.length > 500) {
     keys.sort((a, b) => String(state.sent[a].at).localeCompare(String(state.sent[b].at)));
@@ -178,7 +194,34 @@ export function recordSent(key, record) {
   }
 }
 
+export function recordSent(key, record) {
+  if (!key) return;
+  const state = readSentState();
+  state.sent[key] = { ...record, at: new Date().toISOString() };
+  persistSentState(state);
+}
+
 export function alreadySent(key) {
   if (!key) return false;
   return Boolean(readSentState().sent[key]);
+}
+
+/**
+ * Record that the paired EXIT for an already-sent entry has now also been sent. Merges onto the
+ * SAME ledger key rather than writing a new one, so `alreadySent(key)` keeps meaning exactly "we
+ * sent the entry" — the fact this exists at all is the auto-exit dispatcher's proof that this
+ * position is one it opened at the executor, not a position it's guessing about.
+ */
+export function recordExitSent(key, record) {
+  if (!key) return;
+  const state = readSentState();
+  const existing = state.sent[key] || {};
+  state.sent[key] = { ...existing, exit: { ...record, at: new Date().toISOString() } };
+  persistSentState(state);
+}
+
+/** Whether the paired EXIT for the entry recorded under `key` has already been sent. */
+export function alreadyExitSent(key) {
+  if (!key) return false;
+  return Boolean(readSentState().sent[key]?.exit);
 }

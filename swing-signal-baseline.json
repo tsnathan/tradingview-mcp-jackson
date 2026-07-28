@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-24T16:43:13.837Z",
+  "last_updated": "2026-07-28T19:38:41.580Z",
   "market_hours": {
     "timezone": "America/New_York",
     "open": "09:30",
@@ -47,13 +47,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 37.89,
-      "last_seen_at": "2026-07-24T16:42:47.359Z",
+      "last_seen_at": "2026-07-28T19:37:24.551Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-24T14:00:00.000Z",
       "entry_price": "39.37",
-      "net_pnl": "+87.58 USD",
-      "favorable_excursion": "+127.03 USD",
-      "adverse_excursion": "-123.63 USD"
+      "net_pnl": "-783.36 USD | -6.55%",
+      "favorable_excursion": "+121.14 USD",
+      "adverse_excursion": "-1125.90 USD"
     },
     "COINBASE:BTCUSD:30": {
       "symbol": "COINBASE:BTCUSD",
@@ -102,28 +102,28 @@
       "timeframe": "15",
       "label_count": 25,
       "last_signal": "▼",
-      "last_price": 83.59,
-      "last_seen_at": "2026-07-24T16:42:35.977Z",
+      "last_price": 82.27,
+      "last_seen_at": "2026-07-28T19:37:04.538Z",
       "signal_type": "EXIT",
-      "entry_time": "2026-07-22T18:15:00.000Z",
-      "entry_price": "81.28",
-      "net_pnl": "-102.44 USD",
-      "favorable_excursion": "+36.11 USD",
-      "adverse_excursion": "-562.47 USD"
+      "entry_time": "2026-07-28T14:00:00.000Z",
+      "entry_price": "78.87",
+      "net_pnl": "+295.81 USD | +2.22%",
+      "favorable_excursion": "+319.60 USD",
+      "adverse_excursion": "-135.01 USD"
     },
     "BATS:TNA:15": {
       "symbol": "BATS:TNA",
       "timeframe": "15",
       "label_count": 25,
       "last_signal": "▼",
-      "last_price": 69.7,
-      "last_seen_at": "2026-07-24T16:42:19.400Z",
+      "last_price": 69.4,
+      "last_seen_at": "2026-07-28T19:36:33.047Z",
       "signal_type": "EXIT",
-      "entry_time": "2026-07-24T14:45:00.000Z",
-      "entry_price": "67.45",
-      "net_pnl": "+357.78 USD",
-      "favorable_excursion": "+410.32 USD",
-      "adverse_excursion": "-40.88 USD"
+      "entry_time": "2026-07-28T14:00:00.000Z",
+      "entry_price": "67.67",
+      "net_pnl": "+246.00 USD | +2.17%",
+      "favorable_excursion": "+277.61 USD",
+      "adverse_excursion": "-96.47 USD"
     },
     "LSE_DLY:0I9U:15": {
       "symbol": "LSE_DLY:0I9U",
@@ -184,16 +184,16 @@
     "BATS:WTAI:15": {
       "symbol": "BATS:WTAI",
       "timeframe": "15",
-      "label_count": 24,
+      "label_count": 22,
       "last_signal": "▲",
       "last_price": 37.89,
-      "last_seen_at": "2026-07-24T16:42:27.796Z",
+      "last_seen_at": "2026-07-28T19:36:48.788Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-23T13:30:00.000Z",
       "entry_price": "40.63",
-      "net_pnl": "-250.26 USD",
-      "favorable_excursion": "+175.28 USD",
-      "adverse_excursion": "-431.02 USD"
+      "net_pnl": "-878.62 USD | -9.19%",
+      "favorable_excursion": "+151.50 USD",
+      "adverse_excursion": "-1153.05 USD"
     },
     "BATS:XRP:15": {
       "symbol": "BATS:XRP",
@@ -213,15 +213,15 @@
       "symbol": "BATS:EDC",
       "timeframe": "60",
       "label_count": 25,
-      "last_signal": "▼",
-      "last_price": 76.12,
-      "last_seen_at": "2026-07-24T16:13:36.175Z",
-      "signal_type": "EXIT",
-      "entry_time": "2026-05-12T15:00:00.000Z",
-      "entry_price": "83",
-      "net_pnl": "-80.88 USD",
-      "favorable_excursion": "+1042.04 USD",
-      "adverse_excursion": "-1175.89 USD"
+      "last_signal": "▲",
+      "last_price": 64.73,
+      "last_seen_at": "2026-07-27T19:19:22.706Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-24T20:00:00.000Z",
+      "entry_price": "68.55",
+      "net_pnl": "+58.63 USD | +0.57%",
+      "favorable_excursion": "+580.79 USD",
+      "adverse_excursion": "-161.38 USD"
     },
     "BATS:INTC:60": {
       "symbol": "BATS:INTC",
@@ -229,13 +229,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 89.6,
-      "last_seen_at": "2026-07-24T16:13:40.198Z",
+      "last_seen_at": "2026-07-28T19:37:57.046Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-24T14:00:00.000Z",
       "entry_price": "96.41",
-      "net_pnl": "+58.46 USD",
-      "favorable_excursion": "+258.11 USD",
-      "adverse_excursion": "-179.55 USD"
+      "net_pnl": "-1285.20 USD | -9.25%",
+      "favorable_excursion": "+222.17 USD",
+      "adverse_excursion": "-1823.27 USD"
     },
     "BATS:TMV:60": {
       "symbol": "BATS:TMV",
@@ -257,27 +257,27 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 64.91,
-      "last_seen_at": "2026-07-24T16:13:55.335Z",
+      "last_seen_at": "2026-07-27T19:19:37.772Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-23T14:00:00.000Z",
       "entry_price": "67.01",
-      "net_pnl": "-179.52 USD",
-      "favorable_excursion": "+112.76 USD",
-      "adverse_excursion": "-614.67 USD"
+      "net_pnl": "-605.44 USD | -4.99%",
+      "favorable_excursion": "+103.71 USD",
+      "adverse_excursion": "-935.17 USD"
     },
     "BATS:USO:60": {
       "symbol": "BATS:USO",
       "timeframe": "60",
-      "label_count": 21,
-      "last_signal": "▼",
-      "last_price": 142.02,
-      "last_seen_at": "2026-07-24T16:14:06.571Z",
-      "signal_type": "EXIT",
-      "entry_time": "2026-06-05T15:00:00.000Z",
-      "entry_price": "134.33",
-      "net_pnl": "-3294.98 USD",
-      "favorable_excursion": "+672.63 USD",
-      "adverse_excursion": "-3653.93 USD"
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 101.84,
+      "last_seen_at": "2026-07-27T19:19:49.920Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-27T09:00:00.000Z",
+      "entry_price": "126.41",
+      "net_pnl": "-82.32 USD | -0.73%",
+      "favorable_excursion": "+182.58 USD",
+      "adverse_excursion": "-139.14 USD"
     },
     "BATS:WGMI:60": {
       "symbol": "BATS:WGMI",
@@ -299,13 +299,13 @@
       "label_count": 12,
       "last_signal": "▲",
       "last_price": 24.03,
-      "last_seen_at": "2026-07-24T16:14:09.092Z",
-      "signal_type": "EXIT",
-      "entry_time": "2026-06-09T16:00:00.000Z",
-      "entry_price": "20.66",
-      "net_pnl": "+1360.04 USD",
-      "favorable_excursion": "+1410.04 USD",
-      "adverse_excursion": "-319.10 USD"
+      "last_seen_at": "2026-07-27T19:19:52.893Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-08T14:00:00.000Z",
+      "entry_price": "22.4",
+      "net_pnl": "-2318.00 USD | -20.29%",
+      "favorable_excursion": "+369.71 USD",
+      "adverse_excursion": "-2533.89 USD"
     },
     "BATS:ASHR:240": {
       "symbol": "BATS:ASHR",
@@ -313,11 +313,11 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 34.4,
-      "last_seen_at": "2026-07-24T15:14:53.125Z",
-      "signal_type": "EXIT",
-      "entry_time": "2026-05-21T12:00:00.000Z",
-      "entry_price": "35.07",
-      "net_pnl": "-127.71 USD | -0.90%",
+      "last_seen_at": "2026-07-28T18:22:02.551Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-08T12:00:00.000Z",
+      "entry_price": "34.74",
+      "net_pnl": "-317.34 USD | -2.24%",
       "favorable_excursion": "+443.22 USD",
       "adverse_excursion": "-532.02 USD"
     },
@@ -341,27 +341,27 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 40.98,
-      "last_seen_at": "2026-07-24T15:14:55.240Z",
+      "last_seen_at": "2026-07-28T18:22:06.586Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-22T16:00:00.000Z",
       "entry_price": "41.98",
-      "net_pnl": "-6.04 USD",
-      "favorable_excursion": "0.00 USD",
-      "adverse_excursion": "-218.04 USD"
+      "net_pnl": "+181.77 USD | +1.65%",
+      "favorable_excursion": "+196.22 USD",
+      "adverse_excursion": "-179.77 USD"
     },
     "BATS:EURL:240": {
       "symbol": "BATS:EURL",
       "timeframe": "240",
       "label_count": 25,
       "last_signal": "▼",
-      "last_price": 51.5,
-      "last_seen_at": "2026-07-24T15:14:57.221Z",
+      "last_price": 48.32,
+      "last_seen_at": "2026-07-28T18:22:10.306Z",
       "signal_type": "EXIT",
       "entry_time": "2026-03-03T13:00:00.000Z",
       "entry_price": "42.3",
-      "net_pnl": "+726.62 USD",
-      "favorable_excursion": "+1275.70 USD",
-      "adverse_excursion": "-4484.30 USD"
+      "net_pnl": "+644.88 USD | +3.58%",
+      "favorable_excursion": "+1132.18 USD",
+      "adverse_excursion": "-3979.82 USD"
     },
     "BATS:FAS:240": {
       "symbol": "BATS:FAS",
@@ -369,13 +369,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 137.19,
-      "last_seen_at": "2026-07-24T15:14:59.409Z",
+      "last_seen_at": "2026-07-27T19:23:40.420Z",
       "signal_type": "EXIT",
       "entry_time": "2026-06-03T16:00:00.000Z",
       "entry_price": "124.93",
-      "net_pnl": "+1350.23 USD",
-      "favorable_excursion": "+1641.15 USD",
-      "adverse_excursion": "-15.49 USD"
+      "net_pnl": "+1263.12 USD | +8.71%",
+      "favorable_excursion": "+1535.27 USD",
+      "adverse_excursion": "-14.49 USD"
     },
     "BATS:GLTR:240": {
       "symbol": "BATS:GLTR",
@@ -383,11 +383,11 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 209.5,
-      "last_seen_at": "2026-07-24T15:15:03.922Z",
-      "signal_type": "EXIT",
-      "entry_time": "2026-04-28T12:00:00.000Z",
-      "entry_price": "213.12",
-      "net_pnl": "-2537.08 USD | -13.83%",
+      "last_seen_at": "2026-07-28T18:22:18.348Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-05-19T16:00:00.000Z",
+      "entry_price": "212.51",
+      "net_pnl": "-2687.96 USD | -14.65%",
       "favorable_excursion": "+345.83 USD",
       "adverse_excursion": "-3057.99 USD"
     },
@@ -397,13 +397,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 70.22,
-      "last_seen_at": "2026-07-24T15:15:10.437Z",
+      "last_seen_at": "2026-07-27T19:23:55.282Z",
       "signal_type": "EXIT",
-      "entry_time": "2026-03-03T17:00:00.000Z",
-      "entry_price": "59.82",
-      "net_pnl": "-1189.39 USD",
-      "favorable_excursion": "+625.73 USD",
-      "adverse_excursion": "-3255.07 USD"
+      "entry_time": "2026-05-19T16:00:00.000Z",
+      "entry_price": "60.7",
+      "net_pnl": "+1742.15 USD | +14.06%",
+      "favorable_excursion": "+1813.42 USD",
+      "adverse_excursion": "-142.94 USD"
     },
     "BATS:PILL:240": {
       "symbol": "BATS:PILL",
@@ -411,27 +411,27 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 14.25,
-      "last_seen_at": "2026-07-24T15:15:12.568Z",
+      "last_seen_at": "2026-07-28T18:22:21.946Z",
       "signal_type": "EXIT",
       "entry_time": "2026-05-18T16:00:00.000Z",
       "entry_price": "11.1",
-      "net_pnl": "+2324.73 USD",
-      "favorable_excursion": "+3122.35 USD",
-      "adverse_excursion": "-679.55 USD"
+      "net_pnl": "+2846.49 USD | +12.66%",
+      "favorable_excursion": "+3823.13 USD",
+      "adverse_excursion": "-832.07 USD"
     },
     "BATS:UTSL:240": {
       "symbol": "BATS:UTSL",
       "timeframe": "240",
       "label_count": 25,
-      "last_signal": "▲",
-      "last_price": 39.11,
-      "last_seen_at": "2026-07-24T15:15:25.346Z",
+      "last_signal": "▼",
+      "last_price": 48.72,
+      "last_seen_at": "2026-07-28T18:22:44.245Z",
       "signal_type": "EXIT",
-      "entry_time": "2026-05-08T16:00:00.000Z",
-      "entry_price": "45.37",
-      "net_pnl": "+88.76 USD",
-      "favorable_excursion": "+381.54 USD",
-      "adverse_excursion": "-1872.69 USD"
+      "entry_time": "2026-07-21T16:00:00.000Z",
+      "entry_price": "43.8",
+      "net_pnl": "+1537.80 USD | +9.69%",
+      "favorable_excursion": "+1873.78 USD",
+      "adverse_excursion": "-33.96 USD"
     },
     "BATS:AGQ:D": {
       "symbol": "BATS:AGQ",
@@ -439,13 +439,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 31.88,
-      "last_seen_at": "2026-07-24T15:15:51.277Z",
+      "last_seen_at": "2026-07-27T19:25:17.424Z",
       "signal_type": "OPEN",
       "entry_time": "2026-03-20T13:30:00.000Z",
       "entry_price": "108.24",
-      "net_pnl": "-5654.80 USD",
-      "favorable_excursion": "+7387.66 USD",
-      "adverse_excursion": "-6793.56 USD"
+      "net_pnl": "-13579.83 USD | -36.13%",
+      "favorable_excursion": "+17587.03 USD",
+      "adverse_excursion": "-16172.74 USD"
     },
     "BATS:GLD:D": {
       "symbol": "BATS:GLD",
@@ -453,13 +453,13 @@
       "label_count": 18,
       "last_signal": "▲",
       "last_price": 168.3,
-      "last_seen_at": "2026-07-24T15:15:54.588Z",
+      "last_seen_at": "2026-07-28T16:08:09.926Z",
       "signal_type": "OPEN",
       "entry_time": "2026-03-24T13:30:00.000Z",
       "entry_price": "400.24",
-      "net_pnl": "-787.20 USD",
-      "favorable_excursion": "+1441.79 USD",
-      "adverse_excursion": "-1119.61 USD"
+      "net_pnl": "-820.68 USD | -6.69%",
+      "favorable_excursion": "+1345.67 USD",
+      "adverse_excursion": "-1044.97 USD"
     },
     "BATS:IYC:D": {
       "symbol": "BATS:IYC",
@@ -467,13 +467,13 @@
       "label_count": 22,
       "last_signal": "▲",
       "last_price": 93.99,
-      "last_seen_at": "2026-07-24T15:15:57.926Z",
+      "last_seen_at": "2026-07-28T16:08:14.479Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-24T13:30:00.000Z",
       "entry_price": "99.68",
-      "net_pnl": "-400.40 USD",
-      "favorable_excursion": "+485.15 USD",
-      "adverse_excursion": "-639.05 USD"
+      "net_pnl": "+40.46 USD | +0.32%",
+      "favorable_excursion": "+374.89 USD",
+      "adverse_excursion": "-493.81 USD"
     },
     "BATS:IYG:D": {
       "symbol": "BATS:IYG",
@@ -481,13 +481,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 95.75,
-      "last_seen_at": "2026-07-24T15:16:01.238Z",
+      "last_seen_at": "2026-07-28T16:08:18.929Z",
       "signal_type": "EXIT",
       "entry_time": "2026-02-13T14:30:00.000Z",
       "entry_price": "87.14",
-      "net_pnl": "+592.02 USD",
-      "favorable_excursion": "+607.54 USD",
-      "adverse_excursion": "-1259.78 USD"
+      "net_pnl": "+654.33 USD | +3.97%",
+      "favorable_excursion": "+671.49 USD",
+      "adverse_excursion": "-1392.39 USD"
     },
     "BATS:JNUG:D": {
       "symbol": "BATS:JNUG",
@@ -495,13 +495,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 34.83,
-      "last_seen_at": "2026-07-24T15:16:04.605Z",
+      "last_seen_at": "2026-07-28T16:08:23.620Z",
       "signal_type": "OPEN",
       "entry_time": "2026-03-19T13:30:00.000Z",
       "entry_price": "159.53",
-      "net_pnl": "-5409.88 USD",
-      "favorable_excursion": "+13281.52 USD",
-      "adverse_excursion": "-8377.47 USD"
+      "net_pnl": "-4087.58 USD | -20.50%",
+      "favorable_excursion": "+9268.40 USD",
+      "adverse_excursion": "-5846.14 USD"
     },
     "BATS:MEXX:D": {
       "symbol": "BATS:MEXX",
@@ -509,13 +509,13 @@
       "label_count": 22,
       "last_signal": "▲",
       "last_price": 8.44,
-      "last_seen_at": "2026-07-24T15:16:07.923Z",
+      "last_seen_at": "2026-07-28T16:08:28.225Z",
       "signal_type": "OPEN",
       "entry_time": "2026-03-20T13:30:00.000Z",
       "entry_price": "25.55",
-      "net_pnl": "+1842.50 USD",
-      "favorable_excursion": "+6642.68 USD",
-      "adverse_excursion": "-1337.02 USD"
+      "net_pnl": "+670.32 USD | +19.10%",
+      "favorable_excursion": "+1249.22 USD",
+      "adverse_excursion": "-251.44 USD"
     },
     "BATS:MIDU:D": {
       "symbol": "BATS:MIDU",
@@ -523,13 +523,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 66.01,
-      "last_seen_at": "2026-07-24T15:16:11.222Z",
+      "last_seen_at": "2026-07-27T19:25:43.208Z",
       "signal_type": "EXIT",
       "entry_time": "2026-03-10T13:30:00.000Z",
       "entry_price": "55.55",
-      "net_pnl": "+4725.91 USD",
-      "favorable_excursion": "+4754.41 USD",
-      "adverse_excursion": "-3490.96 USD"
+      "net_pnl": "+2966.15 USD | +19.90%",
+      "favorable_excursion": "+2984.03 USD",
+      "adverse_excursion": "-2191.05 USD"
     },
     "BATS:MSFT:D": {
       "symbol": "BATS:MSFT",
@@ -537,13 +537,13 @@
       "label_count": 24,
       "last_signal": "▲",
       "last_price": 356.28,
-      "last_seen_at": "2026-07-24T15:16:14.635Z",
+      "last_seen_at": "2026-07-27T19:25:47.667Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-23T13:30:00.000Z",
       "entry_price": "372.38",
-      "net_pnl": "+446.22 USD",
-      "favorable_excursion": "+1229.79 USD",
-      "adverse_excursion": "-871.44 USD"
+      "net_pnl": "+760.11 USD | +4.97%",
+      "favorable_excursion": "+1296.27 USD",
+      "adverse_excursion": "-918.54 USD"
     },
     "BATS:NUGT:D": {
       "symbol": "BATS:NUGT",
@@ -565,13 +565,13 @@
       "label_count": 24,
       "last_signal": "▲",
       "last_price": 337.24,
-      "last_seen_at": "2026-07-24T15:17:13.495Z",
+      "last_seen_at": "2026-07-27T19:27:01.004Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-24T13:30:00.000Z",
       "entry_price": "320.72",
-      "net_pnl": "-1077.00 USD",
-      "favorable_excursion": "+191.93 USD",
-      "adverse_excursion": "-1254.07 USD"
+      "net_pnl": "-1394.95 USD | -3.59%",
+      "favorable_excursion": "+220.72 USD",
+      "adverse_excursion": "-1927.48 USD"
     },
     "BATS:UDOW:D": {
       "symbol": "BATS:UDOW",
@@ -593,13 +593,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 70.61,
-      "last_seen_at": "2026-07-24T15:16:18.139Z",
+      "last_seen_at": "2026-07-28T16:08:32.726Z",
       "signal_type": "EXIT",
       "entry_time": "2026-03-10T13:30:00.000Z",
       "entry_price": "55.48",
-      "net_pnl": "+4405.79 USD",
-      "favorable_excursion": "+5131.03 USD",
-      "adverse_excursion": "-3012.74 USD"
+      "net_pnl": "+5078.32 USD | +24.71%",
+      "favorable_excursion": "+5914.27 USD",
+      "adverse_excursion": "-3472.63 USD"
     },
     "BATS:UTSL:D": {
       "symbol": "BATS:UTSL",
@@ -621,13 +621,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 179.31,
-      "last_seen_at": "2026-07-24T15:16:21.560Z",
+      "last_seen_at": "2026-07-28T16:08:37.561Z",
       "signal_type": "EXIT",
-      "entry_time": "2025-11-19T14:30:00.000Z",
-      "entry_price": "150",
-      "net_pnl": "+814.91 USD",
-      "favorable_excursion": "+831.21 USD",
-      "adverse_excursion": "-311.06 USD"
+      "entry_time": "2026-03-30T13:30:00.000Z",
+      "entry_price": "160.55",
+      "net_pnl": "+2037.20 USD | +11.63%",
+      "favorable_excursion": "+2100.37 USD",
+      "adverse_excursion": "-504.73 USD"
     },
     "BATS:NVDA:D": {
       "symbol": "BATS:NVDA",
@@ -635,13 +635,13 @@
       "label_count": 22,
       "last_signal": "▲",
       "last_price": 164.27,
-      "last_seen_at": "2026-07-24T15:16:24.950Z",
+      "last_seen_at": "2026-07-28T16:08:42.403Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-26T13:30:00.000Z",
       "entry_price": "193.12",
-      "net_pnl": "+997.69 USD",
-      "favorable_excursion": "+1243.54 USD",
-      "adverse_excursion": "-207.27 USD"
+      "net_pnl": "+595.20 USD | +2.25%",
+      "favorable_excursion": "+2697.84 USD",
+      "adverse_excursion": "-449.68 USD"
     },
     "BATS:INTL:D": {
       "symbol": "BATS:INTL",
@@ -649,13 +649,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 27.22,
-      "last_seen_at": "2026-07-24T15:16:28.414Z",
+      "last_seen_at": "2026-07-28T16:08:46.947Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-20T13:30:00.000Z",
       "entry_price": "29.91",
-      "net_pnl": "-83.49 USD",
-      "favorable_excursion": "+341.62 USD",
-      "adverse_excursion": "-106.19 USD"
+      "net_pnl": "-93.66 USD | -0.44%",
+      "favorable_excursion": "+301.11 USD",
+      "adverse_excursion": "-428.10 USD"
     },
     "BATS:MU:D": {
       "symbol": "BATS:MU",
@@ -663,13 +663,13 @@
       "label_count": 17,
       "last_signal": "▼",
       "last_price": 471.34,
-      "last_seen_at": "2026-07-24T15:16:31.778Z",
+      "last_seen_at": "2026-07-28T16:08:52.103Z",
       "signal_type": "EXIT",
       "entry_time": "2026-03-31T13:30:00.000Z",
       "entry_price": "321.67",
-      "net_pnl": "+7990.30 USD",
-      "favorable_excursion": "+8499.42 USD",
-      "adverse_excursion": "-525.08 USD"
+      "net_pnl": "+5593.21 USD | +49.63%",
+      "favorable_excursion": "+5949.59 USD",
+      "adverse_excursion": "-367.56 USD"
     },
     "BATS:PLTR:D": {
       "symbol": "BATS:PLTR",
@@ -677,13 +677,13 @@
       "label_count": 20,
       "last_signal": "▲",
       "last_price": 122.68,
-      "last_seen_at": "2026-07-24T15:16:35.344Z",
-      "signal_type": "EXIT",
-      "entry_time": "2025-04-07T13:30:00.000Z",
-      "entry_price": "66.65",
-      "net_pnl": "+12386.10 USD",
-      "favorable_excursion": "+12780.13 USD",
-      "adverse_excursion": "-142.60 USD"
+      "last_seen_at": "2026-07-28T16:08:56.758Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-23T13:30:00.000Z",
+      "entry_price": "120.15",
+      "net_pnl": "+897.12 USD | +2.83%",
+      "favorable_excursion": "+4694.72 USD",
+      "adverse_excursion": "-3502.84 USD"
     },
     "BATS:AAPL:D": {
       "symbol": "BATS:AAPL",
@@ -691,13 +691,13 @@
       "label_count": 23,
       "last_signal": "▼",
       "last_price": 288.62,
-      "last_seen_at": "2026-07-24T15:16:38.834Z",
+      "last_seen_at": "2026-07-28T16:09:01.850Z",
       "signal_type": "EXIT",
       "entry_time": "2026-01-08T14:30:00.000Z",
       "entry_price": "257.02",
-      "net_pnl": "+1303.51 USD",
-      "favorable_excursion": "+1766.64 USD",
-      "adverse_excursion": "-817.56 USD"
+      "net_pnl": "+1436.07 USD | +8.59%",
+      "favorable_excursion": "+1946.29 USD",
+      "adverse_excursion": "-900.71 USD"
     },
     "BATS:DXYZ:D": {
       "symbol": "BATS:DXYZ",
@@ -705,13 +705,13 @@
       "label_count": 8,
       "last_signal": "▲",
       "last_price": 23.81,
-      "last_seen_at": "2026-07-24T15:16:42.329Z",
+      "last_seen_at": "2026-07-27T19:26:22.145Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-17T13:30:00.000Z",
       "entry_price": "27.89",
-      "net_pnl": "-2070.90 USD",
-      "favorable_excursion": "+956.32 USD",
-      "adverse_excursion": "-2237.78 USD"
+      "net_pnl": "-2523.90 USD | -15.70%",
+      "favorable_excursion": "+1316.78 USD",
+      "adverse_excursion": "-3081.25 USD"
     },
     "BATS:WQTM:D": {
       "symbol": "BATS:WQTM",
@@ -719,13 +719,13 @@
       "label_count": 4,
       "last_signal": "▲",
       "last_price": 23.18,
-      "last_seen_at": "2026-07-24T15:16:45.853Z",
+      "last_seen_at": "2026-07-27T19:26:26.411Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-17T13:30:00.000Z",
       "entry_price": "30.6",
-      "net_pnl": "+166.98 USD",
-      "favorable_excursion": "+736.67 USD",
-      "adverse_excursion": "-174.46 USD"
+      "net_pnl": "+202.37 USD | +1.78%",
+      "favorable_excursion": "+696.08 USD",
+      "adverse_excursion": "-164.85 USD"
     },
     "BATS:QTUM:D": {
       "symbol": "BATS:QTUM",
@@ -733,13 +733,13 @@
       "label_count": 20,
       "last_signal": "▲",
       "last_price": 101.41,
-      "last_seen_at": "2026-07-24T15:16:49.347Z",
-      "signal_type": "EXIT",
-      "entry_time": "2026-03-09T13:30:00.000Z",
-      "entry_price": "108.02",
-      "net_pnl": "+1176.90 USD",
-      "favorable_excursion": "+1187.06 USD",
-      "adverse_excursion": "-557.60 USD"
+      "last_seen_at": "2026-07-28T16:09:06.693Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-20T13:30:00.000Z",
+      "entry_price": "142.85",
+      "net_pnl": "-467.25 USD | -3.49%",
+      "favorable_excursion": "+311.25 USD",
+      "adverse_excursion": "-794.13 USD"
     },
     "BATS:WTAI:D": {
       "symbol": "BATS:WTAI",
@@ -747,13 +747,13 @@
       "label_count": 18,
       "last_signal": "▲",
       "last_price": 26.55,
-      "last_seen_at": "2026-07-24T15:16:52.720Z",
-      "signal_type": "EXIT",
-      "entry_time": "2025-02-28T14:30:00.000Z",
-      "entry_price": "21.18",
-      "net_pnl": "+548.39 USD",
-      "favorable_excursion": "+560.06 USD",
-      "adverse_excursion": "-2851.18 USD"
+      "last_seen_at": "2026-07-28T16:09:11.380Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-20T13:30:00.000Z",
+      "entry_price": "40.22",
+      "net_pnl": "-1343.54 USD | -8.20%",
+      "favorable_excursion": "+622.43 USD",
+      "adverse_excursion": "-1883.41 USD"
     },
     "AMEX:MIDU:240": {
       "symbol": "AMEX:MIDU",
@@ -773,15 +773,15 @@
       "symbol": "BATS:EWO",
       "timeframe": "15",
       "label_count": 25,
-      "last_signal": "▼",
-      "last_price": 45.84,
-      "last_seen_at": "2026-07-24T16:42:23.657Z",
-      "signal_type": "EXIT",
-      "entry_time": "2026-07-08T15:15:00.000Z",
-      "entry_price": "41.62",
-      "net_pnl": "+5.05 USD",
-      "favorable_excursion": "+1266.05 USD",
-      "adverse_excursion": "-155.02 USD"
+      "last_signal": "▲",
+      "last_price": 41.15,
+      "last_seen_at": "2026-07-28T19:36:41.251Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-27T14:45:00.000Z",
+      "entry_price": "41.43",
+      "net_pnl": "-67.25 USD | -0.57%",
+      "favorable_excursion": "+5.00 USD",
+      "adverse_excursion": "-140.26 USD"
     },
     "LSE:0I9U:15": {
       "symbol": "LSE:0I9U",
@@ -816,14 +816,14 @@
       "timeframe": "15",
       "label_count": 25,
       "last_signal": "▼",
-      "last_price": 29.99,
-      "last_seen_at": "2026-07-24T16:42:21.594Z",
+      "last_price": 30.15,
+      "last_seen_at": "2026-07-28T19:36:37.233Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-08T13:45:00.000Z",
       "entry_price": "27.31",
-      "net_pnl": "+1083.17 USD",
-      "favorable_excursion": "+1095.56 USD",
-      "adverse_excursion": "-345.81 USD"
+      "net_pnl": "+1174.97 USD | +9.59%",
+      "favorable_excursion": "+1188.41 USD",
+      "adverse_excursion": "-375.11 USD"
     },
     "CBOE:UVXY:30": {
       "symbol": "CBOE:UVXY",
@@ -1279,41 +1279,41 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 37.33,
-      "last_seen_at": "2026-07-24T16:13:34.021Z",
+      "last_seen_at": "2026-07-27T19:19:19.543Z",
       "signal_type": "EXIT",
       "entry_time": "2026-06-24T14:00:00.000Z",
       "entry_price": "35.89",
-      "net_pnl": "-322.86 USD",
-      "favorable_excursion": "+294.26 USD",
-      "adverse_excursion": "-747.66 USD"
+      "net_pnl": "-305.41 USD | -3.04%",
+      "favorable_excursion": "+278.35 USD",
+      "adverse_excursion": "-707.25 USD"
     },
     "BATS:LABU:60": {
       "symbol": "BATS:LABU",
       "timeframe": "60",
-      "label_count": 20,
+      "label_count": 18,
       "last_signal": "▲",
       "last_price": 155.75,
-      "last_seen_at": "2026-07-24T16:13:43.683Z",
+      "last_seen_at": "2026-07-27T19:19:28.762Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-10T14:00:00.000Z",
       "entry_price": "294.59",
-      "net_pnl": "-1872.78 USD",
-      "favorable_excursion": "+71.63 USD",
-      "adverse_excursion": "-2305.15 USD"
+      "net_pnl": "-1622.01 USD | -13.08%",
+      "favorable_excursion": "+66.51 USD",
+      "adverse_excursion": "-2140.50 USD"
     },
     "BATS:PILL:60": {
       "symbol": "BATS:PILL",
       "timeframe": "60",
       "label_count": 25,
-      "last_signal": "▲",
+      "last_signal": "▼",
       "last_price": 21.02,
-      "last_seen_at": "2026-07-24T16:13:48.434Z",
-      "signal_type": "OPEN",
+      "last_seen_at": "2026-07-28T19:38:00.761Z",
+      "signal_type": "EXIT",
       "entry_time": "2026-07-13T14:00:00.000Z",
       "entry_price": "18.22",
-      "net_pnl": "+589.60 USD",
-      "favorable_excursion": "+1143.66 USD",
-      "adverse_excursion": "-440.89 USD"
+      "net_pnl": "+1414.06 USD | +10.04%",
+      "favorable_excursion": "+1429.57 USD",
+      "adverse_excursion": "-461.83 USD"
     },
     "BATS:SPXL:60": {
       "symbol": "BATS:SPXL",
@@ -1321,13 +1321,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 263.07,
-      "last_seen_at": "2026-07-24T16:13:52.469Z",
+      "last_seen_at": "2026-07-27T19:19:34.705Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-23T13:00:00.000Z",
       "entry_price": "262.35",
-      "net_pnl": "+104.58 USD",
-      "favorable_excursion": "+121.28 USD",
-      "adverse_excursion": "-248.74 USD"
+      "net_pnl": "-57.60 USD | -0.51%",
+      "favorable_excursion": "+227.11 USD",
+      "adverse_excursion": "-236.89 USD"
     },
     "BATS:SQQQ:60": {
       "symbol": "BATS:SQQQ",
@@ -1389,15 +1389,15 @@
       "symbol": "BATS:UDOW",
       "timeframe": "60",
       "label_count": 25,
-      "last_signal": "▲",
-      "last_price": 69.02,
-      "last_seen_at": "2026-07-24T16:13:58.803Z",
-      "signal_type": "OPEN",
+      "last_signal": "▼",
+      "last_price": 72.06,
+      "last_seen_at": "2026-07-28T19:38:04.475Z",
+      "signal_type": "EXIT",
       "entry_time": "2026-07-14T12:00:00.000Z",
       "entry_price": "69.47",
-      "net_pnl": "-163.56 USD",
-      "favorable_excursion": "+462.58 USD",
-      "adverse_excursion": "-543.22 USD"
+      "net_pnl": "+167.19 USD | +1.37%",
+      "favorable_excursion": "+433.05 USD",
+      "adverse_excursion": "-508.55 USD"
     },
     "BATS:UPRO:60": {
       "symbol": "BATS:UPRO",
@@ -1405,13 +1405,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 137.75,
-      "last_seen_at": "2026-07-24T16:14:02.234Z",
+      "last_seen_at": "2026-07-28T19:38:08.323Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-23T13:00:00.000Z",
       "entry_price": "137.32",
-      "net_pnl": "+103.68 USD",
-      "favorable_excursion": "+124.96 USD",
-      "adverse_excursion": "-252.50 USD"
+      "net_pnl": "+33.11 USD | +0.30%",
+      "favorable_excursion": "+234.29 USD",
+      "adverse_excursion": "-240.03 USD"
     },
     "BATS:URTY:60": {
       "symbol": "BATS:URTY",
@@ -1419,13 +1419,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 80.2,
-      "last_seen_at": "2026-07-24T16:14:04.255Z",
+      "last_seen_at": "2026-07-28T19:38:12.321Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-17T14:00:00.000Z",
       "entry_price": "82.03",
-      "net_pnl": "-254.03 USD",
-      "favorable_excursion": "+282.29 USD",
-      "adverse_excursion": "-764.39 USD"
+      "net_pnl": "-281.52 USD | -1.77%",
+      "favorable_excursion": "+271.95 USD",
+      "adverse_excursion": "-736.37 USD"
     },
     "BATS:YANG:60": {
       "symbol": "BATS:YANG",
@@ -1447,13 +1447,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 103.75,
-      "last_seen_at": "2026-07-24T15:14:50.957Z",
+      "last_seen_at": "2026-07-27T19:23:28.266Z",
       "signal_type": "OPEN",
       "entry_time": "2026-05-19T16:00:00.000Z",
       "entry_price": "111.4",
-      "net_pnl": "-10714.77 USD",
-      "favorable_excursion": "+2130.30 USD",
-      "adverse_excursion": "-12765.15 USD"
+      "net_pnl": "-10419.60 USD | -38.90%",
+      "favorable_excursion": "+2049.40 USD",
+      "adverse_excursion": "-12280.40 USD"
     },
     "BATS:GLD:240": {
       "symbol": "BATS:GLD",
@@ -1461,13 +1461,13 @@
       "label_count": 24,
       "last_signal": "▲",
       "last_price": 413.3,
-      "last_seen_at": "2026-07-24T15:15:01.692Z",
+      "last_seen_at": "2026-07-28T18:22:14.925Z",
       "signal_type": "OPEN",
       "entry_time": "2026-05-19T16:00:00.000Z",
       "entry_price": "413.89",
-      "net_pnl": "-1240.93 USD",
-      "favorable_excursion": "+233.31 USD",
-      "adverse_excursion": "-1580.50 USD"
+      "net_pnl": "-1287.02 USD | -10.12%",
+      "favorable_excursion": "+218.26 USD",
+      "adverse_excursion": "-1478.53 USD"
     },
     "BATS:JNUG:240": {
       "symbol": "BATS:JNUG",
@@ -1475,13 +1475,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 172.1,
-      "last_seen_at": "2026-07-24T15:15:06.087Z",
+      "last_seen_at": "2026-07-27T19:23:49.438Z",
       "signal_type": "OPEN",
       "entry_time": "2026-05-19T16:00:00.000Z",
       "entry_price": "162.82",
-      "net_pnl": "-9206.30 USD",
-      "favorable_excursion": "+5699.04 USD",
-      "adverse_excursion": "-13666.01 USD"
+      "net_pnl": "-8074.08 USD | -24.93%",
+      "favorable_excursion": "+5009.86 USD",
+      "adverse_excursion": "-12013.37 USD"
     },
     "BATS:MEXX:240": {
       "symbol": "BATS:MEXX",
@@ -1489,13 +1489,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 28.78,
-      "last_seen_at": "2026-07-24T15:15:08.245Z",
+      "last_seen_at": "2026-07-27T19:23:52.392Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-05T16:00:00.000Z",
       "entry_price": "27.79",
-      "net_pnl": "-51.10 USD",
-      "favorable_excursion": "+5551.72 USD",
-      "adverse_excursion": "-1479.64 USD"
+      "net_pnl": "+1627.32 USD | +6.53%",
+      "favorable_excursion": "+4628.24 USD",
+      "adverse_excursion": "-1233.52 USD"
     },
     "BATS:QTUM:240": {
       "symbol": "BATS:QTUM",
@@ -1503,13 +1503,13 @@
       "label_count": 24,
       "last_signal": "▲",
       "last_price": 101.51,
-      "last_seen_at": "2026-07-24T15:15:14.780Z",
+      "last_seen_at": "2026-07-28T18:22:25.872Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-02T20:00:00.000Z",
       "entry_price": "155.06",
-      "net_pnl": "-1189.29 USD",
-      "favorable_excursion": "+329.29 USD",
-      "adverse_excursion": "-1532.51 USD"
+      "net_pnl": "-1544.63 USD | -11.31%",
+      "favorable_excursion": "+314.15 USD",
+      "adverse_excursion": "-1744.25 USD"
     },
     "BATS:SOXL:240": {
       "symbol": "BATS:SOXL",
@@ -1517,13 +1517,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 157.55,
-      "last_seen_at": "2026-07-24T15:15:16.800Z",
+      "last_seen_at": "2026-07-28T18:22:29.506Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-02T16:00:00.000Z",
       "entry_price": "189.9",
-      "net_pnl": "-8598.26 USD",
-      "favorable_excursion": "+3872.79 USD",
-      "adverse_excursion": "-13761.31 USD"
+      "net_pnl": "-13844.16 USD | -40.34%",
+      "favorable_excursion": "+3541.43 USD",
+      "adverse_excursion": "-15142.03 USD"
     },
     "BATS:TMF:240": {
       "symbol": "BATS:TMF",
@@ -1531,13 +1531,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 31.58,
-      "last_seen_at": "2026-07-24T15:15:18.811Z",
+      "last_seen_at": "2026-07-28T18:22:33.098Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-01T12:00:00.000Z",
       "entry_price": "34.76",
-      "net_pnl": "-655.27 USD",
-      "favorable_excursion": "+79.06 USD",
-      "adverse_excursion": "-861.11 USD"
+      "net_pnl": "-458.80 USD | -5.05%",
+      "favorable_excursion": "+75.70 USD",
+      "adverse_excursion": "-824.54 USD"
     },
     "BATS:TNA:240": {
       "symbol": "BATS:TNA",
@@ -1545,13 +1545,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 59.5,
-      "last_seen_at": "2026-07-24T15:15:21.200Z",
+      "last_seen_at": "2026-07-28T18:22:36.850Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-08T16:00:00.000Z",
       "entry_price": "68.1",
-      "net_pnl": "+273.00 USD",
-      "favorable_excursion": "+1689.57 USD",
-      "adverse_excursion": "-311.43 USD"
+      "net_pnl": "+185.46 USD | +0.92%",
+      "favorable_excursion": "+1582.56 USD",
+      "adverse_excursion": "-291.71 USD"
     },
     "BATS:UDOW:240": {
       "symbol": "BATS:UDOW",
@@ -1559,13 +1559,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 60.75,
-      "last_seen_at": "2026-07-24T15:15:23.239Z",
+      "last_seen_at": "2026-07-28T18:22:40.633Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-17T16:00:00.000Z",
       "entry_price": "70.69",
-      "net_pnl": "-530.88 USD",
-      "favorable_excursion": "0.00 USD",
-      "adverse_excursion": "-974.23 USD"
+      "net_pnl": "+146.73 USD | +0.98%",
+      "favorable_excursion": "+237.04 USD",
+      "adverse_excursion": "-826.25 USD"
     },
     "BATS:WQTM:240": {
       "symbol": "BATS:WQTM",
@@ -1573,13 +1573,13 @@
       "label_count": 6,
       "last_signal": "▲",
       "last_price": 23.23,
-      "last_seen_at": "2026-07-24T15:15:27.717Z",
+      "last_seen_at": "2026-07-28T18:22:47.492Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-09T20:00:00.000Z",
       "entry_price": "35.74",
-      "net_pnl": "-1408.68 USD",
-      "favorable_excursion": "+955.45 USD",
-      "adverse_excursion": "-1693.35 USD"
+      "net_pnl": "-1584.60 USD | -14.76%",
+      "favorable_excursion": "+904.66 USD",
+      "adverse_excursion": "-1811.39 USD"
     },
     "BATS:EWY:240": {
       "symbol": "BATS:EWY",
@@ -1587,13 +1587,13 @@
       "label_count": 24,
       "last_signal": "▲",
       "last_price": 173.62,
-      "last_seen_at": "2026-07-24T15:15:29.950Z",
+      "last_seen_at": "2026-07-28T18:22:51.350Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-01T16:00:00.000Z",
       "entry_price": "188.31",
-      "net_pnl": "-1348.75 USD",
-      "favorable_excursion": "+241.91 USD",
-      "adverse_excursion": "-2230.04 USD"
+      "net_pnl": "-2713.20 USD | -17.86%",
+      "favorable_excursion": "+282.85 USD",
+      "adverse_excursion": "-3036.07 USD"
     },
     "BATS:EWY:30": {
       "symbol": "BATS:EWY",
@@ -1601,13 +1601,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 154.19,
-      "last_seen_at": "2026-07-24T16:42:49.468Z",
+      "last_seen_at": "2026-07-28T19:37:28.733Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-24T08:30:00.000Z",
       "entry_price": "169.21",
-      "net_pnl": "-283.36 USD",
-      "favorable_excursion": "+134.81 USD",
-      "adverse_excursion": "-441.92 USD"
+      "net_pnl": "-1173.60 USD | -9.10%",
+      "favorable_excursion": "+126.06 USD",
+      "adverse_excursion": "-1499.70 USD"
     },
     "BATS:KORU:30": {
       "symbol": "BATS:KORU",
@@ -1615,27 +1615,27 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 15.46,
-      "last_seen_at": "2026-07-24T16:42:51.723Z",
+      "last_seen_at": "2026-07-28T19:37:32.780Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-24T08:30:00.000Z",
       "entry_price": "20.23",
-      "net_pnl": "-1062.60 USD",
-      "favorable_excursion": "+478.00 USD",
-      "adverse_excursion": "-1632.02 USD"
+      "net_pnl": "-5160.60 USD | -26.48%",
+      "favorable_excursion": "+576.24 USD",
+      "adverse_excursion": "-6450.96 USD"
     },
     "BATS:UDOW:30": {
       "symbol": "BATS:UDOW",
       "timeframe": "30",
       "label_count": 25,
-      "last_signal": "▲",
-      "last_price": 67.79,
-      "last_seen_at": "2026-07-24T16:42:53.727Z",
-      "signal_type": "OPEN",
+      "last_signal": "▼",
+      "last_price": 70.51,
+      "last_seen_at": "2026-07-28T19:37:36.479Z",
+      "signal_type": "EXIT",
       "entry_time": "2026-07-23T10:00:00.000Z",
       "entry_price": "68.6",
-      "net_pnl": "-18.04 USD",
-      "favorable_excursion": "+42.87 USD",
-      "adverse_excursion": "-331.05 USD"
+      "net_pnl": "+199.30 USD | +1.84%",
+      "favorable_excursion": "+210.36 USD",
+      "adverse_excursion": "-318.94 USD"
     },
     "BATS:FAS:30": {
       "symbol": "BATS:FAS",
@@ -1643,13 +1643,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 174.8,
-      "last_seen_at": "2026-07-24T16:42:55.832Z",
+      "last_seen_at": "2026-07-28T19:37:40.664Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-17T14:00:00.000Z",
       "entry_price": "173.11",
-      "net_pnl": "-308.30 USD",
-      "favorable_excursion": "+22.50 USD",
-      "adverse_excursion": "-842.99 USD"
+      "net_pnl": "-290.93 USD | -2.51%",
+      "favorable_excursion": "+21.23 USD",
+      "adverse_excursion": "-795.50 USD"
     },
     "BATS:MU:30": {
       "symbol": "BATS:MU",
@@ -1657,13 +1657,13 @@
       "label_count": 24,
       "last_signal": "▲",
       "last_price": 804.01,
-      "last_seen_at": "2026-07-24T16:42:57.895Z",
+      "last_seen_at": "2026-07-27T19:48:16.065Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-24T14:00:00.000Z",
       "entry_price": "933.13",
-      "net_pnl": "+66.17 USD",
-      "favorable_excursion": "+226.68 USD",
-      "adverse_excursion": "-187.63 USD"
+      "net_pnl": "-546.36 USD | -4.45%",
+      "favorable_excursion": "+284.36 USD",
+      "adverse_excursion": "-951.28 USD"
     },
     "TSX_DLY:TD:30": {
       "symbol": "TSX_DLY:TD",
@@ -1671,13 +1671,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 166.37,
-      "last_seen_at": "2026-07-24T16:43:00.097Z",
+      "last_seen_at": "2026-07-28T19:37:44.307Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-20T14:30:00.000Z",
       "entry_price": "170.35",
-      "net_pnl": "-111.30 USD",
-      "favorable_excursion": "+79.08 USD",
-      "adverse_excursion": "-227.52 USD"
+      "net_pnl": "-46.86 USD | -0.39%",
+      "favorable_excursion": "+74.56 USD",
+      "adverse_excursion": "-231.68 USD"
     },
     "BATS:AMDL:30": {
       "symbol": "BATS:AMDL",
@@ -1685,13 +1685,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 49.83,
-      "last_seen_at": "2026-07-24T16:43:02.319Z",
+      "last_seen_at": "2026-07-28T19:37:48.819Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-24T14:00:00.000Z",
       "entry_price": "63.71",
-      "net_pnl": "+945.03 USD",
+      "net_pnl": "-4239.63 USD | -21.78%",
       "favorable_excursion": "+1374.57 USD",
-      "adverse_excursion": "-125.34 USD"
+      "adverse_excursion": "-5399.59 USD"
     },
     "BATS:FAS:15": {
       "symbol": "BATS:FAS",
@@ -1699,69 +1699,69 @@
       "label_count": 23,
       "last_signal": "▼",
       "last_price": 174.8,
-      "last_seen_at": "2026-07-24T16:42:25.675Z",
+      "last_seen_at": "2026-07-28T19:36:44.846Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-17T18:30:00.000Z",
       "entry_price": "168.42",
-      "net_pnl": "-104.30 USD",
-      "favorable_excursion": "+101.53 USD",
-      "adverse_excursion": "-452.24 USD"
+      "net_pnl": "-99.33 USD | -0.98%",
+      "favorable_excursion": "+96.69 USD",
+      "adverse_excursion": "-430.71 USD"
     },
     "BATS:DUSL:15": {
       "symbol": "BATS:DUSL",
       "timeframe": "15",
       "label_count": 25,
       "last_signal": "▼",
-      "last_price": 100,
-      "last_seen_at": "2026-07-24T16:42:29.878Z",
+      "last_price": 101.51,
+      "last_seen_at": "2026-07-28T19:36:52.503Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-07T14:15:00.000Z",
       "entry_price": "97.75",
-      "net_pnl": "+252.57 USD",
-      "favorable_excursion": "+270.63 USD",
-      "adverse_excursion": "-913.21 USD"
+      "net_pnl": "+282.67 USD | +1.71%",
+      "favorable_excursion": "+302.89 USD",
+      "adverse_excursion": "-1022.07 USD"
     },
     "BATS:EDC:15": {
       "symbol": "BATS:EDC",
       "timeframe": "15",
       "label_count": 25,
       "last_signal": "▲",
-      "last_price": 76.12,
-      "last_seen_at": "2026-07-24T16:42:31.870Z",
+      "last_price": 64.73,
+      "last_seen_at": "2026-07-28T19:36:56.595Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-23T15:15:00.000Z",
       "entry_price": "71.45",
-      "net_pnl": "-68.40 USD",
-      "favorable_excursion": "+291.34 USD",
-      "adverse_excursion": "-453.86 USD"
+      "net_pnl": "-1180.02 USD | -7.29%",
+      "favorable_excursion": "+344.75 USD",
+      "adverse_excursion": "-1815.07 USD"
     },
     "BATS:RETL:15": {
       "symbol": "BATS:RETL",
       "timeframe": "15",
       "label_count": 25,
-      "last_signal": "▲",
-      "last_price": 8.72,
-      "last_seen_at": "2026-07-24T16:42:33.867Z",
+      "last_signal": "▼",
+      "last_price": 10.22,
+      "last_seen_at": "2026-07-28T19:37:00.294Z",
       "signal_type": "EXIT",
-      "entry_time": "2026-07-14T14:15:00.000Z",
-      "entry_price": "8.72",
-      "net_pnl": "+1009.41 USD",
-      "favorable_excursion": "+1052.35 USD",
-      "adverse_excursion": "-12.72 USD"
+      "entry_time": "2026-07-20T14:15:00.000Z",
+      "entry_price": "9.45",
+      "net_pnl": "-673.49 USD | -6.01%",
+      "favorable_excursion": "+119.15 USD",
+      "adverse_excursion": "-1255.45 USD"
     },
     "LSE_DLY:USLV:15": {
       "symbol": "LSE_DLY:USLV",
       "timeframe": "15",
       "label_count": 25,
       "last_signal": "▼",
-      "last_price": 66.26,
-      "last_seen_at": "2026-07-24T16:42:38.216Z",
+      "last_price": 67.83,
+      "last_seen_at": "2026-07-28T19:37:08.292Z",
       "signal_type": "EXIT",
       "entry_time": "2026-06-01T07:15:00.000Z",
       "entry_price": "61.02",
-      "net_pnl": "+246.13 USD",
-      "favorable_excursion": "+322.62 USD",
-      "adverse_excursion": "-128.61 USD"
+      "net_pnl": "+240.30 USD | +2.38%",
+      "favorable_excursion": "+314.98 USD",
+      "adverse_excursion": "-125.57 USD"
     },
     "BATS:YINN:15": {
       "symbol": "BATS:YINN",
@@ -1769,27 +1769,27 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 29.47,
-      "last_seen_at": "2026-07-24T16:42:40.270Z",
+      "last_seen_at": "2026-07-28T19:37:12.052Z",
       "signal_type": "EXIT",
-      "entry_time": "2026-07-16T23:15:00.000Z",
-      "entry_price": "27.52",
-      "net_pnl": "+560.33 USD",
-      "favorable_excursion": "+612.55 USD",
-      "adverse_excursion": "-626.75 USD"
+      "entry_time": "2026-07-21T11:15:00.000Z",
+      "entry_price": "28.6",
+      "net_pnl": "-64.73 USD | -0.55%",
+      "favorable_excursion": "0.00 USD",
+      "adverse_excursion": "-605.06 USD"
     },
     "TSX_DLY:RY:15": {
       "symbol": "TSX_DLY:RY",
       "timeframe": "15",
-      "label_count": 24,
-      "last_signal": "▲",
-      "last_price": 294.95,
-      "last_seen_at": "2026-07-24T16:42:42.465Z",
-      "signal_type": "OPEN",
-      "entry_time": "2026-07-23T13:45:00.000Z",
-      "entry_price": "293.28",
-      "net_pnl": "+84.96 USD",
-      "favorable_excursion": "+87.00 USD",
-      "adverse_excursion": "-69.24 USD"
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 296.11,
+      "last_seen_at": "2026-07-28T19:37:17.817Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-07-28T14:00:00.000Z",
+      "entry_price": "293.6",
+      "net_pnl": "+65.29 USD | +0.65%",
+      "favorable_excursion": "+80.46 USD",
+      "adverse_excursion": "-15.08 USD"
     },
     "BATS:FAS:60": {
       "symbol": "BATS:FAS",
@@ -1797,27 +1797,27 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 174.8,
-      "last_seen_at": "2026-07-24T16:14:11.258Z",
+      "last_seen_at": "2026-07-28T19:38:16.164Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-20T14:00:00.000Z",
       "entry_price": "167.29",
-      "net_pnl": "+28.04 USD",
-      "favorable_excursion": "+156.65 USD",
-      "adverse_excursion": "-556.35 USD"
+      "net_pnl": "+26.21 USD | +0.18%",
+      "favorable_excursion": "+146.43 USD",
+      "adverse_excursion": "-520.07 USD"
     },
     "BATS:DUSL:60": {
       "symbol": "BATS:DUSL",
       "timeframe": "60",
       "label_count": 25,
       "last_signal": "▼",
-      "last_price": 99.64,
-      "last_seen_at": "2026-07-24T16:14:14.755Z",
+      "last_price": 101.51,
+      "last_seen_at": "2026-07-28T19:38:20.546Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-07T15:00:00.000Z",
       "entry_price": "96.9",
-      "net_pnl": "+106.29 USD",
-      "favorable_excursion": "+348.89 USD",
-      "adverse_excursion": "-685.99 USD"
+      "net_pnl": "+110.31 USD | +0.83%",
+      "favorable_excursion": "+362.10 USD",
+      "adverse_excursion": "-711.98 USD"
     },
     "BATS:BE:60": {
       "symbol": "BATS:BE",
@@ -1825,13 +1825,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 194.1,
-      "last_seen_at": "2026-07-24T16:14:17.078Z",
+      "last_seen_at": "2026-07-28T19:38:24.784Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-24T14:00:00.000Z",
       "entry_price": "202.17",
-      "net_pnl": "+64.99 USD",
-      "favorable_excursion": "+231.62 USD",
-      "adverse_excursion": "-425.07 USD"
+      "net_pnl": "-2469.38 USD | -15.69%",
+      "favorable_excursion": "+176.70 USD",
+      "adverse_excursion": "-3309.44 USD"
     },
     "TSX_DLY:TD:60": {
       "symbol": "TSX_DLY:TD",
@@ -1839,13 +1839,13 @@
       "label_count": 24,
       "last_signal": "▲",
       "last_price": 166.37,
-      "last_seen_at": "2026-07-24T16:14:19.950Z",
+      "last_seen_at": "2026-07-28T19:38:28.737Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-20T20:00:00.000Z",
       "entry_price": "169.32",
-      "net_pnl": "-43.80 USD",
-      "favorable_excursion": "+147.51 USD",
-      "adverse_excursion": "-162.01 USD"
+      "net_pnl": "+26.22 USD | +0.21%",
+      "favorable_excursion": "+139.43 USD",
+      "adverse_excursion": "-171.07 USD"
     },
     "BATS:MU:240": {
       "symbol": "BATS:MU",
@@ -1853,13 +1853,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 311.48,
-      "last_seen_at": "2026-07-24T15:15:32.268Z",
+      "last_seen_at": "2026-07-28T18:22:56.298Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-02T16:00:00.000Z",
       "entry_price": "991.1",
-      "net_pnl": "-1003.20 USD",
-      "favorable_excursion": "+868.18 USD",
-      "adverse_excursion": "-3761.62 USD"
+      "net_pnl": "-3838.56 USD | -16.64%",
+      "favorable_excursion": "+955.00 USD",
+      "adverse_excursion": "-4465.80 USD"
     },
     "TSX_DLY:RY:240": {
       "symbol": "TSX_DLY:RY",
@@ -1867,13 +1867,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 239.27,
-      "last_seen_at": "2026-07-24T15:15:34.622Z",
+      "last_seen_at": "2026-07-28T18:23:00.602Z",
       "signal_type": "EXIT",
       "entry_time": "2026-02-27T16:00:00.000Z",
       "entry_price": "227.05",
-      "net_pnl": "-10.14 USD",
-      "favorable_excursion": "+197.61 USD",
-      "adverse_excursion": "-564.69 USD"
+      "net_pnl": "-9.59 USD | -0.08%",
+      "favorable_excursion": "+186.83 USD",
+      "adverse_excursion": "-533.89 USD"
     },
     "BATS:BE:240": {
       "symbol": "BATS:BE",
@@ -1881,13 +1881,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 223.8,
-      "last_seen_at": "2026-07-24T15:15:36.997Z",
+      "last_seen_at": "2026-07-28T18:23:04.543Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-08T16:00:00.000Z",
       "entry_price": "246.42",
-      "net_pnl": "-9157.35 USD",
-      "favorable_excursion": "+6218.38 USD",
-      "adverse_excursion": "-10776.12 USD"
+      "net_pnl": "-16093.02 USD | -33.77%",
+      "favorable_excursion": "+5551.05 USD",
+      "adverse_excursion": "-16204.00 USD"
     },
     "TSX_DLY:TD:240": {
       "symbol": "TSX_DLY:TD",
@@ -1895,13 +1895,13 @@
       "label_count": 23,
       "last_signal": "▼",
       "last_price": 136.49,
-      "last_seen_at": "2026-07-24T15:15:39.210Z",
+      "last_seen_at": "2026-07-28T18:23:08.426Z",
       "signal_type": "EXIT",
       "entry_time": "2026-03-09T15:00:00.000Z",
       "entry_price": "128.31",
-      "net_pnl": "+350.56 USD",
-      "favorable_excursion": "+369.58 USD",
-      "adverse_excursion": "-254.58 USD"
+      "net_pnl": "+328.19 USD | +2.90%",
+      "favorable_excursion": "+345.99 USD",
+      "adverse_excursion": "-238.33 USD"
     },
     "BSE_DLY:SBIN:240": {
       "symbol": "BSE_DLY:SBIN",
@@ -1909,13 +1909,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 1066.9,
-      "last_seen_at": "2026-07-24T15:15:41.617Z",
+      "last_seen_at": "2026-07-28T18:23:13.056Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-23T07:30:00.000Z",
       "entry_price": "1008.65",
-      "net_pnl": "+96.00 USD",
-      "favorable_excursion": "+125.12 USD",
-      "adverse_excursion": "-137.38 USD"
+      "net_pnl": "+58.10 USD | +0.37%",
+      "favorable_excursion": "+196.58 USD",
+      "adverse_excursion": "-128.22 USD"
     },
     "BSE_DLY:KARURVYSYA:240": {
       "symbol": "BSE_DLY:KARURVYSYA",
@@ -1923,13 +1923,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 347.75,
-      "last_seen_at": "2026-07-24T15:15:43.807Z",
+      "last_seen_at": "2026-07-28T18:23:17.281Z",
       "signal_type": "EXIT",
       "entry_time": "2026-06-10T07:30:00.000Z",
       "entry_price": "276",
-      "net_pnl": "+1492.32 USD",
-      "favorable_excursion": "+1794.53 USD",
-      "adverse_excursion": "-527.47 USD"
+      "net_pnl": "+1367.96 USD | +7.50%",
+      "favorable_excursion": "+1644.98 USD",
+      "adverse_excursion": "-483.52 USD"
     },
     "BSE_DLY:ICICIBANK:240": {
       "symbol": "BSE_DLY:ICICIBANK",
@@ -1937,13 +1937,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 1479.9,
-      "last_seen_at": "2026-07-24T15:15:46.079Z",
+      "last_seen_at": "2026-07-28T18:23:21.092Z",
       "signal_type": "EXIT",
       "entry_time": "2026-05-20T07:30:00.000Z",
       "entry_price": "1230.5",
-      "net_pnl": "+797.04 USD",
-      "favorable_excursion": "+887.03 USD",
-      "adverse_excursion": "-213.97 USD"
+      "net_pnl": "+730.62 USD | +5.39%",
+      "favorable_excursion": "+813.11 USD",
+      "adverse_excursion": "-196.14 USD"
     },
     "BATS:SPCX:D": {
       "symbol": "BATS:SPCX",
@@ -1951,7 +1951,7 @@
       "label_count": 0,
       "last_signal": null,
       "last_price": 113.12,
-      "last_seen_at": "2026-07-24T15:16:56.120Z",
+      "last_seen_at": "2026-07-28T16:09:15.771Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-24T15:16:56.120Z",
       "entry_price": "—",
@@ -1965,13 +1965,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 184.4,
-      "last_seen_at": "2026-07-24T15:16:59.623Z",
+      "last_seen_at": "2026-07-28T16:09:20.992Z",
       "signal_type": "EXIT",
-      "entry_time": "2025-03-11T13:30:00.000Z",
-      "entry_price": "141.61",
-      "net_pnl": "+4500.05 USD",
-      "favorable_excursion": "+4921.41 USD",
-      "adverse_excursion": "-8738.31 USD"
+      "entry_time": "2026-02-12T14:30:00.000Z",
+      "entry_price": "148.5",
+      "net_pnl": "+138.24 USD | +0.72%",
+      "favorable_excursion": "+197.56 USD",
+      "adverse_excursion": "-5384.27 USD"
     },
     "BATS:BE:D": {
       "symbol": "BATS:BE",
@@ -1979,13 +1979,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 116.51,
-      "last_seen_at": "2026-07-24T15:17:02.923Z",
+      "last_seen_at": "2026-07-28T16:09:26.150Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-13T13:30:00.000Z",
       "entry_price": "231.38",
-      "net_pnl": "-2370.40 USD",
-      "favorable_excursion": "+1631.09 USD",
-      "adverse_excursion": "-2960.91 USD"
+      "net_pnl": "-12167.92 USD | -25.62%",
+      "favorable_excursion": "+3751.51 USD",
+      "adverse_excursion": "-13338.41 USD"
     },
     "BATS:JNJ:D": {
       "symbol": "BATS:JNJ",
@@ -1993,13 +1993,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 251.71,
-      "last_seen_at": "2026-07-24T15:17:06.425Z",
+      "last_seen_at": "2026-07-28T16:09:31.376Z",
       "signal_type": "EXIT",
       "entry_time": "2026-04-17T13:30:00.000Z",
       "entry_price": "234.36",
-      "net_pnl": "+405.37 USD",
-      "favorable_excursion": "+532.08 USD",
-      "adverse_excursion": "-896.13 USD"
+      "net_pnl": "+463.27 USD | +2.74%",
+      "favorable_excursion": "+608.09 USD",
+      "adverse_excursion": "-1024.15 USD"
     },
     "BATS:GOOGL:D": {
       "symbol": "BATS:GOOGL",
@@ -2007,13 +2007,13 @@
       "label_count": 24,
       "last_signal": "▲",
       "last_price": 272.11,
-      "last_seen_at": "2026-07-24T15:17:09.960Z",
-      "signal_type": "EXIT",
-      "entry_time": "2026-03-09T13:30:00.000Z",
-      "entry_price": "294.36",
-      "net_pnl": "+2974.72 USD",
-      "favorable_excursion": "+3098.27 USD",
-      "adverse_excursion": "-1465.38 USD"
+      "last_seen_at": "2026-07-27T19:26:56.731Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-29T13:30:00.000Z",
+      "entry_price": "341.83",
+      "net_pnl": "-867.60 USD | -4.01%",
+      "favorable_excursion": "+1985.89 USD",
+      "adverse_excursion": "-1636.31 USD"
     },
     "BSE_DLY:KARURVYSYA:D": {
       "symbol": "BSE_DLY:KARURVYSYA",
@@ -2021,13 +2021,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 347.75,
-      "last_seen_at": "2026-07-24T15:17:17.004Z",
+      "last_seen_at": "2026-07-28T16:09:36.577Z",
       "signal_type": "EXIT",
       "entry_time": "2025-08-20T03:45:00.000Z",
       "entry_price": "183.5",
-      "net_pnl": "+2831.87 USD",
-      "favorable_excursion": "+3126.84 USD",
-      "adverse_excursion": "-305.91 USD"
+      "net_pnl": "+4432.49 USD | +22.34%",
+      "favorable_excursion": "+4894.18 USD",
+      "adverse_excursion": "-478.82 USD"
     },
     "BSE_DLY:ICICIBANK:D": {
       "symbol": "BSE_DLY:ICICIBANK",
@@ -2035,13 +2035,13 @@
       "label_count": 23,
       "last_signal": "▼",
       "last_price": 1479.9,
-      "last_seen_at": "2026-07-24T15:17:20.482Z",
+      "last_seen_at": "2026-07-28T16:09:41.730Z",
       "signal_type": "EXIT",
       "entry_time": "2026-01-28T03:45:00.000Z",
       "entry_price": "1358.15",
-      "net_pnl": "+301.99 USD",
-      "favorable_excursion": "+824.91 USD",
-      "adverse_excursion": "-1891.54 USD"
+      "net_pnl": "+247.08 USD | +2.02%",
+      "favorable_excursion": "+674.93 USD",
+      "adverse_excursion": "-1547.62 USD"
     },
     "BATS:KORU:180": {
       "symbol": "BATS:KORU",
@@ -2049,27 +2049,27 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 29,
-      "last_seen_at": "2026-07-24T15:49:33.481Z",
+      "last_seen_at": "2026-07-27T19:21:58.365Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-24T20:00:00.000Z",
       "entry_price": "37.15",
-      "net_pnl": "-16712.16 USD",
-      "favorable_excursion": "+8838.67 USD",
-      "adverse_excursion": "-20445.25 USD"
+      "net_pnl": "-28328.22 USD | -51.54%",
+      "favorable_excursion": "+13159.38 USD",
+      "adverse_excursion": "-30439.74 USD"
     },
     "BATS:MEXX:180": {
       "symbol": "BATS:MEXX",
       "timeframe": "180",
       "label_count": 25,
-      "last_signal": "▲",
+      "last_signal": "▼",
       "last_price": 35.75,
-      "last_seen_at": "2026-07-24T15:49:35.940Z",
+      "last_seen_at": "2026-07-28T17:22:39.314Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-05T14:00:00.000Z",
       "entry_price": "28.56",
-      "net_pnl": "-408.36 USD",
-      "favorable_excursion": "+2321.40 USD",
-      "adverse_excursion": "-1104.84 USD"
+      "net_pnl": "+804.81 USD | +4.59%",
+      "favorable_excursion": "+2698.97 USD",
+      "adverse_excursion": "-1284.55 USD"
     },
     "BATS:PILL:180": {
       "symbol": "BATS:PILL",
@@ -2077,13 +2077,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 14.25,
-      "last_seen_at": "2026-07-24T15:49:38.373Z",
+      "last_seen_at": "2026-07-27T19:22:04.337Z",
       "signal_type": "EXIT",
       "entry_time": "2026-05-15T17:00:00.000Z",
       "entry_price": "11.67",
-      "net_pnl": "+990.53 USD",
-      "favorable_excursion": "+1990.68 USD",
-      "adverse_excursion": "-1482.32 USD"
+      "net_pnl": "+540.53 USD | +5.62%",
+      "favorable_excursion": "+1086.30 USD",
+      "adverse_excursion": "-808.90 USD"
     },
     "BATS:RETL:180": {
       "symbol": "BATS:RETL",
@@ -2091,13 +2091,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 9.56,
-      "last_seen_at": "2026-07-24T15:49:40.920Z",
+      "last_seen_at": "2026-07-27T19:22:07.397Z",
       "signal_type": "EXIT",
-      "entry_time": "2025-07-31T23:00:00.000Z",
-      "entry_price": "7.8",
-      "net_pnl": "+2265.08 USD",
-      "favorable_excursion": "+2434.81 USD",
-      "adverse_excursion": "-800.87 USD"
+      "entry_time": "2026-07-08T17:00:00.000Z",
+      "entry_price": "8.45",
+      "net_pnl": "+922.52 USD | +10.55%",
+      "favorable_excursion": "+1139.00 USD",
+      "adverse_excursion": "-81.12 USD"
     },
     "BATS:QTUM:180": {
       "symbol": "BATS:QTUM",
@@ -2105,13 +2105,13 @@
       "label_count": 22,
       "last_signal": "▲",
       "last_price": 147.51,
-      "last_seen_at": "2026-07-24T15:49:44.180Z",
+      "last_seen_at": "2026-07-28T17:22:43.983Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-25T14:00:00.000Z",
       "entry_price": "157.03",
-      "net_pnl": "-1223.20 USD",
-      "favorable_excursion": "+683.44 USD",
-      "adverse_excursion": "-1566.96 USD"
+      "net_pnl": "-1482.75 USD | -11.93%",
+      "favorable_excursion": "+640.72 USD",
+      "adverse_excursion": "-1724.03 USD"
     },
     "BATS:WQTM:180": {
       "symbol": "BATS:WQTM",
@@ -2119,13 +2119,13 @@
       "label_count": 12,
       "last_signal": "▲",
       "last_price": 31.93,
-      "last_seen_at": "2026-07-24T15:49:46.691Z",
+      "last_seen_at": "2026-07-28T17:22:47.688Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-05T14:00:00.000Z",
       "entry_price": "37.15",
-      "net_pnl": "-2202.00 USD",
-      "favorable_excursion": "+646.97 USD",
-      "adverse_excursion": "-2582.63 USD"
+      "net_pnl": "-2328.97 USD | -17.33%",
+      "favorable_excursion": "+604.66 USD",
+      "adverse_excursion": "-2664.13 USD"
     },
     "BATS:WTAI:180": {
       "symbol": "BATS:WTAI",
@@ -2133,13 +2133,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 40.37,
-      "last_seen_at": "2026-07-24T15:49:49.074Z",
+      "last_seen_at": "2026-07-28T17:22:51.984Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-02T17:00:00.000Z",
       "entry_price": "42.2",
-      "net_pnl": "-763.68 USD",
-      "favorable_excursion": "+816.31 USD",
-      "adverse_excursion": "-1288.25 USD"
+      "net_pnl": "-1837.05 USD | -12.42%",
+      "favorable_excursion": "+912.83 USD",
+      "adverse_excursion": "-2231.67 USD"
     },
     "BATS:NUGT:180": {
       "symbol": "BATS:NUGT",
@@ -2147,13 +2147,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 168,
-      "last_seen_at": "2026-07-24T15:49:51.527Z",
+      "last_seen_at": "2026-07-27T19:22:19.630Z",
       "signal_type": "EXIT",
       "entry_time": "2026-06-24T20:00:00.000Z",
       "entry_price": "114.71",
-      "net_pnl": "+1092.81 USD",
-      "favorable_excursion": "+2993.52 USD",
-      "adverse_excursion": "-2642.73 USD"
+      "net_pnl": "+1007.75 USD | +5.70%",
+      "favorable_excursion": "+2760.49 USD",
+      "adverse_excursion": "-2437.01 USD"
     },
     "BATS:MNST:180": {
       "symbol": "BATS:MNST",
@@ -2161,13 +2161,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 74.62,
-      "last_seen_at": "2026-07-24T15:49:54.633Z",
+      "last_seen_at": "2026-07-28T17:22:56.687Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-21T14:00:00.000Z",
       "entry_price": "94.42",
-      "net_pnl": "-92.38 USD",
-      "favorable_excursion": "+196.02 USD",
-      "adverse_excursion": "-224.16 USD"
+      "net_pnl": "+455.40 USD | +3.32%",
+      "favorable_excursion": "+641.09 USD",
+      "adverse_excursion": "-217.27 USD"
     },
     "BATS:EWY:180": {
       "symbol": "BATS:EWY",
@@ -2175,13 +2175,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 173.62,
-      "last_seen_at": "2026-07-24T15:49:57.039Z",
+      "last_seen_at": "2026-07-28T17:23:02.277Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-29T17:00:00.000Z",
       "entry_price": "195.23",
-      "net_pnl": "-2706.24 USD",
-      "favorable_excursion": "+716.62 USD",
-      "adverse_excursion": "-3958.58 USD"
+      "net_pnl": "-4002.35 USD | -20.40%",
+      "favorable_excursion": "+709.15 USD",
+      "adverse_excursion": "-4453.15 USD"
     },
     "BATS:UDOW:180": {
       "symbol": "BATS:UDOW",
@@ -2189,27 +2189,27 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 60.75,
-      "last_seen_at": "2026-07-24T15:50:00.492Z",
+      "last_seen_at": "2026-07-28T17:23:07.639Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-14T14:00:00.000Z",
       "entry_price": "70.92",
-      "net_pnl": "-528.36 USD",
-      "favorable_excursion": "+240.16 USD",
-      "adverse_excursion": "-1033.14 USD"
+      "net_pnl": "+218.79 USD | +1.33%",
+      "favorable_excursion": "+223.01 USD",
+      "adverse_excursion": "-959.34 USD"
     },
     "BATS:MU:180": {
       "symbol": "BATS:MU",
       "timeframe": "180",
-      "label_count": 21,
-      "last_signal": "▼",
-      "last_price": 1254.81,
-      "last_seen_at": "2026-07-24T15:50:03.580Z",
-      "signal_type": "EXIT",
-      "entry_time": "2026-07-02T11:00:00.000Z",
-      "entry_price": "1012.1",
-      "net_pnl": "-501.95 USD",
-      "favorable_excursion": "+1265.63 USD",
-      "adverse_excursion": "-4391.14 USD"
+      "label_count": 22,
+      "last_signal": "▲",
+      "last_price": 804.01,
+      "last_seen_at": "2026-07-28T17:23:14.056Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-28T17:00:00.000Z",
+      "entry_price": "824.55",
+      "net_pnl": "-116.38 USD | -0.56%",
+      "favorable_excursion": "+36.70 USD",
+      "adverse_excursion": "-169.61 USD"
     },
     "TSX_DLY:RY:180": {
       "symbol": "TSX_DLY:RY",
@@ -2217,13 +2217,13 @@
       "label_count": 23,
       "last_signal": "▼",
       "last_price": 239.27,
-      "last_seen_at": "2026-07-24T15:50:06.468Z",
+      "last_seen_at": "2026-07-28T17:23:19.281Z",
       "signal_type": "EXIT",
       "entry_time": "2026-02-27T18:00:00.000Z",
       "entry_price": "227.06",
-      "net_pnl": "-28.70 USD",
-      "favorable_excursion": "+179.15 USD",
-      "adverse_excursion": "-513.85 USD"
+      "net_pnl": "-26.98 USD | -0.25%",
+      "favorable_excursion": "+168.40 USD",
+      "adverse_excursion": "-483.02 USD"
     },
     "BATS:BE:180": {
       "symbol": "BATS:BE",
@@ -2231,27 +2231,27 @@
       "label_count": 22,
       "last_signal": "▲",
       "last_price": 223.8,
-      "last_seen_at": "2026-07-24T15:50:09.143Z",
+      "last_seen_at": "2026-07-28T17:23:24.555Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-26T17:00:00.000Z",
       "entry_price": "269.01",
-      "net_pnl": "-6556.77 USD",
-      "favorable_excursion": "+7979.50 USD",
-      "adverse_excursion": "-7442.72 USD"
+      "net_pnl": "-9622.80 USD | -37.50%",
+      "favorable_excursion": "+7254.09 USD",
+      "adverse_excursion": "-9904.41 USD"
     },
     "TSX_DLY:TD:180": {
       "symbol": "TSX_DLY:TD",
       "timeframe": "180",
-      "label_count": 23,
-      "last_signal": "▼",
-      "last_price": 172.98,
-      "last_seen_at": "2026-07-24T15:50:16.144Z",
-      "signal_type": "EXIT",
-      "entry_time": "2026-07-08T17:00:00.000Z",
-      "entry_price": "168.11",
-      "net_pnl": "+289.77 USD",
-      "favorable_excursion": "+369.52 USD",
-      "adverse_excursion": "-80.16 USD"
+      "label_count": 24,
+      "last_signal": "▲",
+      "last_price": 166.37,
+      "last_seen_at": "2026-07-28T17:23:29.624Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-28T14:00:00.000Z",
+      "entry_price": "167.62",
+      "net_pnl": "+155.40 USD | +1.24%",
+      "favorable_excursion": "+157.67 USD",
+      "adverse_excursion": "-20.13 USD"
     },
     "BATS:JNJ:180": {
       "symbol": "BATS:JNJ",
@@ -2259,13 +2259,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 269.44,
-      "last_seen_at": "2026-07-24T15:50:19.393Z",
+      "last_seen_at": "2026-07-28T17:23:34.913Z",
       "signal_type": "EXIT",
       "entry_time": "2026-07-15T11:00:00.000Z",
       "entry_price": "249.19",
-      "net_pnl": "+386.98 USD",
-      "favorable_excursion": "+493.62 USD",
-      "adverse_excursion": "-183.04 USD"
+      "net_pnl": "+361.75 USD | +3.37%",
+      "favorable_excursion": "+461.42 USD",
+      "adverse_excursion": "-171.11 USD"
     },
     "BATS:GOOGL:180": {
       "symbol": "BATS:GOOGL",
@@ -2273,13 +2273,13 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 349.5,
-      "last_seen_at": "2026-07-24T15:50:21.998Z",
+      "last_seen_at": "2026-07-28T17:23:40.643Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-17T11:00:00.000Z",
       "entry_price": "350.52",
-      "net_pnl": "-1161.42 USD",
-      "favorable_excursion": "+343.18 USD",
-      "adverse_excursion": "-1402.85 USD"
+      "net_pnl": "-583.12 USD | -4.27%",
+      "favorable_excursion": "+325.58 USD",
+      "adverse_excursion": "-1330.91 USD"
     },
     "BATS:TQQQ:180": {
       "symbol": "BATS:TQQQ",
@@ -2287,13 +2287,13 @@
       "label_count": 24,
       "last_signal": "▲",
       "last_price": 37.32,
-      "last_seen_at": "2026-07-24T15:50:24.609Z",
+      "last_seen_at": "2026-07-28T17:23:45.624Z",
       "signal_type": "OPEN",
       "entry_time": "2026-06-05T17:00:00.000Z",
       "entry_price": "76.96",
-      "net_pnl": "-2522.25 USD",
-      "favorable_excursion": "+1910.93 USD",
-      "adverse_excursion": "-2980.57 USD"
+      "net_pnl": "-3084.64 USD | -18.28%",
+      "favorable_excursion": "+1766.55 USD",
+      "adverse_excursion": "-3668.49 USD"
     },
     "BSE_DLY:KARURVYSYA:180": {
       "symbol": "BSE_DLY:KARURVYSYA",
@@ -2301,13 +2301,13 @@
       "label_count": 25,
       "last_signal": "▼",
       "last_price": 347.75,
-      "last_seen_at": "2026-07-24T15:50:27.023Z",
+      "last_seen_at": "2026-07-28T17:23:52.157Z",
       "signal_type": "EXIT",
       "entry_time": "2026-06-08T06:30:00.000Z",
       "entry_price": "284.2",
-      "net_pnl": "+559.67 USD",
-      "favorable_excursion": "+962.34 USD",
-      "adverse_excursion": "-1118.46 USD"
+      "net_pnl": "+513.03 USD | +2.73%",
+      "favorable_excursion": "+882.14 USD",
+      "adverse_excursion": "-1025.26 USD"
     },
     "BSE_DLY:CIPLA:180": {
       "symbol": "BSE_DLY:CIPLA",
@@ -2315,27 +2315,811 @@
       "label_count": 25,
       "last_signal": "▲",
       "last_price": 1490,
-      "last_seen_at": "2026-07-24T15:50:29.785Z",
+      "last_seen_at": "2026-07-28T17:23:57.725Z",
       "signal_type": "OPEN",
       "entry_time": "2026-07-17T06:30:00.000Z",
       "entry_price": "1408.2",
-      "net_pnl": "+15.75 USD",
-      "favorable_excursion": "+507.53 USD",
-      "adverse_excursion": "-390.67 USD"
+      "net_pnl": "+291.60 USD | +2.22%",
+      "favorable_excursion": "+451.13 USD",
+      "adverse_excursion": "-347.27 USD"
     },
     "BSE_DLY:ICICIBANK:180": {
       "symbol": "BSE_DLY:ICICIBANK",
       "timeframe": "180",
-      "label_count": 0,
-      "last_signal": null,
-      "last_price": 1433.15,
-      "last_seen_at": "2026-07-24T15:50:33.021Z",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 1479.9,
+      "last_seen_at": "2026-07-28T17:24:03.384Z",
       "signal_type": "EXIT",
       "entry_time": "2026-06-02T06:30:00.000Z",
       "entry_price": "1223.4",
-      "net_pnl": "+936.87 USD",
-      "favorable_excursion": "+972.32 USD",
-      "adverse_excursion": "-128.68 USD"
+      "net_pnl": "+858.80 USD | +6.38%",
+      "favorable_excursion": "+891.29 USD",
+      "adverse_excursion": "-117.96 USD"
+    },
+    "BATS:EWO:45": {
+      "symbol": "BATS:EWO",
+      "timeframe": "45",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 43.02,
+      "last_seen_at": "2026-07-27T19:48:34.210Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-07-17T14:00:00.000Z",
+      "entry_price": "41.53",
+      "net_pnl": "+26.79 USD | +0.26%",
+      "favorable_excursion": "+1071.39 USD",
+      "adverse_excursion": "-25.48 USD"
+    },
+    "BATS:DXYZ:45": {
+      "symbol": "BATS:DXYZ",
+      "timeframe": "45",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 25.14,
+      "last_seen_at": "2026-07-27T19:48:37.995Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-17T14:00:00.000Z",
+      "entry_price": "25.41",
+      "net_pnl": "-829.44 USD | -8.05%",
+      "favorable_excursion": "+282.08 USD",
+      "adverse_excursion": "-1246.24 USD"
+    },
+    "BATS:WQTM:45": {
+      "symbol": "BATS:WQTM",
+      "timeframe": "45",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 30.15,
+      "last_seen_at": "2026-07-27T19:48:41.347Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-24T14:00:00.000Z",
+      "entry_price": "30.88",
+      "net_pnl": "+95.36 USD | +0.98%",
+      "favorable_excursion": "+294.76 USD",
+      "adverse_excursion": "-98.60 USD"
+    },
+    "BATS:WTAI:45": {
+      "symbol": "BATS:WTAI",
+      "timeframe": "45",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 37.89,
+      "last_seen_at": "2026-07-28T19:08:04.764Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-24T14:45:00.000Z",
+      "entry_price": "39.06",
+      "net_pnl": "-720.78 USD | -5.97%",
+      "favorable_excursion": "+214.17 USD",
+      "adverse_excursion": "-1054.52 USD"
+    },
+    "BATS:XOVL:45": {
+      "symbol": "BATS:XOVL",
+      "timeframe": "45",
+      "label_count": 12,
+      "last_signal": "▲",
+      "last_price": 19.4,
+      "last_seen_at": "2026-07-27T19:48:48.063Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-07T16:15:00.000Z",
+      "entry_price": "22.86",
+      "net_pnl": "-2444.96 USD | -21.60%",
+      "favorable_excursion": "+140.25 USD",
+      "adverse_excursion": "-2668.15 USD"
+    },
+    "BATS:UDOW:45": {
+      "symbol": "BATS:UDOW",
+      "timeframe": "45",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 70.51,
+      "last_seen_at": "2026-07-28T19:08:08.182Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-07-23T12:30:00.000Z",
+      "entry_price": "67.6",
+      "net_pnl": "+422.15 USD | +3.45%",
+      "favorable_excursion": "+434.83 USD",
+      "adverse_excursion": "-184.19 USD"
+    },
+    "BATS:FAS:45": {
+      "symbol": "BATS:FAS",
+      "timeframe": "45",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 174.8,
+      "last_seen_at": "2026-07-28T19:08:11.806Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-07-17T18:30:00.000Z",
+      "entry_price": "168.42",
+      "net_pnl": "+25.03 USD | +0.21%",
+      "favorable_excursion": "+114.42 USD",
+      "adverse_excursion": "-509.67 USD"
+    },
+    "TSX_DLY:TD:45": {
+      "symbol": "TSX_DLY:TD",
+      "timeframe": "45",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 166.37,
+      "last_seen_at": "2026-07-28T19:08:16.012Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-20T19:15:00.000Z",
+      "entry_price": "169.32",
+      "net_pnl": "+19.20 USD | +0.17%",
+      "favorable_excursion": "+129.32 USD",
+      "adverse_excursion": "-158.68 USD"
+    },
+    "BATS:AMDL:45": {
+      "symbol": "BATS:AMDL",
+      "timeframe": "45",
+      "label_count": 22,
+      "last_signal": "▲",
+      "last_price": 49.83,
+      "last_seen_at": "2026-07-28T19:08:19.767Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-24T14:00:00.000Z",
+      "entry_price": "63.71",
+      "net_pnl": "-3074.24 USD | -21.87%",
+      "favorable_excursion": "+989.31 USD",
+      "adverse_excursion": "-3886.21 USD"
+    },
+    "BSE_DLY:SBIN:45": {
+      "symbol": "BSE_DLY:SBIN",
+      "timeframe": "45",
+      "label_count": 24,
+      "last_signal": "▲",
+      "last_price": 1066.9,
+      "last_seen_at": "2026-07-27T19:49:05.442Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-22T07:15:00.000Z",
+      "entry_price": "1021",
+      "net_pnl": "-1.60 USD | -0.02%",
+      "favorable_excursion": "+40.23 USD",
+      "adverse_excursion": "-172.17 USD"
+    },
+    "BATS:DRN:45": {
+      "symbol": "BATS:DRN",
+      "timeframe": "45",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 11.85,
+      "last_seen_at": "2026-07-28T19:08:23.339Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-07-22T20:45:00.000Z",
+      "entry_price": "11.19",
+      "net_pnl": "+628.04 USD | +5.33%",
+      "favorable_excursion": "+640.47 USD",
+      "adverse_excursion": "-201.13 USD"
+    },
+    "BATS:JNUG:120": {
+      "symbol": "BATS:JNUG",
+      "timeframe": "120",
+      "label_count": 23,
+      "last_signal": "▼",
+      "last_price": 139,
+      "last_seen_at": "2026-07-27T19:20:15.242Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-07-08T10:00:00.000Z",
+      "entry_price": "114.33",
+      "net_pnl": "+981.02 USD | +11.28%",
+      "favorable_excursion": "+1008.95 USD",
+      "adverse_excursion": "-1141.85 USD"
+    },
+    "BATS:SOXL:120": {
+      "symbol": "BATS:SOXL",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 157.55,
+      "last_seen_at": "2026-07-27T19:20:18.279Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-23T20:00:00.000Z",
+      "entry_price": "230.97",
+      "net_pnl": "-11121.00 USD | -41.56%",
+      "favorable_excursion": "+4487.89 USD",
+      "adverse_excursion": "-12733.71 USD"
+    },
+    "BATS:SPXL:120": {
+      "symbol": "BATS:SPXL",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 250.36,
+      "last_seen_at": "2026-07-28T18:38:46.366Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-17T10:00:00.000Z",
+      "entry_price": "267.16",
+      "net_pnl": "-226.87 USD | -1.63%",
+      "favorable_excursion": "+261.80 USD",
+      "adverse_excursion": "-526.12 USD"
+    },
+    "BATS:TNA:120": {
+      "symbol": "BATS:TNA",
+      "timeframe": "120",
+      "label_count": 22,
+      "last_signal": "▲",
+      "last_price": 59.5,
+      "last_seen_at": "2026-07-28T18:38:50.031Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-08T10:00:00.000Z",
+      "entry_price": "68.7",
+      "net_pnl": "+54.90 USD | +0.41%",
+      "favorable_excursion": "+920.73 USD",
+      "adverse_excursion": "-299.88 USD"
+    },
+    "BATS:UTSL:120": {
+      "symbol": "BATS:UTSL",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 48.72,
+      "last_seen_at": "2026-07-28T18:38:53.760Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-07-17T20:00:00.000Z",
+      "entry_price": "45",
+      "net_pnl": "+742.15 USD | +5.46%",
+      "favorable_excursion": "+931.67 USD",
+      "adverse_excursion": "-533.03 USD"
+    },
+    "BATS:YINN:120": {
+      "symbol": "BATS:YINN",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 30.42,
+      "last_seen_at": "2026-07-27T19:20:30.231Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-06-17T20:00:00.000Z",
+      "entry_price": "26.4",
+      "net_pnl": "-1386.45 USD | -11.16%",
+      "favorable_excursion": "+330.69 USD",
+      "adverse_excursion": "-2855.91 USD"
+    },
+    "BATS:TECL:120": {
+      "symbol": "BATS:TECL",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 175.55,
+      "last_seen_at": "2026-07-27T19:20:33.217Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-23T20:00:00.000Z",
+      "entry_price": "210.93",
+      "net_pnl": "-2298.96 USD | -16.50%",
+      "favorable_excursion": "+1310.62 USD",
+      "adverse_excursion": "-2906.00 USD"
+    },
+    "BATS:DXYZ:120": {
+      "symbol": "BATS:DXYZ",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 23.6,
+      "last_seen_at": "2026-07-27T19:20:36.207Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-20T14:00:00.000Z",
+      "entry_price": "24.98",
+      "net_pnl": "-485.09 USD | -6.82%",
+      "favorable_excursion": "+315.72 USD",
+      "adverse_excursion": "-762.86 USD"
+    },
+    "BATS:QTUM:120": {
+      "symbol": "BATS:QTUM",
+      "timeframe": "120",
+      "label_count": 18,
+      "last_signal": "▲",
+      "last_price": 147.51,
+      "last_seen_at": "2026-07-28T18:38:57.411Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-24T14:00:00.000Z",
+      "entry_price": "160.39",
+      "net_pnl": "-1686.96 USD | -14.01%",
+      "favorable_excursion": "+367.75 USD",
+      "adverse_excursion": "-1870.88 USD"
+    },
+    "BATS:MNST:120": {
+      "symbol": "BATS:MNST",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 101,
+      "last_seen_at": "2026-07-28T18:39:01.808Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-07-20T20:00:00.000Z",
+      "entry_price": "95.48",
+      "net_pnl": "+331.05 USD | +2.69%",
+      "favorable_excursion": "+378.55 USD",
+      "adverse_excursion": "-339.98 USD"
+    },
+    "BATS:TOPT:120": {
+      "symbol": "BATS:TOPT",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 31.6,
+      "last_seen_at": "2026-07-27T19:20:45.253Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-17T10:00:00.000Z",
+      "entry_price": "32.54",
+      "net_pnl": "-38.74 USD | -0.38%",
+      "favorable_excursion": "+276.38 USD",
+      "adverse_excursion": "-102.08 USD"
+    },
+    "BATS:ASHR:120": {
+      "symbol": "BATS:ASHR",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 34.4,
+      "last_seen_at": "2026-07-28T18:39:06.423Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-26T14:00:00.000Z",
+      "entry_price": "35.77",
+      "net_pnl": "-591.48 USD | -4.93%",
+      "favorable_excursion": "+284.37 USD",
+      "adverse_excursion": "-765.03 USD"
+    },
+    "BATS:EWY:120": {
+      "symbol": "BATS:EWY",
+      "timeframe": "120",
+      "label_count": 22,
+      "last_signal": "▲",
+      "last_price": 173.62,
+      "last_seen_at": "2026-07-28T18:39:10.626Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-23T14:00:00.000Z",
+      "entry_price": "197.74",
+      "net_pnl": "-3517.02 USD | -21.52%",
+      "favorable_excursion": "+1274.70 USD",
+      "adverse_excursion": "-3852.24 USD"
+    },
+    "BATS:MU:120": {
+      "symbol": "BATS:MU",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 804.01,
+      "last_seen_at": "2026-07-28T18:39:16.075Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-28T12:00:00.000Z",
+      "entry_price": "839.99",
+      "net_pnl": "-599.76 USD | -2.40%",
+      "favorable_excursion": "+246.68 USD",
+      "adverse_excursion": "-1448.44 USD"
+    },
+    "TSX_DLY:RY:120": {
+      "symbol": "TSX_DLY:RY",
+      "timeframe": "120",
+      "label_count": 23,
+      "last_signal": "▼",
+      "last_price": 239.27,
+      "last_seen_at": "2026-07-28T18:39:20.169Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-02-27T16:00:00.000Z",
+      "entry_price": "227.05",
+      "net_pnl": "-8.48 USD | -0.08%",
+      "favorable_excursion": "+165.28 USD",
+      "adverse_excursion": "-472.28 USD"
+    },
+    "BATS:BE:120": {
+      "symbol": "BATS:BE",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 223.8,
+      "last_seen_at": "2026-07-28T18:39:24.434Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-26T14:00:00.000Z",
+      "entry_price": "281.44",
+      "net_pnl": "-16544.40 USD | -40.93%",
+      "favorable_excursion": "+9269.56 USD",
+      "adverse_excursion": "-16873.72 USD"
+    },
+    "TSX_DLY:TD:120": {
+      "symbol": "TSX_DLY:TD",
+      "timeframe": "120",
+      "label_count": 24,
+      "last_signal": "▲",
+      "last_price": 166.37,
+      "last_seen_at": "2026-07-28T18:39:28.492Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-28T15:00:00.000Z",
+      "entry_price": "168.6",
+      "net_pnl": "+70.72 USD | +0.58%",
+      "favorable_excursion": "+86.46 USD",
+      "adverse_excursion": "-23.70 USD"
+    },
+    "BATS:GOOGL:120": {
+      "symbol": "BATS:GOOGL",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 349.5,
+      "last_seen_at": "2026-07-28T18:39:32.965Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-17T10:00:00.000Z",
+      "entry_price": "349.25",
+      "net_pnl": "-487.56 USD | -3.85%",
+      "favorable_excursion": "+342.41 USD",
+      "adverse_excursion": "-1179.77 USD"
+    },
+    "BATS:TQQQ:120": {
+      "symbol": "BATS:TQQQ",
+      "timeframe": "120",
+      "label_count": 24,
+      "last_signal": "▲",
+      "last_price": 66.79,
+      "last_seen_at": "2026-07-27T19:21:09.372Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-23T14:00:00.000Z",
+      "entry_price": "76.77",
+      "net_pnl": "-2002.77 USD | -16.09%",
+      "favorable_excursion": "+716.53 USD",
+      "adverse_excursion": "-2326.64 USD"
+    },
+    "BSE_DLY:KARURVYSYA:120": {
+      "symbol": "BSE_DLY:KARURVYSYA",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 347.75,
+      "last_seen_at": "2026-07-28T18:39:36.900Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-05-12T05:30:00.000Z",
+      "entry_price": "285.6",
+      "net_pnl": "+234.62 USD | +2.00%",
+      "favorable_excursion": "+617.64 USD",
+      "adverse_excursion": "-694.36 USD"
+    },
+    "BSE_DLY:ICICIBANK:120": {
+      "symbol": "BSE_DLY:ICICIBANK",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 1479.9,
+      "last_seen_at": "2026-07-28T18:39:41.906Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-06-02T07:30:00.000Z",
+      "entry_price": "1234",
+      "net_pnl": "+566.25 USD | +5.09%",
+      "favorable_excursion": "+633.74 USD",
+      "adverse_excursion": "-192.01 USD"
+    },
+    "BATS:DRN:120": {
+      "symbol": "BATS:DRN",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 11.6,
+      "last_seen_at": "2026-07-28T18:39:45.934Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-06-17T20:00:00.000Z",
+      "entry_price": "10.34",
+      "net_pnl": "+1233.01 USD | +9.07%",
+      "favorable_excursion": "+1484.37 USD",
+      "adverse_excursion": "-184.41 USD"
+    },
+    "BATS:DRV:120": {
+      "symbol": "BATS:DRV",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 18.68,
+      "last_seen_at": "2026-07-27T19:21:35.489Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-08T08:00:00.000Z",
+      "entry_price": "19.12",
+      "net_pnl": "-1375.92 USD | -10.77%",
+      "favorable_excursion": "+599.34 USD",
+      "adverse_excursion": "-1623.79 USD"
+    },
+    "BATS:EDC:120": {
+      "symbol": "BATS:EDC",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 103.79,
+      "last_seen_at": "2026-07-28T18:39:50.587Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-24T18:00:00.000Z",
+      "entry_price": "82.78",
+      "net_pnl": "-4248.30 USD | -19.89%",
+      "favorable_excursion": "+1993.62 USD",
+      "adverse_excursion": "-4866.38 USD"
+    },
+    "NSE_DLY:HINDZINC:120": {
+      "symbol": "NSE_DLY:HINDZINC",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 678.25,
+      "last_seen_at": "2026-07-28T18:39:54.783Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-06-03T05:30:00.000Z",
+      "entry_price": "613.7",
+      "net_pnl": "-1649.20 USD | -13.16%",
+      "favorable_excursion": "+10.19 USD",
+      "adverse_excursion": "-1887.91 USD"
+    },
+    "NSE_DLY:ICICIBANK:120": {
+      "symbol": "NSE_DLY:ICICIBANK",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 1480,
+      "last_seen_at": "2026-07-28T18:39:58.794Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-06-02T07:30:00.000Z",
+      "entry_price": "1234.9",
+      "net_pnl": "+554.99 USD | +4.99%",
+      "favorable_excursion": "+628.79 USD",
+      "adverse_excursion": "-201.91 USD"
+    },
+    "NSE_DLY:BHARTIARTL:120": {
+      "symbol": "NSE_DLY:BHARTIARTL",
+      "timeframe": "120",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 1966,
+      "last_seen_at": "2026-07-28T18:40:03.104Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-06-02T05:30:00.000Z",
+      "entry_price": "1780",
+      "net_pnl": "+416.20 USD | +3.89%",
+      "favorable_excursion": "+464.52 USD",
+      "adverse_excursion": "-79.08 USD"
+    },
+    "BSE_DLY:SBIN:180": {
+      "symbol": "BSE_DLY:SBIN",
+      "timeframe": "180",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 1066.9,
+      "last_seen_at": "2026-07-28T17:24:09.372Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-23T09:30:00.000Z",
+      "entry_price": "1012.7",
+      "net_pnl": "+1.20 USD | +0.01%",
+      "favorable_excursion": "+119.85 USD",
+      "adverse_excursion": "-158.55 USD"
+    },
+    "BATS:EDC:180": {
+      "symbol": "BATS:EDC",
+      "timeframe": "180",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 103.79,
+      "last_seen_at": "2026-07-28T17:24:14.506Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-02T14:00:00.000Z",
+      "entry_price": "82.59",
+      "net_pnl": "-6041.28 USD | -18.50%",
+      "favorable_excursion": "+1129.92 USD",
+      "adverse_excursion": "-7318.20 USD"
+    },
+    "BATS:AAPU:180": {
+      "symbol": "BATS:AAPU",
+      "timeframe": "180",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 42.86,
+      "last_seen_at": "2026-07-28T17:24:19.347Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-06-08T20:00:00.000Z",
+      "entry_price": "38.74",
+      "net_pnl": "+351.59 USD | +1.84%",
+      "favorable_excursion": "+395.82 USD",
+      "adverse_excursion": "-3654.98 USD"
+    },
+    "NSE_DLY:LT:180": {
+      "symbol": "NSE_DLY:LT",
+      "timeframe": "180",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 4272.3,
+      "last_seen_at": "2026-07-28T17:24:23.886Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-08T06:30:00.000Z",
+      "entry_price": "3969.4",
+      "net_pnl": "-418.20 USD | -2.81%",
+      "favorable_excursion": "+19.89 USD",
+      "adverse_excursion": "-760.11 USD"
+    },
+    "NSE_DLY:ICICIBANK:180": {
+      "symbol": "NSE_DLY:ICICIBANK",
+      "timeframe": "180",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 1480,
+      "last_seen_at": "2026-07-28T17:24:28.389Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-06-02T06:30:00.000Z",
+      "entry_price": "1223.4",
+      "net_pnl": "+858.80 USD | +6.38%",
+      "favorable_excursion": "+895.14 USD",
+      "adverse_excursion": "-120.16 USD"
+    },
+    "NSE_DLY:BHARTIARTL:180": {
+      "symbol": "NSE_DLY:BHARTIARTL",
+      "timeframe": "180",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 1966,
+      "last_seen_at": "2026-07-28T17:24:33.087Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-06-08T06:30:00.000Z",
+      "entry_price": "1809",
+      "net_pnl": "+555.09 USD | +4.38%",
+      "favorable_excursion": "+631.34 USD",
+      "adverse_excursion": "-295.46 USD"
+    },
+    "BATS:DFEN:240": {
+      "symbol": "BATS:DFEN",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 89.01,
+      "last_seen_at": "2026-07-28T18:23:24.833Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-07-13T20:00:00.000Z",
+      "entry_price": "72.19",
+      "net_pnl": "+1534.16 USD | +8.26%",
+      "favorable_excursion": "+1726.48 USD",
+      "adverse_excursion": "-2048.85 USD"
+    },
+    "BATS:EDC:240": {
+      "symbol": "BATS:EDC",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 74.86,
+      "last_seen_at": "2026-07-28T18:23:28.361Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-02T16:00:00.000Z",
+      "entry_price": "78.53",
+      "net_pnl": "-4385.15 USD | -15.61%",
+      "favorable_excursion": "+2378.99 USD",
+      "adverse_excursion": "-5228.86 USD"
+    },
+    "BATS:AMDL:240": {
+      "symbol": "BATS:AMDL",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 48.28,
+      "last_seen_at": "2026-07-28T18:23:31.756Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-08T12:00:00.000Z",
+      "entry_price": "61.65",
+      "net_pnl": "-2514.15 USD | -20.78%",
+      "favorable_excursion": "+3072.54 USD",
+      "adverse_excursion": "-3075.01 USD"
+    },
+    "NSE_DLY:LT:240": {
+      "symbol": "NSE_DLY:LT",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 4272.3,
+      "last_seen_at": "2026-07-28T18:23:36.115Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-15T03:30:00.000Z",
+      "entry_price": "3868",
+      "net_pnl": "-152.00 USD | -0.79%",
+      "favorable_excursion": "0.00 USD",
+      "adverse_excursion": "-607.47 USD"
+    },
+    "NSE_DLY:ULTRACEMCO:240": {
+      "symbol": "NSE_DLY:ULTRACEMCO",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 12172,
+      "last_seen_at": "2026-07-28T18:23:40.969Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-05-18T07:30:00.000Z",
+      "entry_price": "11529",
+      "net_pnl": "+162.76 USD | +1.41%",
+      "favorable_excursion": "+255.47 USD",
+      "adverse_excursion": "-834.53 USD"
+    },
+    "NSE_DLY:ICICIBANK:240": {
+      "symbol": "NSE_DLY:ICICIBANK",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 1480,
+      "last_seen_at": "2026-07-28T18:23:45.113Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-05-20T07:30:00.000Z",
+      "entry_price": "1230.9",
+      "net_pnl": "+722.37 USD | +5.33%",
+      "favorable_excursion": "+812.56 USD",
+      "adverse_excursion": "-202.74 USD"
+    },
+    "NSE_DLY:BHARTIARTL:240": {
+      "symbol": "NSE_DLY:BHARTIARTL",
+      "timeframe": "240",
+      "label_count": 23,
+      "last_signal": "▼",
+      "last_price": 1966,
+      "last_seen_at": "2026-07-28T18:23:49.326Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-05-13T07:30:00.000Z",
+      "entry_price": "1787.5",
+      "net_pnl": "+682.25 USD | +6.35%",
+      "favorable_excursion": "+801.67 USD",
+      "adverse_excursion": "-48.52 USD"
+    },
+    "BATS:KORU:D": {
+      "symbol": "BATS:KORU",
+      "timeframe": "D",
+      "label_count": 20,
+      "last_signal": "▲",
+      "last_price": 11.67,
+      "last_seen_at": "2026-07-27T19:27:13.996Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-09T13:30:00.000Z",
+      "entry_price": "28.09",
+      "net_pnl": "-3764.64 USD | -37.81%",
+      "favorable_excursion": "+249.58 USD",
+      "adverse_excursion": "-4319.82 USD"
+    },
+    "NSE_DLY:LT:D": {
+      "symbol": "NSE_DLY:LT",
+      "timeframe": "D",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 4272.3,
+      "last_seen_at": "2026-07-28T16:09:47.238Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-07-15T03:45:00.000Z",
+      "entry_price": "3868",
+      "net_pnl": "-144.00 USD | -0.72%",
+      "favorable_excursion": "0.00 USD",
+      "adverse_excursion": "-607.47 USD"
+    },
+    "NSE_DLY:ULTRACEMCO:D": {
+      "symbol": "NSE_DLY:ULTRACEMCO",
+      "timeframe": "D",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 12172,
+      "last_seen_at": "2026-07-28T16:09:52.099Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-03-10T03:45:00.000Z",
+      "entry_price": "11606",
+      "net_pnl": "+451.31 USD | +3.88%",
+      "favorable_excursion": "+664.39 USD",
+      "adverse_excursion": "-1292.61 USD"
+    },
+    "NSE_DLY:BHARTIARTL:D": {
+      "symbol": "NSE_DLY:BHARTIARTL",
+      "timeframe": "D",
+      "label_count": 25,
+      "last_signal": "▼",
+      "last_price": 1966,
+      "last_seen_at": "2026-07-28T16:09:56.921Z",
+      "signal_type": "EXIT",
+      "entry_time": "2026-01-19T03:45:00.000Z",
+      "entry_price": "2023",
+      "net_pnl": "-886.96 USD | -4.87%",
+      "favorable_excursion": "+287.79 USD",
+      "adverse_excursion": "-2560.71 USD"
+    },
+    "NSE_DLY:TATASTEEL:240": {
+      "symbol": "NSE_DLY:TATASTEEL",
+      "timeframe": "240",
+      "label_count": 25,
+      "last_signal": "▲",
+      "last_price": 224.4,
+      "last_seen_at": "2026-07-28T18:23:53.415Z",
+      "signal_type": "OPEN",
+      "entry_time": "2026-05-20T07:30:00.000Z",
+      "entry_price": "204.69",
+      "net_pnl": "-1764.99 USD | -10.04%",
+      "favorable_excursion": "+1139.29 USD",
+      "adverse_excursion": "-1919.27 USD"
     }
   },
   "watchlists": {
@@ -2356,8 +3140,8 @@
         "TSX:RY"
       ],
       "symbol_count": 12,
-      "updated_at": "2026-07-24T16:43:13.837Z",
-      "last_scanned_at": "2026-07-24T16:42:42.465Z",
+      "updated_at": "2026-07-28T19:38:41.580Z",
+      "last_scanned_at": "2026-07-28T19:37:17.821Z",
       "source": "data_attributes"
     },
     "Swing 30min": {
@@ -2380,41 +3164,29 @@
     "Swing 1H": {
       "timeframe": "60",
       "symbols": [
-        "AMEX:ASHR",
-        "AMEX:EDC",
         "NASDAQ:INTC",
-        "AMEX:LABU",
         "AMEX:PILL",
-        "AMEX:SPXL",
-        "NASDAQ:TQQQ",
         "AMEX:UDOW",
         "AMEX:UPRO",
         "AMEX:URTY",
-        "AMEX:USO",
-        "CBOE:XOVL",
         "AMEX:FAS",
         "AMEX:DUSL",
         "NYSE:BE",
         "TSX:TD"
       ],
-      "symbol_count": 16,
-      "updated_at": "2026-07-24T16:43:13.837Z",
-      "last_scanned_at": "2026-07-24T16:14:19.950Z",
+      "symbol_count": 9,
+      "updated_at": "2026-07-28T19:38:41.580Z",
+      "last_scanned_at": "2026-07-28T19:38:28.738Z",
       "source": "data_attributes"
     },
     "Swing 4H": {
       "timeframe": "240",
       "symbols": [
-        "AMEX:AGQ",
         "AMEX:ASHR",
         "AMEX:EPI",
         "AMEX:EURL",
-        "AMEX:FAS",
         "AMEX:GLD",
         "AMEX:GLTR",
-        "AMEX:JNUG",
-        "AMEX:MEXX",
-        "AMEX:MIDU",
         "AMEX:PILL",
         "NASDAQ:QTUM",
         "AMEX:SOXL",
@@ -2430,25 +3202,30 @@
         "TSX:TD",
         "BSE:SBIN",
         "BSE:KARURVYSYA",
-        "BSE:ICICIBANK"
+        "BSE:ICICIBANK",
+        "AMEX:DFEN",
+        "AMEX:EDC",
+        "NASDAQ:AMDL",
+        "NSE:LT",
+        "NSE:ULTRACEMCO",
+        "NSE:ICICIBANK",
+        "NSE:BHARTIARTL",
+        "NSE:TATASTEEL"
       ],
-      "symbol_count": 26,
-      "updated_at": "2026-07-24T16:43:13.837Z",
-      "last_scanned_at": "2026-07-24T15:15:46.079Z",
+      "symbol_count": 29,
+      "updated_at": "2026-07-28T19:38:41.580Z",
+      "last_scanned_at": "2026-07-28T18:23:53.416Z",
       "source": "data_attributes"
     },
     "Swing 1D": {
       "timeframe": "D",
-      "updated_at": "2026-07-24T16:43:13.837Z",
+      "updated_at": "2026-07-28T19:38:41.580Z",
       "symbols": [
-        "AMEX:AGQ",
         "AMEX:GLD",
         "AMEX:IYC",
         "AMEX:IYG",
         "AMEX:JNUG",
         "AMEX:MEXX",
-        "AMEX:MIDU",
-        "NASDAQ:MSFT",
         "AMEX:URTY",
         "AMEX:XLI",
         "NASDAQ:NVDA",
@@ -2456,73 +3233,62 @@
         "NASDAQ:MU",
         "NASDAQ:PLTR",
         "NASDAQ:AAPL",
-        "NYSE:DXYZ",
-        "CBOE:WQTM",
         "NASDAQ:QTUM",
         "CBOE:WTAI",
         "NASDAQ:SPCX",
         "AMEX:FAS",
         "NYSE:BE",
         "NYSE:JNJ",
-        "NASDAQ:GOOGL",
-        "NASDAQ:TSLA",
         "BSE:KARURVYSYA",
-        "BSE:ICICIBANK"
+        "BSE:ICICIBANK",
+        "NSE:LT",
+        "NSE:ULTRACEMCO",
+        "NSE:BHARTIARTL"
       ],
-      "symbol_count": 27,
-      "last_scanned_at": "2026-07-24T15:17:20.483Z",
+      "symbol_count": 23,
+      "last_scanned_at": "2026-07-28T16:09:56.922Z",
       "source": "data_attributes"
     },
     "Swing 30m": {
       "timeframe": "30",
-      "updated_at": "2026-07-24T16:43:13.837Z",
+      "updated_at": "2026-07-28T19:38:41.580Z",
       "symbols": [
         "CBOE:WTAI",
         "AMEX:EWY",
         "AMEX:KORU",
         "AMEX:UDOW",
         "AMEX:FAS",
-        "NASDAQ:MU",
         "TSX:TD",
         "NASDAQ:AMDL"
       ],
-      "symbol_count": 8,
+      "symbol_count": 7,
       "source": "data_attributes",
-      "last_scanned_at": "2026-07-24T16:43:02.319Z"
+      "last_scanned_at": "2026-07-28T19:37:48.819Z"
     },
     "Swing 45m": {
       "timeframe": "45",
-      "updated_at": "2026-07-24T16:43:13.837Z",
+      "updated_at": "2026-07-28T19:38:41.580Z",
       "symbols": [
-        "AMEX:EWO",
-        "NYSE:DXYZ",
-        "CBOE:WQTM",
         "CBOE:WTAI",
-        "CBOE:XOVL",
         "AMEX:UDOW",
         "AMEX:FAS",
         "TSX:TD",
         "NASDAQ:AMDL",
-        "BSE:SBIN"
+        "AMEX:DRN"
       ],
-      "symbol_count": 10,
-      "source": "data_attributes"
+      "symbol_count": 6,
+      "source": "data_attributes",
+      "last_scanned_at": "2026-07-28T19:08:23.339Z"
     },
     "Swing 2H": {
       "timeframe": "120",
-      "updated_at": "2026-07-24T16:43:13.837Z",
+      "updated_at": "2026-07-28T19:38:41.580Z",
       "symbols": [
-        "AMEX:JNUG",
-        "AMEX:SOXL",
         "AMEX:SPXL",
         "AMEX:TNA",
         "AMEX:UTSL",
-        "AMEX:YINN",
-        "AMEX:TECL",
-        "NYSE:DXYZ",
         "NASDAQ:QTUM",
         "NASDAQ:MNST",
-        "AMEX:TOPT",
         "AMEX:ASHR",
         "AMEX:EWY",
         "NASDAQ:MU",
@@ -2530,25 +3296,26 @@
         "NYSE:BE",
         "TSX:TD",
         "NASDAQ:GOOGL",
-        "NASDAQ:TQQQ",
         "BSE:KARURVYSYA",
-        "BSE:ICICIBANK"
+        "BSE:ICICIBANK",
+        "AMEX:DRN",
+        "AMEX:EDC",
+        "NSE:HINDZINC",
+        "NSE:ICICIBANK",
+        "NSE:BHARTIARTL"
       ],
-      "symbol_count": 21,
-      "source": "data_attributes"
+      "symbol_count": 19,
+      "source": "data_attributes",
+      "last_scanned_at": "2026-07-28T18:40:03.104Z"
     },
     "Swing 3H": {
       "timeframe": "180",
-      "updated_at": "2026-07-24T16:43:13.837Z",
+      "updated_at": "2026-07-28T19:38:41.580Z",
       "symbols": [
-        "AMEX:KORU",
         "AMEX:MEXX",
-        "AMEX:PILL",
-        "AMEX:RETL",
         "NASDAQ:QTUM",
         "CBOE:WQTM",
         "CBOE:WTAI",
-        "AMEX:NUGT",
         "NASDAQ:MNST",
         "AMEX:EWY",
         "AMEX:UDOW",
@@ -2561,17 +3328,23 @@
         "NASDAQ:TQQQ",
         "BSE:KARURVYSYA",
         "BSE:CIPLA",
-        "BSE:ICICIBANK"
+        "BSE:ICICIBANK",
+        "BSE:SBIN",
+        "AMEX:EDC",
+        "NASDAQ:AAPU",
+        "NSE:LT",
+        "NSE:ICICIBANK",
+        "NSE:BHARTIARTL"
       ],
-      "symbol_count": 21,
+      "symbol_count": 23,
       "source": "data_attributes",
-      "last_scanned_at": "2026-07-24T15:50:33.022Z"
+      "last_scanned_at": "2026-07-28T17:24:33.088Z"
     }
   },
   "excursion_alerts": {
     "BATS:EWY|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 188.31,
       "stats": {
         "totalTrades": 10,
@@ -2587,14 +3360,15 @@
         "targetAvg": 197.89,
         "targetMax": 206.71
       },
-      "skip_reason": "Local alert 12/19",
+      "skip_reason": "Local alert 38/61",
       "fired": {
-        "stopAvg": "2026-07-24T15:19:59.355Z"
+        "stopAvg": "2026-07-24T15:19:59.355Z",
+        "stopMax": "2026-07-28T14:49:21.280Z"
       }
     },
     "BATS:WQTM|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.312Z",
       "entry_price": 35.74,
       "stats": {
         "totalTrades": 3,
@@ -2610,7 +3384,7 @@
         "targetAvg": 38.74,
         "targetMax": 39.22
       },
-      "skip_reason": "Local alert 14/19",
+      "skip_reason": "Local alert 51/61",
       "fired": {
         "stopMax": "2026-07-24T15:19:59.354Z",
         "stopAvg": "2026-07-24T15:19:59.355Z"
@@ -2618,7 +3392,7 @@
     },
     "BATS:TNA|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 68.1,
       "stats": {
         "totalTrades": 17,
@@ -2634,11 +3408,11 @@
         "targetAvg": 76.06,
         "targetMax": 82.91
       },
-      "skip_reason": "Local alert 5/19"
+      "skip_reason": "Local alert 27/61"
     },
     "BATS:TMF|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 34.76,
       "stats": {
         "totalTrades": 14,
@@ -2654,11 +3428,11 @@
         "targetAvg": 36.16,
         "targetMax": 38.83
       },
-      "skip_reason": "Local alert 13/19"
+      "skip_reason": "Local alert 39/61"
     },
     "BATS:SOXL|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 189.9,
       "stats": {
         "totalTrades": 15,
@@ -2674,14 +3448,14 @@
         "targetAvg": 230.69,
         "targetMax": 269.26
       },
-      "skip_reason": "Local alert 11/19",
+      "skip_reason": "Local alert 36/61",
       "fired": {
         "stopAvg": "2026-07-24T15:19:59.354Z"
       }
     },
     "BATS:QTUM|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 155.06,
       "stats": {
         "totalTrades": 11,
@@ -2697,57 +3471,14 @@
         "targetAvg": 164.61,
         "targetMax": 183
       },
-      "skip_reason": "Local alert 8/19",
-      "fired": {
-        "stopAvg": "2026-07-24T15:19:59.354Z"
-      }
-    },
-    "BATS:MEXX|240": {
-      "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
-      "entry_price": 27.79,
-      "stats": {
-        "totalTrades": 12,
-        "completedTrades": 10,
-        "avgFavorablePct": 15.35,
-        "maxFavorablePct": 41,
-        "avgAdversePct": 11.25,
-        "maxAdversePct": 30.41
-      },
-      "levels": {
-        "stopAvg": 24.66,
-        "stopMax": 19.34,
-        "targetAvg": 32.06,
-        "targetMax": 39.18
-      },
-      "skip_reason": "Local alert 15/19"
-    },
-    "BATS:JNUG|240": {
-      "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
-      "entry_price": 162.82,
-      "stats": {
-        "totalTrades": 15,
-        "completedTrades": 12,
-        "avgFavorablePct": 14.46,
-        "maxFavorablePct": 30.3,
-        "avgAdversePct": 12.05,
-        "maxAdversePct": 50.54
-      },
-      "levels": {
-        "stopAvg": 143.2,
-        "stopMax": 80.53,
-        "targetAvg": 186.36,
-        "targetMax": 212.15
-      },
-      "skip_reason": "Local alert 19/19",
+      "skip_reason": "Local alert 32/61",
       "fired": {
         "stopAvg": "2026-07-24T15:19:59.354Z"
       }
     },
     "BATS:GLD|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.312Z",
       "entry_price": 413.89,
       "stats": {
         "totalTrades": 12,
@@ -2763,14 +3494,14 @@
         "targetAvg": 427.18,
         "targetMax": 438.93
       },
-      "skip_reason": "Local alert 17/19",
+      "skip_reason": "Local alert 57/61",
       "fired": {
         "stopAvg": "2026-07-24T15:19:59.353Z"
       }
     },
     "BATS:EPI|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 41.98,
       "stats": {
         "totalTrades": 13,
@@ -2786,72 +3517,11 @@
         "targetAvg": 43.37,
         "targetMax": 45.05
       },
-      "skip_reason": "Local alert 1/19"
-    },
-    "BATS:DXYZ|240": {
-      "created": false,
-      "created_at": "2026-07-23T19:33:39.710Z",
-      "entry_price": 23.92,
-      "stats": {
-        "totalTrades": 14,
-        "completedTrades": 10,
-        "avgFavorablePct": 12.33,
-        "maxFavorablePct": 24.21,
-        "avgAdversePct": 15.54,
-        "maxAdversePct": 52.26
-      },
-      "levels": {
-        "stopAvg": 20.2,
-        "stopMax": 11.42,
-        "targetAvg": 26.87,
-        "targetMax": 29.71
-      }
-    },
-    "BATS:AGQ|240": {
-      "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
-      "entry_price": 111.4,
-      "stats": {
-        "totalTrades": 14,
-        "completedTrades": 12,
-        "avgFavorablePct": 12.02,
-        "maxFavorablePct": 24.55,
-        "avgAdversePct": 11.43,
-        "maxAdversePct": 43.86
-      },
-      "levels": {
-        "stopAvg": 98.67,
-        "stopMax": 62.54,
-        "targetAvg": 124.79,
-        "targetMax": 138.75
-      },
-      "skip_reason": "Local alert 16/19",
-      "fired": {
-        "stopAvg": "2026-07-24T15:19:59.353Z"
-      }
-    },
-    "BATS:YANG|60": {
-      "created": false,
-      "created_at": "2026-07-23T19:33:56.616Z",
-      "entry_price": 39.2,
-      "stats": {
-        "totalTrades": 10,
-        "completedTrades": 9,
-        "avgFavorablePct": 6.11,
-        "maxFavorablePct": 11.06,
-        "avgAdversePct": 5.43,
-        "maxAdversePct": 13.24
-      },
-      "levels": {
-        "stopAvg": 37.07,
-        "stopMax": 34.01,
-        "targetAvg": 41.6,
-        "targetMax": 43.54
-      }
+      "skip_reason": "Local alert 9/61"
     },
     "BATS:URTY|60": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.138Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 82.03,
       "stats": {
         "totalTrades": 16,
@@ -2867,11 +3537,11 @@
         "targetAvg": 87.6,
         "targetMax": 90.3
       },
-      "skip_reason": "Local alert 12/51"
+      "skip_reason": "Local alert 17/61"
     },
     "BATS:UPRO|60": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.114Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 137.32,
       "stats": {
         "totalTrades": 13,
@@ -2887,192 +3557,11 @@
         "targetAvg": 141.85,
         "targetMax": 144.09
       },
-      "skip_reason": "Local alert 13/51"
-    },
-    "BATS:UDOW|60": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.154Z",
-      "entry_price": 69.47,
-      "stats": {
-        "totalTrades": 15,
-        "completedTrades": 14,
-        "avgFavorablePct": 3.06,
-        "maxFavorablePct": 6.39,
-        "avgAdversePct": 3.58,
-        "maxAdversePct": 12.33
-      },
-      "levels": {
-        "stopAvg": 66.98,
-        "stopMax": 60.9,
-        "targetAvg": 71.6,
-        "targetMax": 73.91
-      },
-      "skip_reason": "Local alert 14/51"
-    },
-    "BATS:TQQQ|60": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.101Z",
-      "entry_price": 67.01,
-      "stats": {
-        "totalTrades": 13,
-        "completedTrades": 12,
-        "avgFavorablePct": 4.92,
-        "maxFavorablePct": 9.65,
-        "avgAdversePct": 7.43,
-        "maxAdversePct": 20.6
-      },
-      "levels": {
-        "stopAvg": 62.03,
-        "stopMax": 53.21,
-        "targetAvg": 70.31,
-        "targetMax": 73.48
-      },
-      "skip_reason": "Local alert 15/51"
-    },
-    "BATS:TOPT|60": {
-      "created": false,
-      "created_at": "2026-07-23T19:34:34.256Z",
-      "entry_price": 32.51,
-      "stats": {
-        "totalTrades": 9,
-        "completedTrades": 7,
-        "avgFavorablePct": 1.27,
-        "maxFavorablePct": 2.47,
-        "avgAdversePct": 1.89,
-        "maxAdversePct": 5.53
-      },
-      "levels": {
-        "stopAvg": 31.9,
-        "stopMax": 30.71,
-        "targetAvg": 32.92,
-        "targetMax": 33.31
-      }
-    },
-    "BATS:TECS|60": {
-      "created": false,
-      "created_at": "2026-07-23T19:34:41.554Z",
-      "entry_price": 71.47,
-      "stats": {
-        "totalTrades": 14,
-        "completedTrades": 12,
-        "avgFavorablePct": 8.03,
-        "maxFavorablePct": 17.6,
-        "avgAdversePct": 10.72,
-        "maxAdversePct": 61.29
-      },
-      "levels": {
-        "stopAvg": 63.81,
-        "stopMax": 27.67,
-        "targetAvg": 77.21,
-        "targetMax": 84.05
-      }
-    },
-    "BATS:SPXL|60": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.111Z",
-      "entry_price": 262.35,
-      "stats": {
-        "totalTrades": 14,
-        "completedTrades": 13,
-        "avgFavorablePct": 3.12,
-        "maxFavorablePct": 4.95,
-        "avgAdversePct": 4.71,
-        "maxAdversePct": 14.1
-      },
-      "levels": {
-        "stopAvg": 249.99,
-        "stopMax": 225.36,
-        "targetAvg": 270.54,
-        "targetMax": 275.34
-      },
-      "skip_reason": "Local alert 16/51"
-    },
-    "BATS:PILL|60": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.157Z",
-      "entry_price": 18.22,
-      "stats": {
-        "totalTrades": 10,
-        "completedTrades": 7,
-        "avgFavorablePct": 7.07,
-        "maxFavorablePct": 14.3,
-        "avgAdversePct": 6.14,
-        "maxAdversePct": 16.49
-      },
-      "levels": {
-        "stopAvg": 17.1,
-        "stopMax": 15.22,
-        "targetAvg": 19.51,
-        "targetMax": 20.83
-      },
-      "skip_reason": "Local alert 17/51"
-    },
-    "BATS:LABU|60": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.163Z",
-      "entry_price": 294.59,
-      "stats": {
-        "totalTrades": 11,
-        "completedTrades": 8,
-        "avgFavorablePct": 8.25,
-        "maxFavorablePct": 16.89,
-        "avgAdversePct": 9.15,
-        "maxAdversePct": 18.33
-      },
-      "levels": {
-        "stopAvg": 267.64,
-        "stopMax": 240.59,
-        "targetAvg": 318.89,
-        "targetMax": 344.35
-      },
-      "skip_reason": "Local alert 18/51",
-      "fired": {
-        "stopAvg": "2026-07-24T15:19:59.353Z"
-      }
-    },
-    "BATS:WQTM|D": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.141Z",
-      "entry_price": 30.6,
-      "stats": {
-        "totalTrades": 2,
-        "completedTrades": 1,
-        "avgFavorablePct": 14.53,
-        "maxFavorablePct": 14.53,
-        "avgAdversePct": 9.33,
-        "maxAdversePct": 9.33
-      },
-      "levels": {
-        "stopAvg": 27.75,
-        "stopMax": 27.75,
-        "targetAvg": 35.05,
-        "targetMax": 35.05
-      },
-      "skip_reason": "Local alert 19/51"
-    },
-    "BATS:DXYZ|D": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.219Z",
-      "entry_price": 27.89,
-      "stats": {
-        "totalTrades": 2,
-        "completedTrades": 1,
-        "avgFavorablePct": 11.41,
-        "maxFavorablePct": 11.41,
-        "avgAdversePct": 42.83,
-        "maxAdversePct": 42.83
-      },
-      "levels": {
-        "stopAvg": 15.94,
-        "stopMax": 15.94,
-        "targetAvg": 31.07,
-        "targetMax": 31.07
-      },
-      "skip_reason": "Local alert 20/51"
+      "skip_reason": "Local alert 7/61"
     },
     "BATS:INTL|D": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.131Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 29.91,
       "stats": {
         "totalTrades": 15,
@@ -3088,11 +3577,11 @@
         "targetAvg": 32.85,
         "targetMax": 35.06
       },
-      "skip_reason": "Local alert 21/51"
+      "skip_reason": "Local alert 13/61"
     },
     "BATS:NVDA|D": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.201Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 193.12,
       "stats": {
         "totalTrades": 2,
@@ -3108,49 +3597,11 @@
         "targetAvg": 229.08,
         "targetMax": 229.08
       },
-      "skip_reason": "Local alert 22/51"
-    },
-    "BATS:UTSL|D": {
-      "created": false,
-      "created_at": "2026-07-23T19:35:58.258Z",
-      "entry_price": 44.04,
-      "stats": {
-        "totalTrades": 8,
-        "completedTrades": 6,
-        "avgFavorablePct": 18.8,
-        "maxFavorablePct": 33.64,
-        "avgAdversePct": 14.64,
-        "maxAdversePct": 51.76
-      },
-      "levels": {
-        "stopAvg": 37.59,
-        "stopMax": 21.24,
-        "targetAvg": 52.32,
-        "targetMax": 58.86
-      }
-    },
-    "BATS:NUGT|D": {
-      "created": false,
-      "created_at": "2026-07-23T19:36:08.736Z",
-      "entry_price": 148.5,
-      "stats": {
-        "totalTrades": 7,
-        "completedTrades": 6,
-        "avgFavorablePct": 25.32,
-        "maxFavorablePct": 44.84,
-        "avgAdversePct": 20.96,
-        "maxAdversePct": 36.58
-      },
-      "levels": {
-        "stopAvg": 117.37,
-        "stopMax": 94.18,
-        "targetAvg": 186.1,
-        "targetMax": 215.09
-      }
+      "skip_reason": "Local alert 44/61"
     },
     "BATS:WTAI|15": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.107Z",
+      "created_at": "2026-07-28T19:38:42.310Z",
       "entry_price": 40.63,
       "stats": {
         "totalTrades": 10,
@@ -3166,202 +3617,15 @@
         "targetAvg": 41.84,
         "targetMax": 42.8
       },
-      "skip_reason": "Local alert 23/51"
-    },
-    "BATS:DRAM|15": {
-      "created": false,
-      "created_at": "2026-07-23T19:47:10.206Z",
-      "entry_price": 57.41,
-      "stats": {
-        "totalTrades": 11,
-        "completedTrades": 9,
-        "avgFavorablePct": 3.63,
-        "maxFavorablePct": 10.7,
-        "avgAdversePct": 7.16,
-        "maxAdversePct": 19.77
-      },
-      "levels": {
-        "stopAvg": 53.3,
-        "stopMax": 46.06,
-        "targetAvg": 59.49,
-        "targetMax": 63.55
+      "skip_reason": "Local alert 6/61",
+      "fired": {
+        "stopAvg": "2026-07-27T19:30:54.732Z",
+        "stopMax": "2026-07-28T14:49:21.275Z"
       }
-    },
-    "BATS:SOXL|15": {
-      "created": false,
-      "created_at": "2026-07-23T19:47:17.928Z",
-      "entry_price": 154.67,
-      "stats": {
-        "totalTrades": 14,
-        "completedTrades": 13,
-        "avgFavorablePct": 3.79,
-        "maxFavorablePct": 12,
-        "avgAdversePct": 14.41,
-        "maxAdversePct": 33.75
-      },
-      "levels": {
-        "stopAvg": 132.38,
-        "stopMax": 102.47,
-        "targetAvg": 160.53,
-        "targetMax": 173.23
-      }
-    },
-    "BATS:WQTM|15": {
-      "created": false,
-      "created_at": "2026-07-23T19:47:25.596Z",
-      "entry_price": 31.78,
-      "stats": {
-        "totalTrades": 15,
-        "completedTrades": 11,
-        "avgFavorablePct": 1.73,
-        "maxFavorablePct": 3.53,
-        "avgAdversePct": 3.54,
-        "maxAdversePct": 11.62
-      },
-      "levels": {
-        "stopAvg": 30.65,
-        "stopMax": 28.09,
-        "targetAvg": 32.33,
-        "targetMax": 32.9
-      }
-    },
-    "BATS:XRP|15": {
-      "created": false,
-      "created_at": "2026-07-23T19:47:33.218Z",
-      "entry_price": 12.65,
-      "stats": {
-        "totalTrades": 10,
-        "completedTrades": 7,
-        "avgFavorablePct": 1.38,
-        "maxFavorablePct": 2.47,
-        "avgAdversePct": 4.08,
-        "maxAdversePct": 17.5
-      },
-      "levels": {
-        "stopAvg": 12.13,
-        "stopMax": 10.44,
-        "targetAvg": 12.82,
-        "targetMax": 12.96
-      }
-    },
-    "BATS:DXYZ|30": {
-      "created": false,
-      "created_at": "2026-07-23T19:47:42.533Z",
-      "entry_price": 24.89,
-      "stats": {
-        "totalTrades": 12,
-        "completedTrades": 8,
-        "avgFavorablePct": 6.55,
-        "maxFavorablePct": 13.54,
-        "avgAdversePct": 11.6,
-        "maxAdversePct": 33.09
-      },
-      "levels": {
-        "stopAvg": 22,
-        "stopMax": 16.65,
-        "targetAvg": 26.52,
-        "targetMax": 28.26
-      }
-    },
-    "BATS:AGQ|15": {
-      "created": false,
-      "created_at": "2026-07-23T19:47:51.873Z",
-      "entry_price": 66.24,
-      "stats": {
-        "totalTrades": 12,
-        "completedTrades": 9,
-        "avgFavorablePct": 4.24,
-        "maxFavorablePct": 9.74,
-        "avgAdversePct": 7.23,
-        "maxAdversePct": 27.5
-      },
-      "levels": {
-        "stopAvg": 61.45,
-        "stopMax": 48.02,
-        "targetAvg": 69.05,
-        "targetMax": 72.69
-      }
-    },
-    "BATS:FNGU|30": {
-      "created": false,
-      "created_at": "2026-07-23T19:48:01.284Z",
-      "entry_price": 27.06,
-      "stats": {
-        "totalTrades": 12,
-        "completedTrades": 10,
-        "avgFavorablePct": 3.8,
-        "maxFavorablePct": 9.91,
-        "avgAdversePct": 7.45,
-        "maxAdversePct": 23.42
-      },
-      "levels": {
-        "stopAvg": 25.04,
-        "stopMax": 20.72,
-        "targetAvg": 28.09,
-        "targetMax": 29.74
-      }
-    },
-    "BATS:DXYZ|15": {
-      "created": false,
-      "created_at": "2026-07-23T19:48:18.305Z",
-      "entry_price": 25.06,
-      "stats": {
-        "totalTrades": 13,
-        "completedTrades": 11,
-        "avgFavorablePct": 3.31,
-        "maxFavorablePct": 9.01,
-        "avgAdversePct": 7.98,
-        "maxAdversePct": 26
-      },
-      "levels": {
-        "stopAvg": 23.06,
-        "stopMax": 18.54,
-        "targetAvg": 25.89,
-        "targetMax": 27.32
-      }
-    },
-    "COINBASE:BTCUSD|30": {
-      "created": false,
-      "created_at": "2026-07-23T19:48:35.481Z",
-      "entry_price": 65806.08,
-      "stats": {
-        "totalTrades": 20,
-        "completedTrades": 13,
-        "avgFavorablePct": 1.12,
-        "maxFavorablePct": 3.48,
-        "avgAdversePct": 1.71,
-        "maxAdversePct": 6.17
-      },
-      "levels": {
-        "stopAvg": 64680.8,
-        "stopMax": 61745.84,
-        "targetAvg": 66543.11,
-        "targetMax": 68096.13
-      }
-    },
-    "BATS:UDOW|30": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.116Z",
-      "entry_price": 68.6,
-      "stats": {
-        "totalTrades": 13,
-        "completedTrades": 12,
-        "avgFavorablePct": 1.9,
-        "maxFavorablePct": 4.22,
-        "avgAdversePct": 2.25,
-        "maxAdversePct": 7.09
-      },
-      "levels": {
-        "stopAvg": 67.06,
-        "stopMax": 63.74,
-        "targetAvg": 69.9,
-        "targetMax": 71.49
-      },
-      "skip_reason": "Local alert 24/51"
     },
     "TSX_DLY:TD|30": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.129Z",
+      "created": true,
+      "created_at": "2026-07-28T19:22:20.333Z",
       "entry_price": 170.35,
       "stats": {
         "totalTrades": 16,
@@ -3377,7 +3641,10 @@
         "targetAvg": 173.19,
         "targetMax": 175.02
       },
-      "skip_reason": "Local alert 25/51",
+      "alert_ids": [
+        5247204052,
+        5247204081
+      ],
       "fired": {
         "stopAvg": "2026-07-24T15:19:59.352Z"
       }
@@ -3449,30 +3716,10 @@
       "alert_ids": [
         5222062805,
         5222062863
-      ]
-    },
-    "BATS:MU|30": {
-      "created": true,
-      "created_at": "2026-07-24T15:18:05.896Z",
-      "entry_price": 933.13,
-      "stats": {
-        "totalTrades": 12,
-        "completedTrades": 11,
-        "avgFavorablePct": 5.19,
-        "maxFavorablePct": 10.62,
-        "avgAdversePct": 8.79,
-        "maxAdversePct": 19.22
-      },
-      "levels": {
-        "stopAvg": 851.11,
-        "stopMax": 753.78,
-        "targetAvg": 981.56,
-        "targetMax": 1032.23
-      },
-      "alert_ids": [
-        5222063243,
-        5222063335
-      ]
+      ],
+      "fired": {
+        "stopMax": "2026-07-28T15:08:18.585Z"
+      }
     },
     "BATS:WTAI|30": {
       "created": true,
@@ -3495,29 +3742,6 @@
       "alert_ids": [
         5222063623,
         5222063678
-      ]
-    },
-    "BATS:TSLA|D": {
-      "created": true,
-      "created_at": "2026-07-24T15:18:20.915Z",
-      "entry_price": 320.72,
-      "stats": {
-        "totalTrades": 7,
-        "completedTrades": 6,
-        "avgFavorablePct": 37.98,
-        "maxFavorablePct": 130.89,
-        "avgAdversePct": 21.19,
-        "maxAdversePct": 37.53
-      },
-      "levels": {
-        "stopAvg": 252.76,
-        "stopMax": 200.35,
-        "targetAvg": 442.53,
-        "targetMax": 740.51
-      },
-      "alert_ids": [
-        5222065121,
-        5222065164
       ]
     },
     "BATS:EWY|30": {
@@ -3568,7 +3792,7 @@
     },
     "BATS:EDC|15": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.098Z",
+      "created_at": "2026-07-28T19:38:42.310Z",
       "entry_price": 71.45,
       "stats": {
         "totalTrades": 10,
@@ -3584,27 +3808,10 @@
         "targetAvg": 75.09,
         "targetMax": 77.09
       },
-      "skip_reason": "Local alert 26/51"
-    },
-    "TSX_DLY:RY|15": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.104Z",
-      "entry_price": 293.28,
-      "stats": {
-        "totalTrades": 12,
-        "completedTrades": 11,
-        "avgFavorablePct": 1.09,
-        "maxFavorablePct": 1.96,
-        "avgAdversePct": 0.94,
-        "maxAdversePct": 2.64
-      },
-      "levels": {
-        "stopAvg": 290.52,
-        "stopMax": 285.54,
-        "targetAvg": 296.48,
-        "targetMax": 299.03
-      },
-      "skip_reason": "Local alert 27/51"
+      "skip_reason": "Local alert 5/61",
+      "fired": {
+        "stopAvg": "2026-07-28T14:49:21.276Z"
+      }
     },
     "BSE_DLY:SBIN|240": {
       "created": true,
@@ -3631,7 +3838,7 @@
     },
     "TSX_DLY:TD|60": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.127Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 169.32,
       "stats": {
         "totalTrades": 12,
@@ -3647,11 +3854,11 @@
         "targetAvg": 173.42,
         "targetMax": 176.19
       },
-      "skip_reason": "Local alert 29/51"
+      "skip_reason": "Local alert 11/61"
     },
     "BATS:UDOW|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 70.69,
       "stats": {
         "totalTrades": 17,
@@ -3667,11 +3874,11 @@
         "targetAvg": 75.45,
         "targetMax": 79.42
       },
-      "skip_reason": "Local alert 2/19"
+      "skip_reason": "Local alert 16/61"
     },
     "BATS:BE|D": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.159Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 231.38,
       "stats": {
         "totalTrades": 10,
@@ -3687,11 +3894,11 @@
         "targetAvg": 298.76,
         "targetMax": 380.16
       },
-      "skip_reason": "Local alert 31/51"
+      "skip_reason": "Local alert 25/61"
     },
     "BATS:BE|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 246.42,
       "stats": {
         "totalTrades": 14,
@@ -3707,14 +3914,15 @@
         "targetAvg": 289.32,
         "targetMax": 305.46
       },
-      "skip_reason": "Local alert 4/19",
+      "skip_reason": "Local alert 26/61",
       "fired": {
-        "stopAvg": "2026-07-24T15:19:59.355Z"
+        "stopAvg": "2026-07-24T15:19:59.355Z",
+        "stopMax": "2026-07-28T14:49:21.281Z"
       }
     },
     "BATS:MU|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 991.1,
       "stats": {
         "totalTrades": 11,
@@ -3730,11 +3938,14 @@
         "targetAvg": 1092.69,
         "targetMax": 1178.32
       },
-      "skip_reason": "Local alert 10/19"
+      "skip_reason": "Local alert 35/61",
+      "fired": {
+        "stopAvg": "2026-07-28T14:49:21.280Z"
+      }
     },
     "BATS:IYC|D": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.213Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 99.68,
       "stats": {
         "totalTrades": 9,
@@ -3750,31 +3961,11 @@
         "targetAvg": 107.04,
         "targetMax": 114.03
       },
-      "skip_reason": "Local alert 34/51"
-    },
-    "BATS:MSFT|D": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.217Z",
-      "entry_price": 372.38,
-      "stats": {
-        "totalTrades": 10,
-        "completedTrades": 8,
-        "avgFavorablePct": 7.52,
-        "maxFavorablePct": 16.56,
-        "avgAdversePct": 8.58,
-        "maxAdversePct": 27.38
-      },
-      "levels": {
-        "stopAvg": 340.43,
-        "stopMax": 270.42,
-        "targetAvg": 400.38,
-        "targetMax": 434.05
-      },
-      "skip_reason": "Local alert 35/51"
+      "skip_reason": "Local alert 48/61"
     },
     "BATS:GLD|D": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.246Z",
+      "created_at": "2026-07-28T19:38:42.312Z",
       "entry_price": 400.24,
       "stats": {
         "totalTrades": 7,
@@ -3790,37 +3981,14 @@
         "targetAvg": 423.85,
         "targetMax": 473
       },
-      "skip_reason": "Local alert 36/51",
-      "fired": {
-        "stopAvg": "2026-07-24T15:19:59.355Z"
-      }
-    },
-    "BATS:AGQ|D": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.250Z",
-      "entry_price": 108.24,
-      "stats": {
-        "totalTrades": 6,
-        "completedTrades": 5,
-        "avgFavorablePct": 22.04,
-        "maxFavorablePct": 31.19,
-        "avgAdversePct": 19.08,
-        "maxAdversePct": 46.16
-      },
-      "levels": {
-        "stopAvg": 87.59,
-        "stopMax": 58.28,
-        "targetAvg": 132.1,
-        "targetMax": 142
-      },
-      "skip_reason": "Local alert 37/51",
+      "skip_reason": "Local alert 59/61",
       "fired": {
         "stopAvg": "2026-07-24T15:19:59.355Z"
       }
     },
     "BATS:MEXX|D": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.253Z",
+      "created_at": "2026-07-28T19:38:42.312Z",
       "entry_price": 25.55,
       "stats": {
         "totalTrades": 4,
@@ -3836,11 +4004,11 @@
         "targetAvg": 33.09,
         "targetMax": 40.64
       },
-      "skip_reason": "Local alert 38/51"
+      "skip_reason": "Local alert 60/61"
     },
     "BATS:JNUG|D": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.256Z",
+      "created_at": "2026-07-28T19:38:42.312Z",
       "entry_price": 159.53,
       "stats": {
         "totalTrades": 7,
@@ -3856,14 +4024,14 @@
         "targetAvg": 212.81,
         "targetMax": 234.94
       },
-      "skip_reason": "Local alert 39/51",
+      "skip_reason": "Local alert 61/61",
       "fired": {
         "stopAvg": "2026-07-24T15:19:59.356Z"
       }
     },
     "BATS:MNST|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.125Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 94.42,
       "stats": {
         "totalTrades": 14,
@@ -3879,11 +4047,11 @@
         "targetAvg": 99,
         "targetMax": 107.33
       },
-      "skip_reason": "Local alert 40/51"
+      "skip_reason": "Local alert 10/61"
     },
     "BATS:GOOGL|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.144Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 350.52,
       "stats": {
         "totalTrades": 13,
@@ -3899,14 +4067,14 @@
         "targetAvg": 368.5,
         "targetMax": 389.64
       },
-      "skip_reason": "Local alert 41/51",
+      "skip_reason": "Local alert 18/61",
       "fired": {
         "stopAvg": "2026-07-24T15:51:37.468Z"
       }
     },
     "BSE_DLY:CIPLA|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.147Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 1408.2,
       "stats": {
         "totalTrades": 17,
@@ -3922,11 +4090,11 @@
         "targetAvg": 1464.39,
         "targetMax": 1530.15
       },
-      "skip_reason": "Local alert 42/51"
+      "skip_reason": "Local alert 21/61"
     },
     "BATS:UDOW|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.151Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 70.92,
       "stats": {
         "totalTrades": 16,
@@ -3942,11 +4110,11 @@
         "targetAvg": 75.19,
         "targetMax": 77.19
       },
-      "skip_reason": "Local alert 43/51"
+      "skip_reason": "Local alert 24/61"
     },
     "BATS:WTAI|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.176Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 42.2,
       "stats": {
         "totalTrades": 12,
@@ -3962,14 +4130,14 @@
         "targetAvg": 45.01,
         "targetMax": 48.19
       },
-      "skip_reason": "Local alert 44/51",
+      "skip_reason": "Local alert 33/61",
       "fired": {
         "stopAvg": "2026-07-24T15:51:37.466Z"
       }
     },
     "BATS:EWY|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.193Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 195.23,
       "stats": {
         "totalTrades": 13,
@@ -3985,7 +4153,7 @@
         "targetAvg": 208.64,
         "targetMax": 221.78
       },
-      "skip_reason": "Local alert 45/51",
+      "skip_reason": "Local alert 40/61",
       "fired": {
         "stopMax": "2026-07-24T15:51:37.466Z",
         "stopAvg": "2026-07-24T15:51:37.466Z"
@@ -3993,7 +4161,7 @@
     },
     "BATS:BE|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.197Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 269.01,
       "stats": {
         "totalTrades": 12,
@@ -4009,14 +4177,15 @@
         "targetAvg": 314.28,
         "targetMax": 362.84
       },
-      "skip_reason": "Local alert 46/51",
+      "skip_reason": "Local alert 41/61",
       "fired": {
-        "stopAvg": "2026-07-24T15:51:37.467Z"
+        "stopAvg": "2026-07-24T15:51:37.467Z",
+        "stopMax": "2026-07-28T14:49:21.279Z"
       }
     },
     "BATS:QTUM|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.205Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 157.03,
       "stats": {
         "totalTrades": 9,
@@ -4032,38 +4201,14 @@
         "targetAvg": 164.25,
         "targetMax": 170
       },
-      "skip_reason": "Local alert 47/51",
+      "skip_reason": "Local alert 45/61",
       "fired": {
         "stopAvg": "2026-07-24T15:51:37.465Z"
       }
     },
-    "BATS:KORU|180": {
-      "created": false,
-      "created_at": "2026-07-24T16:43:14.208Z",
-      "entry_price": 37.15,
-      "stats": {
-        "totalTrades": 8,
-        "completedTrades": 6,
-        "avgFavorablePct": 24.69,
-        "maxFavorablePct": 31.62,
-        "avgAdversePct": 6.47,
-        "maxAdversePct": 26.66
-      },
-      "levels": {
-        "stopAvg": 34.75,
-        "stopMax": 27.25,
-        "targetAvg": 46.32,
-        "targetMax": 48.9
-      },
-      "skip_reason": "Local alert 48/51",
-      "fired": {
-        "stopMax": "2026-07-24T15:51:37.464Z",
-        "stopAvg": "2026-07-24T15:51:37.464Z"
-      }
-    },
     "BATS:TQQQ|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.225Z",
+      "created_at": "2026-07-28T19:38:42.312Z",
       "entry_price": 76.96,
       "stats": {
         "totalTrades": 12,
@@ -4079,14 +4224,14 @@
         "targetAvg": 82.44,
         "targetMax": 85.54
       },
-      "skip_reason": "Local alert 49/51",
+      "skip_reason": "Local alert 52/61",
       "fired": {
         "stopAvg": "2026-07-24T15:51:37.468Z"
       }
     },
     "BATS:MEXX|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.231Z",
+      "created_at": "2026-07-28T19:38:42.312Z",
       "entry_price": 28.56,
       "stats": {
         "totalTrades": 8,
@@ -4102,11 +4247,11 @@
         "targetAvg": 31.72,
         "targetMax": 34.91
       },
-      "skip_reason": "Local alert 50/51"
+      "skip_reason": "Local alert 53/61"
     },
     "BATS:WQTM|180": {
       "created": false,
-      "created_at": "2026-07-24T16:43:14.234Z",
+      "created_at": "2026-07-28T19:38:42.312Z",
       "entry_price": 37.15,
       "stats": {
         "totalTrades": 6,
@@ -4122,35 +4267,15 @@
         "targetAvg": 41.35,
         "targetMax": 42.77
       },
-      "skip_reason": "Local alert 51/51",
+      "skip_reason": "Local alert 54/61",
       "fired": {
         "stopMax": "2026-07-24T15:51:37.465Z",
         "stopAvg": "2026-07-24T15:51:37.465Z"
       }
     },
-    "BATS:DFEN|240": {
-      "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
-      "entry_price": 72.19,
-      "stats": {
-        "totalTrades": 13,
-        "completedTrades": 12,
-        "avgFavorablePct": 10.37,
-        "maxFavorablePct": 22.6,
-        "avgAdversePct": 10.99,
-        "maxAdversePct": 28.65
-      },
-      "levels": {
-        "stopAvg": 64.26,
-        "stopMax": 51.51,
-        "targetAvg": 79.68,
-        "targetMax": 88.5
-      },
-      "skip_reason": "Local alert 3/19"
-    },
     "BATS:AMDL|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 61.65,
       "stats": {
         "totalTrades": 13,
@@ -4166,11 +4291,14 @@
         "targetAvg": 73.05,
         "targetMax": 83.33
       },
-      "skip_reason": "Local alert 6/19"
+      "skip_reason": "Local alert 28/61",
+      "fired": {
+        "stopAvg": "2026-07-28T14:49:21.281Z"
+      }
     },
     "BATS:ASHR|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 34.74,
       "stats": {
         "totalTrades": 14,
@@ -4186,11 +4314,11 @@
         "targetAvg": 36.17,
         "targetMax": 37.82
       },
-      "skip_reason": "Local alert 7/19"
+      "skip_reason": "Local alert 29/61"
     },
     "BATS:EDC|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.311Z",
       "entry_price": 78.53,
       "stats": {
         "totalTrades": 15,
@@ -4206,11 +4334,14 @@
         "targetAvg": 87.61,
         "targetMax": 103.68
       },
-      "skip_reason": "Local alert 9/19"
+      "skip_reason": "Local alert 34/61",
+      "fired": {
+        "stopAvg": "2026-07-27T19:30:54.745Z"
+      }
     },
     "BATS:GLTR|240": {
       "created": false,
-      "created_at": "2026-07-25T03:56:23.233Z",
+      "created_at": "2026-07-28T19:38:42.312Z",
       "entry_price": 212.51,
       "stats": {
         "totalTrades": 14,
@@ -4226,8 +4357,576 @@
         "targetAvg": 224.69,
         "targetMax": 230.74
       },
-      "skip_reason": "Local alert 18/19"
+      "skip_reason": "Local alert 58/61",
+      "fired": {
+        "stopAvg": "2026-07-27T19:30:54.744Z"
+      }
+    },
+    "BATS:EWO|15": {
+      "created": true,
+      "created_at": "2026-07-27T19:27:47.157Z",
+      "entry_price": 41.43,
+      "stats": {
+        "totalTrades": 16,
+        "completedTrades": 14,
+        "avgFavorablePct": 2.93,
+        "maxFavorablePct": 10.03,
+        "avgAdversePct": 1.49,
+        "maxAdversePct": 12.16
+      },
+      "levels": {
+        "stopAvg": 40.81,
+        "stopMax": 36.39,
+        "targetAvg": 42.64,
+        "targetMax": 45.59
+      },
+      "alert_ids": [
+        5238432585,
+        5238432606
+      ]
+    },
+    "BATS:WTAI|45": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.310Z",
+      "entry_price": 39.06,
+      "stats": {
+        "totalTrades": 16,
+        "completedTrades": 15,
+        "avgFavorablePct": 3.48,
+        "maxFavorablePct": 6.51,
+        "avgAdversePct": 3.95,
+        "maxAdversePct": 9.74
+      },
+      "levels": {
+        "stopAvg": 37.52,
+        "stopMax": 35.26,
+        "targetAvg": 40.42,
+        "targetMax": 41.6
+      },
+      "skip_reason": "Local alert 3/61",
+      "fired": {
+        "stopAvg": "2026-07-28T14:49:21.277Z"
+      }
+    },
+    "BATS:AMDL|45": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.310Z",
+      "entry_price": 63.71,
+      "stats": {
+        "totalTrades": 11,
+        "completedTrades": 10,
+        "avgFavorablePct": 8.77,
+        "maxFavorablePct": 13.57,
+        "avgAdversePct": 11.94,
+        "maxAdversePct": 26.83
+      },
+      "levels": {
+        "stopAvg": 56.1,
+        "stopMax": 46.62,
+        "targetAvg": 69.3,
+        "targetMax": 72.36
+      },
+      "skip_reason": "Local alert 4/61",
+      "fired": {
+        "stopAvg": "2026-07-28T14:49:21.277Z"
+      }
+    },
+    "BSE_DLY:SBIN|180": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 1012.7,
+      "stats": {
+        "totalTrades": 15,
+        "completedTrades": 13,
+        "avgFavorablePct": 4.93,
+        "maxFavorablePct": 11.12,
+        "avgAdversePct": 4.66,
+        "maxAdversePct": 18.49
+      },
+      "levels": {
+        "stopAvg": 965.51,
+        "stopMax": 825.45,
+        "targetAvg": 1062.63,
+        "targetMax": 1125.31
+      },
+      "skip_reason": "Local alert 8/61"
+    },
+    "TSX_DLY:TD|45": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 169.32,
+      "stats": {
+        "totalTrades": 10,
+        "completedTrades": 9,
+        "avgFavorablePct": 1.96,
+        "maxFavorablePct": 3.37,
+        "avgAdversePct": 1.37,
+        "maxAdversePct": 2.28
+      },
+      "levels": {
+        "stopAvg": 167,
+        "stopMax": 165.46,
+        "targetAvg": 172.64,
+        "targetMax": 175.03
+      },
+      "skip_reason": "Local alert 12/61"
+    },
+    "BATS:QTUM|D": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 142.85,
+      "stats": {
+        "totalTrades": 10,
+        "completedTrades": 9,
+        "avgFavorablePct": 7.9,
+        "maxFavorablePct": 13.44,
+        "avgAdversePct": 13.31,
+        "maxAdversePct": 37.36
+      },
+      "levels": {
+        "stopAvg": 123.84,
+        "stopMax": 89.48,
+        "targetAvg": 154.14,
+        "targetMax": 162.05
+      },
+      "skip_reason": "Local alert 14/61"
+    },
+    "BATS:WTAI|D": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 40.22,
+      "stats": {
+        "totalTrades": 9,
+        "completedTrades": 8,
+        "avgFavorablePct": 7.82,
+        "maxFavorablePct": 12.58,
+        "avgAdversePct": 10,
+        "maxAdversePct": 25.66
+      },
+      "levels": {
+        "stopAvg": 36.2,
+        "stopMax": 29.9,
+        "targetAvg": 43.37,
+        "targetMax": 45.28
+      },
+      "skip_reason": "Local alert 15/61"
+    },
+    "BATS:GOOGL|120": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 349.25,
+      "stats": {
+        "totalTrades": 13,
+        "completedTrades": 12,
+        "avgFavorablePct": 4.16,
+        "maxFavorablePct": 11.15,
+        "avgAdversePct": 4.17,
+        "maxAdversePct": 9.81
+      },
+      "levels": {
+        "stopAvg": 334.69,
+        "stopMax": 314.99,
+        "targetAvg": 363.78,
+        "targetMax": 388.19
+      },
+      "skip_reason": "Local alert 19/61",
+      "fired": {
+        "stopAvg": "2026-07-27T19:30:54.740Z"
+      }
+    },
+    "BATS:SPXL|120": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 267.16,
+      "stats": {
+        "totalTrades": 14,
+        "completedTrades": 13,
+        "avgFavorablePct": 4.49,
+        "maxFavorablePct": 6.88,
+        "avgAdversePct": 5.81,
+        "maxAdversePct": 21.23
+      },
+      "levels": {
+        "stopAvg": 251.64,
+        "stopMax": 210.44,
+        "targetAvg": 279.16,
+        "targetMax": 285.54
+      },
+      "skip_reason": "Local alert 20/61"
+    },
+    "NSE_DLY:LT|D": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 3868,
+      "stats": {
+        "totalTrades": 14,
+        "completedTrades": 13,
+        "avgFavorablePct": 11.14,
+        "maxFavorablePct": 19.33,
+        "avgAdversePct": 10.08,
+        "maxAdversePct": 48.97
+      },
+      "levels": {
+        "stopAvg": 3478.11,
+        "stopMax": 1973.84,
+        "targetAvg": 4298.9,
+        "targetMax": 4615.68
+      },
+      "skip_reason": "Local alert 22/61"
+    },
+    "NSE_DLY:LT|240": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 3868,
+      "stats": {
+        "totalTrades": 15,
+        "completedTrades": 14,
+        "avgFavorablePct": 7.26,
+        "maxFavorablePct": 18.33,
+        "avgAdversePct": 4.72,
+        "maxAdversePct": 13.74
+      },
+      "levels": {
+        "stopAvg": 3685.43,
+        "stopMax": 3336.54,
+        "targetAvg": 4148.82,
+        "targetMax": 4577
+      },
+      "skip_reason": "Local alert 23/61"
+    },
+    "BATS:TNA|120": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 68.7,
+      "stats": {
+        "totalTrades": 11,
+        "completedTrades": 10,
+        "avgFavorablePct": 6.35,
+        "maxFavorablePct": 9.93,
+        "avgAdversePct": 9.14,
+        "maxAdversePct": 23.48
+      },
+      "levels": {
+        "stopAvg": 62.42,
+        "stopMax": 52.57,
+        "targetAvg": 73.06,
+        "targetMax": 75.52
+      },
+      "skip_reason": "Local alert 30/61"
+    },
+    "NSE_DLY:LT|180": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 3969.4,
+      "stats": {
+        "totalTrades": 17,
+        "completedTrades": 16,
+        "avgFavorablePct": 4.92,
+        "maxFavorablePct": 13.65,
+        "avgAdversePct": 4.78,
+        "maxAdversePct": 18.45
+      },
+      "levels": {
+        "stopAvg": 3779.66,
+        "stopMax": 3237.05,
+        "targetAvg": 4164.69,
+        "targetMax": 4511.22
+      },
+      "skip_reason": "Local alert 31/61"
+    },
+    "BATS:EDC|180": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 82.59,
+      "stats": {
+        "totalTrades": 17,
+        "completedTrades": 16,
+        "avgFavorablePct": 10.97,
+        "maxFavorablePct": 32.66,
+        "avgAdversePct": 7.24,
+        "maxAdversePct": 35.72
+      },
+      "levels": {
+        "stopAvg": 76.61,
+        "stopMax": 53.09,
+        "targetAvg": 91.65,
+        "targetMax": 109.56
+      },
+      "skip_reason": "Local alert 37/61",
+      "fired": {
+        "stopAvg": "2026-07-27T19:30:54.744Z"
+      }
+    },
+    "BATS:ASHR|120": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 35.77,
+      "stats": {
+        "totalTrades": 15,
+        "completedTrades": 14,
+        "avgFavorablePct": 1.8,
+        "maxFavorablePct": 4.6,
+        "avgAdversePct": 1.97,
+        "maxAdversePct": 5.08
+      },
+      "levels": {
+        "stopAvg": 35.07,
+        "stopMax": 33.95,
+        "targetAvg": 36.41,
+        "targetMax": 37.42
+      },
+      "skip_reason": "Local alert 42/61",
+      "fired": {
+        "stopAvg": "2026-07-27T19:30:54.738Z",
+        "stopMax": "2026-07-28T14:49:21.278Z"
+      }
+    },
+    "BATS:BE|120": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 281.44,
+      "stats": {
+        "totalTrades": 13,
+        "completedTrades": 12,
+        "avgFavorablePct": 19.03,
+        "maxFavorablePct": 47.12,
+        "avgAdversePct": 12.51,
+        "maxAdversePct": 38
+      },
+      "levels": {
+        "stopAvg": 246.23,
+        "stopMax": 174.49,
+        "targetAvg": 335,
+        "targetMax": 414.05
+      },
+      "skip_reason": "Local alert 43/61",
+      "fired": {
+        "stopAvg": "2026-07-27T19:30:54.739Z",
+        "stopMax": "2026-07-28T14:49:21.278Z"
+      }
+    },
+    "BATS:EDC|120": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 82.78,
+      "stats": {
+        "totalTrades": 13,
+        "completedTrades": 12,
+        "avgFavorablePct": 9.25,
+        "maxFavorablePct": 16.82,
+        "avgAdversePct": 7.11,
+        "maxAdversePct": 33.17
+      },
+      "levels": {
+        "stopAvg": 76.89,
+        "stopMax": 55.32,
+        "targetAvg": 90.44,
+        "targetMax": 96.7
+      },
+      "skip_reason": "Local alert 46/61",
+      "fired": {
+        "stopAvg": "2026-07-27T19:30:54.741Z"
+      }
+    },
+    "BATS:QTUM|120": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.311Z",
+      "entry_price": 160.39,
+      "stats": {
+        "totalTrades": 9,
+        "completedTrades": 8,
+        "avgFavorablePct": 3.69,
+        "maxFavorablePct": 7.64,
+        "avgAdversePct": 6.05,
+        "maxAdversePct": 11.62
+      },
+      "levels": {
+        "stopAvg": 150.69,
+        "stopMax": 141.75,
+        "targetAvg": 166.31,
+        "targetMax": 172.64
+      },
+      "skip_reason": "Local alert 47/61",
+      "fired": {
+        "stopMax": "2026-07-27T19:30:54.738Z",
+        "stopAvg": "2026-07-27T19:30:54.738Z"
+      }
+    },
+    "BATS:EWY|120": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.312Z",
+      "entry_price": 197.74,
+      "stats": {
+        "totalTrades": 12,
+        "completedTrades": 11,
+        "avgFavorablePct": 6.05,
+        "maxFavorablePct": 11.66,
+        "avgAdversePct": 4.76,
+        "maxAdversePct": 10.5
+      },
+      "levels": {
+        "stopAvg": 188.33,
+        "stopMax": 176.98,
+        "targetAvg": 209.7,
+        "targetMax": 220.8
+      },
+      "skip_reason": "Local alert 49/61",
+      "fired": {
+        "stopMax": "2026-07-27T19:30:54.739Z",
+        "stopAvg": "2026-07-27T19:30:54.739Z"
+      }
+    },
+    "BATS:PLTR|D": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.312Z",
+      "entry_price": 120.15,
+      "stats": {
+        "totalTrades": 10,
+        "completedTrades": 9,
+        "avgFavorablePct": 28.54,
+        "maxFavorablePct": 80.15,
+        "avgAdversePct": 17.64,
+        "maxAdversePct": 57.77
+      },
+      "levels": {
+        "stopAvg": 98.96,
+        "stopMax": 50.74,
+        "targetAvg": 154.44,
+        "targetMax": 216.45
+      },
+      "skip_reason": "Local alert 50/61"
+    },
+    "NSE_DLY:HINDZINC|120": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.312Z",
+      "entry_price": 613.7,
+      "stats": {
+        "totalTrades": 12,
+        "completedTrades": 10,
+        "avgFavorablePct": 6.8,
+        "maxFavorablePct": 13.58,
+        "avgAdversePct": 7.55,
+        "maxAdversePct": 15.84
+      },
+      "levels": {
+        "stopAvg": 567.37,
+        "stopMax": 516.49,
+        "targetAvg": 655.43,
+        "targetMax": 697.04
+      },
+      "skip_reason": "Local alert 55/61",
+      "fired": {
+        "stopAvg": "2026-07-27T19:30:54.741Z"
+      }
+    },
+    "TSX_DLY:TD|180": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.310Z",
+      "entry_price": 167.62,
+      "stats": {
+        "totalTrades": 12,
+        "completedTrades": 11,
+        "avgFavorablePct": 2.96,
+        "maxFavorablePct": 6.86,
+        "avgAdversePct": 2.44,
+        "maxAdversePct": 7.77
+      },
+      "levels": {
+        "stopAvg": 163.53,
+        "stopMax": 154.6,
+        "targetAvg": 172.58,
+        "targetMax": 179.12
+      },
+      "skip_reason": "Local alert 1/61"
+    },
+    "BATS:MU|120": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.310Z",
+      "entry_price": 839.99,
+      "stats": {
+        "totalTrades": 15,
+        "completedTrades": 14,
+        "avgFavorablePct": 9.43,
+        "maxFavorablePct": 22.77,
+        "avgAdversePct": 8.11,
+        "maxAdversePct": 22.8
+      },
+      "levels": {
+        "stopAvg": 771.87,
+        "stopMax": 648.47,
+        "targetAvg": 919.2,
+        "targetMax": 1031.26
+      },
+      "skip_reason": "Local alert 2/61"
+    },
+    "NSE_DLY:TATASTEEL|240": {
+      "created": false,
+      "created_at": "2026-07-28T19:38:42.312Z",
+      "entry_price": 204.69,
+      "stats": {
+        "totalTrades": 12,
+        "completedTrades": 11,
+        "avgFavorablePct": 8.82,
+        "maxFavorablePct": 23.18,
+        "avgAdversePct": 5.83,
+        "maxAdversePct": 16.09
+      },
+      "levels": {
+        "stopAvg": 192.76,
+        "stopMax": 171.76,
+        "targetAvg": 222.74,
+        "targetMax": 252.14
+      },
+      "skip_reason": "Local alert 56/61",
+      "fired": {
+        "stopAvg": "2026-07-28T14:49:21.281Z"
+      }
+    },
+    "TSX_DLY:TD|120": {
+      "created": true,
+      "created_at": "2026-07-28T19:22:24.485Z",
+      "entry_price": 168.6,
+      "stats": {
+        "totalTrades": 12,
+        "completedTrades": 11,
+        "avgFavorablePct": 2.65,
+        "maxFavorablePct": 6.86,
+        "avgAdversePct": 2.71,
+        "maxAdversePct": 8.38
+      },
+      "levels": {
+        "stopAvg": 164.03,
+        "stopMax": 154.47,
+        "targetAvg": 173.07,
+        "targetMax": 180.17
+      },
+      "alert_ids": [
+        5247204183,
+        5247204231
+      ]
+    },
+    "BATS:MU|180": {
+      "created": true,
+      "created_at": "2026-07-28T19:22:22.625Z",
+      "entry_price": 824.55,
+      "stats": {
+        "totalTrades": 11,
+        "completedTrades": 10,
+        "avgFavorablePct": 11.3,
+        "maxFavorablePct": 26.01,
+        "avgAdversePct": 8.51,
+        "maxAdversePct": 21.83
+      },
+      "levels": {
+        "stopAvg": 754.38,
+        "stopMax": 644.55,
+        "targetAvg": 917.72,
+        "targetMax": 1039.02
+      },
+      "alert_ids": [
+        5247204109,
+        5247204132
+      ]
     }
-  },
-  "pending_alert_cleanup": []
+  }
 }

@@ -274,6 +274,11 @@ export async function getStrategyPositionState({ study_filter } = {}) {
       signal: 'EXIT',
       entryTime: t.e?.tm ? new Date(t.e.tm).toISOString() : null,
       entryPrice: t.e?.p != null ? String(t.e.p) : '—',
+      // When this EXIT actually happened — distinct from entryTime above, which is when the
+      // now-closed position was opened (could be days/weeks earlier). Needed to tell a genuinely
+      // fresh exit apart from an old, already-seen one on every subsequent scan of the same day.
+      exitTime: t.x?.tm ? new Date(t.x.tm).toISOString() : null,
+      exitPrice: t.x?.p != null ? String(t.x.p) : '—',
       netPnl: usdPctText(t.tp?.v, t.tp?.p),
       favorableExcursion: usdText(t.rn?.v),
       adverseExcursion: usdText(t.dd?.v != null ? -Math.abs(t.dd.v) : t.dd?.v),
@@ -281,8 +286,8 @@ export async function getStrategyPositionState({ study_filter } = {}) {
     };
   } else {
     trade = {
-      tradeNumber: null, side: null, signal: 'EXIT', entryTime: null,
-      entryPrice: '—', netPnl: '—', favorableExcursion: '—', adverseExcursion: '—', rawText: null,
+      tradeNumber: null, side: null, signal: 'EXIT', entryTime: null, exitTime: null,
+      entryPrice: '—', exitPrice: '—', netPnl: '—', favorableExcursion: '—', adverseExcursion: '—', rawText: null,
     };
   }
 

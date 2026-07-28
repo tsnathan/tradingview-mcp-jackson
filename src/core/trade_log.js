@@ -723,6 +723,46 @@ function tfSortRank(label) {
   return i === -1 ? 999 : i;
 }
 
+/**
+ * Tickers with active (non-archived) closed-trade history that are no longer a member of ANY
+ * current watchlist. Read-only inventory — nothing is moved here. See
+ * `scripts/archive_trade_log.js` for the actual archive action, which this is meant to make
+ * discoverable without remembering to run `--dry-run`: `morning.js` calls this right after a live
+ * watchlist reconciliation (the twice-daily sync, not every scan) and persists the result onto the
+ * baseline so a symbol that drops out of every watchlist shows up on the dashboard on its own.
+ */
+export function findWatchlistOrphans(baseline, watchlistNames = null) {
+  // baseline.watchlists accumulates dead entries under old names forever — nothing ever prunes
+  // them on a rename, since syncWatchlistSymbolsFromTradingView only iterates rules.json's
+  // currently-configured names. Without this filter, a ticker sitting only under a stale/renamed
+  // watchlist name (never actually scanned) would read as "still in a watchlist" and never surface
+  // here. When watchlistNames isn't given, fall back to trusting every baseline entry.
+  const allowedNames = Array.isArray(watchlistNames) ? new Set(watchlistNames) : null;
+  const inWatchlists = new Set();
+  for (const [name, w] of Object.entries(baseline?.watchlists || {})) {
+    if (allowedNames && !allowedNames.has(name)) continue;
+    for (const s of w?.symbols || []) {
+      const t = String(s ?? "").split(":").pop().toUpperCase();
+      if (t) inWatchlists.add(t);
+    }
+  }
+  const byTicker = new Map();
+  for (const r of readAllTradeLogs()) {
+    const ticker = String(r.ticker ?? "").split(":").pop().toUpperCase();
+    if (!ticker || inWatchlists.has(ticker)) continue;
+    let e = byTicker.get(ticker);
+    if (!e) {
+      e = { ticker, trades: 0, timeframes: new Set() };
+      byTicker.set(ticker, e);
+    }
+    e.trades++;
+    if (r.timeframe) e.timeframes.add(r.timeframe);
+  }
+  return [...byTicker.values()]
+    .map((e) => ({ ticker: e.ticker, trades: e.trades, timeframes: [...e.timeframes].sort((a, b) => tfSortRank(a) - tfSortRank(b)) }))
+    .sort((a, b) => b.trades - a.trades);
+}
+
 const NUMERIC_COLUMNS = new Set([
   "entry_time_ms", "entry_price", "exit_time_ms", "exit_price", "qty",
   "position_value", "bars_held", "pnl_usd", "pnl_pct",

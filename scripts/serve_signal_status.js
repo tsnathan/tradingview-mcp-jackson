@@ -6,8 +6,9 @@ import { dirname, join, resolve } from 'node:path';
 import { createDashboardStatus, ensureTradingViewConnection, exportMetricsScan, runBrief, runSignalJob, syncWatchlistSymbolsFromTradingView } from '../src/core/morning.js';
 import { runRegression } from '../src/core/regression.js';
 import { buildEdgeAnalysis } from '../src/core/edge_analysis.js';
-import { readPerfSnapshots, listRuleTypes } from '../src/core/trade_log.js';
+import { readPerfSnapshots, listRuleTypes, findWatchlistOrphans } from '../src/core/trade_log.js';
 import { simulatePortfolio, sweepMaxPositions } from '../src/core/portfolio_sim.js';
+import { lookupSymbol } from '../src/core/symbol_lookup.js';
 import {
   loadWebhookCredentials,
   loadWebhookSettings,
@@ -168,6 +169,54 @@ function loadRulesFile() {
 
 function writeRulesFile(rules) {
   writeFileSync(join(ROOT, 'rules.json'), JSON.stringify(rules, null, 2), 'utf8');
+}
+
+// baseline.watchlists is the ground truth for symbol membership (see the "Watchlist Symbols panel"
+// note in CLAUDE.md) — read directly from disk rather than through morning.js's unexported
+// loadBaseline, same pattern scripts/backfill_trade_log.js already uses.
+function baselineFilePath() {
+  const rules = loadRulesFile() || {};
+  return resolve(ROOT, rules.baseline_file || join(ROOT, 'swing-signal-baseline.json'));
+}
+
+function loadBaselineFile() {
+  const baselinePath = baselineFilePath();
+  if (!existsSync(baselinePath)) return {};
+  try {
+    return JSON.parse(readFileSync(baselinePath, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+// Direct single-field patches to already-written status/baseline files — same technique used to
+// fix the watchlist-sync display bug (see CLAUDE.md): a full scan is not required just to refresh
+// one derived field after a side action like archiving completes.
+function patchStatusFile(patch) {
+  try {
+    const current = existsSync(STATUS_FILE) ? JSON.parse(readFileSync(STATUS_FILE, 'utf8')) : {};
+    writeFileSync(STATUS_FILE, JSON.stringify({ ...current, ...patch }, null, 2), 'utf8');
+  } catch {}
+}
+
+function patchBaselineFile(patch) {
+  const baselinePath = baselineFilePath();
+  try {
+    const current = existsSync(baselinePath) ? JSON.parse(readFileSync(baselinePath, 'utf8')) : {};
+    writeFileSync(baselinePath, JSON.stringify({ ...current, ...patch }, null, 2), 'utf8');
+  } catch {}
+}
+
+function buildOpenBySymbolTf() {
+  const snapshots = readPerfSnapshots();
+  const openBySymbolTf = {};
+  for (const [key, perf] of Object.entries(snapshots)) {
+    openBySymbolTf[key] = {
+      openPct: (perf.openPLPercent || 0) * 100,
+      maxDDPct: (perf.maxDDPercent || 0) * 100,
+    };
+  }
+  return openBySymbolTf;
 }
 
 function readJsonBody(req) {
@@ -332,18 +381,67 @@ const server = http.createServer((req, res) => {
       const minTrades = Number(url.searchParams.get('min') || 4);
       // Drawdown and open P&L come from the per-symbol snapshot written by each scan; the CSVs
       // hold closed trades only and cannot supply either.
-      const snapshots = readPerfSnapshots();
-      const openBySymbolTf = {};
-      for (const [key, perf] of Object.entries(snapshots)) {
-        openBySymbolTf[key] = {
-          openPct: (perf.openPLPercent || 0) * 100,
-          maxDDPct: (perf.maxDDPercent || 0) * 100,
-        };
-      }
-      sendJson(res, 200, buildEdgeAnalysis({ openBySymbolTf, minTrades, ruleType: resolveRuleType(url.searchParams) }));
+      sendJson(res, 200, buildEdgeAnalysis({ openBySymbolTf: buildOpenBySymbolTf(), minTrades, ruleType: resolveRuleType(url.searchParams) }));
     } catch (err) {
       sendJson(res, 500, { available: false, error: err?.message || 'edge analysis failed' });
     }
+    return;
+  }
+
+  if (req.url === '/api/symbol-lookup' || req.url.startsWith('/api/symbol-lookup?')) {
+    try {
+      const url = new URL(req.url, 'http://localhost');
+      const symbol = url.searchParams.get('symbol') || '';
+      const baseline = loadBaselineFile();
+      const status = getStatus();
+      const result = lookupSymbol(symbol, {
+        baseline,
+        openTrades: Array.isArray(status.openTrades) ? status.openTrades : [],
+        openBySymbolTf: buildOpenBySymbolTf(),
+        ruleType: resolveRuleType(url.searchParams),
+      });
+      sendJson(res, 200, result);
+    } catch (err) {
+      sendJson(res, 500, { available: false, error: err?.message || 'symbol lookup failed' });
+    }
+    return;
+  }
+
+  // Orphan detection (which logged tickers are no longer in any watchlist) runs automatically as
+  // part of the twice-daily watchlist reconciliation — see findWatchlistOrphans in trade_log.js and
+  // its call site in morning.js. This endpoint is the one-click action the dashboard banner offers
+  // instead of requiring `node scripts/archive_trade_log.js --orphans` by hand. It shells out to
+  // that exact script (rather than reimplementing its row-moving logic here) so archiving always
+  // goes through the one tested, byte-exact code path. Guarded by runExclusive against a scan
+  // running concurrently: a live scan appends rows to the same trade-log CSVs this rewrites in
+  // full, and an overlapping read-modify-write could drop an appended row.
+  if (req.method === 'POST' && req.url === '/api/archive-orphans') {
+    runExclusive('archive-orphans', () => new Promise((resolveRun, rejectRun) => {
+      const child = spawn(process.execPath, [join(ROOT, 'scripts', 'archive_trade_log.js'), '--orphans'], { cwd: ROOT });
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', (d) => { stdout += d; });
+      child.stderr.on('data', (d) => { stderr += d; });
+      child.on('error', rejectRun);
+      child.on('close', (code) => {
+        if (code === 0) resolveRun(stdout);
+        else rejectRun(new Error(stderr.trim() || `archive script exited with code ${code}`));
+      });
+    }))
+      .then((output) => {
+        // Refresh the persisted orphan list immediately so the banner clears without waiting for
+        // the next scheduled reconciliation — archived tickers' rows now live under trade-log/archive/,
+        // which readAllTradeLogs() (and so findWatchlistOrphans) excludes automatically.
+        const baseline = loadBaselineFile();
+        const rules = loadRulesFile() || {};
+        const orphans = findWatchlistOrphans(baseline, Object.keys(rules.watchlists || {}));
+        patchBaselineFile({ trade_log_orphans: orphans });
+        patchStatusFile({ tradeLogOrphans: orphans });
+        sendJson(res, 200, { success: true, output, tradeLogOrphans: orphans });
+      })
+      .catch((err) => {
+        sendJson(res, err?.code === 'SCAN_BUSY' ? 409 : 500, { success: false, error: err?.message || 'archive failed' });
+      });
     return;
   }
 

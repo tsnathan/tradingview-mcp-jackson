@@ -131,6 +131,7 @@
       <button type="button" class="tabbtn active" data-pane="pane-signals">Signals</button>
       <button type="button" class="tabbtn" data-pane="pane-edge">Edge Analysis</button>
       <button type="button" class="tabbtn" data-pane="pane-portfolio">Portfolio Sim</button>
+      <button type="button" class="tabbtn" data-pane="pane-symbol">Symbol Lookup</button>
     </div>
 
     <div id="pane-signals" class="tabpane">
@@ -229,6 +230,7 @@
 
     <div class="card" id="open-trades-card">
       <h2>Open Trades</h2>
+      <div id="orphan-banner"></div>
       <div id="open-trades"></div>
     </div>
 
@@ -440,6 +442,58 @@
         <div class="edge-table-wrap"><div id="ps-detail"></div></div>
       </div>
     </div><!-- /pane-portfolio -->
+
+    <div id="pane-symbol" class="tabpane hidden">
+      <div class="card">
+        <h1>Symbol Lookup</h1>
+        <p class="muted" style="margin:0 0 10px;">Which watchlists a symbol belongs to, its open
+        position(s), and its full closed-trade history — pulled from the same baseline and trade log
+        every other tab reads, joined by ticker (exchange prefix ignored, so BATS:SOXL and AMEX:SOXL
+        both match "SOXL").</p>
+        <form id="sym-search-form" class="controls" style="margin-bottom:0;">
+          <div class="control-group" style="flex:1;min-width:200px;">
+            <label class="control-label" for="sym-search-input">Symbol</label>
+            <input id="sym-search-input" class="control-input" type="text" placeholder="SOXL or BATS:SOXL" autocomplete="off" />
+          </div>
+          <div class="control-group">
+            <label class="control-label">&nbsp;</label>
+            <button id="sym-search-btn" class="btn btn-primary" type="submit">Search</button>
+          </div>
+        </form>
+        <div class="filter-row" id="sym-rule-row" style="display:none;">
+          <span class="control-label">Exit rule:</span>
+          <span id="sym-rule-chips"></span>
+          <span id="sym-rule-note" class="toggle-meta"></span>
+        </div>
+        <div id="sym-status" class="action-message"></div>
+      </div>
+
+      <div id="sym-results" class="hidden">
+        <div class="card">
+          <h2>Watchlist Membership</h2>
+          <div id="sym-watchlists"></div>
+        </div>
+
+        <div class="card" id="sym-open-card">
+          <h2>Open Trade(s)</h2>
+          <div id="sym-open"></div>
+        </div>
+
+        <div class="card" id="sym-stats-card">
+          <h2>Historical Performance by Timeframe</h2>
+          <p class="muted" style="margin:0 0 4px;font-size:12px;">Same expectancy/CAGR methodology as
+          the Edge Analysis tab. A timeframe missing here (but present above) means this symbol has
+          under ~2 months of history on it there — too little to annualize, not zero trades.</p>
+          <div class="edge-table-wrap"><div id="sym-stats-table"></div></div>
+        </div>
+
+        <div class="card" id="sym-closed-card">
+          <h2>Closed Trades</h2>
+          <div id="sym-closed-note" class="muted" style="font-size:12px;margin-bottom:6px;"></div>
+          <div class="edge-table-wrap"><div id="sym-closed-table"></div></div>
+        </div>
+      </div>
+    </div><!-- /pane-symbol -->
   </div>
 
   <script>
@@ -612,7 +666,7 @@
 
       return `
         <tr style="border-bottom:2px solid #334466;background:#0d1525;font-weight:600;font-size:12px;color:#98a7c6;">
-          <td colspan="4" style="color:#98a7c6;padding:8px 8px;">Avg (${rows.length} open)</td>
+          <td colspan="5" style="color:#98a7c6;padding:8px 8px;">Avg (${rows.length} open)</td>
           <td>${fmtMetricAvg(avgPnlUsd, avgPnlPct)}</td>
           <td>${mfeCell}</td>
           <td>${maeCell}</td>
@@ -636,6 +690,7 @@
         return `
           <tr class="row-open">
             <td>${row.symbol || '—'}</td>
+            <td>${webhookTag(row.timeframe)}</td>
             <td class="status-open">OPEN</td>
             <td>${row.entryTime || '—'}</td>
             <td>${row.entryPrice ?? '—'}</td>
@@ -672,8 +727,12 @@
     }
 
     function webhookSentKey(row) {
-      if (!row.entryTime) return null;
-      return `${webhookBareTicker(row.symbol)}|${webhookTag(row.timeframe)}|${row.entryTime}`;
+      // Keyed on entryTimeRaw (canonical ISO), not entryTime (the ET-formatted display string) —
+      // the server's ledger keys on raw entry time (dispatchTradeWebhooks reads it straight off
+      // entry.trade.entryTime), so using the display string here would silently never match the
+      // auto-dispatch path's key for the same position, breaking dedupe and auto-exit lookup both.
+      if (!row.entryTimeRaw) return null;
+      return `${webhookBareTicker(row.symbol)}|${webhookTag(row.timeframe)}|${row.entryTimeRaw}`;
     }
 
     function buildWebhookCell(row) {
@@ -689,14 +748,15 @@
       const sent = webhookConfig.sent?.[key];
       if (sent) {
         const when = sent.at ? new Date(sent.at).toLocaleString() : '';
-        return `<span style="font-size:11px;color:#6ee7a8;" title="${sent.source || ''} @ ${when}">✓ sent ${sent.side || ''}</span>`;
+        const exitNote = sent.exit ? ` · exited ${sent.exit.side || ''} ${sent.exit.at ? new Date(sent.exit.at).toLocaleString() : ''}` : '';
+        return `<span style="font-size:11px;color:#6ee7a8;" title="${sent.source || ''} @ ${when}${exitNote}">✓ sent ${sent.side || ''}${sent.exit ? ' · ✓ exited' : ''}</span>`;
       }
       const payload = {
         symbol: webhookBareTicker(row.symbol),
         side: String(row.side || '').toUpperCase() === 'SHORT' ? 'SHORT' : 'LONG',
         timeframe: String(row.timeframe ?? ''),
         price: row.entryPrice ?? '',
-        entryTime: row.entryTime,
+        entryTime: row.entryTimeRaw,
       };
       return `<button type="button" class="btn webhook-send-btn" style="padding:3px 9px;font-size:11px;" data-payload='${JSON.stringify(payload).replace(/'/g, '&#39;')}'>Send</button>`;
     }
@@ -838,6 +898,7 @@
             <thead>
               <tr>
                 <th>Symbol</th>
+                <th>TF</th>
                 <th>Signal</th>
                 <th>Entry Date / Time</th>
                 <th>Entry Price</th>
@@ -978,8 +1039,13 @@
         return;
       }
 
+      // Keep in sync with the actual source strings watchlist.js/morning.js can emit — this map had
+      // drifted to only the 3 oldest values, so a live 'data_attributes' read (the normal case) fell
+      // through to a raw, unstyled label instead of the green "live" badge.
       const sourceLabel = {
         tradingview_panel: { text: 'Live from TradingView', color: '#86efac' },
+        data_attributes:   { text: 'Live from TradingView', color: '#86efac' },
+        text_scan:         { text: 'Live from TradingView (text scan)', color: '#86efac' },
         rules_fallback:    { text: 'Fallback from rules.json', color: '#facc15' },
         watchlist_unavailable: { text: 'Cached (TradingView unreadable)', color: '#94a3b8' },
       };
@@ -1300,6 +1366,51 @@
       renderPriorSignals(data.priorSignals || []);
       renderWatchlistSyncStatus(data.watchlistSync || [], data.watchlistSyncOptions || []);
       renderTaMetrics(data.scanResults || []);
+      renderOrphanBanner(data.tradeLogOrphans || []);
+    }
+
+    // Detection runs automatically as part of the twice-daily watchlist reconciliation (see
+    // findWatchlistOrphans in trade_log.js) — this just surfaces it and offers a one-click action
+    // instead of requiring `node scripts/archive_trade_log.js --orphans` to be run by hand.
+    // Archiving never deletes trade history, only moves it out of live Edge Analysis/Portfolio Sim.
+    function renderOrphanBanner(orphans) {
+      const el = document.getElementById('orphan-banner');
+      if (!orphans.length) { el.innerHTML = ''; return; }
+      const list = orphans.map((o) => `${o.ticker} (${o.trades} trade${o.trades === 1 ? '' : 's'}, ${o.timeframes.join('/')})`).join(', ');
+      el.innerHTML = `
+        <div class="warn-box">
+          <h3>${orphans.length} symbol${orphans.length === 1 ? '' : 's'} logged but no longer in any watchlist</h3>
+          <p>${list}</p>
+          <p class="muted" style="font-size:12px;">Archiving moves their closed-trade history out of Edge
+          Analysis and Portfolio Sim into <code>trade-log/archive/</code> — nothing is deleted, and it's
+          reversible with <code>--restore</code>. Detected during the last watchlist reconciliation.</p>
+          <button type="button" class="btn" id="archive-orphans-btn">Archive Now</button>
+          <span id="archive-orphans-msg" class="action-message" style="margin-top:0;"></span>
+        </div>`;
+      document.getElementById('archive-orphans-btn').addEventListener('click', async () => {
+        const tickers = orphans.map((o) => o.ticker).join(', ');
+        if (!confirm(`Archive closed-trade history for: ${tickers}?\n\nThis removes them from Edge Analysis and Portfolio Sim (reversible with --restore). Trade rows are never deleted.`)) return;
+        const btn = document.getElementById('archive-orphans-btn');
+        const msg = document.getElementById('archive-orphans-msg');
+        btn.disabled = true;
+        msg.textContent = 'Archiving…';
+        msg.className = 'action-message';
+        try {
+          const resp = await fetch('/api/archive-orphans', { method: 'POST' });
+          const data = await resp.json();
+          if (data?.success) {
+            renderOrphanBanner(data.tradeLogOrphans || []);
+          } else {
+            msg.textContent = data?.error || 'Archive failed';
+            msg.className = 'action-message action-message-error';
+            btn.disabled = false;
+          }
+        } catch (err) {
+          msg.textContent = err?.message || 'Archive failed';
+          msg.className = 'action-message action-message-error';
+          btn.disabled = false;
+        }
+      });
     }
 
     function setActionBusy(isBusy) {
@@ -1675,6 +1786,7 @@
         // most visits to this dashboard never open this tab.
         if (btn.dataset.pane === 'pane-edge' && !edgeLoaded) loadEdgeAnalysis();
         if (btn.dataset.pane === 'pane-portfolio' && !psLoaded) initPortfolioSim();
+        if (btn.dataset.pane === 'pane-symbol') document.getElementById('sym-search-input')?.focus();
       });
     });
 
@@ -1917,6 +2029,14 @@
           the only like-for-like one available.</p>
           <p>Median hold period is shown alongside the mean because hold time is right-skewed — most
           positions exit on a quick signal flip, but a few ride out much longer and pull the mean up.</p>
+          <p><strong>Expected</strong> is CAGR's non-compounding sibling: expectancy/trade &times;
+          the trades/year implied by this symbol's own average hold period (365.25 / avg hold days).
+          CAGR compounds the observed return to the power of 1/years, which over a short or
+          sparsely-traded span inflates a modest run into a punchy headline number; Expected just
+          adds up what this symbol's typical trade earns at the rate it typically trades, so a short
+          history doesn't get compounded into a number the record can't back up. Neither is more
+          "correct" — CAGR is the right lens for a compounding portfolio equity curve, Expected is
+          the right lens for "what does a trade like this actually pay, this often."</p>
         </div>
         ${shortSpan > 0 ? `
         <div class="warn-box">
@@ -1973,6 +2093,7 @@
           <td class="num">${t.trades}</td>
           <td class="num">${n1(t.avgSpanYears)}y</td>
           <td class="num ${cls(t.medianCagr)}"><strong>${n1(t.medianCagr)}%</strong></td>
+          <td class="num ${cls(t.medianExpected)}" title="linear, trade-frequency based (see Expected column)">${t.medianExpected === null ? '—' : n1(t.medianExpected) + '%'}</td>
           <td class="num ${cls(t.medianCagrDd)}"><strong>${n2(t.medianCagrDd)}</strong></td>
           <td class="num">${n1(t.avgMaxDD)}%</td>
           <td class="num">${n0(t.winRate)}%</td>
@@ -1987,7 +2108,7 @@
         <table class="edge-table">
           <thead><tr>
             <th>TF</th><th class="num">syms</th><th class="num">trades</th><th class="num">span</th>
-            <th class="num">med CAGR</th><th class="num">CAGR/DD</th><th class="num">avg DD</th>
+            <th class="num">med CAGR</th><th class="num">Expected</th><th class="num">CAGR/DD</th><th class="num">avg DD</th>
             <th class="num">win%</th><th class="num">PF</th><th class="num">MFE</th><th class="num">MAE</th>
             <th class="num">hold</th><th class="num">open drag</th><th class="num">profitable</th>
           </tr></thead>
@@ -2059,7 +2180,8 @@
 
       const cols = [
         ['ticker', 'Symbol', false], ['tfDisplay', 'TF', false], ['trades', 'n', true],
-        ['years', 'span', true], ['cagr', 'CAGR', true], ['cagrDd', 'CAGR/DD', true],
+        ['years', 'span', true], ['cagr', 'CAGR', true], ['expectedPct', 'Expected', true],
+        ['cagrDd', 'CAGR/DD', true],
         ['maxDDPct', 'maxDD', true], ['totalReturnPct', 'total', true], ['openPct', 'open', true],
         ['winRate', 'win%', true], ['profitFactor', 'PF', true], ['expectancyPct', 'exp/trade', true],
         ['avgMaePct', 'MAE', true], ['medianHoldDays', 'hold', true], ['marginCalls', 'MC', true],
@@ -2073,6 +2195,7 @@
           <td class="num">${s.trades}</td>
           <td class="num">${n1(s.years)}y</td>
           <td class="num ${cls(s.cagr)}"><strong>${n1(s.cagr)}%</strong></td>
+          <td class="num ${cls(s.expectedPct)}" title="expectancy/trade x trades/year implied by avg hold period — linear, not compounded">${s.expectedPct === null ? '—' : n1(s.expectedPct) + '%'}</td>
           <td class="num ${cls(s.cagrDd)}"><strong>${n2(s.cagrDd)}</strong></td>
           <td class="num">${n1(s.maxDDPct)}%</td>
           <td class="num ${cls(s.totalReturnPct)}">${n1(s.totalReturnPct)}%</td>
@@ -2393,6 +2516,180 @@
           </div>
         </div>`;
     }
+
+    /* =====================  SYMBOL LOOKUP TAB  ===================== */
+
+    let symLastQuery = '';
+
+    function tfLabel(tf) {
+      const map = { '1':'1m','3':'3m','5':'5m','15':'15m','30':'30m','45':'45m','60':'1h','120':'2h','180':'3h','240':'4h','360':'6h','480':'8h','720':'12h' };
+      const raw = String(tf ?? '').trim();
+      if (map[raw]) return map[raw];
+      const u = raw.toUpperCase();
+      if (u === 'D' || u === '1D') return '1D';
+      if (u === 'W' || u === '1W') return '1W';
+      return raw || '?';
+    }
+
+    function tfRankOf(tf) {
+      const order = ['15m', '30m', '45m', '1h', '2h', '3h', '4h', '1d'];
+      const i = order.indexOf(tf);
+      return i === -1 ? 999 : i;
+    }
+
+    async function runSymbolLookup(query) {
+      const q = String(query || '').trim();
+      const statusEl = document.getElementById('sym-status');
+      const resultsEl = document.getElementById('sym-results');
+      if (!q) { statusEl.textContent = 'Enter a symbol.'; return; }
+      symLastQuery = q;
+      statusEl.textContent = 'Searching…';
+      statusEl.classList.remove('action-message-error');
+      try {
+        const resp = await fetch(`/api/symbol-lookup?symbol=${encodeURIComponent(q)}${ruleParam()}`);
+        const data = await resp.json();
+        if (!data.available) {
+          statusEl.textContent = data.reason === 'empty_query' ? 'Enter a symbol.' : (data.error || 'Lookup failed.');
+          statusEl.classList.add('action-message-error');
+          resultsEl.classList.add('hidden');
+          return;
+        }
+        // Adopt whatever the server resolved so the chips highlight the variant actually measured,
+        // same pattern the Edge Analysis/Portfolio Sim tabs use.
+        if (selectedRule === null && data.ruleType) selectedRule = data.ruleType;
+        document.getElementById('sym-rule-row').style.display = data.ruleTypes?.length ? '' : 'none';
+        renderRuleChips('sym-rule-chips', 'sym-rule-note', data, () => runSymbolLookup(symLastQuery));
+
+        const noHistoryAtAll = data.watchlists.length === 0 && data.openTrades.length === 0 && data.closedTrades.length === 0;
+        statusEl.textContent = noHistoryAtAll
+          ? `No watchlist membership, open trades, or closed-trade history found for "${data.ticker}".`
+          : `Showing ${data.ticker}`;
+        statusEl.classList.toggle('action-message-error', noHistoryAtAll);
+        resultsEl.classList.toggle('hidden', noHistoryAtAll);
+        if (noHistoryAtAll) return;
+
+        renderSymWatchlists(data.watchlists);
+        renderSymOpen(data.openTrades);
+        renderSymStats(data.perTimeframeStats);
+        renderSymClosed(data);
+      } catch (err) {
+        statusEl.textContent = `Lookup failed: ${err?.message || err}`;
+        statusEl.classList.add('action-message-error');
+        resultsEl.classList.add('hidden');
+      }
+    }
+
+    function renderSymWatchlists(rows) {
+      const el = document.getElementById('sym-watchlists');
+      if (!rows.length) {
+        el.innerHTML = '<div class="muted">Not currently a member of any configured watchlist.</div>';
+        return;
+      }
+      el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;">${rows.map((w) => `
+        <span class="chip active" style="cursor:default;">${w.watchlistName} <span class="muted">${tfLabel(w.timeframe)} · ${w.symbolCount} symbols</span></span>
+      `).join('')}</div>`;
+    }
+
+    // Reuses buildOpenTradeRows/wireWebhookButtons verbatim — these open-trade rows are the exact
+    // same shape the Open Trades card renders (they come straight from the same status.openTrades
+    // array, just filtered to this ticker), so the Send-webhook button and formatting work unchanged.
+    function renderSymOpen(rows) {
+      const el = document.getElementById('sym-open');
+      if (!rows.length) {
+        el.innerHTML = '<div class="muted">No open position on any timeframe.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>TF</th>
+              <th>Signal</th>
+              <th>Entry Date / Time</th>
+              <th>Entry Price</th>
+              <th>Net P&amp;L</th>
+              <th>Hist. MFE avg / max</th>
+              <th>Hist. MAE avg / max</th>
+              <th>Alert Levels (avg / max)</th>
+              <th>Trade Webhook</th>
+            </tr>
+          </thead>
+          <tbody>${buildOpenTradeRows(rows)}</tbody>
+        </table>`;
+      wireWebhookButtons(el);
+    }
+
+    function renderSymStats(rows) {
+      const el = document.getElementById('sym-stats-table');
+      if (!rows.length) {
+        el.innerHTML = '<div class="muted">No timeframe has enough history to measure yet (needs roughly 2 months+ of closed trades to annualize).</div>';
+        return;
+      }
+      const sorted = [...rows].sort((a, b) => tfRankOf(a.timeframe) - tfRankOf(b.timeframe));
+      el.innerHTML = `
+        <table class="edge-table">
+          <thead><tr>
+            <th>TF</th><th class="num">n</th><th class="num">span</th><th class="num">win%</th>
+            <th class="num">exp/trade</th><th class="num">CAGR</th><th class="num">Expected</th><th class="num">CAGR/DD</th>
+            <th class="num">MAE</th><th class="num">hold</th>
+          </tr></thead>
+          <tbody>${sorted.map((s) => `
+            <tr>
+              <td><strong>${s.tfDisplay}</strong></td>
+              <td class="num">${s.trades}</td>
+              <td class="num">${n1(s.years)}y</td>
+              <td class="num">${n0(s.winRate)}%</td>
+              <td class="num ${cls(s.expectancyPct)}">${n1(s.expectancyPct)}%</td>
+              <td class="num ${cls(s.cagr)}">${n1(s.cagr)}%</td>
+              <td class="num ${cls(s.expectedPct)}">${s.expectedPct === null ? '—' : n1(s.expectedPct) + '%'}</td>
+              <td class="num ${cls(s.cagrDd)}">${n2(s.cagrDd)}</td>
+              <td class="num neg">${n1(s.avgMaePct)}%</td>
+              <td class="num">${fmtHold(s.medianHoldDays)}</td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+    }
+
+    function renderSymClosed(data) {
+      const noteEl = document.getElementById('sym-closed-note');
+      const el = document.getElementById('sym-closed-table');
+      const rows = data.closedTrades;
+      noteEl.textContent = data.isTruncated
+        ? `Showing most recent ${rows.length} of ${data.closedTradeCount} closed trades.`
+        : `${data.closedTradeCount} closed trade${data.closedTradeCount === 1 ? '' : 's'}.`;
+      if (!rows.length) {
+        el.innerHTML = '<div class="muted">No closed trades logged for this symbol under the selected exit rule.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <table class="edge-table">
+          <thead><tr>
+            <th>TF</th><th>Side</th><th>Entry</th><th class="num">Entry $</th>
+            <th>Exit</th><th class="num">Exit $</th><th>Exit reason</th>
+            <th class="num">P&amp;L%</th><th class="num">hold</th><th>rule</th>
+          </tr></thead>
+          <tbody>${rows.map((t) => {
+            const holdDays = (t.exit_time_ms && t.entry_time_ms) ? (t.exit_time_ms - t.entry_time_ms) / 864e5 : NaN;
+            return `<tr>
+              <td>${t.timeframe}</td>
+              <td>${t.side || '—'}</td>
+              <td style="font-size:12px;">${t.entry_time_et || '—'}</td>
+              <td class="num">${fmt2(t.entry_price)}</td>
+              <td style="font-size:12px;">${t.exit_time_et || '—'}</td>
+              <td class="num">${fmt2(t.exit_price)}</td>
+              <td style="font-size:12px;">${t.exit_signal || '—'}</td>
+              <td class="num ${cls(t.pnl_pct)}"><strong>${n2(t.pnl_pct)}%</strong></td>
+              <td class="num">${fmtHold(holdDays)}</td>
+              <td><span class="muted" style="font-size:11px;">${t.rule_type || '—'}</span></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+    }
+
+    document.getElementById('sym-search-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      runSymbolLookup(document.getElementById('sym-search-input').value);
+    });
   </script>
 </body>
 </html>

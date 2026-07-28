@@ -20,6 +20,9 @@ import {
   sentKey,
   alreadySent,
   recordSent,
+  exitOrderAction,
+  alreadyExitSent,
+  recordExitSent,
 } from "./trade_webhook.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -838,6 +841,7 @@ export function buildPriorSignalsByWatchlist(
             wasOpen: liveSignal === 'OPEN',
             entryPrice: normalizeTradeDisplay(tradeBackedEntry.trade.entryPrice),
             entryTime: formatEntryTimeDisplay(tradeBackedEntry.trade.entryTime, timezone),
+            entryTimeRaw: tradeBackedEntry.trade.entryTime || null,
             netPnl: fillTradeMetric(tradeBackedEntry.trade.netPnl, liveSignal),
             favorableExcursion: fillTradeMetric(tradeBackedEntry.trade.favorableExcursion, liveSignal),
             adverseExcursion: fillTradeMetric(tradeBackedEntry.trade.adverseExcursion, liveSignal),
@@ -887,6 +891,7 @@ export function buildPriorSignalsByWatchlist(
             // Label-only signal, no trade read — there is no entry time to show, and the scan
             // timestamp is not one (open_issues.txt Issue 7).
             entryTime: 'No trade time',
+            entryTimeRaw: null,
             netPnl: 'In progress',
             favorableExcursion: 'In progress',
             adverseExcursion: 'In progress',
@@ -899,6 +904,7 @@ export function buildPriorSignalsByWatchlist(
             signal: '—',
             entryPrice: 'Unavailable',
             entryTime: 'No prior trade recorded',
+            entryTimeRaw: null,
             netPnl: 'Unavailable',
             favorableExcursion: 'Unavailable',
             adverseExcursion: 'Unavailable',
@@ -920,6 +926,7 @@ export function buildPriorSignalsByWatchlist(
           wasOpen: latestSignal === 'OPEN',
           entryPrice: normalizeTradeDisplay(latest.entry_price ?? latest.last_price ?? 'n/a'),
           entryTime: formatEntryTimeDisplay(latest.entry_time, timezone),
+          entryTimeRaw: latest.entry_time || null,
           netPnl: fillTradeMetric(latest.net_pnl, resolvedSignal),
           favorableExcursion: fillTradeMetric(latest.favorable_excursion, resolvedSignal),
           adverseExcursion: fillTradeMetric(latest.adverse_excursion, resolvedSignal),
@@ -930,6 +937,7 @@ export function buildPriorSignalsByWatchlist(
           signal: '—',
           entryPrice: hasMeaningfulTradeValue(latest.entry_price ?? latest.last_price) ? normalizeTradeDisplay(latest.entry_price ?? latest.last_price) : 'Unavailable',
           entryTime: hasMeaningfulTradeValue(latest.entry_time) ? formatEntryTimeDisplay(latest.entry_time, timezone) : 'No prior trade recorded',
+          entryTimeRaw: latest.entry_time || null,
           netPnl: hasMeaningfulTradeValue(latest.net_pnl) ? normalizeTradeDisplay(latest.net_pnl) : 'Unavailable',
           favorableExcursion: hasMeaningfulTradeValue(latest.favorable_excursion) ? normalizeTradeDisplay(latest.favorable_excursion) : 'Unavailable',
           adverseExcursion: hasMeaningfulTradeValue(latest.adverse_excursion) ? normalizeTradeDisplay(latest.adverse_excursion) : 'Unavailable',
@@ -999,10 +1007,32 @@ function buildWatchlistSummaryLines(
         }))
       : fallbackOpenTrades;
 
-    if (rowsToShow.length > 0) {
-      const details = rowsToShow
-        .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${normalizeTradeDisplay(row.entryTime)}`)
-        .join('\n');
+    // Same recency test as OPEN above, but keyed on exitTime — entryTime on an EXIT trade is when
+    // the now-closed position originally opened (possibly days earlier), not when it closed, so it
+    // can't tell a fresh exit apart from an old one already shown on a prior scan. No fallback-from-
+    // baseline path here (unlike OPEN's fallbackOpenTrades) — this is new, not preserving a
+    // previously-relied-on read path.
+    const recentExits = results
+      .filter((entry) => entry.watchlist_name === watchlistName && !entry.error)
+      .filter((entry) => String(entry.trade?.signal || '').toUpperCase() === 'EXIT')
+      .filter((entry) => isRecentTradeSignal(entry.trade?.exitTime, entry.scanned_at, entry.timeframe)
+        || isSameTradingDay(entry.trade?.exitTime, entry.scanned_at, timezone))
+      .sort(
+        (a, b) => parseEntryTimestamp(b.trade?.exitTime) - parseEntryTimestamp(a.trade?.exitTime)
+          || new Date(b.scanned_at || 0).getTime() - new Date(a.scanned_at || 0).getTime(),
+      )
+      .map((entry) => ({
+        symbol: entry.state?.symbol || entry.symbol || 'n/a',
+        exitTime: normalizeTradeDisplay(entry.trade?.exitTime),
+        netPnl: normalizeTradeDisplay(entry.trade?.netPnl),
+      }));
+
+    if (rowsToShow.length > 0 || recentExits.length > 0) {
+      const openDetails = rowsToShow
+        .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${normalizeTradeDisplay(row.entryTime)}`);
+      const exitDetails = recentExits
+        .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${normalizeTradeDisplay(row.netPnl)} | AT: ${normalizeTradeDisplay(row.exitTime)}`);
+      const details = [...openDetails, ...exitDetails].join('\n');
       return `${prefix} | SIGNAL\n${details}`;
     }
 
@@ -1034,6 +1064,7 @@ export function buildOpenTrades(
         // produced wrong dates in Open Trades and broke the recency-based signal/notify
         // gates (open_issues.txt Issue 7). Null means "entry time unknown", full stop.
         entryTime: entry.trade?.entryTime || null,
+        entryTimeRaw: entry.trade?.entryTime || null,
         netPnl: normalizeTradeDisplay(entry.trade?.netPnl, 'In progress'),
         favorableExcursion: normalizeTradeDisplay(entry.trade?.favorableExcursion, 'In progress'),
         adverseExcursion: normalizeTradeDisplay(entry.trade?.adverseExcursion, 'In progress'),
@@ -1059,6 +1090,11 @@ export function buildOpenTrades(
       wasOpen: true,
       entryPrice: normalizeTradeDisplay(row?.entryPrice ?? row?.entry_price),
       entryTime: formatEntryTimeDisplay(entryTime, timezone),
+      // Canonical (raw ISO) entry time, distinct from the display string above — the webhook
+      // dedupe ledger keys on this, not the display format, so both the manual Send button and
+      // the auto-dispatch path (which keys straight off entry.trade.entryTime) land on the same
+      // key for the same position. Null when no raw source exists (label-only/no-history rows).
+      entryTimeRaw: row?.entryTimeRaw || row?.entry_time_raw || null,
       netPnl: fillTradeMetric(row?.netPnl ?? row?.net_pnl, 'OPEN'),
       favorableExcursion: fillTradeMetric(row?.favorableExcursion ?? row?.favorable_excursion, 'OPEN'),
       adverseExcursion: fillTradeMetric(row?.adverseExcursion ?? row?.adverse_excursion, 'OPEN'),
@@ -1119,6 +1155,7 @@ export function buildOpenTrades(
       signal: 'OPEN',
       entryPrice: entry?.entry_price,
       entryTime: entry?.entry_time || null,
+      entryTimeRaw: entry?.entry_time || null,
       netPnl: entry?.net_pnl,
       favorableExcursion: entry?.favorable_excursion,
       adverseExcursion: entry?.adverse_excursion,
@@ -1322,6 +1359,34 @@ function normalizeWatchlistName(value) {
     .replace(/[^a-z0-9]/g, '');
 }
 
+/**
+ * Fallback for the dashboard's Watchlist Symbols panel on any scan that didn't itself run a live
+ * TradingView resync.
+ *
+ * `syncWatchlistSymbolsFromTradingView()` only runs once or twice a day (gated by
+ * `watchlist-sync-state.json`'s open/close dates), so on every OTHER scan `result.watchlist_sync`
+ * was `[]` — and because `writeLatestStatus()` overwrites the whole status file every run, that
+ * empty array clobbered whatever the sync scan had written minutes earlier. The panel showed real
+ * data for the ~15 minutes between a sync scan and the next regular one, then went blank for the
+ * rest of the day — read as "seeding failed" even though `baseline.watchlists` (the actual source
+ * of truth, updated by the sync regardless of which scan triggered it) was fine the whole time.
+ * This just re-derives the same display shape from that persisted baseline instead of from the
+ * current scan's (usually empty) live-sync result.
+ */
+function buildWatchlistSyncFromBaseline(baseline) {
+  return Object.entries(baseline?.watchlists || {}).map(([watchlistName, w]) => ({
+    watchlistName,
+    timeframe: w?.timeframe || null,
+    symbols: Array.isArray(w?.symbols) ? w.symbols : [],
+    count: Array.isArray(w?.symbols) ? w.symbols.length : 0,
+    source: w?.source || "watchlist_unavailable",
+    selected: null,
+    activeWatchlistName: null,
+    selectError: null,
+    cached: true,
+  }));
+}
+
 export async function syncWatchlistSymbolsFromTradingView({
   rules,
   baselinePath = DEFAULT_BASELINE_PATH,
@@ -1410,6 +1475,7 @@ export async function syncWatchlistSymbolsFromTradingView({
 
     synced.push({
       watchlistName,
+      timeframe,
       symbols: resolvedSymbols,
       count: resolvedSymbols.length,
       source: rawBaseline.watchlists[watchlistName].source,
@@ -1504,7 +1570,7 @@ export function createDashboardStatus(result = {}) {
   // the watchlist summary doesn't highlight it. OPEN/LONG signals in signal_lines should not
   // override a "NO SIGNAL" summary (they may reflect prior-day positions, not today's entry).
   const hasMeaningfulSummary = watchlistSummaryLines.some((line) =>
-    /SIGNAL:\s*(OPEN|EXIT)\b/i.test(line) || /OPEN:\s*\w/i.test(line),
+    /SIGNAL:\s*(OPEN|EXIT)\b/i.test(line) || /OPEN:\s*\w/i.test(line) || /EXIT:\s*\w/i.test(line),
   );
   const hasExitSignalLines = signalLines.some((line) => /SIGNAL:\s*EXIT\b/i.test(line));
   const lines = watchlistSummaryLines.length > 0 && (hasMeaningfulSummary || !hasExitSignalLines)
@@ -1543,6 +1609,7 @@ export function createDashboardStatus(result = {}) {
     watchlistSync: Array.isArray(result.watchlist_sync) ? result.watchlist_sync : [],
     watchlistSyncOptions: Array.isArray(result.watchlistOptions) ? result.watchlistOptions : [],
     watchlistSyncActiveName: result.activeWatchlistName || null,
+    tradeLogOrphans: Array.isArray(result.trade_log_orphans) ? result.trade_log_orphans : [],
     openTrades: Array.isArray(result.open_trades) ? result.open_trades : [],
     priorSignals,
     isPartialScan: Boolean(result.is_partial_scan),
@@ -1970,14 +2037,27 @@ export async function runBrief({
     }
   }
 
+  // "Genuinely new" — matches exactly what buildWatchlistSummaryLines actually displays (recent-bar
+  // or same-day OPEN/EXIT), not the older entry.signal?.hasSignal/hasSignalChanged path this used to
+  // fall back to. That path reads the strategy's on-chart label text, the same "Position: Long/Short"
+  // reading documented above as unreliable/one-bar-ahead — and its price-comparison arm fires on
+  // ordinary price movement for any symbol with an active label, so a days-old open position could
+  // inflate this count on nearly every scan with nothing new having actually happened (confirmed live
+  // 2026-07-28: 3 counted "signals" were all 1-5 day old positions, none shown in the actual list).
   const signalEntries = results.filter((entry) => {
-    const hasOpenTrade = String(entry.trade?.signal || '').toUpperCase() === 'OPEN'
-      && isRecentTradeSignal(entry.trade?.entryTime, entry.scanned_at, entry.timeframe);
-    if (hasOpenTrade) return true;
-
-    const key = `${entry.state?.symbol || entry.symbol}:${entry.timeframe}`;
-    const previous = baseline.signals[key] || {};
-    return Boolean(entry.signal?.hasSignal) && hasSignalChanged(previous, entry.signal);
+    const tradeSignal = String(entry.trade?.signal || '').toUpperCase();
+    if (tradeSignal === 'OPEN') {
+      return isRecentTradeSignal(entry.trade?.entryTime, entry.scanned_at, entry.timeframe)
+        || isSameTradingDay(entry.trade?.entryTime, entry.scanned_at, timezone);
+    }
+    if (tradeSignal === 'EXIT') {
+      // exitTime (added to getStrategyPositionState's EXIT branch), not entryTime — entryTime here
+      // is when the now-closed position originally opened, which says nothing about how recently it
+      // exited. A EXIT with no exitTime (DOM-fallback trade reads never carry one) is never counted.
+      return isRecentTradeSignal(entry.trade?.exitTime, entry.scanned_at, entry.timeframe)
+        || isSameTradingDay(entry.trade?.exitTime, entry.scanned_at, timezone);
+    }
+    return false;
   });
   const changedSignals = signalEntries.filter((entry) => {
     const key = `${entry.state?.symbol || entry.symbol}:${entry.timeframe}`;
@@ -1987,7 +2067,11 @@ export async function runBrief({
         || normalizeTradeDisplay(previous.entry_time, '') !== normalizeTradeDisplay(entry.trade?.entryTime, '')
         || normalizeTradeDisplay(previous.entry_price, '') !== normalizeTradeDisplay(entry.trade?.entryPrice, '');
     }
-    return hasSignalChanged(previous, entry.signal);
+    // EXIT: a freshly-closed position's prior baseline entry still reads signal_type 'OPEN' (that's
+    // what the scan before this one recorded while it was still open), so this also survives re-scans
+    // of the same closed trade later the same day without re-counting it as newly changed.
+    return String(previous.signal_type || '').toUpperCase() !== 'EXIT'
+      || normalizeTradeDisplay(previous.entry_time, '') !== normalizeTradeDisplay(entry.trade?.entryTime, '');
   });
 
   let displayBaseline = baseline;
@@ -2028,6 +2112,15 @@ export async function runBrief({
   const notifyEntries = changedSignals.filter((entry) =>
     String(entry.trade?.signal || '').toUpperCase() === 'OPEN'
     && isSameTradingDay(entry.trade?.entryTime, generatedAt, timezone)
+  );
+  // Same shape of gate as notifyEntries above, mirrored for EXIT: same-day, keyed on exitTime (not
+  // entryTime — a closed trade's entryTime can be days old, exitTime is when it actually closed).
+  // This only decides eligibility to be OFFERED to the webhook dispatcher; dispatchExitWebhooks adds
+  // its own further gate (the matching entry must have been sent via webhook in the first place)
+  // before anything actually goes out.
+  const notifyExitEntries = changedSignals.filter((entry) =>
+    String(entry.trade?.signal || '').toUpperCase() === 'EXIT'
+    && isSameTradingDay(entry.trade?.exitTime, generatedAt, timezone)
   );
   const notifySignalLines = notifyEntries.map((entry) => {
     const symbol = entry.state?.symbol || entry.symbol || 'n/a';
@@ -2102,6 +2195,18 @@ export async function runBrief({
       entry_price: entry.trade?.entryPrice ?? entry.signal?.price ?? entry.quote?.last ?? null,
       entry_time: entry.trade?.entryTime || null,
     })),
+    // Exit-side twin. `entry_time` is carried through (not just exit_time) because it's what the
+    // matching entry's webhook was keyed under — dispatchExitWebhooks needs it to look up whether
+    // this exact position was ever opened via webhook in the first place.
+    notify_exit_events: notifyExitEntries.map((entry) => ({
+      symbol: entry.state?.symbol || entry.symbol || null,
+      timeframe: entry.timeframe,
+      watchlist_name: entry.watchlist_name || null,
+      side: entry.trade?.side || null,
+      exit_price: entry.trade?.exitPrice ?? null,
+      entry_time: entry.trade?.entryTime || null,
+      exit_time: entry.trade?.exitTime || null,
+    })),
     watchlist_summary_lines: watchlistSummaryLines,
     summary_line: watchlistSummaryLines.join("\n") || noSignalLines.join("\n"),
     instruction: signals_only
@@ -2160,6 +2265,14 @@ function parseEntryPriceNum(str) {
 //   3. Create 2 TradingView price alerts (avg stop, avg target)
 //   4. Mark as done in the baseline so subsequent scans skip this block
 //
+// Positions with a webhook already sent for them (manual Send or auto-armed — real money placed
+// at the executor) get priority for the account's limited alert quota over positions that are
+// only being tracked/monitored. When the quota is full, a webhook-sent trade may evict an existing
+// alert pair belonging to a non-webhook-sent position, preferring the longest timeframe available
+// (a 1D/4H position loses less by dropping to scan-interval-granularity local monitoring than a
+// 15m one would) — see findEvictionCandidate below. User-confirmed design 2026-07-28, prompted by
+// TSX_DLY:TD having a webhook sent but only local (no real TradingView alert) monitoring.
+//
 // Returns openTrades array augmented with excursionStats and alertLevels fields.
 export async function createExcursionAlerts(openTrades, baselinePath) {
   if (!Array.isArray(openTrades) || openTrades.length === 0) return openTrades;
@@ -2178,7 +2291,51 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
     usedSlots = (alertList.alerts || []).filter(a => a.active).length;
   } catch {}
 
-  for (const trade of openTrades) {
+  // Which currently-open positions have a webhook actually sent for them. Keyed the same way
+  // excursion_alerts is (`${symbol}|${timeframe}`, both raw form and normalized-ticker form,
+  // matching the existing lookup pattern below) so eviction can check "is this candidate
+  // webhook-sent" without re-deriving it per candidate. Requires entryTimeRaw (not the ET-display
+  // entryTime) — see the sentKey format-mismatch fix this was built alongside.
+  const webhookSentKeys = new Set();
+  for (const t of openTrades) {
+    if (!t?.entryTimeRaw) continue;
+    const k = sentKey({ symbol: t.symbol, timeframe: t.timeframe, entryTime: t.entryTimeRaw });
+    if (k && alreadySent(k)) {
+      webhookSentKeys.add(`${t.symbol}|${t.timeframe}`);
+      const ticker = String(t.symbol || '').split(':').pop()?.toUpperCase() || '';
+      webhookSentKeys.add(`${ticker}|${t.timeframe}`);
+    }
+  }
+
+  // Process webhook-sent trades first — they're the ones that should win a contested slot or an
+  // eviction. Stable sort: relative order within each group is unchanged.
+  const orderedOpenTrades = [...openTrades].sort((a, b) => {
+    const aSent = webhookSentKeys.has(`${a.symbol}|${a.timeframe}`) ? 0 : 1;
+    const bSent = webhookSentKeys.has(`${b.symbol}|${b.timeframe}`) ? 0 : 1;
+    return aSent - bSent;
+  });
+
+  // Best non-webhook-sent, currently-real-alert candidate to evict to make room — longest
+  // timeframe first, since that position loses the least precision falling back to local
+  // monitoring (checked once per its own, already-long, scan interval either way).
+  function findEvictionCandidate(rawExcursionAlerts) {
+    let best = null;
+    let bestMinutes = -1;
+    for (const [key, entry] of Object.entries(rawExcursionAlerts || {})) {
+      if (!entry?.created || !Array.isArray(entry.alert_ids) || entry.alert_ids.length === 0) continue;
+      if (webhookSentKeys.has(key)) continue; // never evict another webhook-sent position
+      const pipe = key.lastIndexOf('|');
+      if (pipe < 0) continue;
+      const tf = key.slice(pipe + 1);
+      const ticker = key.slice(0, pipe).split(':').pop()?.toUpperCase() || '';
+      if (webhookSentKeys.has(`${ticker}|${tf}`)) continue;
+      const minutes = timeframeToMinutes(tf) || 0;
+      if (minutes > bestMinutes) { bestMinutes = minutes; best = { key, entry, timeframe: tf }; }
+    }
+    return best;
+  }
+
+  for (const trade of orderedOpenTrades) {
     const { symbol, timeframe, entryPrice } = trade;
     const key = `${symbol}|${timeframe}`;
     const ticker = String(symbol || '').split(':').pop()?.toUpperCase() || '';
@@ -2259,12 +2416,20 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
 
     const sym = symbol.replace(/^[^:]+:/, '');
     const tf  = timeframe === 'D' ? '1D' : timeframe === 'W' ? '1W' : `${timeframe}m`;
+    // Whether a webhook has actually been sent for this exact position — checked once here so it's
+    // available both for the alert message marker below and the quota/eviction priority further
+    // down, rather than recomputed in each place.
+    const isWebhookSent = webhookSentKeys.has(key) || webhookSentKeys.has(normKey);
     // Two alerts per open trade (avg stop + avg target) — the max-MAE/max-MFE pair was
     // dropped to fit the account's alert quota (user decision 2026-07-23). All four levels
     // are still computed and stored in the baseline for the dashboard's Alert Levels column.
+    // "Open Pos" marks a position with a real order placed at the executor (vs. just being
+    // tracked/monitored) so it reads at a glance from the TradingView alert list/notification
+    // itself, without cross-checking the dashboard.
+    const posMarker = isWebhookSent ? ' | Open Pos' : '';
     const alertDefs = [
-      { price: levels.stopAvg,   msg: `${sym} ${tf} | Stop avg MAE ${stats.avgAdversePct}% | Entry ${entryNum}` },
-      { price: levels.targetAvg, msg: `${sym} ${tf} | Target avg MFE ${stats.avgFavorablePct}% | Entry ${entryNum}` },
+      { price: levels.stopAvg,   msg: `${sym} ${tf}${posMarker} | Stop avg MAE ${stats.avgAdversePct}% | Entry ${entryNum}` },
+      { price: levels.targetAvg, msg: `${sym} ${tf}${posMarker} | Target avg MFE ${stats.avgFavorablePct}% | Entry ${entryNum}` },
     ];
 
     // Respect alert quota — save levels to baseline so the dashboard can show them even
@@ -2272,10 +2437,40 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
     // overflow monitoring (see processLevelViolationsAndCleanup), so the label is deferred
     // to "Local alert i/n" (computed after the loop) rather than exposing the raw quota math.
     if (usedSlots + alertDefs.length > MAX_ALERTS) {
-      const enrichedIndex = enriched.length;
-      enriched.push({ ...trade, excursionStats: stats, alertLevels: levels, alertsCreated: false, alertsSkipReason: null });
-      quotaOverflow.push({ enrichedIndex, key, entryNum, stats, levels, stored });
-      continue;
+      let evictedKey = null;
+      if (isWebhookSent) {
+        const rawForEviction = parseJsonFile(baselinePath, {});
+        const candidate = findEvictionCandidate(rawForEviction.excursion_alerts);
+        if (candidate) {
+          try {
+            await alerts.deleteAlerts({ alert_ids: candidate.entry.alert_ids });
+            rawForEviction.excursion_alerts[candidate.key] = {
+              ...candidate.entry,
+              created: false,
+              alert_ids: [],
+              skip_reason: `Evicted for webhook-sent ${sym} ${tf}`,
+            };
+            writeJsonFile(baselinePath, rawForEviction);
+            evictedKey = candidate.key;
+            // Re-check the real count rather than assume both alert_ids in the pair were
+            // still active — one side (typically the stop) may have already self-fired and
+            // gone inactive, in which case it wasn't counted against usedSlots to begin with.
+            try {
+              const freshList = await alerts.list();
+              usedSlots = (freshList.alerts || []).filter(a => a.active).length;
+            } catch {
+              usedSlots = Math.max(0, usedSlots - candidate.entry.alert_ids.length);
+            }
+          } catch {}
+        }
+      }
+      if (!evictedKey) {
+        const enrichedIndex = enriched.length;
+        enriched.push({ ...trade, excursionStats: stats, alertLevels: levels, alertsCreated: false, alertsSkipReason: null });
+        quotaOverflow.push({ enrichedIndex, key, entryNum, stats, levels, stored });
+        continue;
+      }
+      // Eviction freed a slot — fall through to create this (higher-priority) trade's alerts below.
     }
 
     let allCreated = true;
@@ -2350,7 +2545,54 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
 // Checks run at each watchlist's own scan cadence — a 15m trade is checked every 15 minutes,
 // a 4H trade every 4 hours. That granularity (vs TradingView's tick-level alerts) is the
 // accepted tradeoff for levels that don't fit the alert quota.
-export function processLevelViolationsAndCleanup({ results = [], baselinePath, timezone = DEFAULT_MARKET_HOURS.timezone } = {}) {
+/**
+ * excursion_alerts entries whose symbol/timeframe is no longer part of ANY current watchlist —
+ * the TradingView-alert twin of findWatchlistOrphans() in trade_log.js. The EXIT-driven cleanup
+ * below only fires for entries a scan actually observes reading EXIT, which requires that exact
+ * symbol/timeframe to still be scanned at all. A symbol dropped from its watchlist (renamed
+ * watchlist, removed symbol, or fully orphaned like KORU) leaves that path with nothing to ever
+ * trigger it — the TradingView alert just sits active until it self-fires or hits its ~30-day
+ * expiration. Verified live 2026-07-28: TSLA|1D, USO|60, EDC|60 all carried active, never-fired
+ * alerts with no path back to cleanup; MU|30's stop-side alert had already self-fired hours
+ * earlier, unnoticed, because MU|30 hadn't been scanned since it dropped out of "Swing 30m".
+ */
+function findOrphanedExcursionAlerts(baseline, watchlistNames = null) {
+  // baseline.watchlists accumulates dead entries under old names forever — nothing ever deletes
+  // them on a rename (confirmed live: "Swing 30min" still sits in the baseline, superseded by
+  // "Swing 30m", but syncWatchlistSymbolsFromTradingView only ever iterates rules.json's
+  // configured names). Treating every baseline.watchlists key as "real" would have missed exactly
+  // the MU|30 case this function exists to catch: MU is only in the dead "Swing 30min" entry, not
+  // the real "Swing 30m" one. When watchlistNames isn't given (no rules available), fall back to
+  // trusting every baseline entry rather than risk flagging everything as orphaned.
+  const allowedNames = Array.isArray(watchlistNames) ? new Set(watchlistNames) : null;
+  const inWatchlists = new Set(); // "TICKER|rawTimeframe", e.g. "MU|30"
+  for (const [name, w] of Object.entries(baseline?.watchlists || {})) {
+    if (allowedNames && !allowedNames.has(name)) continue;
+    const tf = String(w?.timeframe ?? '');
+    for (const s of w?.symbols || []) {
+      const ticker = String(s ?? '').split(':').pop()?.toUpperCase() || '';
+      if (ticker) inWatchlists.add(`${ticker}|${tf}`);
+    }
+  }
+  const orphans = [];
+  for (const [key, entry] of Object.entries(baseline?.excursion_alerts || {})) {
+    const pipe = key.lastIndexOf('|');
+    if (pipe < 0) continue;
+    const ticker = key.slice(0, pipe).split(':').pop()?.toUpperCase() || '';
+    const tf = key.slice(pipe + 1);
+    if (inWatchlists.has(`${ticker}|${tf}`)) continue;
+    orphans.push({
+      key,
+      ticker,
+      timeframe: tf,
+      alert_ids: Array.isArray(entry?.alert_ids) ? entry.alert_ids : [],
+      created: Boolean(entry?.created),
+    });
+  }
+  return orphans;
+}
+
+export function processLevelViolationsAndCleanup({ results = [], baselinePath, timezone = DEFAULT_MARKET_HOURS.timezone, watchlistNames = null } = {}) {
   const raw = parseJsonFile(baselinePath, {});
   if (!raw.excursion_alerts || Object.keys(raw.excursion_alerts).length === 0) {
     return { violation_lines: [], violations: [], cleaned: [] };
@@ -2432,8 +2674,21 @@ export function processLevelViolationsAndCleanup({ results = [], baselinePath, t
     }
   }
 
+  // Symbols/timeframes that dropped out of every watchlist entirely — see
+  // findOrphanedExcursionAlerts for why the EXIT-driven pass above can never catch these.
+  const orphaned = findOrphanedExcursionAlerts(raw, watchlistNames);
+  for (const orphan of orphaned) {
+    if (orphan.created && orphan.alert_ids.length > 0) {
+      if (!Array.isArray(raw.pending_alert_cleanup)) raw.pending_alert_cleanup = [];
+      raw.pending_alert_cleanup.push({ key: orphan.key, alert_ids: orphan.alert_ids, closed_at: new Date().toISOString(), reason: 'orphaned_from_watchlist' });
+    }
+    delete raw.excursion_alerts[orphan.key];
+    cleaned.push(orphan.key);
+    dirty = true;
+  }
+
   if (dirty) writeJsonFile(baselinePath, raw);
-  return { violation_lines: violations.map((v) => v.line), violations, cleaned };
+  return { violation_lines: violations.map((v) => v.line), violations, cleaned, orphaned };
 }
 
 // Drains baseline.pending_alert_cleanup — TradingView alert ids left behind by trades that
@@ -2608,6 +2863,22 @@ export async function runSignalJob({
     baseline.watchlists = syncResult.watchlists;
   }
 
+  // A real reconciliation happened (the twice-daily live resync, not every 15-min scan) — recompute
+  // which logged tickers no longer belong to any watchlist and persist it onto the baseline so it
+  // survives until the next reconciliation, the same reason buildWatchlistSyncFromBaseline exists
+  // above: writeLatestStatus() overwrites the whole status file every run, so an in-memory-only
+  // value would flicker to empty on every non-sync scan in between. Detection only — nothing is
+  // archived automatically; see the "Archive Now" flow this feeds on the dashboard.
+  if (Array.isArray(syncResult?.synced) && syncResult.synced.length > 0) {
+    try {
+      const orphans = tradeLog.findWatchlistOrphans(baseline, Object.keys(rules.watchlists || {}));
+      baseline.trade_log_orphans = orphans;
+      const raw = parseJsonFile(baselinePath, {});
+      raw.trade_log_orphans = orphans;
+      writeJsonFile(baselinePath, raw);
+    } catch {}
+  }
+
   let dueScanTargets = force ? scanTargets : filterScanTargetsBySchedule(scanTargets, now, marketHours, baseline.watchlists);
   if (Array.isArray(watchlistNames) && watchlistNames.length > 0) {
     const filterSet = new Set(watchlistNames);
@@ -2636,7 +2907,10 @@ export async function runSignalJob({
     onWatchlistComplete,
   });
 
-  result.watchlist_sync = Array.isArray(syncResult?.synced) ? syncResult.synced : [];
+  result.watchlist_sync = Array.isArray(syncResult?.synced) && syncResult.synced.length > 0
+    ? syncResult.synced
+    : buildWatchlistSyncFromBaseline(baseline);
+  result.trade_log_orphans = Array.isArray(baseline.trade_log_orphans) ? baseline.trade_log_orphans : [];
   result.watchlistOptions = Array.isArray(syncResult?.watchlistOptions) ? syncResult.watchlistOptions : [];
   result.activeWatchlistName = syncResult?.activeWatchlistName || null;
   result.strategy_mismatch = strategyCheck.mismatch || null;
@@ -2646,6 +2920,7 @@ export async function runSignalJob({
     results: result.all_scan_results,
     baselinePath,
     timezone: marketHours.timezone || DEFAULT_MARKET_HOURS.timezone,
+    watchlistNames: Object.keys(rules.watchlists || {}),
   });
   result.level_violations = levelCheck.violations;
   if (levelCheck.violation_lines.length > 0) {
@@ -2684,6 +2959,9 @@ export async function runSignalJob({
   // dashboard-triggered or ad-hoc scan can ever place a live order while debugging.
   result.webhook_dispatch = notify
     ? await dispatchTradeWebhooks(result.notify_signal_events || [], rules)
+    : { sent: [], skipped: [], failed: [], armed: [] };
+  result.webhook_exit_dispatch = notify
+    ? await dispatchExitWebhooks(result.notify_exit_events || [], rules)
     : { sent: [], skipped: [], failed: [], armed: [] };
 
   writeLatestStatus(result);
@@ -2746,6 +3024,77 @@ async function dispatchTradeWebhooks(events, rules) {
       // Deliberately NOT recorded as sent, so the next scan retries.
       out.failed.push({ symbol: payload.symbol, tag: payload.tag, error: res.error });
       console.error(`[webhook] FAILED ${payload.symbol} (${payload.tag}): ${res.error}`);
+    }
+  }
+  return out;
+}
+
+/**
+ * Send the trade webhook's closing order for every eligible EXIT whose matching entry was itself
+ * sent via this webhook — never for a position this system doesn't know it opened at the executor,
+ * even if the same symbol/timeframe genuinely closed today. That's a deliberate, narrower scope than
+ * dispatchTradeWebhooks' entry side: sending a close order for a position Railway was never told
+ * about could error out, or — worse, if the receiver doesn't validate — open an unintended opposite
+ * position instead of closing anything.
+ *
+ * Same three gates as dispatchTradeWebhooks, plus a fourth that's the entire point of this function:
+ *   1. notify (real scheduled scan only),
+ *   2. timeframe armed,
+ *   3. alreadySent(key) — the matching ENTRY (same ticker|tag|entryTime) was sent via this webhook,
+ *   4. !alreadyExitSent(key) — this exit hasn't already gone out.
+ * Side is inverted from the position's entry side via exitOrderAction (closing a LONG is a sell,
+ * closing a SHORT is a buy) — passed as buildWebhookPayload's `action` override so it isn't re-run
+ * through the entry-side mapping a second time.
+ */
+async function dispatchExitWebhooks(events, rules) {
+  const out = { sent: [], skipped: [], failed: [], armed: [] };
+  if (!Array.isArray(events) || events.length === 0) return out;
+
+  const settings = loadWebhookSettings(rules);
+  out.armed = settings.enabledTimeframes;
+  if (settings.enabledTimeframes.length === 0) return out;
+
+  const creds = loadWebhookCredentials();
+  if (!creds.configured) {
+    out.skipped.push({ reason: "not_configured", count: events.length });
+    return out;
+  }
+
+  for (const ev of events) {
+    if (!settings.enabledTimeframes.includes(String(ev.timeframe))) continue;
+    // Keyed on entry_time, not exit_time — this must match the exact key the opening webhook (if
+    // any) was recorded under, since that record's existence is the gate below.
+    const key = sentKey({ symbol: ev.symbol, timeframe: ev.timeframe, entryTime: ev.entry_time });
+    if (!key) {
+      out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "no_entry_time" });
+      continue;
+    }
+    if (!alreadySent(key)) {
+      out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "entry_not_sent_by_us" });
+      continue;
+    }
+    if (alreadyExitSent(key)) {
+      out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "already_sent" });
+      continue;
+    }
+
+    const payload = buildWebhookPayload({
+      symbol: ev.symbol,
+      action: exitOrderAction(ev.side),
+      timeframe: ev.timeframe,
+      price: ev.exit_price,
+      group: settings.group,
+      secret: creds.secret,
+    });
+    const res = await sendTradeWebhook({ url: creds.url, payload });
+    if (res.success) {
+      recordExitSent(key, { symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price, source: "auto-exit" });
+      out.sent.push({ symbol: payload.symbol, tag: payload.tag, side: payload.side });
+      console.log(`[webhook] sent EXIT ${payload.side} ${payload.symbol} (${payload.tag}) @ ${payload.price}`);
+    } else {
+      // Deliberately NOT recorded as sent, so the next scan retries.
+      out.failed.push({ symbol: payload.symbol, tag: payload.tag, error: res.error });
+      console.error(`[webhook] EXIT FAILED ${payload.symbol} (${payload.tag}): ${res.error}`);
     }
   }
   return out;
