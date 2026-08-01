@@ -7,6 +7,96 @@
       "price": "170.35",
       "source": "manual",
       "at": "2026-07-28T18:48:55.039Z"
+    },
+    "UDOW|30m|2026-07-29T14:00:00.000Z": {
+      "symbol": "UDOW",
+      "tag": "30m",
+      "side": "buy",
+      "price": "68.85",
+      "source": "manual",
+      "at": "2026-07-29T14:33:14.778Z",
+      "exit": {
+        "symbol": "UDOW",
+        "tag": "30m",
+        "side": "sell",
+        "price": "68.85",
+        "order_type": "market",
+        "time_in_force": "gtc",
+        "source": "manual-exit",
+        "at": "2026-07-31T17:41:50.348Z"
+      }
+    },
+    "FTV|1h|2026-07-29T14:00:00.000Z": {
+      "symbol": "FTV",
+      "tag": "1h",
+      "side": "buy",
+      "price": "61.43",
+      "source": "manual",
+      "at": "2026-07-29T15:02:29.997Z"
+    },
+    "AME|1h|2026-07-29T15:00:00.000Z": {
+      "symbol": "AME",
+      "tag": "1h",
+      "side": "buy",
+      "price": "236.57",
+      "source": "manual",
+      "at": "2026-07-29T15:13:27.583Z",
+      "exit": {
+        "symbol": "AME",
+        "tag": "1h",
+        "side": "sell",
+        "price": "243.2",
+        "order_type": "limit",
+        "time_in_force": "gtc",
+        "source": "manual-exit",
+        "at": "2026-07-31T17:35:23.834Z"
+      }
+    },
+    "FR|1h|2026-07-29T13:00:00.000Z": {
+      "symbol": "FR",
+      "tag": "1h",
+      "side": "buy",
+      "price": "65.78",
+      "source": "manual",
+      "at": "2026-07-29T15:15:24.589Z"
+    },
+    "OII|30m|2026-07-28T20:00:00.000Z": {
+      "symbol": "OII",
+      "tag": "30m",
+      "side": "buy",
+      "price": "47.42",
+      "source": "manual",
+      "at": "2026-07-29T17:31:43.628Z",
+      "exit": {
+        "symbol": "OII",
+        "tag": "30m",
+        "side": "sell",
+        "price": "15m closed",
+        "note": null,
+        "sent": false,
+        "source": "manual-close",
+        "at": "2026-07-31T19:49:32.053Z"
+      }
+    },
+    "ARQT|2h|2026-07-31T16:00:00.000Z": {
+      "symbol": "ARQT",
+      "tag": "2h",
+      "side": "buy",
+      "price": "26.49",
+      "order_type": "market",
+      "time_in_force": "gtc",
+      "source": "manual",
+      "at": "2026-07-31T19:14:54.158Z"
+    },
+    "DRN|2h|2026-07-31T16:00:00.000Z": {
+      "symbol": "DRN",
+      "tag": "2h",
+      "side": "buy",
+      "price": "11.2",
+      "order_type": "market",
+      "time_in_force": "gtc",
+      "source": "manual",
+      "at": "2026-07-31T19:31:51.174Z"
     }
   }
 }
