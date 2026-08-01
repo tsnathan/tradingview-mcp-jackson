@@ -118,6 +118,29 @@
     .warn-box { background:#2a1f0d; border:1px solid #78350f; border-left:4px solid #f59e0b; border-radius:10px; padding:14px 16px; margin:12px 0; }
     .warn-box h3 { margin:0 0 8px; font-size:15px; color:#fbbf24; }
     .warn-box p { margin:6px 0; line-height:1.55; }
+    /* Collapsible variant. The headline lives in <summary> and is ALWAYS visible — only the
+       explanation folds away, so a collapsed stack still states every caveat it is warning about. */
+    details.warn-box { padding:0; }
+    details.warn-box > summary {
+      list-style:none; cursor:pointer; padding:10px 16px; font-size:15px; font-weight:700;
+      color:#fbbf24; display:flex; align-items:center; gap:9px;
+    }
+    details.warn-box > summary::-webkit-details-marker { display:none; }
+    details.warn-box > summary::before {
+      content:'\25B8'; display:inline-block; font-size:12px; line-height:1; transition:transform .15s;
+    }
+    details.warn-box[open] > summary::before { transform:rotate(90deg); }
+    details.warn-box > summary:hover { color:#fcd34d; }
+    details.warn-box > summary:focus-visible { outline:2px solid #f59e0b; outline-offset:-2px; border-radius:8px; }
+    details.warn-box .warn-body { padding:0 16px 12px; }
+    details.warn-box .warn-body > :first-child { margin-top:0; }
+    details.warn-box .warn-body p { margin:6px 0; line-height:1.55; }
+    .warn-stack-tools { display:flex; justify-content:flex-end; margin:12px 0 -4px; }
+    .warn-stack-tools button {
+      background:none; border:none; color:#98a7c6; font-size:11px; cursor:pointer; padding:2px 4px;
+      font-family:inherit; text-decoration:underline;
+    }
+    .warn-stack-tools button:hover { color:#e5eefc; }
     .num { font-family:monospace; text-align:right; }
     .pos { color:#6ee7a8; } .neg { color:#fca5a5; } .dim { color:#98a7c6; }
     .tag { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
@@ -2981,6 +3004,64 @@
     document.getElementById('edge-refresh').addEventListener('click', () => loadEdgeAnalysis());
     document.getElementById('edge-min-trades').addEventListener('change', () => loadEdgeAnalysis());
 
+    /* ---------- collapsible warn boxes ----------
+       These carry real caveats about the numbers they sit above (understated drawdown, closed-trades-
+       only, capacity binding), so collapsing must never hide WHAT is being warned about — only the
+       explanation. The headline stays in the always-visible <summary>.
+
+       Collapsed is the default because a full stack pushed the actual results below the fold. State is
+       remembered per box (keyed on its headline, not its position, so it survives boxes appearing and
+       disappearing between runs) — re-collapsing after every simulation would be worse than the
+       original complaint. */
+    const warnOpenState = (() => {
+      try { return JSON.parse(localStorage.getItem('warnBoxOpen') || '{}'); } catch { return {}; }
+    })();
+
+    function warnKey(title) {
+      return String(title).replace(/<[^>]+>/g, '').replace(/\d+/g, '#')  // digits vary per run; the box does not
+        .replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 70);
+    }
+
+    function warnBox(title, body) {
+      const k = warnKey(title);
+      return `<details class="warn-box" data-warn="${k}"${warnOpenState[k] ? ' open' : ''}>`
+        + `<summary>${title}</summary><div class="warn-body">${body}</div></details>`;
+    }
+
+    /** Render a list of {title, body} as a collapsible stack, with an expand/collapse-all control. */
+    function warnStack(items) {
+      if (!items.length) return '';
+      const anyOpen = items.some((w) => warnOpenState[warnKey(w.title)]);
+      return `<div class="warn-stack-tools"><button type="button" data-warn-all="${anyOpen ? 'collapse' : 'expand'}">`
+        + `${anyOpen ? 'Collapse' : 'Expand'} all ${items.length} note${items.length > 1 ? 's' : ''}</button></div>`
+        + items.map((w) => warnBox(w.title, w.body)).join('');
+    }
+
+    // `toggle` does not bubble, so delegation needs the capture phase — without `true` this listener
+    // never fires and every box silently forgets its state.
+    document.addEventListener('toggle', (e) => {
+      const d = e.target;
+      if (!d || d.tagName !== 'DETAILS' || !d.dataset.warn) return;
+      warnOpenState[d.dataset.warn] = d.open;
+      try { localStorage.setItem('warnBoxOpen', JSON.stringify(warnOpenState)); } catch {}
+      const tools = d.parentElement?.querySelector('[data-warn-all]');
+      if (tools) {
+        const boxes = [...d.parentElement.querySelectorAll('details.warn-box')];
+        const anyOpen = boxes.some((b) => b.open);
+        tools.dataset.warnAll = anyOpen ? 'collapse' : 'expand';
+        tools.textContent = `${anyOpen ? 'Collapse' : 'Expand'} all ${boxes.length} note${boxes.length > 1 ? 's' : ''}`;
+      }
+    }, true);
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest?.('[data-warn-all]');
+      if (!btn) return;
+      const expand = btn.dataset.warnAll === 'expand';
+      // Setting .open fires `toggle` on each box, so persistence and the button label are handled by
+      // the listener above rather than duplicated here.
+      btn.parentElement.parentElement.querySelectorAll('details.warn-box').forEach((d) => { d.open = expand; });
+    });
+
     const n1 = (v) => (Number.isFinite(v) ? v.toFixed(1) : '—');
     const n2 = (v) => (Number.isFinite(v) ? v.toFixed(2) : '—');
     const n0 = (v) => (Number.isFinite(v) ? Math.round(v).toString() : '—');
@@ -3279,21 +3360,21 @@
           "correct" — CAGR is the right lens for a compounding portfolio equity curve, Expected is
           the right lens for "what does a trade like this actually pay, this often."</p>
         </div>
-        ${shortSpan > 0 ? `
-        <div class="warn-box">
-          <h3>${shortSpan} of ${qualified.length} symbols have under a year of history</h3>
-          <p>Annualizing a few months magnifies noise — a good 3-month run becomes a spectacular CAGR
-          that will not repeat. This does not distort ranking <em>within</em> a timeframe (all its
-          symbols share the same window), but treat the absolute CAGR of a short-span row as
-          indicative rather than predictive.</p>
-        </div>` : ''}
-        ${totalMarginCalls > 0 ? `
-        <div class="warn-box">
-          <h3>${totalMarginCalls} margin-call exits detected</h3>
-          <p>Margin calls fire on the <em>same bar as entry</em>, liquidating a token quantity — the
-          strategy is requesting more size than buying power allows. This is position sizing set at
-          ~100% of equity on leveraged ETFs, not a signal-quality problem.</p>
-        </div>` : ''}
+        ${warnStack([
+          ...(shortSpan > 0 ? [{
+            title: `${shortSpan} of ${qualified.length} symbols have under a year of history`,
+            body: `<p>Annualizing a few months magnifies noise — a good 3-month run becomes a spectacular
+              CAGR that will not repeat. This does not distort ranking <em>within</em> a timeframe (all its
+              symbols share the same window), but treat the absolute CAGR of a short-span row as
+              indicative rather than predictive.</p>`,
+          }] : []),
+          ...(totalMarginCalls > 0 ? [{
+            title: `${totalMarginCalls} margin-call exits detected`,
+            body: `<p>Margin calls fire on the <em>same bar as entry</em>, liquidating a token quantity —
+              the strategy is requesting more size than buying power allows. This is position sizing set
+              at ~100% of equity on leveraged ETFs, not a signal-quality problem.</p>`,
+          }] : []),
+        ])}
       `;
     }
 
@@ -3617,37 +3698,44 @@
 
       const warns = [];
       if (r.fillRate < 50) {
-        warns.push(`<h3>Capacity is the binding constraint</h3>
-          <p>Only ${n0(r.fillRate)}% of signals could be taken — ${r.signalsSkipped} were skipped because every
-          slot was occupied. At this slot count you are not trading the strategy, you are trading a
-          near-arbitrary subset of it, chosen by arrival time. Check the Capacity Sweep below.</p>`);
+        warns.push({
+          title: `Capacity is the binding constraint — only ${n0(r.fillRate)}% of signals taken`,
+          body: `<p>${r.signalsSkipped} signals were skipped because every slot was occupied. At this slot
+            count you are not trading the strategy, you are trading a near-arbitrary subset of it, chosen
+            by arrival time. Check the Capacity Sweep below.</p>`,
+        });
       }
       if (r.maeDrawdownEst > r.maxDrawdownPct * 1.5) {
-        warns.push(`<h3>True drawdown is worse than the curve shows</h3>
-          <p>The equity curve is marked only at exits, so it cannot show pain felt while positions were
-          still open. Using each trade's logged MAE and assuming concurrent positions bottom together
-          gives ${n1(r.maeDrawdownEst)}% against the realized ${n1(r.maxDrawdownPct)}%. Reality sits between
-          the two — size for the higher number.</p>`);
+        warns.push({
+          title: `True drawdown is worse than the curve shows — ${n1(r.maeDrawdownEst)}% vs ${n1(r.maxDrawdownPct)}% realized`,
+          body: `<p>The equity curve is marked only at exits, so it cannot show pain felt while positions
+            were still open. That estimate uses each trade's logged MAE and assumes concurrent positions
+            bottom together. Reality sits between the two — size for the higher number.</p>`,
+        });
       }
       // `years` is the union span of every selected timeframe, so a timeframe with much less logged
       // history than the others has its trades annualized over years it never traded in. The run is
       // still real; what it describes just is not what the timeframe chips suggest.
       const thinSpans = (r.timeframeSpans || []).filter((s) => s.coveragePct < 80);
       if ((r.timeframeSpans || []).length > 1 && thinSpans.length) {
-        warns.push(`<h3>Selected timeframes span very different histories</h3>
-          <p>CAGR and Expected are annualized over the full ${n1(r.years)}y run, which is the union of
-          every selected timeframe's history —
-          ${thinSpans.map((s) => `<strong>${s.timeframe}</strong> covers only ${n0(s.coveragePct)}% of it
-          (${s.startAt} → ${s.endAt}, ${s.trades} signals)`).join('; ')}.
-          Those trades are being annualized over years they were not available for, and for the
-          uncovered stretch the portfolio was really running the other timeframes alone. Compare
-          timeframes one at a time before reading anything into the combined figure.</p>`);
+        warns.push({
+          title: `Selected timeframes span very different histories — ${thinSpans.map((s) => s.timeframe).join(', ')} ${thinSpans.length > 1 ? 'cover' : 'covers'} under 80% of the run`,
+          body: `<p>CAGR and Expected are annualized over the full ${n1(r.years)}y run, which is the union of
+            every selected timeframe's history —
+            ${thinSpans.map((s) => `<strong>${s.timeframe}</strong> covers only ${n0(s.coveragePct)}% of it
+            (${s.startAt} → ${s.endAt}, ${s.trades} signals)`).join('; ')}.
+            Those trades are being annualized over years they were not available for, and for the
+            uncovered stretch the portfolio was really running the other timeframes alone. Compare
+            timeframes one at a time before reading anything into the combined figure.</p>`,
+        });
       }
-      warns.push(`<h3>Closed trades only</h3>
-        <p>Positions still open are absent from the log, and they are disproportionately losers — winners
-        close, losers ride. This simulation is therefore optimistic by an amount it cannot measure. The
-        open positions currently carrying −25% or worse are the ones missing here.</p>`);
-      document.getElementById('ps-warn').innerHTML = warns.map((w) => `<div class="warn-box">${w}</div>`).join('');
+      warns.push({
+        title: 'Closed trades only — this simulation is optimistic',
+        body: `<p>Positions still open are absent from the log, and they are disproportionately losers —
+          winners close, losers ride. This simulation is therefore optimistic by an amount it cannot
+          measure. The open positions currently carrying −25% or worse are the ones missing here.</p>`,
+      });
+      document.getElementById('ps-warn').innerHTML = warnStack(warns);
     }
 
     function renderPsCapitalUtilization(r) {
@@ -3917,29 +4005,35 @@
       const out = [];
       const shownRule = selectedRule === 'all' ? null : selectedRule;
       if ((r.ruleType || null) !== (shownRule || null)) {
-        out.push(`<h3>This result is for a different exit rule</h3>
-          <p>The stored sweep was run on <strong>${r.ruleType || 'all pooled'}</strong>, but the chips above
+        out.push({
+          title: `This result is for a different exit rule (${r.ruleType || 'all pooled'}, not ${shownRule || 'all pooled'})`,
+          body: `<p>The stored sweep was run on <strong>${r.ruleType || 'all pooled'}</strong>, but the chips above
           are set to <strong>${shownRule || 'all pooled'}</strong>. Exit-rule variants are different
-          strategies, so these numbers do not describe the current selection. Re-run to update.</p>`);
+          strategies, so these numbers do not describe the current selection. Re-run to update.</p>`,
+        });
       }
       if (Number.isFinite(d.newTrades) && d.newTrades >= 50) {
-        out.push(`<h3>${d.newTrades.toLocaleString()} trades logged since this sweep</h3>
-          <p>The sweep is a snapshot of a log that grows on every scan — it was computed from
+        out.push({
+          title: `${d.newTrades.toLocaleString()} trades logged since this sweep`,
+          body: `<p>The sweep is a snapshot of a log that grows on every scan — it was computed from
           ${r.tradeCount.toLocaleString()} closed trades and there are now
           ${d.currentTradeCount.toLocaleString()}. The ordering is usually stable, but re-run before
-          acting on a close call.</p>`);
+          acting on a close call.</p>`,
+        });
       }
       if (r.quick) {
-        out.push(`<h3>Quick sweep — shortlist computed, grid ${r.gridFrom ? 'carried over' : 'skipped'}</h3>
-          <p>The recommendation below is unaffected — the quick path drops evidence, it does not change
+        out.push({
+          title: `Quick sweep — shortlist computed, grid ${r.gridFrom ? 'carried over' : 'skipped'}`,
+          body: `<p>The recommendation below is unaffected — the quick path drops evidence, it does not change
           the answer. ${r.gridFrom
             ? `The grid sections (timeframe contribution, slot count, walk-forward) below are <strong>not</strong>
                from this run: they were measured ${new Date(r.gridFrom.generatedAt).toLocaleString()} on
                ${r.gridFrom.tradeCount.toLocaleString()} trades and are kept so a 30-second click does not
                discard a four-minute result. Each of those cards says so too.`
-            : 'The grid sections below have no data yet — run the full sweep for them.'}</p>`);
+            : 'The grid sections below have no data yet — run the full sweep for them.'}</p>`,
+        });
       }
-      el.innerHTML = out.map((w) => `<div class="warn-box">${w}</div>`).join('');
+      el.innerHTML = warnStack(out);
     }
 
     function renderSweetSpotHeadline(r) {
@@ -3992,7 +4086,8 @@
             <th class="num" title="Average rank by out-of-sample CAGR alone — the column published in PORTFOLIO_RECKONER.md">CAGR rank</th>
             <th class="num" title="Mean of the CAGR rank and the CAGR/DD rank in each window. Lower is better on both axes at once — this is what drives the best all-round pick.">both-axes</th>
             <th class="num" title="Worst single-window CAGR rank. A strong average built on one dominant window is not a finding.">worst</th>
-            ${windows.map((w) => `<th class="num" title="Out-of-sample window starting ${w.splitAt}">OOS ${w.splitAt.slice(5)}</th>`).join('')}</tr></thead>
+            ${windows.map((w) => `<th class="num" title="Out-of-sample window starting ${w.splitAt}">OOS ${w.splitAt.slice(5)}</th>`).join('')}
+            <th></th></tr></thead>
           <tbody>${rows.map((x) => {
             const perWindow = windows.map((w) => w.scored.find((s) => s.label === x.label));
             const isBest = r.bestAllRound && x.label === r.bestAllRound.label;
@@ -4007,6 +4102,9 @@
               <td class="num"><strong>${x.rankOverall.toFixed(2)}</strong></td>
               <td class="num dim">${x.worstRank}</td>
               ${perWindow.map((s) => `<td class="num ${cls(s?.cagr)}">${s && Number.isFinite(s.cagr) ? n1(s.cagr) + '%' : '—'}</td>`).join('')}
+              <td><button type="button" class="btn sw-to-sim" style="padding:2px 8px;font-size:11px;font-weight:400;"
+                data-tfs="${x.timeframes.join(',')}" data-slots="${x.slots}"
+                title="Load these timeframes, this slot count and the Top-20 universe into the Portfolio Sim">&rarr; Sim</button></td>
             </tr>`;
           }).join('')}</tbody>
         </table></div>
@@ -4019,7 +4117,24 @@
           <strong>Expected</strong> is the same return without compounding, so the gap between it and CAGR is
           how much of the headline number is the exponent rather than the trades; a config whose ordering
           holds in both columns is the one to trust.
-        </p>`;
+        </p>
+        <div class="warn-box" style="font-size:12px;">
+          <h3 style="font-size:13px;">These numbers will not match the Portfolio Sim tab</h3>
+          <p style="margin:4px 0;">Two deliberate differences, and both move the result a long way:</p>
+          <p style="margin:4px 0;"><strong>Universe.</strong> Every row here runs the <strong>Top 20 by
+            expectancy</strong>, re-picked inside each window's in-sample half. The Portfolio Sim defaults
+            to <strong>All</strong> symbols, where far more signals compete for the same slots — that alone
+            takes <code>15m+30m @ 3</code> from ~63% fill down to ~19%, and the CAGR with it.</p>
+          <p style="margin:4px 0;"><strong>Window.</strong> These columns score <strong>only the
+            out-of-sample stretch</strong> after each split (3–6 months each), then average the three. The
+            Portfolio Sim runs the <strong>full logged history</strong>. Short windows with heavy
+            compounding is exactly the regime that inflates CAGR — which is what the Expected column and the
+            first caveat below are for.</p>
+          <p style="margin:4px 0;">The <strong>&rarr; Sim</strong> button copies a row's timeframes, slot
+            count and the Top-20 universe across so you can inspect its equity curve and contention. It
+            fixes the universe difference but <em>not</em> the window one, so expect a lower CAGR there —
+            that is the honest full-history number, not a disagreement.</p>
+        </div>`;
     }
 
     function renderSweetSpotTf(r) {
@@ -4163,21 +4278,62 @@
       const ddNote = r && r.bestAllRound
         ? `Its ${n1(r.bestAllRound.dd)}% average is realistically closer to ${n1(r.bestAllRound.dd * 3.5)}%.`
         : '';
-      document.getElementById('sw-caveats').innerHTML = `
-        <div class="warn-box"><h3>Magnitudes are not forecasts</h3>
-          <p>Out-of-sample windows are months, not years, with heavy compounding, so a three-figure CAGR
-          is not an expectation. The <strong>ordering</strong> is the finding; the levels are not.</p></div>
-        <div class="warn-box"><h3>Drawdowns are understated roughly 3.5×</h3>
-          <p>The equity curve is marked only at exits, so it cannot show pain felt while positions were
-          still open. Scale every drawdown here accordingly. ${ddNote}</p></div>
-        <div class="warn-box"><h3>Closed trades only</h3>
-          <p>Positions still open are absent from the trade log and are disproportionately losers —
-          winners close, losers ride. Every figure here is optimistic by an amount it cannot measure.</p></div>
-        <div class="warn-box"><h3>Do not add a drawdown or ratio screen on top</h3>
-          <p>Tested and rejected: a per-symbol drawdown cap inverts on expectancy and loses on both CAGR
-          and portfolio drawdown. If capacity is genuinely constrained (fill rate materially under ~65%),
-          trim by expectancy percentile within timeframe — never by a DD cap.</p></div>`;
+      document.getElementById('sw-caveats').innerHTML = warnStack([
+        {
+          title: 'Magnitudes are not forecasts — read the ordering',
+          body: `<p>Out-of-sample windows are months, not years, with heavy compounding, so a three-figure
+            CAGR is not an expectation. The <strong>ordering</strong> is the finding; the levels are not.
+            The Expected column is the same return without compounding, which is the sober read.</p>`,
+        },
+        {
+          title: 'Drawdowns are understated roughly 3.5×',
+          body: `<p>The equity curve is marked only at exits, so it cannot show pain felt while positions
+            were still open. Scale every drawdown here accordingly. ${ddNote}</p>`,
+        },
+        {
+          title: 'Closed trades only — every figure is optimistic',
+          body: `<p>Positions still open are absent from the trade log and are disproportionately losers —
+            winners close, losers ride. Every figure here is optimistic by an amount it cannot measure.</p>`,
+        },
+        {
+          title: 'Do not add a drawdown or ratio screen on top',
+          body: `<p>Tested and rejected: a per-symbol drawdown cap inverts on expectancy and loses on both
+            CAGR and portfolio drawdown. If capacity is genuinely constrained (fill rate materially under
+            ~65%), trim by expectancy percentile within timeframe — never by a DD cap.</p>`,
+        },
+      ]);
     }
+
+    /**
+     * Load a shortlist row's configuration into the Portfolio Sim. Drives that tab's OWN controls
+     * rather than re-deriving anything — the Top-20 picker in particular has non-obvious ranking
+     * rules (expectancy percentile within timeframe, one timeframe per ticker) that must not come to
+     * exist in two places. Note this reproduces the universe and the config, NOT the out-of-sample
+     * window, so the CAGR there is legitimately lower; the card text says so.
+     */
+    async function openConfigInSim(timeframes, slots) {
+      document.querySelector('.tabbtn[data-pane="pane-portfolio"]')?.click();
+      if (!psLoaded) await initPortfolioSim();
+      document.getElementById('ps-max').value = slots;
+      const known = timeframes.filter((t) => psAllTimeframes.some((a) => a.v === t));
+      // An unknown timeframe would silently narrow the selection to nothing and then be reset to
+      // "all" by renderPsTfChips, quietly running a different config than the row claims.
+      if (known.length !== timeframes.length) {
+        document.getElementById('ps-status').textContent =
+          `Note: ${timeframes.filter((t) => !known.includes(t)).join(', ')} not present in this rule's trade log — running the rest.`;
+      }
+      if (!known.length) return;
+      psTfSelected = new Set(known);
+      renderPsTfChips();
+      // Click the tab's own Top-20 control, which applies the universe and runs the simulation.
+      document.getElementById('ps-sym-top20').click();
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest?.('.sw-to-sim');
+      if (!btn) return;
+      openConfigInSim(btn.dataset.tfs.split(','), Number(btn.dataset.slots));
+    });
 
     document.getElementById('sw-run-quick').addEventListener('click', () => startSweetSpot(true));
     document.getElementById('sw-run-full').addEventListener('click', () => startSweetSpot(false));
