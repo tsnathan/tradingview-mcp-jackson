@@ -51,6 +51,12 @@ import { readAllTradeLogs } from "./trade_log.js";
 
 const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
 
+const TF_SORT_ORDER = ["15m", "30m", "45m", "1h", "2h", "3h", "4h", "1d"];
+function tfSortRank(label) {
+  const i = TF_SORT_ORDER.indexOf(label);
+  return i === -1 ? 999 : i;
+}
+
 /**
  * Collapse pyramid tranches into the single position they actually are.
  *
@@ -281,6 +287,12 @@ export function simulatePortfolio({
       entryMs: r.entry_time_ms,
       exitMs: r.exit_time_ms,
       size,
+      // Portfolio equity at the moment this trade was funded. Required to state a return in
+      // portfolio terms: `size` scales with equity, so on a compounding path a dollar P&L means
+      // something different early than late, and only pnlUsd/equityAtEntry is comparable across
+      // the run. An eviction rewrites pnlUsd/exitMs below but never this — the trade really was
+      // funded at this equity regardless of how it ended.
+      equityAtEntry: portfolioValue,
       pnlPct: r.pnl_pct || 0,
       pnlUsd: size * ((r.pnl_pct || 0) / 100),
       maePct: r.mae_pct || 0,
@@ -391,15 +403,73 @@ export function simulatePortfolio({
     if (t.pnlUsd > 0) perSymbol[k].wins++;
   }
 
+  const expectancyUsd = taken.length ? (gp - gl) / taken.length : 0;
+  const tradesPerYear = years > 0 ? taken.length / years : 0;
+
+  // Expected: CAGR's non-compounding sibling — mean per-trade return times how many such trades fit
+  // a year. It has to be measured against the equity that FUNDED each trade, never against the
+  // starting `capital`. Position size is portfolioValue/maxPositions, so on a compounding path a
+  // late trade is sized off a multiple of the opening stake (measured on one real 1.9y run: $20,000
+  // for the first fill, $112,060 for the last), and a mean DOLLAR P&L therefore mixes size regimes
+  // that a fixed denominator cannot reconcile.
+  //
+  // The previous form — (expectancyUsd / capital) * tradesPerYear * 100 — did exactly that, and it
+  // also collapsed algebraically: expectancyUsd is (finalEquity - capital)/n, so multiplying by
+  // n/years cancels n outright and leaves totalReturnPct/years. It reported simple annualized
+  // return under a label promising a trade-frequency measure, and by Bernoulli's inequality that
+  // sits ABOVE CAGR for every profitable run longer than a year (242.9% vs 147.7% on 15m+2h at 5
+  // slots, and the ordering inverted below a year) — an ordering driven by span length, carrying no
+  // information about the strategy. Size-neutral, the same run reads 95.0%, correctly below CAGR.
+  //
+  // Commission is netted per trade because CAGR is already net of it via finalEquity, and the two
+  // numbers are placed side by side to be read against each other.
+  const expectancyPctOfEquity = taken.length
+    ? (taken.reduce(
+      (s, t) => s + (t.equityAtEntry > 0 ? (t.pnlUsd - commissionPerTrade) / t.equityAtEntry : 0),
+      0,
+    ) / taken.length) * 100
+    : 0;
+  const expectedPct = taken.length && years > 0 ? expectancyPctOfEquity * tradesPerYear : null;
+
+  // Per-timeframe spans. `years` above is the UNION span across every selected timeframe, so a
+  // selection mixing 1d (9.7y of logged history) with 30m (0.55y) annualizes the fast timeframe's
+  // trades over a period it did not trade in. That is not an arithmetic error — the portfolio
+  // really did run that long — but it changes what CAGR/Expected describe, invisibly, so the
+  // composition is reported rather than left to be inferred from the trade log.
+  const spanByTf = new Map();
+  for (const r of sorted) {
+    let s = spanByTf.get(r.timeframe);
+    if (!s) spanByTf.set(r.timeframe, (s = { trades: 0, startMs: Infinity, endMs: -Infinity }));
+    s.trades++;
+    if (r.entry_time_ms < s.startMs) s.startMs = r.entry_time_ms;
+    if (r.exit_time_ms > s.endMs) s.endMs = r.exit_time_ms;
+  }
+  const totalSpanMs = endAt - startAt;
+  const timeframeSpans = [...spanByTf.entries()]
+    .map(([timeframe, s]) => ({
+      timeframe,
+      trades: s.trades,
+      startAt: new Date(s.startMs).toISOString().slice(0, 10),
+      endAt: new Date(s.endMs).toISOString().slice(0, 10),
+      years: (s.endMs - s.startMs) / MS_PER_YEAR,
+      coveragePct: totalSpanMs > 0 ? ((s.endMs - s.startMs) / totalSpanMs) * 100 : 100,
+    }))
+    .sort((a, b) => a.coveragePct - b.coveragePct);
+
   return {
     available: true,
     inputs: { capital, maxPositions, priority, timeframes, tickers, commissionPerTrade, ruleType },
     startAt: new Date(startAt).toISOString().slice(0, 10),
     endAt: new Date(endAt).toISOString().slice(0, 10),
     years,
+    // Span of each selected timeframe's own history, ascending by how much of the simulated span it
+    // covers — a low leading coveragePct means CAGR/Expected are annualizing that timeframe over
+    // years it was absent for.
+    timeframeSpans,
     finalEquity,
     totalReturnPct,
     cagr,
+    expectedPct,
     maxDrawdownPct: maxDD,
     maeDrawdownEst,
     cagrDd: maxDD > 0 && cagr !== null ? cagr / maxDD : null,
@@ -414,13 +484,16 @@ export function simulatePortfolio({
     profitFactor: gl > 0 ? gp / gl : null,
     avgWinUsd: wins.length ? gp / wins.length : 0,
     avgLossUsd: losses.length ? -gl / losses.length : 0,
-    expectancyUsd: taken.length ? (gp - gl) / taken.length : 0,
+    expectancyUsd,
+    // The size-neutral companion to expectancyUsd: same average, expressed against the equity that
+    // funded each trade instead of in dollars, so it does not drift as the account compounds.
+    expectancyPctOfEquity,
     equityCurve: downsample(equityCurve, 400),
     occupancy,
     capitalUtilization,
     skippedByKey,
     perSymbol: Object.values(perSymbol).sort((a, b) => b.pnlUsd - a.pnlUsd),
-    tradesPerYear: years > 0 ? taken.length / years : 0,
+    tradesPerYear,
     // See evictPolicy's block comment above: "wouldBeat" compares FINAL outcomes, so it is a
     // hindsight diagnostic of whether contention ever costs anything — not evidence any of this
     // could be acted on live. evictions/evictPolicy are only non-zero when evictPolicy was passed.
@@ -473,6 +546,7 @@ export function sweepMaxPositions({ capital, timeframes, tickers, priority, rank
     out.push({
       maxPositions,
       cagr: r.cagr,
+      expectedPct: r.expectedPct,
       maxDrawdownPct: r.maxDrawdownPct,
       cagrDd: r.cagrDd,
       totalReturnPct: r.totalReturnPct,
@@ -487,4 +561,112 @@ export function sweepMaxPositions({ capital, timeframes, tickers, priority, rank
     });
   }
   return out;
+}
+
+/**
+ * Concurrent open-position count over trailing lookback windows (default last 1/2/3 months),
+ * pooled across the whole book ("overall") and broken out per timeframe. Min/avg/max are
+ * TIME-WEIGHTED over the window, not per-trade averages: positions open and close at unevenly
+ * spaced times, so treating every trade as one equal-weight sample would over/under-count busy
+ * stretches. Instead this sweeps a step function of "how many positions are open right now" across
+ * the window and integrates it — the same technique as measuring average queue depth over time.
+ *
+ * Same "closed trades only" limitation as simulatePortfolio(): a position still open right now has
+ * no exit_time_ms yet, so it is invisible here, and the most recent slice of the window
+ * understates true concurrency by however many positions are open at this instant. This is a
+ * historical/descriptive view, not a live one — the dashboard's Open Trades count is the live figure.
+ *
+ * Pyramid tranches are merged first (mergePositionTranches) so an add-leg doesn't inflate the count
+ * for what is really one logical position — same reasoning as simulatePortfolio's slot allocation.
+ *
+ * `lookbackMonths` windows are 30-day increments back from `now`, not calendar months — simpler and
+ * predictable, and precise calendar-month math buys nothing for a descriptive stat like this one.
+ */
+export function computeOpenPositionConcurrency({
+  ruleType = null,
+  lookbackMonths = [1, 2, 3],
+  now = Date.now(),
+} = {}) {
+  const allRows = readAllTradeLogs({ ruleType });
+  const { positions: allPositions } = mergePositionTranches(allRows, ruleType);
+  const withTimes = allPositions.filter(
+    (p) => Number.isFinite(p.entry_time_ms) && Number.isFinite(p.exit_time_ms) && p.exit_time_ms >= p.entry_time_ms,
+  );
+
+  const timeframes = [...new Set(withTimes.map((p) => p.timeframe))]
+    .filter(Boolean)
+    .sort((a, b) => tfSortRank(a) - tfSortRank(b));
+
+  const nowMs = Number(now);
+  const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
+
+  function sweepWindows(positions) {
+    const out = {};
+    for (const months of lookbackMonths) {
+      const windowStart = nowMs - months * MONTH_MS;
+      const inWindow = positions.filter((p) => p.exit_time_ms >= windowStart && p.entry_time_ms <= nowMs);
+      if (inWindow.length === 0) {
+        out[months] = { min: 0, avg: 0, max: 0, positions: 0 };
+        continue;
+      }
+
+      // Sweep-line: +1 at (clipped) entry, -1 at (clipped) exit, integrate the level over time.
+      const events = [];
+      for (const p of inWindow) {
+        const start = Math.max(p.entry_time_ms, windowStart);
+        const end = Math.min(p.exit_time_ms, nowMs);
+        if (end <= start) continue;
+        events.push([start, 1], [end, -1]);
+      }
+      events.sort((a, b) => a[0] - b[0]);
+
+      let level = 0;
+      let prevT = windowStart;
+      let min = Infinity;
+      let max = 0;
+      let weightedSum = 0;
+      let totalSpan = 0;
+      for (const [t, delta] of events) {
+        if (t > prevT) {
+          const span = t - prevT;
+          weightedSum += level * span;
+          totalSpan += span;
+          if (level < min) min = level;
+          if (level > max) max = level;
+        }
+        level += delta;
+        prevT = t;
+      }
+      if (nowMs > prevT) {
+        const span = nowMs - prevT;
+        weightedSum += level * span;
+        totalSpan += span;
+        if (level < min) min = level;
+        if (level > max) max = level;
+      }
+
+      out[months] = {
+        min: Number.isFinite(min) ? min : 0,
+        avg: totalSpan > 0 ? weightedSum / totalSpan : 0,
+        max,
+        positions: inWindow.length,
+      };
+    }
+    return out;
+  }
+
+  const byTimeframe = {};
+  for (const tf of timeframes) {
+    byTimeframe[tf] = sweepWindows(withTimes.filter((p) => p.timeframe === tf));
+  }
+
+  return {
+    available: withTimes.length > 0,
+    ruleType,
+    generatedAt: new Date(nowMs).toISOString(),
+    lookbackMonths,
+    timeframes,
+    overall: sweepWindows(withTimes),
+    byTimeframe,
+  };
 }

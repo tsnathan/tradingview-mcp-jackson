@@ -16,3 +16,6 @@ webhook.local.json
 # One-off manual safety copies made before risky operations; git history is the real backup.
 *.backup-*
 trade-log/*.pre-*
+
+# Stray stderr redirect artifacts from launching the dashboard server by hand.
+*.err

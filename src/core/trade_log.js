@@ -20,7 +20,7 @@
  *     or whether every exit is a signal flip.
  *   - bars_held    (`x.b - e.b`) — exact bar count, not a wall-clock approximation.
  */
-import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 
 import { fileURLToPath } from "node:url";
@@ -673,16 +673,52 @@ export function readTradeLog(timeframe) {
  * exact comparison this column exists to make possible. Omitting the option keeps every row, which
  * is correct for inventory/coverage questions but wrong for performance ones.
  */
+/**
+ * Parse cache, keyed on every log file's size+mtime. Measured 2026-07-31: the full read is ~190 ms
+ * for 2 MB / 7,481 rows and nothing cached it, so an Edge Analysis tab load (edge + concurrency +
+ * sim) re-parsed the same bytes three times for ~500 ms of pure overhead. Parameter sweeps make that
+ * pathological — a few thousand simulations would spend minutes re-reading identical files.
+ *
+ * Invalidation is by content signature, not by time: a scan appends to these files while the
+ * dashboard server is long-lived, so an interval-based cache would serve a stale log after a scan.
+ * The signature costs one stat() per file (microseconds) and cannot go stale, because the very act
+ * that would invalidate it — an append — changes both size and mtime.
+ */
+let tradeLogCache = { signature: null, rows: null };
+
+function tradeLogSignature(files) {
+  return files.map((f) => {
+    const s = statSync(join(TRADE_LOG_DIR, f));
+    return `${f}:${s.size}:${s.mtimeMs}`;
+  }).join("|");
+}
+
 export function readAllTradeLogs({ ruleType = null } = {}) {
   if (!existsSync(TRADE_LOG_DIR)) return [];
-  const out = [];
-  for (const file of readdirSync(TRADE_LOG_DIR)) {
-    if (!/^trades-.*\.csv$/.test(file)) continue;
-    out.push(...parseCsv(readFileSync(join(TRADE_LOG_DIR, file), "utf8")).map(normalizeRuleType));
+  const files = readdirSync(TRADE_LOG_DIR).filter((f) => /^trades-.*\.csv$/.test(f)).sort();
+
+  let all;
+  let signature = null;
+  try {
+    signature = tradeLogSignature(files);
+  } catch { /* a file vanishing mid-stat just means no caching this call */ }
+  if (signature && tradeLogCache.signature === signature) {
+    all = tradeLogCache.rows;
+  } else {
+    all = [];
+    for (const file of files) {
+      all.push(...parseCsv(readFileSync(join(TRADE_LOG_DIR, file), "utf8")).map(normalizeRuleType));
+    }
+    if (signature) tradeLogCache = { signature, rows: all };
   }
-  if (ruleType == null) return out;
+
+  // Callers mutate rows in places (normalizeRuleType, and analysis code that annotates), so the
+  // cached array is never handed out directly — a filtered copy is, and the unfiltered case gets a
+  // shallow copy of the array. Rows themselves are shared; treat them as read-only, which every
+  // current consumer already does.
+  if (ruleType == null) return all.slice();
   const wanted = new Set((Array.isArray(ruleType) ? ruleType : [ruleType]).map(String));
-  return out.filter((r) => wanted.has(r.rule_type));
+  return all.filter((r) => wanted.has(r.rule_type));
 }
 
 /**
@@ -746,20 +782,38 @@ export function findWatchlistOrphans(baseline, watchlistNames = null) {
       if (t) inWatchlists.add(t);
     }
   }
+  // Empty membership cannot be distinguished from "every logged ticker is orphaned", and the wrong
+  // reading of that would offer to archive the entire trade log. A baseline with no usable watchlist
+  // data means "unknown", so report nothing rather than everything. This matters because the caller
+  // no longer waits for a live resync before computing — see runSignalJob.
+  if (inWatchlists.size === 0) return [];
+
   const byTicker = new Map();
   for (const r of readAllTradeLogs()) {
     const ticker = String(r.ticker ?? "").split(":").pop().toUpperCase();
     if (!ticker || inWatchlists.has(ticker)) continue;
     let e = byTicker.get(ticker);
     if (!e) {
-      e = { ticker, trades: 0, timeframes: new Set() };
+      e = { ticker, trades: 0, timeframes: new Set(), lastTradeMs: null, lastTimeframe: null };
       byTicker.set(ticker, e);
     }
     e.trades++;
     if (r.timeframe) e.timeframes.add(r.timeframe);
+    // "Last trade" is the most recent exit, not entry — an orphan's closed history is what's
+    // sitting idle in Edge Analysis/Portfolio Sim, and exit is when it actually stopped mattering.
+    if (r.exit_time_ms && (e.lastTradeMs === null || r.exit_time_ms > e.lastTradeMs)) {
+      e.lastTradeMs = r.exit_time_ms;
+      e.lastTimeframe = r.timeframe || e.lastTimeframe;
+    }
   }
   return [...byTicker.values()]
-    .map((e) => ({ ticker: e.ticker, trades: e.trades, timeframes: [...e.timeframes].sort((a, b) => tfSortRank(a) - tfSortRank(b)) }))
+    .map((e) => ({
+      ticker: e.ticker,
+      trades: e.trades,
+      timeframes: [...e.timeframes].sort((a, b) => tfSortRank(a) - tfSortRank(b)),
+      lastTimeframe: e.lastTimeframe,
+      lastTradeAt: e.lastTradeMs ? new Date(e.lastTradeMs).toISOString() : null,
+    }))
     .sort((a, b) => b.trades - a.trades);
 }
 

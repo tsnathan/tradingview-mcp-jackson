@@ -37,6 +37,7 @@
  * trade-frequency lens, and they're shown side by side for that reason.
  */
 import { readAllTradeLogs, listRuleTypes } from "./trade_log.js";
+import { bareTicker, timeframeTag } from "./trade_webhook.js";
 
 const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -375,6 +376,165 @@ export function buildWindowComparison(rows, monthsList = [6, 12, 24]) {
     out[months] = list;
   }
   return out;
+}
+
+/**
+ * Per symbol+timeframe edge score, for ranking OPEN positions against each other.
+ *
+ * The score is the symbol's **expectancy percentile within its own timeframe**, 0-100. Both halves
+ * of that are load-bearing and neither is a free choice:
+ *
+ * - **Expectancy**, not any ratio. The walk-forward test on this exact data (rank each symbol on
+ *   the first half of its own history, score it on the second half, Spearman rho, n≈48) put
+ *   expectancy at +0.381 while profitFactor (-0.168), sharpe (-0.133), cagrDd (-0.145) and winRate
+ *   (-0.018) all ranked at or *below* random. TradingView's own Key Stats panel shows the same
+ *   family of numbers (Sharpe ratio, profit factor, win %, expected payoff) — of those, only
+ *   "Expected payoff" (= expectancy) survives the test. The ratio metrics fail because max drawdown
+ *   and worst-loss over a dozen trades are essentially one unlucky trade, which mean-reverts.
+ * - **Percentile within timeframe**, not the raw value. Expectancy scales hard with timeframe
+ *   (15m ~1.7%/trade vs 4H ~7%), so a raw-expectancy ranking is really a timeframe ranking; the
+ *   percentile is also what makes rows comparable ACROSS timeframes for a whole-portfolio slot cap.
+ *
+ * Symbols under RANK_MIN_TRADES closed trades get `score: null` rather than a noisy estimate — an
+ * unrankable symbol must read as "unknown", never as "weak", or the cap logic would evict positions
+ * purely for having short history.
+ */
+export function buildSymbolEdgeScores({ ruleType = null } = {}) {
+  const rows = readAllTradeLogs({ ruleType });
+  const byKey = new Map();
+  for (const r of rows) {
+    const ticker = bareTicker(r.ticker).toUpperCase();
+    const timeframe = String(r.timeframe || "").toLowerCase();
+    if (!ticker || !timeframe) continue;
+    const key = `${ticker}|${timeframe}`;
+    if (!byKey.has(key)) byKey.set(key, []);
+    byKey.get(key).push(r);
+  }
+
+  const scores = {};
+  const byTf = new Map();
+  for (const [key, trades] of byKey) {
+    const [ticker, timeframe] = key.split("|");
+    const stats = basicStats(trades);
+    const entry = {
+      key,
+      ticker,
+      timeframe,
+      trades: stats.trades,
+      expectancyPct: stats.expectancyPct,
+      winRate: stats.winRate,
+      avgWinPct: stats.avgWinPct,
+      avgLossPct: stats.avgLossPct,
+      profitFactor: stats.profitFactor,
+      // TradingView's Key Stats "Average profit / Average loss" pair, as one number. Diagnostic
+      // only — shown in the tooltip, never part of the score (see the docstring).
+      payoffRatio: stats.avgLossPct < 0 ? stats.avgWinPct / Math.abs(stats.avgLossPct) : null,
+      avgHoldDays: stats.avgHoldDays,
+      medianHoldDays: stats.medianHoldDays,
+      rankable: stats.trades >= RANK_MIN_TRADES,
+      expPercentile: null,
+      score: null,
+    };
+    scores[key] = entry;
+    if (!byTf.has(timeframe)) byTf.set(timeframe, []);
+    byTf.get(timeframe).push(entry);
+  }
+
+  for (const [, list] of byTf) {
+    const pool = list
+      .filter((s) => s.rankable && Number.isFinite(s.expectancyPct))
+      .sort((a, b) => a.expectancyPct - b.expectancyPct);
+    // Same 4-peer floor buildEdgeAnalysis uses: below that a percentile is noise dressed as
+    // precision, and the consumer should show "n/a" instead of a confident-looking number.
+    if (pool.length < 4) continue;
+    pool.forEach((s, i) => {
+      s.expPercentile = i / (pool.length - 1);
+      s.score = s.expPercentile * 100;
+    });
+  }
+
+  return { ruleType, scores, symbolCount: Object.keys(scores).length };
+}
+
+const rankDesc = (a, b) => {
+  const as = a.edge?.score;
+  const bs = b.edge?.score;
+  const aHas = Number.isFinite(as);
+  const bHas = Number.isFinite(bs);
+  if (aHas !== bHas) return aHas ? -1 : 1;   // unscored rows sort last, never "worst"
+  if (aHas && as !== bs) return bs - as;
+  return String(a.symbol || "").localeCompare(String(b.symbol || ""));
+};
+
+/**
+ * Attach edge scores and the org/new rank pair to a list of open-trade rows.
+ *
+ * Two ranks per row, both within the row's own timeframe:
+ *  - `edgeRankOrg`  — rank among the positions that were ALREADY open before this scan's new
+ *                     arrivals (`isNew` false). Null on a new arrival: it wasn't in that book.
+ *  - `edgeRankNew`  — rank among every position now open on that timeframe, new arrivals included.
+ *
+ * The pair is what answers "should I liquidate something to make room for this?": a held position
+ * whose rank slid from 3/10 to 9/13 has been displaced by better signals, and the newcomer sitting
+ * at 2/13 with no org rank is what displaced it. One rank alone can't show that — the ranks only
+ * move because the set changed, which is exactly the event being asked about.
+ *
+ * @param isNew  Predicate deciding "arrived in this scan". Passed in rather than computed here so
+ *               the ET trading-day calendar stays in morning.js, which owns that logic.
+ */
+export function attachOpenTradeRanks(openTrades, { ruleType = null, isNew = () => false } = {}) {
+  const rows = Array.isArray(openTrades) ? openTrades : [];
+  if (!rows.length) return rows;
+
+  const { scores, ruleType: resolvedRuleType } = buildSymbolEdgeScores({ ruleType });
+
+  const enriched = rows.map((row) => {
+    const key = `${bareTicker(row.symbol).toUpperCase()}|${timeframeTag(row.timeframe)}`;
+    const s = scores[key] || null;
+    return {
+      ...row,
+      isNewEntry: Boolean(isNew(row)),
+      edge: s
+        ? {
+          ruleType: resolvedRuleType,
+          trades: s.trades,
+          expectancyPct: s.expectancyPct,
+          winRate: s.winRate,
+          payoffRatio: s.payoffRatio,
+          profitFactor: s.profitFactor,
+          avgHoldDays: s.avgHoldDays,
+          rankable: s.rankable,
+          score: s.score,
+        }
+        : null,
+      edgeRankOrg: null,
+      edgeRankOrgTotal: null,
+      edgeRankNew: null,
+      edgeRankNewTotal: null,
+    };
+  });
+
+  const groups = new Map();
+  for (const row of enriched) {
+    const tf = timeframeTag(row.timeframe);
+    if (!groups.has(tf)) groups.set(tf, []);
+    groups.get(tf).push(row);
+  }
+
+  for (const [, list] of groups) {
+    const all = [...list].sort(rankDesc);
+    all.forEach((row, i) => {
+      row.edgeRankNew = i + 1;
+      row.edgeRankNewTotal = all.length;
+    });
+    const org = all.filter((row) => !row.isNewEntry);
+    org.forEach((row, i) => {
+      row.edgeRankOrg = i + 1;
+      row.edgeRankOrgTotal = org.length;
+    });
+  }
+
+  return enriched;
 }
 
 /** Per-timeframe data coverage — how far back the log actually reaches. */

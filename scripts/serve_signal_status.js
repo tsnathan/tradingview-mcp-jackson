@@ -1,14 +1,15 @@
 import http from 'node:http';
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync, statSync, watch, writeFileSync } from 'node:fs';
+import { existsSync, openSync, readFileSync, statSync, watch, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { createDashboardStatus, ensureTradingViewConnection, exportMetricsScan, runBrief, runSignalJob, syncWatchlistSymbolsFromTradingView } from '../src/core/morning.js';
 import { runRegression } from '../src/core/regression.js';
 import { buildEdgeAnalysis } from '../src/core/edge_analysis.js';
-import { readPerfSnapshots, listRuleTypes, findWatchlistOrphans } from '../src/core/trade_log.js';
-import { simulatePortfolio, sweepMaxPositions } from '../src/core/portfolio_sim.js';
+import { readPerfSnapshots, listRuleTypes, findWatchlistOrphans, readAllTradeLogs } from '../src/core/trade_log.js';
+import { simulatePortfolio, sweepMaxPositions, computeOpenPositionConcurrency } from '../src/core/portfolio_sim.js';
 import { lookupSymbol } from '../src/core/symbol_lookup.js';
+import { getExecutorPortfolio } from '../src/core/executor_portfolio.js';
 import {
   loadWebhookCredentials,
   loadWebhookSettings,
@@ -17,7 +18,16 @@ import {
   sentKey,
   alreadySent,
   recordSent,
+  recordExitSent,
+  recordManualClose,
+  ledgerRowType,
+  readSentArchive,
+  bareTicker,
+  timeframeTag,
   readSentState,
+  validateOrderSpec,
+  ORDER_TYPES,
+  TIME_IN_FORCE,
 } from '../src/core/trade_webhook.js';
 
 // Keep the server alive if the scan throws an unexpected error.
@@ -25,8 +35,12 @@ process.on('uncaughtException', (err) => console.error('[server] uncaughtExcepti
 process.on('unhandledRejection', (reason) => console.error('[server] unhandledRejection:', reason));
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// Timeframe tags in chart order, for sorting filter dropdowns. Unknown tags sort last rather than
+// being dropped — an unrecognized timeframe must stay selectable.
+const TF_TAG_ORDER = ['1m', '3m', '5m', '15m', '30m', '45m', '1h', '2h', '3h', '4h', '6h', '8h', '12h', '1d', '1w', '1mo'];
 const STATUS_FILE = join(ROOT, 'status', 'latest-signal-status.json');
 const REGRESSION_FILE = join(ROOT, 'status', 'regression-status.json');
+const SWEET_SPOT_FILE = join(ROOT, 'status', 'sweet-spot.json');
 
 /**
  * Resolve the `rule` query param to a rule_type filter.
@@ -69,6 +83,14 @@ const scanState = {
 
 const metricsState = { running: false, startedAt: null };
 const reconcileState = { running: false, startedAt: null };
+/**
+ * Sweet-spot sweep state. Deliberately NOT behind runExclusive: the sweep is read-only over the
+ * trade-log CSVs, runs in its own process, and needs minutes — holding the scan lock that long
+ * would block dashboard-triggered scans for no safety benefit (scheduled scans are separate
+ * processes and were never covered by that lock anyway). It has its own single-flight guard because
+ * two concurrent sweeps would race to write the same result file, not because a scan conflicts.
+ */
+const sweetSpotState = { running: false, startedAt: null, quick: false, ruleType: null, phase: null, pct: 0, error: null, child: null };
 let _lastMetricsCsvContent = null;
 
 function metricsResultsToCsv(results) {
@@ -359,7 +381,7 @@ setInterval(() => {
   } catch {}
 }, 10_000);
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   if (req.url === '/api/scan-state') {
     sendJson(res, 200, {
       success: true,
@@ -388,6 +410,17 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.url === '/api/open-position-concurrency' || req.url.startsWith('/api/open-position-concurrency?')) {
+    try {
+      const url = new URL(req.url, 'http://localhost');
+      const ruleType = resolveRuleType(url.searchParams);
+      sendJson(res, 200, { ...computeOpenPositionConcurrency({ ruleType }), ruleTypes: listRuleTypes() });
+    } catch (err) {
+      sendJson(res, 500, { available: false, error: err?.message || 'concurrency analysis failed' });
+    }
+    return;
+  }
+
   if (req.url === '/api/symbol-lookup' || req.url.startsWith('/api/symbol-lookup?')) {
     try {
       const url = new URL(req.url, 'http://localhost');
@@ -407,17 +440,80 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Orphan detection (which logged tickers are no longer in any watchlist) runs automatically as
-  // part of the twice-daily watchlist reconciliation — see findWatchlistOrphans in trade_log.js and
-  // its call site in morning.js. This endpoint is the one-click action the dashboard banner offers
+  /**
+   * Manual orphan sweep — recompute which logged tickers are no longer in any watchlist, right now.
+   *
+   * Read-only over the trade log and the baseline, so it needs no TradingView connection and no
+   * scan: `findWatchlistOrphans` diffs against `baseline.watchlists`, which is already the persisted
+   * source of truth for membership. It finishes in well under a second, which is why it's a plain
+   * button rather than a background job.
+   *
+   * It does NOT resync watchlist membership from TradingView. If a symbol was removed in TradingView
+   * more recently than the last reconciliation, the baseline hasn't heard about it yet and no amount
+   * of recomputing will surface it — so the response reports `membershipAsOf` and the per-watchlist
+   * sync timestamps, letting the card say how current the answer is instead of implying it's live.
+   * Nothing is archived here; that stays the separate confirm-gated action below.
+   */
+  if (req.method === 'POST' && req.url === '/api/detect-orphans') {
+    try {
+      const baseline = loadBaselineFile();
+      const rules = loadRulesFile() || {};
+      const names = Object.keys(rules.watchlists || {});
+      const orphans = findWatchlistOrphans(baseline, names);
+      patchBaselineFile({ trade_log_orphans: orphans });
+      patchStatusFile({ tradeLogOrphans: orphans });
+      // Only configured watchlists count: baseline.watchlists keeps dead entries under old names
+      // forever (nothing prunes them on rename), and a stale entry's timestamp would misreport how
+      // fresh the membership actually is — the same allowlist findWatchlistOrphans itself applies.
+      const live = Object.entries(baseline.watchlists || {}).filter(([n]) => names.includes(n));
+      const syncedAt = live.map(([, w]) => w?.updated_at).filter(Boolean).sort();
+      console.log(`[orphans] manual sweep: ${orphans.length} orphan(s) across ${live.length} watchlist(s)`);
+      sendJson(res, 200, {
+        success: true,
+        tradeLogOrphans: orphans,
+        watchlistCount: live.length,
+        symbolCount: live.reduce((s, [, w]) => s + (Array.isArray(w?.symbols) ? w.symbols.length : 0), 0),
+        membershipAsOf: syncedAt.length ? syncedAt[syncedAt.length - 1] : null,
+        membershipOldest: syncedAt.length ? syncedAt[0] : null,
+      });
+    } catch (err) {
+      sendJson(res, 500, { success: false, error: err?.message || 'orphan sweep failed' });
+    }
+    return;
+  }
+
+  // Orphan detection (which logged tickers are no longer in any watchlist) also runs automatically on
+  // every scan — see findWatchlistOrphans in trade_log.js and its call site in morning.js. This
+  // endpoint is the one-click ARCHIVE action the dashboard banner offers
   // instead of requiring `node scripts/archive_trade_log.js --orphans` by hand. It shells out to
   // that exact script (rather than reimplementing its row-moving logic here) so archiving always
   // goes through the one tested, byte-exact code path. Guarded by runExclusive against a scan
   // running concurrently: a live scan appends rows to the same trade-log CSVs this rewrites in
   // full, and an overlapping read-modify-write could drop an appended row.
   if (req.method === 'POST' && req.url === '/api/archive-orphans') {
+    let body = {};
+    try {
+      body = await readJsonBody(req);
+    } catch (err) {
+      sendJson(res, 400, { success: false, error: err?.message || 'invalid request body' });
+      return;
+    }
+    const args = [join(ROOT, 'scripts', 'archive_trade_log.js')];
+    const symbols = Array.isArray(body.symbols)
+      ? body.symbols.map((s) => String(s).trim().toUpperCase()).filter(Boolean)
+      : typeof body.symbols === 'string'
+        ? body.symbols.split(',').map((s) => String(s).trim().toUpperCase()).filter(Boolean)
+        : null;
+    if (symbols && symbols.length) {
+      args.push('--symbol', symbols.join(','));
+    } else {
+      args.push('--orphans');
+    }
+    if (body.tf) {
+      args.push('--tf', String(body.tf));
+    }
     runExclusive('archive-orphans', () => new Promise((resolveRun, rejectRun) => {
-      const child = spawn(process.execPath, [join(ROOT, 'scripts', 'archive_trade_log.js'), '--orphans'], { cwd: ROOT });
+      const child = spawn(process.execPath, args, { cwd: ROOT });
       let stdout = '';
       let stderr = '';
       child.stdout.on('data', (d) => { stdout += d; });
@@ -492,6 +588,120 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Sweet Spot — the on-demand twin of `node scripts/sweep_portfolio_grid.mjs`. GET serves the last
+  // persisted result plus live progress; POST starts a run. The two are separate because the full
+  // sweep takes minutes: answering the GET from a cached file means the tab renders instantly on
+  // open and a run is an explicit act, never a side effect of viewing.
+  if (req.url === '/api/sweet-spot' || req.url.startsWith('/api/sweet-spot?')) {
+    try {
+      const url = new URL(req.url, 'http://localhost');
+      const ruleType = resolveRuleType(url.searchParams);
+      let result = null;
+      if (existsSync(SWEET_SPOT_FILE)) {
+        try {
+          result = JSON.parse(readFileSync(SWEET_SPOT_FILE, 'utf8'));
+        } catch (err) {
+          // A torn/half-written file must not take the tab down — report it and offer a re-run.
+          result = null;
+          sweetSpotState.error = `Stored result unreadable: ${err?.message || 'parse failed'}`;
+        }
+      }
+      // Staleness: the sweep is a snapshot of a log that grows on every scan, so a result is only
+      // as good as the trade count it was computed from. Reported rather than acted on — nothing
+      // auto-reruns a multi-minute job.
+      let currentTradeCount = null;
+      try {
+        currentTradeCount = readAllTradeLogs({ ruleType: result?.ruleType ?? ruleType })
+          .filter((r) => r.entry_time_ms && r.exit_time_ms).length;
+      } catch {}
+      sendJson(res, 200, {
+        success: true,
+        result,
+        running: sweetSpotState.running,
+        startedAt: sweetSpotState.startedAt,
+        phase: sweetSpotState.phase,
+        pct: sweetSpotState.pct,
+        error: sweetSpotState.error,
+        currentTradeCount,
+        newTrades: result && Number.isFinite(currentTradeCount) ? currentTradeCount - result.tradeCount : null,
+        ruleType,
+        ruleTypes: listRuleTypes(),
+      });
+    } catch (err) {
+      sendJson(res, 500, { success: false, error: err?.message || 'sweet spot read failed' });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/api/sweet-spot/run') {
+    let body = {};
+    try {
+      body = await readJsonBody(req);
+    } catch (err) {
+      sendJson(res, 400, { success: false, error: err?.message || 'invalid request body' });
+      return;
+    }
+    if (sweetSpotState.running) {
+      sendJson(res, 409, { success: false, error: 'A sweep is already running.', startedAt: sweetSpotState.startedAt });
+      return;
+    }
+    const quick = body.quick === true;
+    const rule = typeof body.rule === 'string' && body.rule ? body.rule : null;
+    const args = [join(ROOT, 'scripts', 'run_sweet_spot.js')];
+    if (quick) args.push('--quick');
+    if (rule) args.push(`--rule=${rule}`);
+
+    sweetSpotState.running = true;
+    sweetSpotState.startedAt = new Date().toISOString();
+    sweetSpotState.quick = quick;
+    sweetSpotState.ruleType = rule;
+    sweetSpotState.phase = 'starting';
+    sweetSpotState.pct = 0;
+    sweetSpotState.error = null;
+
+    // stdio is piped (never 'inherit' — see the /api/restart note below for what inheriting a pipe
+    // nobody drains does to this process). stdout carries the progress JSON lines this reads.
+    const child = spawn(process.execPath, args, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+    sweetSpotState.child = child;
+    let stdoutBuf = '';
+    let stderrBuf = '';
+    child.stdout.on('data', (d) => {
+      stdoutBuf += d;
+      const lines = stdoutBuf.split('\n');
+      stdoutBuf = lines.pop() ?? '';   // keep the trailing partial line for the next chunk
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const msg = JSON.parse(line);
+          if (msg.type === 'progress') {
+            sweetSpotState.phase = msg.phase;
+            sweetSpotState.pct = msg.pct;
+          } else if (msg.type === 'error') {
+            sweetSpotState.error = msg.reason;
+          }
+        } catch { /* a non-JSON line is a stray log, not a failure */ }
+      }
+    });
+    child.stderr.on('data', (d) => { stderrBuf += d; });
+    child.on('error', (err) => {
+      sweetSpotState.error = err?.message || 'failed to start sweep';
+      sweetSpotState.running = false;
+      sweetSpotState.child = null;
+    });
+    child.on('close', (code) => {
+      if (code !== 0 && !sweetSpotState.error) {
+        sweetSpotState.error = stderrBuf.trim().split('\n').slice(-3).join(' ') || `sweep exited with code ${code}`;
+      }
+      sweetSpotState.running = false;
+      sweetSpotState.child = null;
+      sweetSpotState.phase = code === 0 ? 'done' : 'failed';
+      pushEvent({ type: 'sweet-spot-finished', ok: code === 0, error: sweetSpotState.error });
+    });
+
+    sendJson(res, 202, { success: true, started: true, quick, startedAt: sweetSpotState.startedAt });
+    return;
+  }
+
   if (req.url === '/api/watchlists') {
     try {
       const rules = loadRulesFile() || {};
@@ -505,6 +715,124 @@ const server = http.createServer((req, res) => {
   // Webhook arming state + delivery ledger. The secret is never included in any response — only
   // whether one is configured — so the dashboard can show status without the browser ever holding
   // a credential that places live trades.
+  /**
+   * The webhook ledger, shaped for the Webhook Orders tab: what's still open, and the full history.
+   *
+   * Parsed from the ledger key (`TICKER|tag|entryTimeISO`) with the stored record's own fields
+   * preferred — the key is the fallback, not the source, so a record written by a path that stores
+   * richer fields keeps them. `tag` is passed straight back as the `timeframe` for the close call:
+   * timeframeTag() is idempotent over its own output ("1h" -> "1h"), so the key the close endpoint
+   * recomputes is byte-identical to the one the row came from. Getting that wrong would silently
+   * fail the "did we open this" lookup rather than erroring.
+   */
+  if (req.url === '/api/webhook-ledger') {
+    try {
+      const sent = readSentState().sent || {};
+      const archive = readSentArchive();
+      // Archived records are closed overflow from the live ledger — same shape, plus the key they
+      // were stored under. Live wins on the (impossible, but cheap to rule out) chance of a
+      // collision, so a record can never appear twice in the history.
+      const archivedEntries = archive.rows
+        .filter((r) => r && r.key && !(r.key in sent))
+        .map((r) => [r.key, r]);
+      const rows = [...Object.entries(sent), ...archivedEntries].map(([key, rec]) => {
+        const parts = String(key).split('|');
+        return {
+          key,
+          archived: Boolean(rec?.archived_at),
+          symbol: rec?.symbol || parts[0] || null,
+          tag: rec?.tag || parts[1] || null,
+          entryTime: parts[2] || null,
+          side: rec?.side || null,
+          price: rec?.price ?? null,
+          orderType: rec?.order_type || 'market',
+          timeInForce: rec?.time_in_force || null,
+          source: rec?.source || null,
+          sentAt: rec?.at || null,
+          // Computed server-side from the same module that writes the records, so the tab's Type
+          // column cannot drift from what "sent" actually means in the ledger.
+          type: ledgerRowType(rec),
+          exit: rec?.exit
+            ? {
+              side: rec.exit.side || null,
+              price: rec.exit.price ?? null,
+              orderType: rec.exit.order_type || 'market',
+              timeInForce: rec.exit.time_in_force || null,
+              source: rec.exit.source || null,
+              // false only on a close this system recorded but did not send (closed at the broker
+              // by hand, or placed by a TradingView alert). Absent on older records, all real sends.
+              sent: rec.exit.sent !== false,
+              note: rec.exit.note || null,
+              at: rec.exit.at || null,
+            }
+            : null,
+        };
+      });
+      // Newest first by when the ENTRY went out, so an open position and its later close stay
+      // together as one row rather than the close re-sorting it to the top of the history.
+      rows.sort((a, b) => String(b.sentAt || '').localeCompare(String(a.sentAt || '')));
+      // Cross-timeframe exits are attached here rather than fetched separately by the tab: they are
+      // a property of an open row ("another leg of this symbol just flipped"), and a second fetch
+      // could resolve against a different scan than the rows were built from.
+      let crossTfExits = [];
+      try {
+        crossTfExits = JSON.parse(readFileSync(STATUS_FILE, 'utf8'))?.crossTfExits || [];
+      } catch { /* the ledger is still fully usable without the last scan's cross-TF read */ }
+      const crossByKey = {};
+      for (const x of crossTfExits) {
+        if (!x?.held_key) continue;
+        (crossByKey[x.held_key] ||= []).push(x);
+      }
+      for (const r of rows) {
+        // Only live open rows can have them — an archived/closed row's alerts are settled history.
+        if (!r.exit && !r.archived && crossByKey[r.key]) r.crossTfExits = crossByKey[r.key];
+      }
+
+      const creds = loadWebhookCredentials();
+      sendJson(res, 200, {
+        success: true,
+        configured: creds.configured,
+        rows,
+        // Open comes from the live ledger alone — an archived record is closed by definition, and an
+        // archived row rendering a Close button would offer to act on something already settled.
+        open: rows.filter((r) => !r.exit && !r.archived),
+        closed: rows.filter((r) => r.exit),
+        // Surfaced so the history can SAY when it is showing a partial window. Silently short
+        // answers to "YTD" are exactly what archiving replaced.
+        archive: { total: archive.total, truncated: archive.truncated, unreadable: archive.unreadable },
+        // Filter vocabularies come from the data itself, so a filter can never offer a value that
+        // matches nothing.
+        symbols: [...new Set(rows.map((r) => r.symbol).filter(Boolean))].sort(),
+        timeframes: [...new Set(rows.map((r) => r.tag).filter(Boolean))]
+          .sort((a, b) => (TF_TAG_ORDER.indexOf(a) + 1 || 99) - (TF_TAG_ORDER.indexOf(b) + 1 || 99)),
+        types: [...new Set(rows.map((r) => r.type).filter(Boolean))].sort(),
+      });
+    } catch (err) {
+      sendJson(res, 500, { success: false, error: err?.message || 'could not read the webhook ledger' });
+    }
+    return;
+  }
+
+  // Executor portfolio — the broker's own positions, reconciled against the webhook ledger. Fetched
+  // server-side so the portfolio credential never reaches the browser, same rule as the webhook secret.
+  if (req.url === '/api/executor-portfolio' || req.url.startsWith('/api/executor-portfolio?')) {
+    (async () => {
+      try {
+        // Open trades come from the status file rather than a fresh scan: this endpoint must answer in
+        // a second or two, and the reconciliation only needs "which tickers does the scanner think are
+        // open", which the last scan already established.
+        let openTrades = [];
+        try {
+          openTrades = JSON.parse(readFileSync(STATUS_FILE, 'utf8'))?.openTrades || [];
+        } catch { /* reconcile against the ledger alone if the status file isn't readable */ }
+        sendJson(res, 200, await getExecutorPortfolio({ openTrades }));
+      } catch (err) {
+        sendJson(res, 500, { available: false, error: err?.message || 'portfolio fetch failed' });
+      }
+    })();
+    return;
+  }
+
   if (req.url === '/api/webhook-config') {
     try {
       const rules = loadRulesFile() || {};
@@ -517,8 +845,13 @@ const server = http.createServer((req, res) => {
         hasSecret: Boolean(creds.secret),
         group: settings.group,
         enabledTimeframes: settings.enabledTimeframes,
+        tvAlertTimeframes: settings.tvAlertTimeframes,
         watchlists: rules.watchlists || {},
         sent: readSentState().sent,
+        // Order vocabulary comes from the server so the dashboard's dropdowns can never offer a
+        // value validateOrderSpec would then reject.
+        orderTypes: ORDER_TYPES,
+        timeInForce: TIME_IN_FORCE,
       });
     } catch (err) {
       sendJson(res, 500, { success: false, error: err?.message || 'Failed to read webhook config' });
@@ -538,17 +871,32 @@ const server = http.createServer((req, res) => {
         sendJson(res, 500, { success: false, error: 'rules.json not found or invalid' });
         return;
       }
-      const current = new Set(loadWebhookSettings(rules).enabledTimeframes);
+      // `mode` selects which list is being toggled: 'auto' = the scanner places the order itself,
+      // 'tv-alert' = a TradingView watchlist alert places it and the scanner only records it. The two
+      // are kept mutually exclusive HERE as well as in loadWebhookSettings, because enabling one
+      // while the other is still set would mean two orders for one signal.
+      const mode = String(body?.mode || 'auto');
+      if (mode !== 'auto' && mode !== 'tv-alert') {
+        sendJson(res, 400, { success: false, error: `Unknown mode "${mode}" (expected "auto" or "tv-alert")` });
+        return;
+      }
+      const settings = loadWebhookSettings(rules);
+      const armed = new Set(settings.enabledTimeframes);
+      const tvAlert = new Set(settings.tvAlertTimeframes);
       const enable = Boolean(body?.enabled);
-      if (enable) current.add(timeframe); else current.delete(timeframe);
+      const target = mode === 'auto' ? armed : tvAlert;
+      const other = mode === 'auto' ? tvAlert : armed;
+      if (enable) { target.add(timeframe); other.delete(timeframe); } else { target.delete(timeframe); }
       rules.webhook = {
         ...(rules.webhook || {}),
         group: rules.webhook?.group || 'swing',
-        enabled_timeframes: [...current],
+        enabled_timeframes: [...armed],
+        tv_alert_timeframes: [...tvAlert],
       };
       writeRulesFile(rules);
-      console.log(`[webhook] ${enable ? 'ARMED' : 'disarmed'} timeframe ${timeframe} (now: ${[...current].join(',') || 'none'})`);
-      sendJson(res, 200, { success: true, enabledTimeframes: [...current] });
+      const label = mode === 'auto' ? (enable ? 'ARMED auto-send' : 'disarmed auto-send') : (enable ? 'marked TV-ALERT (ledger only)' : 'cleared TV-alert');
+      console.log(`[webhook] ${label} timeframe ${timeframe} (auto: ${[...armed].join(',') || 'none'} | tv-alert: ${[...tvAlert].join(',') || 'none'})`);
+      sendJson(res, 200, { success: true, enabledTimeframes: [...armed], tvAlertTimeframes: [...tvAlert] });
     }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
     return;
   }
@@ -567,6 +915,14 @@ const server = http.createServer((req, res) => {
         sendJson(res, 400, { success: false, error: 'symbol and timeframe are required' });
         return;
       }
+      // Order type / TIF / prices come from the dashboard's manual order form, not an automatic
+      // calc. Re-validated here, not just client-side: this places a real order, and a priced type
+      // missing its price is a hard 400 at the executor rather than something it guesses at.
+      const check = validateOrderSpec(body || {});
+      if (!check.ok) {
+        sendJson(res, 400, { success: false, error: check.error });
+        return;
+      }
       const rules = loadRulesFile() || {};
       const settings = loadWebhookSettings(rules);
       const key = sentKey({ symbol, timeframe, entryTime });
@@ -574,17 +930,135 @@ const server = http.createServer((req, res) => {
         sendJson(res, 409, { success: false, error: 'Already sent for this entry', alreadySent: true });
         return;
       }
-      const payload = buildWebhookPayload({ symbol, side, timeframe, price, group: settings.group, secret: creds.secret });
+      const payload = buildWebhookPayload({
+        symbol, side, timeframe, price, group: settings.group, secret: creds.secret, ...check.spec,
+      });
       const result = await sendTradeWebhook({ url: creds.url, payload });
       if (result.success) {
-        recordSent(key, { symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price, source: 'manual' });
-        console.log(`[webhook] manual send ${payload.side} ${payload.symbol} (${payload.tag}) @ ${payload.price}`);
+        recordSent(key, {
+          symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price,
+          order_type: payload.order_type || 'market', time_in_force: payload.time_in_force || null, source: 'manual',
+        });
+        console.log(`[webhook] manual send ${payload.side} ${payload.symbol} (${payload.tag}) @ ${payload.price} [${payload.order_type || 'market'}${payload.time_in_force ? '/' + payload.time_in_force : ''}]`);
       } else {
         console.error(`[webhook] manual send FAILED ${payload.symbol}: ${result.error}`);
       }
       // Echo the payload back with the secret stripped so the UI can show exactly what went out.
       const { secret, ...safePayload } = payload;
       sendJson(res, result.success ? 200 : 502, { ...result, payload: safePayload });
+    }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+    return;
+  }
+
+  /**
+   * Manual CLOSE for a position this system already opened via webhook — the hand-operated twin of
+   * dispatchExitWebhooks, for liquidating a weak position to free a portfolio slot.
+   *
+   * Scoped exactly like the automatic exit path and for the same reason: it will only close a
+   * position whose ENTRY is in the ledger. Sending a close for a position the executor was never
+   * told about could error out or, worse, open an unintended opposite position if the receiver
+   * doesn't validate. The closing action is the inverse of the *recorded* entry action rather than
+   * a re-derivation from the position's side — the ledger is the only record of what actually went
+   * out, and it can't disagree with itself.
+   */
+  if (req.method === 'POST' && req.url === '/api/send-webhook-exit') {
+    readJsonBody(req).then(async (body) => {
+      const creds = loadWebhookCredentials();
+      if (!creds.configured) {
+        sendJson(res, 400, { success: false, error: 'Webhook URL/secret not configured' });
+        return;
+      }
+      const { symbol, timeframe, price, entryTime } = body || {};
+      if (!symbol || !timeframe) {
+        sendJson(res, 400, { success: false, error: 'symbol and timeframe are required' });
+        return;
+      }
+      const check = validateOrderSpec(body || {});
+      if (!check.ok) {
+        sendJson(res, 400, { success: false, error: check.error });
+        return;
+      }
+      const key = sentKey({ symbol, timeframe, entryTime });
+      if (!key) {
+        sendJson(res, 400, { success: false, error: 'entryTime is required to identify the position to close' });
+        return;
+      }
+      const entryRecord = readSentState().sent[key];
+      if (!entryRecord) {
+        sendJson(res, 409, { success: false, error: 'No webhook entry recorded for this position — refusing to close something the executor was never told about' });
+        return;
+      }
+      if (entryRecord.exit && !body.force) {
+        sendJson(res, 409, { success: false, error: 'Exit already sent for this position', alreadySent: true });
+        return;
+      }
+      const rules = loadRulesFile() || {};
+      const settings = loadWebhookSettings(rules);
+      const closeAction = String(entryRecord.side || 'buy').toLowerCase() === 'sell' ? 'buy' : 'sell';
+      const payload = buildWebhookPayload({
+        symbol, timeframe, price, action: closeAction, group: settings.group, secret: creds.secret, ...check.spec,
+      });
+      const result = await sendTradeWebhook({ url: creds.url, payload });
+      if (result.success) {
+        recordExitSent(key, {
+          symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price,
+          order_type: payload.order_type || 'market', time_in_force: payload.time_in_force || null, source: 'manual-exit',
+        });
+        console.log(`[webhook] manual EXIT ${payload.side} ${payload.symbol} (${payload.tag}) @ ${payload.price} [${payload.order_type || 'market'}${payload.time_in_force ? '/' + payload.time_in_force : ''}]`);
+      } else {
+        console.error(`[webhook] manual EXIT FAILED ${payload.symbol}: ${result.error}`);
+      }
+      const { secret, ...safePayload } = payload;
+      sendJson(res, result.success ? 200 : 502, { ...result, payload: safePayload });
+    }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+    return;
+  }
+
+  /**
+   * Close a ledger position WITHOUT sending anything — for a position already closed by hand at the
+   * broker. Bookkeeping only, so it deliberately does not require webhook credentials: refusing to
+   * record reality because a secret is missing would leave the ledger asserting a position that no
+   * longer exists, which is the failure this endpoint exists to fix.
+   *
+   * Same "entry must be in the ledger" guard as the real close, for a different reason: there is no
+   * position to reconcile if this system never recorded opening one, and inventing an entry to hang
+   * the close off would claim an order that was never placed. The recorded exit side is the inverse
+   * of the stored ENTRY side (closing a long is a sell) — derived from the ledger's own record, never
+   * re-derived from the strategy's current view, which can disagree.
+   */
+  if (req.method === 'POST' && req.url === '/api/close-webhook-local') {
+    readJsonBody(req).then((body) => {
+      const { symbol, timeframe, price, entryTime, note } = body || {};
+      if (!symbol || !timeframe) {
+        sendJson(res, 400, { success: false, error: 'symbol and timeframe are required' });
+        return;
+      }
+      const key = sentKey({ symbol, timeframe, entryTime });
+      if (!key) {
+        sendJson(res, 400, { success: false, error: 'entryTime is required to identify the position to close' });
+        return;
+      }
+      const entryRecord = readSentState().sent[key];
+      if (!entryRecord) {
+        sendJson(res, 409, { success: false, error: 'No webhook entry recorded for this position — nothing to close in the ledger' });
+        return;
+      }
+      if (entryRecord.exit && !body.force) {
+        sendJson(res, 409, { success: false, error: 'A close is already recorded for this position', alreadySent: true });
+        return;
+      }
+      const closeAction = String(entryRecord.side || 'buy').toLowerCase() === 'sell' ? 'buy' : 'sell';
+      recordManualClose(key, {
+        symbol: bareTicker(symbol),
+        tag: timeframeTag(timeframe),
+        side: closeAction,
+        // Optional: whatever the position actually filled at, if the user supplied it. Never guessed
+        // from a quote — an invented fill price would read exactly like a real one.
+        price: price === undefined || price === null || price === '' ? null : String(price),
+        note: typeof note === 'string' && note.trim() ? note.trim().slice(0, 200) : null,
+      });
+      console.log(`[webhook] manual (no-send) close recorded ${bareTicker(symbol)} (${timeframeTag(timeframe)}) — closed at broker, nothing sent`);
+      sendJson(res, 200, { success: true, key, sent: false });
     }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
     return;
   }
@@ -937,9 +1411,19 @@ const server = http.createServer((req, res) => {
     sendJson(res, 200, { success: true, message: 'Restarting server...' });
     // Give the response time to transmit, then spawn a new server process and exit.
     setTimeout(() => {
+      // stdio goes to a log FILE, never 'inherit'. With 'inherit' the restarted server writes to
+      // whatever pipe the original process was launched with — and after this process exits there is
+      // nothing draining it. The buffer fills after a handful of console.log calls and the next write
+      // blocks the event loop forever, which presents as a server that answers GETs that happen not
+      // to log while every logging route hangs with no error anywhere. Diagnosed the hard way
+      // 2026-07-29: two successful POSTs were enough to wedge it.
+      let out = 'ignore';
+      try {
+        out = openSync(join(ROOT, 'dashboard-server.log'), 'a');
+      } catch { /* fall back to discarding output rather than refusing to restart */ }
       const child = spawn(process.execPath, [fileURLToPath(import.meta.url)], {
         detached: true,
-        stdio: 'inherit',
+        stdio: ['ignore', out, out],
         env: process.env,
         cwd: ROOT,
       });

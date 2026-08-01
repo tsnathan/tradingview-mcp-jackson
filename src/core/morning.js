@@ -12,6 +12,7 @@ import * as alerts from "./alerts.js";
 import { launch as launchTradingView } from "./health.js";
 import * as watchlist from "./watchlist.js";
 import * as tradeLog from "./trade_log.js";
+import { attachOpenTradeRanks } from "./edge_analysis.js";
 import {
   loadWebhookCredentials,
   loadWebhookSettings,
@@ -19,10 +20,15 @@ import {
   sendTradeWebhook,
   sentKey,
   alreadySent,
+  getSentRecord,
   recordSent,
+  orderAction,
   exitOrderAction,
   alreadyExitSent,
   recordExitSent,
+  readSentState,
+  bareTicker,
+  timeframeTag,
 } from "./trade_webhook.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -747,16 +753,15 @@ function isRecentTradeSignal(entryTime, scannedAt, timeframe, maxBars = 4) {
   return scanTs >= entryTs && (scanTs - entryTs) <= maxAgeMs;
 }
 
-function isScheduledRunMinute(date, marketHours = DEFAULT_MARKET_HOURS) {
-  return isTimeframeDueNow('15', date, marketHours);
-}
-
-function getNextScheduledRunLabel(from = new Date(), marketHours = DEFAULT_MARKET_HOURS) {
+// `timeframe` defaults to '15' (the scheduled task's own cadence) for the overall "Next run" badge;
+// callers that want a specific watchlist's own next-due tick (e.g. a 30m watchlist skipped on a
+// 15m-only tick) pass that watchlist's timeframe instead.
+function getNextScheduledRunLabel(from = new Date(), marketHours = DEFAULT_MARKET_HOURS, timeframe = '15') {
   const timezone = marketHours?.timezone || DEFAULT_MARKET_HOURS.timezone;
   let candidate = new Date(new Date(from).getTime() + 60 * 1000);
 
   for (let i = 0; i < 60 * 24 * 7; i += 1) {
-    if (isScheduledRunMinute(candidate, marketHours)) {
+    if (isTimeframeDueNow(timeframe, candidate, marketHours)) {
       return `${formatTimestamp(candidate, timezone)} ET`;
     }
     candidate = new Date(candidate.getTime() + 60 * 1000);
@@ -839,6 +844,7 @@ export function buildPriorSignalsByWatchlist(
             symbol: tradeBackedEntry.state?.symbol || tradeBackedEntry.symbol || symbol,
             signal: liveSignal === 'OPEN' ? 'OPEN' : 'EXIT',
             wasOpen: liveSignal === 'OPEN',
+            side: tradeBackedEntry.trade.side || null,
             entryPrice: normalizeTradeDisplay(tradeBackedEntry.trade.entryPrice),
             entryTime: formatEntryTimeDisplay(tradeBackedEntry.trade.entryTime, timezone),
             entryTimeRaw: tradeBackedEntry.trade.entryTime || null,
@@ -968,6 +974,7 @@ function buildWatchlistSummaryLines(
   results = [],
   priorSignalsByWatchlist = [],
   timezone = DEFAULT_MARKET_HOURS.timezone,
+  marketHours = DEFAULT_MARKET_HOURS,
 ) {
   return watchlistSummaries.map((summary) => {
     const watchlistName = summary.watchlist_name || summary.watchlistName || 'Watchlist';
@@ -979,8 +986,24 @@ function buildWatchlistSummaryLines(
     const scanTimestamp = summary.scanned_at || Date.now();
     const prefix = `${formatTimestamp(scanTimestamp, timezone)} ET | WATCHLIST: ${watchlistName} | SYMBOLS: ${displayedCount} | SCAN: ${formatDuration(summary.scan_duration_ms)}`;
 
+    // Still-open (recent-bar-or-same-day) positions from the baseline — the same fallback a scanned
+    // watchlist with no fresh results already uses below. Computed before the skipped-schedule check
+    // so a watchlist not due this tick can still restate what's open, instead of the log going quiet
+    // about it until that timeframe's own bar comes due (user report 2026-07-29: a same-day 30m open
+    // position looked "dropped" from the log after a 15m-only tick — the position itself was never
+    // lost, buildOpenTrades already reconstructs it from baseline fine; only this line went silent).
+    const fallbackOpenTrades = (Array.isArray(priorSection?.trades) ? priorSection.trades : [])
+      .filter((row) => String(row.signal || '').toUpperCase() === 'OPEN')
+      .filter((row) => isRecentTradeSignal(row.entryTime, scanTimestamp, timeframe)
+        || isSameTradingDay(row.entryTime, scanTimestamp, timezone))
+      .sort((a, b) => parseEntryTimestamp(b.entryTime) - parseEntryTimestamp(a.entryTime));
+
     if (summary.skipped_due_schedule) {
-      return `${prefix} | WAITING FOR NEXT ${timeframe || 'WATCHLIST'} BAR`;
+      const openDetails = fallbackOpenTrades
+        .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${normalizeTradeDisplay(row.entryTime)}`);
+      const suffix = openDetails.length > 0 ? `\n${openDetails.join('\n')}` : '';
+      const nextDueEt = getNextScheduledRunLabel(scanTimestamp, marketHours, timeframe);
+      return `${prefix} | WAITING FOR NEXT ${timeframe || 'WATCHLIST'} BAR (next: ${nextDueEt})${suffix}`;
     }
 
     const recentOpenTrades = results
@@ -992,12 +1015,6 @@ function buildWatchlistSummaryLines(
         (a, b) => parseEntryTimestamp(b.trade?.entryTime) - parseEntryTimestamp(a.trade?.entryTime)
           || new Date(b.scanned_at || 0).getTime() - new Date(a.scanned_at || 0).getTime(),
       );
-
-    const fallbackOpenTrades = (Array.isArray(priorSection?.trades) ? priorSection.trades : [])
-      .filter((row) => String(row.signal || '').toUpperCase() === 'OPEN')
-      .filter((row) => isRecentTradeSignal(row.entryTime, scanTimestamp, timeframe)
-        || isSameTradingDay(row.entryTime, scanTimestamp, timezone))
-      .sort((a, b) => parseEntryTimestamp(b.entryTime) - parseEntryTimestamp(a.entryTime));
 
     const rowsToShow = recentOpenTrades.length > 0
       ? recentOpenTrades.map((entry) => ({
@@ -1032,7 +1049,12 @@ function buildWatchlistSummaryLines(
         .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${normalizeTradeDisplay(row.entryTime)}`);
       const exitDetails = recentExits
         .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${normalizeTradeDisplay(row.netPnl)} | AT: ${normalizeTradeDisplay(row.exitTime)}`);
-      const details = [...openDetails, ...exitDetails].join('\n');
+      // Grouped OPEN-then-EXIT (never interleaved), with a blank line between the two groups when
+      // both are present — so a busy block reads as two clearly separate lists rather than one
+      // run-on block. The per-row "OPEN:"/"EXIT:" prefix is untouched so hasMeaningfulSummary's
+      // /OPEN:\s*\w/i and /EXIT:\s*\w/i regex checks keep matching every row, not just a header.
+      const groups = [openDetails, exitDetails].filter((g) => g.length > 0);
+      const details = groups.map((g) => g.join('\n')).join('\n\n');
       return `${prefix} | SIGNAL\n${details}`;
     }
 
@@ -1059,6 +1081,9 @@ export function buildOpenTrades(
         timeframe: entry.timeframe,
         symbol: entry.state?.symbol || entry.symbol || 'n/a',
         signal: 'OPEN',
+        // LONG/SHORT from the strategy's own trade read. The manual webhook Send derives buy/sell
+        // from this; absent it the dashboard falls back to LONG, which is wrong on a short.
+        side: entry.trade?.side || null,
         entryPrice: normalizeTradeDisplay(entry.trade?.entryPrice ?? entry.signal?.price ?? entry.quote?.last),
         // Never substitute the scan timestamp for a missing entry time — that fabrication
         // produced wrong dates in Open Trades and broke the recency-based signal/notify
@@ -1088,6 +1113,7 @@ export function buildOpenTrades(
       symbol,
       signal: 'OPEN',
       wasOpen: true,
+      side: row?.side || null,
       entryPrice: normalizeTradeDisplay(row?.entryPrice ?? row?.entry_price),
       entryTime: formatEntryTimeDisplay(entryTime, timezone),
       // Canonical (raw ISO) entry time, distinct from the display string above — the webhook
@@ -1610,6 +1636,8 @@ export function createDashboardStatus(result = {}) {
     watchlistSyncOptions: Array.isArray(result.watchlistOptions) ? result.watchlistOptions : [],
     watchlistSyncActiveName: result.activeWatchlistName || null,
     tradeLogOrphans: Array.isArray(result.trade_log_orphans) ? result.trade_log_orphans : [],
+    webhookExitPending: Array.isArray(result.webhook_exit_pending) ? result.webhook_exit_pending : [],
+    crossTfExits: Array.isArray(result.cross_tf_exits) ? result.cross_tf_exits : [],
     openTrades: Array.isArray(result.open_trades) ? result.open_trades : [],
     priorSignals,
     isPartialScan: Boolean(result.is_partial_scan),
@@ -1992,7 +2020,7 @@ export async function runBrief({
         const pPrior = buildPriorSignalsByWatchlist(watchlistSummaries, results, pBase.signals, timezone, pBase.last_updated, pBase.watchlists);
         let pTrades = buildOpenTrades(pPrior, pBase.signals, pGenAt, timezone, results);
         pTrades = enrichOpenTradesFromBaseline(pTrades, pBase.excursion_alerts);
-        const pSumLines = buildWatchlistSummaryLines(watchlistSummaries, results, pPrior, timezone);
+        const pSumLines = buildWatchlistSummaryLines(watchlistSummaries, results, pPrior, timezone, rules.market_hours || DEFAULT_MARKET_HOURS);
         const pNoSig = watchlistSummaries.map(
           (t) => `${formatTimestamp(pGenAt, timezone)} ET | WATCHLIST: ${t.watchlist_name} | SYMBOLS: ${t.symbol_count} | SCAN: ${formatDuration(t.scan_duration_ms)} | NO SIGNAL`,
         );
@@ -2147,11 +2175,27 @@ export async function runBrief({
   ])
     .then((result) => result ?? enrichOpenTradesFromBaseline(openTrades, displayBaseline.excursion_alerts))
     .catch(() => enrichOpenTradesFromBaseline(openTrades, displayBaseline.excursion_alerts));
+  // Rank each open position against its timeframe peers so a weak one is visible before it eats a
+  // portfolio slot. Purely additive fields (edge/edgeRank*) — nothing downstream gates on them, and
+  // a failure here must never cost a scan its open-trades data, hence the swallow.
+  try {
+    openTrades = attachOpenTradeRanks(openTrades, {
+      // Same default every other trade-log consumer uses: the most-traded variant, never a pool of
+      // all of them (pooling would average two exit regimes into one meaningless expectancy).
+      ruleType: tradeLog.listRuleTypes()[0]?.rule_type ?? null,
+      // "New" = entered on the current ET trading day, the same calendar test the notify/webhook
+      // gates already use for "is this a fresh signal".
+      isNew: (row) => isSameTradingDay(row.entryTimeRaw, generatedAt, timezone),
+    });
+  } catch (err) {
+    console.error(`[edge] could not rank open trades: ${err?.message || err}`);
+  }
   const watchlistSummaryLines = buildWatchlistSummaryLines(
     watchlistSummaries,
     results,
     priorSignalsByWatchlist,
     timezone,
+    rules.market_hours || DEFAULT_MARKET_HOURS,
   );
 
   return {
@@ -2420,6 +2464,34 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
     // available both for the alert message marker below and the quota/eviction priority further
     // down, rather than recomputed in each place.
     const isWebhookSent = webhookSentKeys.has(key) || webhookSentKeys.has(normKey);
+
+    // Auto-creating a real TradingView alert (or falling into local overflow monitoring) is now
+    // scoped to webhook-sent positions only — user request 2026-07-29: with a much larger symbol
+    // universe across timeframes, unmanaged alerts/local-monitor noise for positions with no real
+    // money on them became unmanageable. Stats/levels are still computed and persisted above so the
+    // dashboard's Alert Levels column keeps showing suggested stop/target for the user to act on
+    // manually; only the TradingView-mutating/monitoring half stops. Pre-existing real alerts on a
+    // non-webhook position (created before this policy) are untouched — the "already created" check
+    // at the top of this loop already skipped this trade entirely if one exists.
+    if (!isWebhookSent) {
+      const raw = parseJsonFile(baselinePath, {});
+      if (!raw.excursion_alerts) raw.excursion_alerts = {};
+      const skipReason = "No webhook sent — auto-alert creation disabled, create manually if needed";
+      raw.excursion_alerts[key] = {
+        created: false,
+        created_at: new Date().toISOString(),
+        entry_price: entryNum,
+        stats,
+        levels,
+        skip_reason: skipReason,
+        ...(stored?.alert_ids ? { alert_ids: stored.alert_ids } : {}),
+        ...(stored?.fired ? { fired: stored.fired } : {}),
+      };
+      writeJsonFile(baselinePath, raw);
+      enriched.push({ ...trade, excursionStats: stats, alertLevels: levels, alertsCreated: false, alertsSkipReason: skipReason });
+      continue;
+    }
+
     // Two alerts per open trade (avg stop + avg target) — the max-MAE/max-MFE pair was
     // dropped to fit the account's alert quota (user decision 2026-07-23). All four levels
     // are still computed and stored in the baseline for the dashboard's Alert Levels column.
@@ -2637,6 +2709,16 @@ export function processLevelViolationsAndCleanup({ results = [], baselinePath, t
     }
 
     if (signal !== 'OPEN') continue;
+
+    // Local level-hit monitoring (and the ntfy noise it produces) is now scoped to webhook-sent
+    // positions only — user request 2026-07-29: with far more symbols across timeframes, a
+    // violation line for every monitored position regardless of whether any money is actually on
+    // it became unmanageable noise. Checked fresh per scan (not read off `stored`) because
+    // webhook-sent status can change after a position's excursion_alerts entry was first written.
+    const entryTimeRaw = entry.trade?.entryTime || null;
+    const wKey = entryTimeRaw ? sentKey({ symbol, timeframe, entryTime: entryTimeRaw }) : null;
+    if (!wKey || !alreadySent(wKey)) continue;
+
     const last = Number(entry.quote?.last);
     const levels = stored.levels;
     if (!Number.isFinite(last) || !levels) continue;
@@ -2863,20 +2945,27 @@ export async function runSignalJob({
     baseline.watchlists = syncResult.watchlists;
   }
 
-  // A real reconciliation happened (the twice-daily live resync, not every 15-min scan) — recompute
-  // which logged tickers no longer belong to any watchlist and persist it onto the baseline so it
-  // survives until the next reconciliation, the same reason buildWatchlistSyncFromBaseline exists
-  // above: writeLatestStatus() overwrites the whole status file every run, so an in-memory-only
-  // value would flicker to empty on every non-sync scan in between. Detection only — nothing is
-  // archived automatically; see the "Archive Now" flow this feeds on the dashboard.
-  if (Array.isArray(syncResult?.synced) && syncResult.synced.length > 0) {
-    try {
-      const orphans = tradeLog.findWatchlistOrphans(baseline, Object.keys(rules.watchlists || {}));
-      baseline.trade_log_orphans = orphans;
-      const raw = parseJsonFile(baselinePath, {});
-      raw.trade_log_orphans = orphans;
-      writeJsonFile(baselinePath, raw);
-    } catch {}
+  // Recompute which logged tickers no longer belong to any watchlist, and persist it onto the
+  // baseline (writeLatestStatus() overwrites the whole status file every run, so an in-memory-only
+  // value would flicker to empty between runs). Detection only — nothing is archived automatically;
+  // see the confirm-gated "Archive Now" flow this feeds on the dashboard.
+  //
+  // Runs on EVERY scan, not only after a live resync. It used to be gated on
+  // `syncResult.synced.length > 0`, which is the exact mistake buildWatchlistSyncFromBaseline was
+  // written to fix for the watchlist panel: the gate keys on the *sync event* while the data source
+  // is `baseline.watchlists`, which is already the persisted source of truth and is equally valid on
+  // a scan that didn't resync. Found 2026-07-29 with 12 real orphans present, fresh membership, and
+  // `trade_log_orphans` still null — the card had been claiming "No orphaned symbols detected" for as
+  // long as the feature had existed, because no run had ever satisfied the gate. The empty-membership
+  // case is handled inside findWatchlistOrphans (returns [], never "everything is an orphan").
+  try {
+    const orphans = tradeLog.findWatchlistOrphans(baseline, Object.keys(rules.watchlists || {}));
+    baseline.trade_log_orphans = orphans;
+    const raw = parseJsonFile(baselinePath, {});
+    raw.trade_log_orphans = orphans;
+    writeJsonFile(baselinePath, raw);
+  } catch (err) {
+    console.error(`[orphans] could not recompute trade-log orphans: ${err?.message || err}`);
   }
 
   let dueScanTargets = force ? scanTargets : filterScanTargetsBySchedule(scanTargets, now, marketHours, baseline.watchlists);
@@ -2964,8 +3053,301 @@ export async function runSignalJob({
     ? await dispatchExitWebhooks(result.notify_exit_events || [], rules)
     : { sent: [], skipped: [], failed: [], armed: [] };
 
+  // Ledger-only recording for timeframes whose orders TradingView's own watchlist alert places.
+  // Deliberately NOT gated on `notify`, unlike the two dispatchers above: this sends nothing, it
+  // only writes down an order somebody else already placed. Gating it would leave the ledger with
+  // holes on any day a manual scan was the one that first observed the position — and the ledger's
+  // completeness is the whole point of this mode.
+  result.webhook_tv_alert_ledger = recordTvAlertLedger(
+    result.notify_signal_events || [],
+    result.notify_exit_events || [],
+    rules,
+  );
+
+  result.webhook_exit_pending = findUnclosedWebhookExits(result.all_scan_results);
+
+  // Cross-timeframe exits on symbols held via webhook. Detection runs on every scan (the dashboard
+  // half is free and must not depend on `notify`); only the push half is gated, exactly like the two
+  // dispatchers above.
+  try {
+    result.cross_tf_exits = findCrossTimeframeExits(result.all_scan_results);
+  } catch (err) {
+    console.error(`[cross-tf] detection failed: ${err?.message || err}`);
+    result.cross_tf_exits = [];
+  }
+  if (notify && result.cross_tf_exits.length > 0 && rules.ntfy?.url) {
+    try {
+      // Dedupe state lives on the baseline alongside pending_alert_cleanup — a standing EXIT stays
+      // the last closed trade for days, so without persistence every 15-minute scan would re-push it.
+      const raw = parseJsonFile(baselinePath, {});
+      const seen = Array.isArray(raw.cross_tf_notified) ? raw.cross_tf_notified : [];
+      const { lines, keys } = crossTfExitNotifyLines(result.cross_tf_exits, {
+        alreadyNotified: new Set(seen),
+        now,
+        timezone: marketHours?.timezone,
+      });
+      if (lines.length > 0) {
+        await pushNtfyLines(lines, {
+          url: rules.ntfy.url,
+          title: "TradingView cross-TF exit",
+          priority: rules.ntfy.priority,
+          logPrefix: "ntfy cross-tf push",
+        });
+        // Recorded only after the push is attempted, and trimmed to the most recent 500 so the
+        // baseline can't grow without bound.
+        raw.cross_tf_notified = [...seen, ...keys].slice(-500);
+        writeJsonFile(baselinePath, raw);
+        result.cross_tf_notified_lines = lines;
+      }
+    } catch (err) {
+      console.error(`[cross-tf] push failed: ${err?.message || err}`);
+    }
+  }
+
   writeLatestStatus(result);
   return result;
+}
+
+/**
+ * Positions this system opened via webhook whose strategy position has since closed, but for which
+ * no close order was ever sent. Detection only — nothing is dispatched from here.
+ *
+ * This exists because the automatic exit path can miss an exit permanently, and silently. To be
+ * dispatched, an EXIT has to be in `changedSignals` AND carry an `exitTime` on the same ET trading
+ * day as the scan (see notifyExitEntries). Both are reasonable for the normal case and both fail the
+ * same way: if no scan runs on the day a position exits — machine asleep, TradingView down, or an
+ * earlier long-running scan still holding the Task Scheduler slot — the next day's scans see the exit
+ * as neither changed nor same-day, and the close never goes out. The ledger keeps saying we hold a
+ * position the strategy closed days ago, and nothing says otherwise.
+ *
+ * Deliberately NOT auto-dispatched despite that. Sending a close order off multi-day-old inferred
+ * state is outward-facing and hard to reverse: if the position was closed at the broker some other
+ * way, the order would try to sell something no longer held. Surfacing it with a one-click Close —
+ * the same detect/surface/confirm shape as the trade-log orphan banner and the strategy-identity
+ * guard — puts a human in front of the stale case while the fresh case still closes automatically.
+ */
+/**
+ * EXIT signals on a DIFFERENT timeframe than one you hold a live webhook position on.
+ *
+ * The same ticker is routinely open on several timeframes — measured 2026-07-31, 47 of 86 open
+ * tickers were, and 5 of 6 webhook-sent positions had other legs (TD alone had five). When one of
+ * those other legs flips, that is information about a position with real money on it, and nothing
+ * surfaced it: the ledger only knows the leg it sent, and the EXIT arrives under a timeframe whose
+ * key isn't in the ledger at all, so every existing webhook path skips it.
+ *
+ * Scoped to webhook-held tickers ONLY, and that scoping is what makes it usable rather than noise:
+ * unscoped it would fire on every EXIT across 47 tickers. Even scoped, expect ~34/month (~8/week) at
+ * six positions — which is why the push half is narrower still (see `crossTfExitNotifyLines`).
+ *
+ * `relation` is the whole point of the record. An exit on a SLOWER timeframe than the one you hold
+ * (hold 2h, the 4h turns) means the larger trend rolled over underneath you. An exit on a FASTER one
+ * (hold 2h, the 45m turns) is a wiggle inside your own timeframe. Both are shown; only the first is
+ * worth interrupting for.
+ *
+ * Detection only — this never closes anything. The held leg's own strategy has not signalled an
+ * exit; another timeframe's has, and whether that means anything for your position is a judgement
+ * call, so it surfaces next to the Close buttons and stops there.
+ */
+export function findCrossTimeframeExits(scanResults) {
+  const state = readSentState().sent || {};
+  // Open webhook positions, indexed by bare ticker — a ticker can hold more than one (different
+  // timeframes), so this is a list per ticker, not a single record.
+  const heldByTicker = new Map();
+  for (const [key, rec] of Object.entries(state)) {
+    if (rec?.exit) continue;
+    const [ticker, tag] = String(key).split('|');
+    if (!ticker || !tag) continue;
+    if (!heldByTicker.has(ticker)) heldByTicker.set(ticker, []);
+    heldByTicker.get(ticker).push({ key, tag, record: rec });
+  }
+  if (heldByTicker.size === 0) return [];
+
+  const out = [];
+  for (const entry of (Array.isArray(scanResults) ? scanResults : [])) {
+    if (String(entry?.trade?.signal || "").toUpperCase() !== "EXIT") continue;
+    const symbol = entry.state?.symbol || entry.symbol || null;
+    if (!symbol) continue;
+    const exitTag = timeframeTag(entry.timeframe);
+    const held = heldByTicker.get(bareTicker(symbol)) || [];
+    for (const h of held) {
+      // Same timeframe is the ordinary exit — dispatchExitWebhooks and findUnclosedWebhookExits
+      // already own that case, and reporting it here would double up on both.
+      if (h.tag === exitTag) continue;
+      const heldMin = timeframeToMinutes(tagToResolution(h.tag));
+      const exitMin = timeframeToMinutes(entry.timeframe);
+      out.push({
+        ticker: bareTicker(symbol),
+        symbol,
+        held_key: h.key,
+        held_timeframe: h.tag,
+        held_side: h.record.side || null,
+        held_entry_price: h.record.price ?? null,
+        held_entry_time: String(h.key).split('|')[2] || null,
+        held_sent_at: h.record.at || null,
+        exit_timeframe: exitTag,
+        exit_watchlist: entry.watchlist_name || null,
+        exit_time: entry.trade?.exitTime || null,
+        exit_price: entry.trade?.exitPrice ?? null,
+        // Preformatted by data.js as "$123.45 | +4.50%" — kept as text rather than reparsed into a
+        // number, since every consumer here only displays it.
+        exit_pnl: entry.trade?.netPnl ?? null,
+        // null when either timeframe can't be parsed — surfaced as unknown rather than guessed,
+        // and the push gate treats unknown as not-slower (i.e. dashboard only).
+        relation: heldMin && exitMin ? (exitMin >= heldMin ? "slower" : "faster") : null,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Invert timeframeTag() back to a TradingView resolution so timeframeToMinutes can read it. The
+ * ledger stores the human tag ("45m", "1d"); scan results carry the raw resolution ("45", "D").
+ */
+function tagToResolution(tag) {
+  const t = String(tag || "").trim().toLowerCase();
+  const m = /^(\d+)(m|h|d|w|mo)$/.exec(t);
+  if (!m) return t;
+  const n = Number(m[1]);
+  if (m[2] === "m") return String(n);
+  if (m[2] === "h") return String(n * 60);
+  if (m[2] === "d") return n === 1 ? "D" : String(n * 1440);
+  if (m[2] === "w") return "W";
+  return "M";
+}
+
+/**
+ * The push half, deliberately narrower than the dashboard half.
+ *
+ * Three gates, each removing a distinct kind of noise:
+ *  - `relation === "slower"` — a faster leg turning is a wiggle inside the held timeframe, still
+ *    visible on the dashboard but not worth an interrupt. This is the gate that takes ~8/week down
+ *    to ~2-3.
+ *  - same ET trading day as the scan, judged on the EXIT's own timestamp (never the held position's
+ *    entry time, which is days old by definition — the same trap documented for dispatchExitWebhooks).
+ *    A DOM-sourced EXIT has no exitTime and is therefore never pushed, rather than guessed at.
+ *  - not already pushed, keyed `ticker|exitTf|exitTime`. Without this the same standing exit would
+ *    re-push every 15 minutes for as long as it remained the last closed trade.
+ */
+export function crossTfExitNotifyLines(crossExits, { alreadyNotified = new Set(), now = new Date(), timezone } = {}) {
+  const lines = [];
+  const keys = [];
+  for (const x of (Array.isArray(crossExits) ? crossExits : [])) {
+    if (x.relation !== "slower") continue;
+    if (!x.exit_time || !isSameTradingDay(x.exit_time, now, timezone)) continue;
+    const dedupeKey = `${x.ticker}|${x.exit_timeframe}|${x.exit_time}`;
+    if (alreadyNotified.has(dedupeKey)) continue;
+    keys.push(dedupeKey);
+    const pnl = x.exit_pnl && x.exit_pnl !== "—" ? ` (${x.exit_pnl})` : "";
+    const px = x.exit_price && x.exit_price !== "—" ? x.exit_price : "?";
+    lines.push(`CROSS-TF EXIT: ${x.ticker} ${x.exit_timeframe} exited @ ${px}${pnl} | you hold ${x.held_timeframe} via webhook | review`);
+  }
+  return { lines, keys };
+}
+
+export function findUnclosedWebhookExits(scanResults) {
+  const out = [];
+  for (const entry of (Array.isArray(scanResults) ? scanResults : [])) {
+    if (String(entry?.trade?.signal || "").toUpperCase() !== "EXIT") continue;
+    const symbol = entry.state?.symbol || entry.symbol || null;
+    const entryTime = entry.trade?.entryTime || null;
+    if (!symbol || !entryTime) continue;
+    const key = sentKey({ symbol, timeframe: entry.timeframe, entryTime });
+    const record = key ? getSentRecord(key) : null;
+    // Only positions WE opened and never closed. tv-alert entries are excluded for the same reason
+    // the dispatcher excludes them: TradingView sends their close.
+    if (!record || record.exit || record.source === "tv-alert") continue;
+    out.push({
+      symbol,
+      timeframe: entry.timeframe,
+      watchlist_name: entry.watchlist_name || null,
+      side: entry.trade?.side || null,
+      entry_time: entryTime,
+      entry_price: record.price ?? null,
+      exit_time: entry.trade?.exitTime || null,
+      exit_price: entry.trade?.exitPrice ?? null,
+      sent_at: record.at || null,
+      source: record.source || null,
+    });
+  }
+  return out;
+}
+
+/**
+ * Record OPEN/EXIT signals on TradingView-alert timeframes into the webhook ledger without sending
+ * anything.
+ *
+ * The subscription only carries two watchlist alerts, and those POST to the Railway executor
+ * directly — so for those timeframes a real order exists that this system never sent and therefore
+ * had no record of. That hole had four consequences, all of them silent:
+ *   - the dashboard offered a "Send" button on a position that was already filled (duplicate-order risk),
+ *   - price-alert auto-creation and local level monitoring skipped it (both now scoped to
+ *     webhook-sent positions), so a live-money position got no monitoring at all,
+ *   - it never competed for the TradingView alert quota, losing to positions with no money on them,
+ *   - and there was no single place to reconcile live positions against the executor's own portfolio.
+ *
+ * Writing the same ledger record the scanner would have written closes all four at once, because
+ * every one of those paths already keys on `alreadySent(key)`.
+ *
+ * `sent: false` + `source: "tv-alert"` mark the record as observed-not-sent. Nothing branches on
+ * those fields today — `alreadySent()` only tests for the record's existence — they exist so the UI
+ * can label the row honestly and so a future reconciliation can tell the two origins apart.
+ */
+export function recordTvAlertLedger(entryEvents, exitEvents, rules) {
+  const out = { recorded: [], recorded_exits: [], skipped: [], timeframes: [] };
+  const settings = loadWebhookSettings(rules);
+  out.timeframes = settings.tvAlertTimeframes;
+  if (settings.tvAlertTimeframes.length === 0) return out;
+
+  const onTvAlertTimeframe = (ev) => settings.tvAlertTimeframes.includes(String(ev.timeframe));
+
+  for (const ev of (Array.isArray(entryEvents) ? entryEvents : []).filter(onTvAlertTimeframe)) {
+    const key = sentKey({ symbol: ev.symbol, timeframe: ev.timeframe, entryTime: ev.entry_time });
+    // Same refusal as the send paths: an unknown entry time yields no stable key, and fabricating
+    // one would corrupt every dedupe/recency check that reads it later.
+    if (!key) {
+      out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "no_entry_time" });
+      continue;
+    }
+    if (alreadySent(key)) continue;
+    recordSent(key, {
+      symbol: bareTicker(ev.symbol),
+      tag: timeframeTag(ev.timeframe),
+      side: orderAction(ev.side),
+      price: ev.entry_price === null || ev.entry_price === undefined ? "" : String(ev.entry_price),
+      sent: false,
+      source: "tv-alert",
+    });
+    out.recorded.push({ symbol: bareTicker(ev.symbol), tag: timeframeTag(ev.timeframe) });
+    console.log(`[webhook] ledger-only ENTRY ${bareTicker(ev.symbol)} (${timeframeTag(ev.timeframe)}) — placed by TradingView alert`);
+  }
+
+  for (const ev of (Array.isArray(exitEvents) ? exitEvents : []).filter(onTvAlertTimeframe)) {
+    const key = sentKey({ symbol: ev.symbol, timeframe: ev.timeframe, entryTime: ev.entry_time });
+    if (!key) {
+      out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "no_entry_time" });
+      continue;
+    }
+    // Only close out a record whose entry this ledger actually holds. An EXIT for a position that
+    // predates the toggle has no entry record, and inventing one would claim an entry order existed.
+    if (!alreadySent(key)) {
+      out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "entry_not_in_ledger" });
+      continue;
+    }
+    if (alreadyExitSent(key)) continue;
+    recordExitSent(key, {
+      symbol: bareTicker(ev.symbol),
+      tag: timeframeTag(ev.timeframe),
+      side: exitOrderAction(ev.side),
+      price: ev.exit_price === null || ev.exit_price === undefined ? "" : String(ev.exit_price),
+      sent: false,
+      source: "tv-alert",
+    });
+    out.recorded_exits.push({ symbol: bareTicker(ev.symbol), tag: timeframeTag(ev.timeframe) });
+    console.log(`[webhook] ledger-only EXIT ${bareTicker(ev.symbol)} (${timeframeTag(ev.timeframe)}) — closed by TradingView alert`);
+  }
+
+  return out;
 }
 
 /**
@@ -3037,11 +3419,23 @@ async function dispatchTradeWebhooks(events, rules) {
  * about could error out, or — worse, if the receiver doesn't validate — open an unintended opposite
  * position instead of closing anything.
  *
- * Same three gates as dispatchTradeWebhooks, plus a fourth that's the entire point of this function:
+ * Gates, and note that "is the timeframe armed" is deliberately NOT one of them:
  *   1. notify (real scheduled scan only),
- *   2. timeframe armed,
- *   3. alreadySent(key) — the matching ENTRY (same ticker|tag|entryTime) was sent via this webhook,
+ *   2. an ENTRY for this exact ticker|tag|entryTime is in the ledger — i.e. we opened it,
+ *   3. that entry was placed by US, not by a TradingView alert (`source: "tv-alert"`), which sends
+ *      its own close,
  *   4. !alreadyExitSent(key) — this exit hasn't already gone out.
+ *
+ * **Arming gates opening, not closing** (changed 2026-07-31 after a real position hit this). It used
+ * to require `webhook.enabled_timeframes` to contain the timeframe, which meant a position entered
+ * with the MANUAL Send button — explicitly supported on any timeframe, armed or not — could never be
+ * closed automatically. Live case: an AME 1H entry sent manually on 2026-07-29 flipped short on
+ * 07-31 and no close order went out, because nothing was armed and this function returned at the
+ * first line. That leaves a real position open at the broker with the system that opened it
+ * declining to close it, which is strictly worse than the risk arming is there to control: arming
+ * decides whether new capital gets committed without a human, while closing only ever unwinds a
+ * position a human already committed to. The ledger record is the authorization.
+ *
  * Side is inverted from the position's entry side via exitOrderAction (closing a LONG is a sell,
  * closing a SHORT is a buy) — passed as buildWebhookPayload's `action` override so it isn't re-run
  * through the entry-side mapping a second time.
@@ -3052,7 +3446,6 @@ async function dispatchExitWebhooks(events, rules) {
 
   const settings = loadWebhookSettings(rules);
   out.armed = settings.enabledTimeframes;
-  if (settings.enabledTimeframes.length === 0) return out;
 
   const creds = loadWebhookCredentials();
   if (!creds.configured) {
@@ -3061,7 +3454,6 @@ async function dispatchExitWebhooks(events, rules) {
   }
 
   for (const ev of events) {
-    if (!settings.enabledTimeframes.includes(String(ev.timeframe))) continue;
     // Keyed on entry_time, not exit_time — this must match the exact key the opening webhook (if
     // any) was recorded under, since that record's existence is the gate below.
     const key = sentKey({ symbol: ev.symbol, timeframe: ev.timeframe, entryTime: ev.entry_time });
@@ -3069,8 +3461,15 @@ async function dispatchExitWebhooks(events, rules) {
       out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "no_entry_time" });
       continue;
     }
-    if (!alreadySent(key)) {
+    const entryRecord = getSentRecord(key);
+    if (!entryRecord) {
       out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "entry_not_sent_by_us" });
+      continue;
+    }
+    // Checked on the RECORD, not the current tv_alert_timeframes config: the config can change after
+    // a position is opened, and what matters is who actually placed this entry.
+    if (entryRecord.source === "tv-alert") {
+      out.skipped.push({ symbol: ev.symbol, timeframe: ev.timeframe, reason: "entry_placed_by_tv_alert" });
       continue;
     }
     if (alreadyExitSent(key)) {

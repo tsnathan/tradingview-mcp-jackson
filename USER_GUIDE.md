@@ -193,24 +193,59 @@ A position appears here when the strategy tester's most recent trade row has an 
 
 During an incremental (partial) scan update, the dashboard shows the P&L values stored from the previous completed scan. The live values from the current scan are only written after `createExcursionAlerts` runs at the end of the full scan cycle.
 
-The table includes three additional columns derived from the full trade history:
+The table includes these additional columns derived from the full trade history:
 
+- **Edge** — a 0-100 quality score for the symbol on that timeframe. See "Ranking signals for a fixed-size portfolio" below.
+- **Org / New** — the position's rank by Edge among its timeframe peers, before and after today's new signals arrived.
 - **Hist. MFE avg / max** — the average and maximum favorable excursion percentage across all completed trades for that symbol and timeframe. These represent how far price typically moved in your favor before the trade closed.
 - **Hist. MAE avg / max** — the average and maximum adverse excursion percentage. These represent how far price moved against you during historical trades.
-- **Alert Levels (avg / max)** — all four levels are always computed and shown for context:
+- **Alert Levels (avg / max)** — all four levels are always computed and shown for context, on **every** open position:
   - Stop avg and Stop max — entry price minus avg/max MAE%
   - Target avg and Target max — entry price plus avg/max MFE%
 
-  Only the **avg pair** (Stop avg + Target avg) gets a real TradingView price alert per open trade — reduced from four to two so a handful of open trades doesn't burn through the account's alert quota. The status indicator shows:
-  - **✓ Alerts set** — the avg-pair alerts have been created in TradingView
-  - **Quota full (N/20 active)** — the configured quota ceiling was reached; levels are shown but alerts were not created. They will be retried on the next scan if quota frees up.
+  **Real price alerts are only created automatically for positions with a webhook entry in the ledger** — i.e. positions where an actual order was placed through the trade executor (sent by this scanner, or by a TradingView alert on a timeframe you've marked "TV alert → ledger"). Everything else shows its suggested stop/target for you to act on manually. This changed on 2026-07-29: as the watchlist universe grew, auto-creating alerts for every detected position both exhausted the 20-alert quota and pushed level-hit notifications for positions with no money on them.
+
+  The status indicator shows:
+  - **✓ Alerts set** — the avg-pair alerts (Stop avg + Target avg) have been created in TradingView
+  - **No webhook sent — auto-alert creation disabled, create manually if needed** — the normal state for a position you haven't placed an order for
+  - **Local alert N/20** — a webhook-sent position that still couldn't get a real alert slot; monitored locally instead (see below)
   - **⏳ Pending** — not yet processed in the current cycle
 
-  Because only the avg pair has a real TradingView alert, the **max pair is monitored locally instead** — every scan checks the live quote against the stored max-MAE/max-MFE levels (and the avg pair too, until its real alert exists) and pushes an ntfy notification titled "TradingView level alert" the first time a level is hit. This runs at the watchlist's own scan cadence (e.g. every 15 minutes for a 15m trade), not tick-by-tick like a real TradingView alert, which is the accepted tradeoff for levels that don't fit the quota.
+  Webhook-sent positions get **priority** for the alert quota, and if the quota is full a longer-timeframe non-webhook position's alert is evicted to make room (a 1D position loses the least from dropping to local monitoring, since it's only checked once per its own long scan interval anyway).
 
-  When a position closes, its real TradingView alerts are automatically deleted — no manual cleanup needed.
+  For webhook-sent positions, the **max pair is monitored locally** — every scan checks the live quote against the stored max-MAE/max-MFE levels (and the avg pair too, until its real alert exists) and pushes an ntfy notification titled "TradingView level alert" the first time a level is hit. This runs at the watchlist's own scan cadence (e.g. every 15 minutes for a 15m trade), not tick-by-tick like a real TradingView alert.
+
+  When a position closes, its real TradingView alerts are automatically deleted — no manual cleanup needed. Alerts for symbols dropped from a watchlist entirely are also cleaned up at the twice-daily watchlist reconciliation, which is the only path that would otherwise leave them stranded until they self-expire.
 
 Alerts are created via TradingView's internal price-alerts REST API and count against your plan's active alert limit — only genuinely *active* alerts count, so old expired/inactive ones don't eat into the quota. Alert creation is idempotent — once alerts are recorded for a `symbol|timeframe` key at a given entry price, subsequent scans skip that trade. If the entry price changes (a new trade on the same symbol), alerts are re-created.
+
+Pre-existing alerts created before the webhook-only policy are left alone, not torn down.
+
+### Ranking signals for a fixed-size portfolio
+
+If you can only hold N positions at once, the useful question is which of the available signals to take and which holding to give up. The **Edge** column answers it.
+
+**Edge** is the symbol's *expectancy percentile within its own timeframe*, 0-100, computed from the closed-trade log. 100 means the best average trade of any symbol on that timeframe; 0 means the worst. Hover the cell for the underlying numbers (expectancy per trade, win rate, average win / average loss, profit factor, average hold, trade count, and which exit-rule variant it was measured on).
+
+Why expectancy and not profit factor, Sharpe, or CAGR/drawdown — all of which TradingView's own Key Stats panel shows? Because those were tested on this data and **rank symbols slightly worse than random** out of sample. Ranking each symbol on the first half of its own history and scoring it on the second half gives a rank correlation of +0.38 for expectancy, but −0.17 for profit factor, −0.13 for Sharpe and −0.15 for CAGR/drawdown. The reason is that maximum drawdown over a dozen trades is essentially that symbol's single worst trade, which is noise and mean-reverts, so dividing by it ranks symbols by how lucky their worst trade happened to be. Those metrics are still shown as diagnostics — they're just not what the score is built from.
+
+Percentile rather than the raw expectancy value because expectancy scales hard with timeframe (roughly 1.7%/trade at 15m against 7% at 4H), so a raw ranking would really just be a timeframe ranking. The percentile is also what makes rows from different timeframes comparable for the position cap.
+
+**Org and New** are the same rank, computed over two different sets, both within the row's own timeframe:
+
+- **Org** — rank among the positions that were already open *before* today's new signals arrived. A position opened today shows "new" here, because it wasn't in that book.
+- **New** — rank among every position now open on that timeframe, today's entries included, with a ▼ / ▲ arrow when the two disagree.
+
+Read together they show displacement. A holding that went from 3/10 to 9/13 has been pushed down by better signals that arrived today, and the newcomer sitting at 2/13 with no Org rank is what pushed it — that's the trade to consider swapping.
+
+**Max positions** (top right of the card, default 15) pools *every* open position across all timeframes by Edge score and flags the ones ranked below the cap as over-cap liquidation candidates, naming the weakest three. It's stored in your browser, so changing it re-renders instantly with no scan or restart.
+
+Two deliberate limits worth knowing:
+
+- Symbols with fewer than 8 closed trades show **n/a** and are never flagged over-cap. "Not enough history to judge" must not read as "weak", or the cap would tell you to liquidate positions purely for being new to the log.
+- Edge ignores the position's current unrealized P&L on purpose. Cutting positions that happen to be down was tested twice here (as a stop-loss variant, and as a best-case simulation that was allowed to cheat and look at each trade's final outcome) and lost both times, because long positions recover a long way from their worst point on average — roughly 13% adverse excursion against −2.5% final. Edge answers "is this symbol's average trade any good on this timeframe", which is a question the trade log can actually answer.
+
+**Use it as a filter, not a priority order.** Testing on this data: changing *which* signal you take when several fire at once barely moved anything, because simultaneous signals are rare. Dropping the bottom half by past expectancy moved a lot — but only when you're genuinely turning signals away. At 5 slots it helped in all 5 test windows; at 10 slots only 3 of 5, and twice it hurt materially. Check the fill rate in the Portfolio Simulation tab before trimming anything. And don't add a drawdown screen on top of it — that was tested separately and loses on both return *and* portfolio drawdown, because on leveraged/volatile instruments the volatility that produces the drawdown is the same volatility that produces the edge.
 
 If an expected open position is not visible:
 - confirm TradingView is connected and the chart has finished loading
@@ -244,6 +279,192 @@ This card exports the Strategy Tester **Performance Summary** tab data for all w
 **Strategy mode:** the export works in any mode (Fast or sweep/IS-OOS). It reads the Performance Summary tab which is always populated by the strategy engine itself. In contrast, TA Metrics Preflight (below) requires sweep mode.
 
 **If a row shows an error:** the strategy tester panel did not load data for that symbol within the timeout. This usually means no strategy is applied to the chart, or TradingView was still recalculating. Re-run the export to retry those symbols.
+
+### Trade execution webhook
+
+Your TradingView subscription only carries **two** watchlist alerts, and those already POST to the Railway executor directly. Every other timeframe would otherwise mean reading an ntfy push and placing the order by hand, which doesn't scale at a 30m/45m cadence. This card's **Trade Webhook** column lets the scanner send the *same payload TradingView's own alert sends*, so the executor can't tell the difference.
+
+#### One-time setup
+
+Create `webhook.local.json` in the project root (it's gitignored — safe for secrets):
+
+```json
+{
+  "url": "https://your-railway-app.up.railway.app/webhook-path",
+  "secret": "your-shared-secret"
+}
+```
+
+Both fields are required — a filled secret with a blank URL still reads as unconfigured and every send is refused. Alternatively set `TRADE_WEBHOOK_URL` and `TRADE_WEBHOOK_SECRET` as environment variables, which take precedence.
+
+**Never put these in `rules.json`** — that file is tracked in git. Only the non-sensitive switches (`webhook.group`, `webhook.enabled_timeframes`, `webhook.tv_alert_timeframes`) live there, because the dashboard has to persist them.
+
+Restart the dashboard server after editing (it holds config in memory).
+
+#### Per-timeframe modes
+
+Each watchlist group header has two mutually exclusive checkboxes. Enabling one clears the other, in the config and in the UI, because having both set would mean two orders for one signal.
+
+| Mode | What it does |
+|---|---|
+| **auto-send** | The scheduled scan POSTs a real order automatically for every new OPEN signal on this timeframe, and the matching close when it exits. Confirmation dialog on arming; **this places real orders with no further prompting**. |
+| **TV alert → ledger** | The scanner sends **nothing**. Use this on the one or two timeframes where a TradingView watchlist alert is already POSTing to the executor. Every OPEN/EXIT the scan detects is recorded in the ledger as if it had been sent. |
+
+**Why the TV-alert mode matters.** Before it existed, a position opened by a TradingView alert was invisible to this system's bookkeeping, which caused four silent problems: the dashboard offered a "Send" button on a position that was already filled (duplicate-order risk), price alerts and level monitoring skipped it entirely because both are now scoped to webhook-sent positions, it lost the alert quota to positions with no money on them, and there was no single place to reconcile live positions. Recording the same ledger entry closes all four at once, because every one of those paths already keys on "is this position in the ledger".
+
+Rows recorded this way are labelled **◆ via TV alert** rather than **✓ sent**, so "we placed this order" and "we observed this order" are never confused. Recording is not gated on the scheduled scan — a manual scan that first observes the position records it too, since the order was placed regardless of which scan noticed.
+
+Auto-exit never fires for these positions: TradingView's own alert closes them, and the auto-exit path only runs on `auto-send` timeframes.
+
+#### Manual Send and Close
+
+Every open position gets a manual **Send** control regardless of arming — an order-type dropdown, a time-in-force dropdown, the price inputs the chosen type requires, and a Send button with a confirmation dialog. Useful for testing the wiring against one real position before arming a whole timeframe.
+
+| `order_type` | Required |
+|---|---|
+| `market` (default) | — |
+| `limit` | limit price |
+| `stop` | stop price |
+| `stop_limit` | limit price **and** stop price |
+| `trailing_stop` | trail % **or** trail $ (time-in-force is forced to GTC by the executor) |
+
+| `time_in_force` | Notes |
+|---|---|
+| `gtc` | the executor's default |
+| `day` | regular-session day order |
+| `opg` | at-the-open; an unfilled OPG order is resubmitted as a market order at 9:35 AM ET |
+| `cls` | at-the-close |
+| `ioc` / `fok` | forwarded to the broker, not used by any strategy path |
+
+`opg` and `cls` are only valid on market and limit orders. A priced order type without its price, or an invalid combination, is refused before anything is sent — validated in the browser *and* again on the server, because this places a real order.
+
+Prices are never computed for you. Bid/ask aren't available from a normal scan (the fields come from a panel that isn't part of this chart layout), so an "automatic midpoint" limit price would have silently fallen back to a market order nearly every time. You type the price.
+
+Once a position's entry is in the ledger, the cell offers a **Close** control with the same order form. It only appears for positions this system knows were opened at the executor — closing something the executor was never told about could error out or, worse, open an unintended opposite position. This is the button to use when the Edge ranking says a holding should make room for a better signal.
+
+#### Automatic closes
+
+**Any position whose entry is in the ledger gets an automatic close order when the strategy exits it — whether or not its timeframe is armed.** Arming controls whether new orders are *opened* without you; it does not control closing. A position you sent by hand on an unarmed timeframe would otherwise sit open at the broker with the system that opened it declining to close it, which is worse than the risk arming exists to manage.
+
+Two exceptions: positions recorded from a TradingView alert (that alert sends its own close), and positions you already closed manually.
+
+The close fires on the first **scheduled** scan after the exit is detected, so it is not instant — at a 15-minute cadence it lands on the next tick, and a scan already in flight when the exit happens won't catch it until the following one. If you want out sooner, use the Close button.
+
+**If no scan runs on the day a position exits, the automatic close is missed for good.** An exit only qualifies while it's still same-day; the next day's scans no longer recognize it. That happens when the machine is asleep, TradingView is down, or an earlier long-running scan is still holding the scheduler slot.
+
+Those get caught rather than lost: the Open Trades card shows an orange banner listing any position opened by webhook whose strategy position has closed with no close order sent, each with a **Send close** button. It is not sent automatically, because by definition the state behind it is stale — check the broker still holds the position before clicking, since if it was closed some other way the order would try to sell what you no longer hold.
+
+#### Safety gates
+
+Three gates must all pass before an *automatic* order goes out, and each covers a different failure:
+
+1. the scan was the real scheduled one (`run_signal_job.js --notify`) — no dashboard-triggered or ad-hoc scan can ever place a live order,
+2. the timeframe is armed for auto-send,
+3. this exact `ticker|timeframe|entryTime` isn't already in the ledger.
+
+Gate 3 is load-bearing: the same OPEN position is re-detected on every scan for as long as it stays open, so without it a 15-minute cadence would re-order the same entry all day. Entry time is in the key because it's precisely what changes when a genuinely new position opens on a symbol that already fired. A position with an unknown entry time is skipped, never given a substitute.
+
+Failed sends are deliberately **not** recorded as sent, so the next scan retries.
+
+The ledger lives at `status/webhook-sent-state.json`. To check what's armed and what's been sent without opening the dashboard:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:3030/api/webhook-config | Select-Object configured, enabledTimeframes, tvAlertTimeframes
+```
+
+The secret is never included in any response, only whether one is configured.
+
+### Webhook Orders tab
+
+Every order this system sent to the trade executor, read straight from the ledger (`status/webhook-sent-state.json`). An entry stays **open** here until a matching close is sent — and that same record is what the auto-close, the price-alert priority and the duplicate-send guard all key on, so this is the definitive list of what the system believes it has working.
+
+It is *not* a broker position report. The ledger records what was sent; whether the broker actually holds it is the Executor Portfolio card's job. A disagreement between the two is worth investigating, which is exactly why they're separate views.
+
+**Open — sent, not yet closed** lists each open order with its symbol, timeframe, side, price, order type, when it went out, and where it came from (`manual` = the Send button, `auto` = an armed scheduled scan, `TV alert` = recorded from a TradingView watchlist alert). Each row carries the full order form — order type, time in force, and whatever price fields the type needs — so you can close with a limit, stop, or trailing stop rather than only at market. TV-alert rows show no Close button: TradingView's own alert sends their close, and sending a second one would double up.
+
+**History** shows every order, open and closed, with both legs side by side — entry side/price/order type/time sent, and the same for the exit. Filter by:
+
+- **Symbol** — substring match on the bare ticker, so `SOX` finds SOXL and pasting `BATS:SOXL` still matches.
+- **Timeframe** — only values that actually appear in the ledger, so a filter can never return nothing by mistake.
+- **Status** — all, open only, or closed only.
+
+The tab reloads every time you open it rather than caching, because an order can be sent from anywhere — a scheduled scan, the Signals tab, or this tab — and a stale view could offer Close on a position that has already been closed.
+
+### Executor Portfolio card
+
+Reads the Railway app's own positions and reconciles them against the webhook ledger. This is the **only source of truth for what is actually held and at what size** — everything else on this dashboard is inference from TradingView's strategy output. Refresh is manual (it hits an external service), and it loads once when the page opens.
+
+Add the endpoint to `webhook.local.json`:
+
+```json
+{
+  "url": "https://your-app.up.railway.app/webhook-path",
+  "secret": "your-shared-secret",
+  "portfolio_url": "https://your-app.up.railway.app/portfolio"
+}
+```
+
+Authentication defaults to `?secret=…` on the query string, reusing the webhook secret — the GET analogue of how the webhook already authenticates. If your endpoint wants something else, add `"portfolio_auth"`:
+
+| Value | Sends |
+|---|---|
+| `query` (default) | `?secret=…` — rename the param with `portfolio_auth_param` |
+| `bearer` | `Authorization: Bearer <secret>` |
+| `header` | `X-Api-Key: <secret>` — rename with `portfolio_auth_header` |
+| `body` | POST with `{"secret": "…"}`, identical to the webhook |
+| `none` | no credential |
+
+A 401/403 is reported in the card **with the status and response body**, so getting the mode wrong is a one-look fix rather than a guess. Set `portfolio_method` to override GET/POST independently.
+
+**The response schema doesn't need to match anything.** The card finds the positions list wherever it sits (a bare array, or under `positions` / `holdings` / `data` / `openPositions` / one level of nesting) and matches field names ignoring case, underscores and dashes — so `avgEntryPrice`, `avg_entry_price` and `AVG-ENTRY-PRICE` all resolve. Symbol, side, quantity, average price, last price, market value and unrealized P&L are each matched against a list of common names; anything it can't map shows as `—` rather than being guessed from a neighbouring field. A negative quantity is read as a short. Unrealized-percent values are treated as a fraction when the magnitude is ≤1 (`0.0084` → `0.84%`).
+
+Because it's shape-agnostic, the card also shows a collapsible **Raw response sample** of the first row. If a column reads `—` when your API clearly returns that value, that sample is what to look at — the field-name list can then be extended.
+
+**What it tells you:**
+
+- **Weight** — each position's share of total portfolio value, next to what an even split across N positions would be. Absolute position size needs account equity, which the endpoint may not return; relative weight is the practical read on whether one position is oversized.
+- **Held vs cap** — position count against your Max positions setting, so an over-capacity book is obvious.
+- **⚠ untracked** — the broker holds it but no open ledger record covers it. Either it was entered outside this system, or a close was recorded here while the broker still holds it (a close order that never filled).
+- **Open ledger records with no broker position** — the mirror case: either the entry never filled, or it closed at the broker and no scan has seen the EXIT yet.
+
+Matching is by ticker with the ledger side aggregated, because the broker holds one position per ticker no matter how many timeframes signalled it — the **Ledger TF** column lists which ones contributed, with a ◆ marking entries recorded from a TradingView alert. Matching per timeframe instead would report a false break for every multi-timeframe symbol.
+
+Neither side is assumed to be wrong: the card reports the difference and leaves the call to you.
+
+### Edge Analysis tab
+
+Ranks and compares what the closed-trade log actually shows, per symbol and per timeframe. All of it respects the **Exit rule** chip row (see "Comparing exit rules" below) and defaults to the variant with the most trades, never a pool of all of them.
+
+- **Symbol Ranking** — every symbol|timeframe sorted by expectancy, with a Keep / Watch / Drop verdict based on its percentile *within its timeframe*. Also shows CAGR and "Expected" side by side: CAGR compounds the observed result over the calendar span, while Expected multiplies the average trade by how many such trades fit in a year at that symbol's own hold period. They can disagree in sign, and both are real — CAGR is the compounding-equity lens, Expected is the trade-frequency lens.
+- **Timeframe Comparison** — the same aggregated per timeframe, plus identical-calendar-window comparisons (6 / 12 / 24 months) so a timeframe with more loaded history doesn't win on span alone.
+- **Open Position Concurrency** — least / average / max number of simultaneously open positions over the trailing 1, 2 and 3 months, per timeframe and pooled. The average is time-weighted, so a brief lull and an all-day stretch at the same level don't count equally. This is the number to check against your Max positions cap. It's historical and closed-trades-only: a position still open right now has no exit time yet, so the most recent slice reads a little low — the Open Trades count is the live figure.
+- **Exit reasons** — what actually closes trades per timeframe. The direct evidence for whether a stop ever fires.
+
+### Portfolio Simulation tab
+
+Replays the closed-trade log as a single account with a fixed number of position slots, so you can see what a capacity limit really costs. Reports fill rate (what share of signals you'd have had room for), time-weighted capital utilization, CAGR, max drawdown and CAGR/drawdown, plus a sweep across slot counts.
+
+**Check fill rate here before trimming a watchlist by Edge.** Selection only pays when you're turning signals away; above roughly 65% fill it mostly just removes trades.
+
+### Symbol Lookup tab
+
+Everything known about one ticker in one place: which watchlists hold it, any open position per timeframe, per-timeframe stats, and its closed-trade history. The closed-trade table includes a `webhook` column showing what the ledger recorded for each entry (`✓ entry only`, `✓ entry+exit`, or `—`).
+
+### Trade Log Orphans card
+
+Lists symbols that still have trade history in the active log but are no longer in any watchlist. Left alone they skew Edge Analysis and Portfolio Simulation, since their trades belong to a strategy you're no longer running on them. The card shows ticker, trade count, timeframes and last trade date, with an **Archive All** button (confirmation required) that moves those rows to `trade-log/archive/`.
+
+The card also now supports row selection: you can choose one or more orphaned tickers and click **Archive selected** to move only those rows. A **Clear selection** button resets your choices without reloading the card.
+
+**Sweep now** recomputes the list on demand. It's instant and needs no TradingView connection — it just diffs the active trade log against the watchlist membership already stored in the baseline. After sweeping, the card states what date that membership is from, and warns if it's more than a day old.
+
+What Sweep does *not* do is re-read your watchlists from TradingView. So if you removed symbols more recently than the last watchlist reconciliation, they won't appear yet no matter how many times you sweep — resync membership first (a scan does this at market open and close, or run `node src/cli/index.js watchlist sync`), then sweep.
+
+Detection also runs automatically on every scan. Archiving stays deliberately manual: an automated job silently rewriting trade-history CSVs off a watchlist read that can occasionally fall back to stale data is a worse failure mode than a banner one click away from doing it correctly. To reverse an archive:
+
+```powershell
+node .\scripts\archive_trade_log.js --restore
+```
 
 ### Previous Signals
 
@@ -523,11 +744,16 @@ The `ELECTRON_EXTRA_LAUNCH_ARGS` environment variable stored at `HKEY_CURRENT_US
 
 - `rules.json` — your watchlists and trading rules
 - `rules.example.json` — template to copy for first-time setup
+- `webhook.local.json` — trade-executor URL and secret (**gitignored**, create it yourself; see "Trade execution webhook")
 - `swing-signal-baseline.json` — saved signal and trade state
 - `status/latest-signal-status.json` — dashboard data source
 - `status/watchdog-state.json` — watchdog retry counter (auto-created)
 - `status/watchlist-sync-state.json` — tracks which date's open/close watchlist sync already ran (auto-created)
+- `status/webhook-sent-state.json` — the trade-webhook ledger: which entries/exits were sent or observed (auto-created)
+- `status/strategy-perf.json` — live open P&L / max drawdown snapshots per symbol|timeframe
+- `trade-log/trades-*.csv` — closed-trade history per timeframe; `trade-log/archive/` holds archived orphans
 - `signal-scan.log` — appended output from the scheduled PowerShell job
+- `dashboard-server.log` — appended output from the dashboard server when it was started by ▶ Restart Server
 - `scripts/run_signal_job.ps1` — scheduled job entry point
 - `scripts/tv_watchdog.ps1` — CDP watchdog (run by `TVWatchdog` task every 5 min)
 - `scripts/serve_signal_status.js` — local dashboard server
@@ -560,6 +786,18 @@ A `LastTaskResult` of `0x800710E0` means the scheduler tried to start a new inst
 ### Browser page does not auto-refresh when a new scan runs
 
 The dashboard uses Server-Sent Events (SSE) to push updates from the server to the browser. On Windows, the underlying file watcher can silently drop events. If you see "Waiting for the next scheduled scan update…" in the refresh note, the SSE stream lost its connection. Reload the page to reconnect — the latest data will load immediately, and SSE will resume.
+
+### The dashboard loads but a button does nothing (or a change to the code had no effect)
+
+The dashboard server holds all its code and config in memory. Editing `rules.json`, `webhook.local.json`, or anything under `src/` has no effect on the running server until it restarts. The **scheduled scan is unaffected** — it's a fresh process every run — so this only bites things the dashboard server itself executes: ▶ Run Scan Now, manual webhook sends, the analysis tabs.
+
+Restart it from the dashboard, or:
+
+```powershell
+Invoke-RestMethod -Method Post http://127.0.0.1:3030/api/restart
+```
+
+A restarted server writes its output to `dashboard-server.log`. If you ever see a server that answers some pages but hangs forever on others with no error anywhere, check that file — before 2026-07-29 the restart inherited a console pipe with nothing reading it, and once its buffer filled, every request that logged would block while requests that happened not to log kept working.
 
 ### TradingView Status shows Disconnected
 

@@ -116,6 +116,9 @@
   "notes": "Swing Profile Strategy [BigBeluga] modified to use trailing stop exit. IS/OOS split 66/34 visible on chart (bottom-right table). Parameter sweep testing 8 trail % values simultaneously (top-right table). Pine script: C:/Users/tsnat/tradingview-mcp-jackson/swing-profile-trailing.pine",
   "webhook": {
     "group": "swing",
-    "enabled_timeframes": []
+    "enabled_timeframes": [],
+    "tv_alert_timeframes": [
+      "15"
+    ]
   }
 }

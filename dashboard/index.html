@@ -59,6 +59,18 @@
       white-space:pre-wrap;
     }
     .action-message-error { color:#fca5a5; }
+    .spinner-inline {
+      display: inline-block;
+      width: 0.9em;
+      height: 0.9em;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spinner-rotate 0.75s linear infinite;
+      vertical-align: text-bottom;
+      margin-right: 0.4em;
+    }
+    @keyframes spinner-rotate { to { transform: rotate(360deg); } }
     .section-toggle { cursor:pointer; list-style:none; font-weight:600; color:#e5eefc; }
     .section-toggle::-webkit-details-marker { display:none; }
     .toggle-meta { color:#98a7c6; font-size:12px; margin-left:8px; }
@@ -131,7 +143,9 @@
       <button type="button" class="tabbtn active" data-pane="pane-signals">Signals</button>
       <button type="button" class="tabbtn" data-pane="pane-edge">Edge Analysis</button>
       <button type="button" class="tabbtn" data-pane="pane-portfolio">Portfolio Sim</button>
+      <button type="button" class="tabbtn" data-pane="pane-sweet">Sweet Spot</button>
       <button type="button" class="tabbtn" data-pane="pane-symbol">Symbol Lookup</button>
+      <button type="button" class="tabbtn" data-pane="pane-webhook">Webhook Orders</button>
     </div>
 
     <div id="pane-signals" class="tabpane">
@@ -230,8 +244,28 @@
 
     <div class="card" id="open-trades-card">
       <h2>Open Trades</h2>
-      <div id="orphan-banner"></div>
+      <div id="exit-pending-banner"></div>
       <div id="open-trades"></div>
+    </div>
+
+    <div class="card" id="executor-portfolio-card">
+      <h2>Executor Portfolio <button type="button" class="btn" id="portfolio-refresh" style="padding:3px 10px;font-size:12px;margin-left:10px;font-weight:400;">Refresh</button></h2>
+      <p class="muted" style="font-size:12px;">The broker's own positions, read live from the trade executor —
+      the only source of truth for what is actually held and at what size. Reconciled against the webhook ledger:
+      anything the executor holds that this system has no open record for, and vice versa, is called out below.
+      Configure with <code>portfolio_url</code> in <code>webhook.local.json</code>.</p>
+      <div id="executor-portfolio"><div class="muted">Not loaded yet.</div></div>
+    </div>
+
+    <div class="card" id="trade-log-orphans-card">
+      <h2>Trade Log Orphans</h2>
+      <p class="muted" style="font-size:12px;">Symbols with closed-trade history that are no longer in any
+      watchlist. Recomputed on every scan, or on demand with <strong>Sweep now</strong> (instant — it diffs the
+      trade log against stored watchlist membership, no TradingView needed). Sweeping does not re-read
+      watchlists from TradingView, so a symbol removed since the last reconciliation won't appear until
+      membership is resynced. Archiving moves their rows into <code>trade-log/archive/</code>, out of Edge
+      Analysis and Portfolio Sim; nothing is deleted, and it's reversible with <code>--restore</code>.</p>
+      <div id="orphan-banner"></div>
     </div>
 
     <div class="card" id="prior-signals-card">
@@ -341,6 +375,17 @@
         <div class="edge-table-wrap"><div id="edge-sym-table"></div></div>
       </div>
 
+      <div class="card" id="edge-concurrency-card">
+        <h2>Open Position Concurrency</h2>
+        <p class="muted" style="margin:0 0 4px;">
+          How many positions were open at the same time, over the trailing 1/2/3 months — min/avg/max,
+          time-weighted (a brief lull doesn't count the same as an all-day stretch). Pyramid add-legs are
+          merged into their base position first, so this counts logical positions, not trade-log rows.
+        </p>
+        <div class="edge-table-wrap"><div id="edge-concurrency-table"></div></div>
+        <p id="edge-concurrency-note" class="muted" style="margin:6px 0 0;font-size:12px;"></p>
+      </div>
+
       <div class="card" id="edge-window-card">
         <details>
           <summary class="section-toggle">Reference · Same-Window Comparison
@@ -409,7 +454,7 @@
         <div class="filter-row">
           <span class="control-label">Symbols:</span>
           <button type="button" class="chip" id="ps-sym-all">All</button>
-          <button type="button" class="chip" id="ps-sym-top20">Top 20 by CAGR/DD</button>
+          <button type="button" class="chip" id="ps-sym-top20" title="Ranked on expectancy percentile within each timeframe — NOT CAGR/DD, which this project measured as ranking symbols worse than random out-of-sample (rho -0.145 vs expectancy +0.381)">Top 20 by expectancy</button>
           <span id="ps-sym-note" class="toggle-meta"></span>
         </div>
         <div id="ps-status" class="action-message"></div>
@@ -442,6 +487,157 @@
         <div class="edge-table-wrap"><div id="ps-detail"></div></div>
       </div>
     </div><!-- /pane-portfolio -->
+
+    <div id="pane-sweet" class="tabpane hidden">
+      <div class="card">
+        <h1>Sweet Spot Finder</h1>
+        <p class="muted" style="margin:0 0 4px;">
+          Answers the two Portfolio Sim knobs that matter most — <strong>which timeframes to trade
+          together</strong> and <strong>how many positions to run</strong> — by measuring every
+          combination instead of guessing. This is the live version of
+          <code>PORTFOLIO_RECKONER.md</code>; both run the same code
+          (<code>src/core/sweet_spot.js</code>), so the tab and the doc cannot drift apart.
+        </p>
+        <p class="muted" style="margin:0;font-size:12px;">
+          Reads <code>trade-log/*.csv</code> only — no TradingView connection needed. Runs in its own
+          process, so the rest of the dashboard stays responsive while a sweep is going.
+        </p>
+
+        <div class="controls" style="margin-top:14px;">
+          <div class="control-group">
+            <button id="sw-run-quick" class="btn btn-primary" type="button">Run Quick Sweep (~30s)</button>
+          </div>
+          <div class="control-group">
+            <button id="sw-run-full" class="btn" type="button">Run Full Sweep (~4 min)</button>
+          </div>
+          <div class="control-group">
+            <button id="sw-refresh" class="btn" type="button" style="min-width:auto;">Refresh</button>
+          </div>
+        </div>
+
+        <div class="filter-row" id="sw-rule-row">
+          <span class="control-label">Exit rule:</span>
+          <span id="sw-rule-chips"></span>
+          <span id="sw-rule-note" class="toggle-meta"></span>
+        </div>
+
+        <div id="sw-progress"></div>
+        <div id="sw-status" class="action-message"></div>
+        <div id="sw-stale"></div>
+        <div id="sw-headline"></div>
+      </div>
+
+      <div class="card" id="sw-shortlist-card">
+        <h2>The Reckoner <span class="muted" style="font-size:13px;font-weight:400;">— shortlist scored out-of-sample, averaged</span></h2>
+        <p class="muted" style="margin:0 0 4px;">Each config is scored in every out-of-sample window with
+        the symbol universe re-picked inside that window's in-sample half, then averaged. <strong>This is
+        the pass to act on</strong> — a single grid maximum is unstable, an average over a shortlist is not.
+        Read the <em>ordering</em>, not the levels.</p>
+        <div id="sw-shortlist"></div>
+      </div>
+
+      <div class="card" id="sw-tf-card">
+        <h2>Timeframe Contribution</h2>
+        <p class="muted" style="margin:0 0 4px;">Average CAGR of every combination <em>containing</em> a
+        timeframe against every combination <em>without</em> it, across all subsets. The largest and
+        cleanest effect in the whole grid.</p>
+        <div id="sw-tf"></div>
+      </div>
+
+      <div class="card" id="sw-slots-card">
+        <h2>Slot Count &amp; Timeframe Count</h2>
+        <p class="muted" style="margin:0 0 4px;">Max positions is also the <strong>position-size
+        divisor</strong> (<code>size = portfolio value / maxPositions</code>), so falling slot counts raise
+        CAGR and drawdown together. That is leverage, not edge — pick a risk point first, then optimize
+        timeframes within it.</p>
+        <div id="sw-slots"></div>
+      </div>
+
+      <div class="card" id="sw-wf-card">
+        <h2>Walk-Forward Honesty Check</h2>
+        <p class="muted" style="margin:0 0 4px;">Rank every combination on the first part of the log,
+        score it on the rest. Spearman rho is how much the in-sample ranking survived. Splits are on the
+        trade-count quantile, never the calendar — the log spans 2016–2026 but almost all trades are
+        recent, so a calendar midpoint lands in a near-empty region.</p>
+        <div id="sw-wf"></div>
+      </div>
+
+      <div class="card" id="sw-grid-card">
+        <h2>In-Sample Grid <span class="muted" style="font-size:13px;font-weight:400;">— structure only, the maximum is not a result</span></h2>
+        <p class="muted" style="margin:0 0 4px;">Every timeframe subset × slot count on all history.
+        Shown because the aggregates above are built from it, but picking the best of these on the same
+        data that produced the ranking is fitting, not measuring.</p>
+        <div id="sw-grid"></div>
+      </div>
+
+      <div class="card" id="sw-caveat-card">
+        <h2>Read This Before Acting</h2>
+        <div id="sw-caveats"></div>
+      </div>
+    </div><!-- /pane-sweet -->
+
+    <div id="pane-webhook" class="tabpane hidden">
+      <div class="card">
+        <h1>Webhook Orders <button type="button" class="btn" id="wl-refresh" style="padding:3px 10px;font-size:12px;margin-left:10px;font-weight:400;">Refresh</button></h1>
+        <p class="muted" style="margin:0;">Every order this system sent to the trade executor, from
+        <code>status/webhook-sent-state.json</code>. An entry stays "open" here until a matching close is
+        sent — that is the same record the auto-close, the price-alert priority and the duplicate-send guard
+        all key on, so this is the definitive list of what this system believes it has working.
+        It is not a broker position report; for that see the Executor Portfolio card on the Signals tab.</p>
+        <div id="wl-status" class="action-message"></div>
+      </div>
+
+      <div class="card" id="wl-open-card">
+        <h2>Open — sent, not yet closed</h2>
+        <p class="muted" style="margin:0 0 10px;font-size:12px;"><strong>Close</strong> sends a real closing
+        order to the executor. <strong>Mark closed (no send)</strong> sends nothing — use it when you already
+        closed the position directly at the broker, so the ledger stops asserting a position you no longer
+        hold. Either way the row leaves this list and the auto-close stops watching it, so only mark closed
+        what really is closed.</p>
+        <div id="wl-open"><div class="muted">Loading…</div></div>
+      </div>
+
+      <div class="card" id="wl-history-card">
+        <h2>History</h2>
+        <div class="controls" style="margin-bottom:10px;">
+          <div class="control-group" style="min-width:150px;">
+            <label class="control-label" for="wl-filter-period">Period</label>
+            <select id="wl-filter-period" class="control-input" title="Matches an order whose entry OR close falls in the period, in this browser's local timezone">
+              <option value="all">All time</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="wtd">Week to date</option>
+              <option value="mtd">Month to date</option>
+              <option value="last_month">Last month</option>
+              <option value="last_30">Last 30 days</option>
+              <option value="ytd">Year to date</option>
+            </select>
+          </div>
+          <div class="control-group" style="min-width:170px;">
+            <label class="control-label" for="wl-filter-symbol">Symbol</label>
+            <input id="wl-filter-symbol" class="control-input" type="text" placeholder="all symbols" autocomplete="off" list="wl-symbol-list" />
+            <datalist id="wl-symbol-list"></datalist>
+          </div>
+          <div class="control-group" style="min-width:130px;">
+            <label class="control-label" for="wl-filter-tf">Timeframe</label>
+            <select id="wl-filter-tf" class="control-input"><option value="">all</option></select>
+          </div>
+          <div class="control-group" style="min-width:130px;">
+            <label class="control-label" for="wl-filter-status">Status</label>
+            <select id="wl-filter-status" class="control-input">
+              <option value="all">all</option>
+              <option value="open">open only</option>
+              <option value="closed">closed only</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label class="control-label">&nbsp;</label>
+            <button type="button" class="btn" id="wl-filter-clear">Clear</button>
+          </div>
+        </div>
+        <div id="wl-history"></div>
+      </div>
+    </div><!-- /pane-webhook -->
 
     <div id="pane-symbol" class="tabpane hidden">
       <div class="card">
@@ -637,6 +833,12 @@
       }).join('');
     }
 
+    // Only used on values that came from an external service (the executor's raw JSON), which is the
+    // one place in this dashboard rendering untrusted text.
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
     function fmt2(n) { return (n == null || !Number.isFinite(Number(n))) ? '—' : Number(n).toFixed(2); }
     function fmtPct(n) { return (n == null || !Number.isFinite(Number(n))) ? '—' : Number(n).toFixed(2) + '%'; }
     function colorVal(str) {
@@ -666,7 +868,7 @@
 
       return `
         <tr style="border-bottom:2px solid #334466;background:#0d1525;font-weight:600;font-size:12px;color:#98a7c6;">
-          <td colspan="5" style="color:#98a7c6;padding:8px 8px;">Avg (${rows.length} open)</td>
+          <td colspan="8" style="color:#98a7c6;padding:8px 8px;">Avg (${rows.length} open)</td>
           <td>${fmtMetricAvg(avgPnlUsd, avgPnlPct)}</td>
           <td>${mfeCell}</td>
           <td>${maeCell}</td>
@@ -674,6 +876,58 @@
           <td></td>
         </tr>
       `;
+    }
+
+    /* ---------- Signal quality ranking ---------- */
+    // The score is the symbol's expectancy percentile WITHIN its own timeframe (0-100), computed
+    // server-side in edge_analysis.js. Not profit factor / Sharpe / CAGR-DD — those were measured on
+    // this data and rank at or below random out-of-sample; see the module docstring. Percentile
+    // rather than raw expectancy so rows stay comparable across timeframes for the portfolio cap.
+    function edgeTooltip(e) {
+      const bits = [
+        `expectancy ${Number(e.expectancyPct).toFixed(2)}%/trade`,
+        `win ${Number(e.winRate).toFixed(0)}%`,
+        e.payoffRatio != null ? `avg win/avg loss ${Number(e.payoffRatio).toFixed(2)}` : null,
+        e.profitFactor != null ? `PF ${Number(e.profitFactor).toFixed(2)}` : null,
+        e.avgHoldDays != null ? `avg hold ${Number(e.avgHoldDays).toFixed(1)}d` : null,
+        `${e.trades} closed trades`,
+        e.ruleType ? `rule: ${e.ruleType}` : null,
+      ].filter(Boolean);
+      return bits.join(' · ');
+    }
+
+    function buildEdgeCell(row) {
+      const e = row.edge;
+      if (!e || e.score == null) {
+        const why = e
+          ? `${e.trades} closed trade${e.trades === 1 ? '' : 's'} — needs 8+ on this symbol and 4+ ranked peers on the timeframe`
+          : 'No closed trades logged for this symbol on this timeframe';
+        return `<span class="muted" style="font-size:11px;" title="${why}">n/a</span>`;
+      }
+      const s = Number(e.score);
+      const color = s >= 66 ? '#6ee7a8' : s >= 33 ? '#facc15' : '#fca5a5';
+      const overCap = row.__overCap
+        ? `<br><span style="font-size:10px;color:#fb923c;" title="Ranks below your portfolio cap of ${maxPositions} across every open position">⚠ over cap (#${row.__globalRank})</span>`
+        : '';
+      return `<span style="color:${color};font-weight:600;" title="${edgeTooltip(e)}">${s.toFixed(0)}</span>${overCap}`;
+    }
+
+    function buildRankCells(row) {
+      // "new" only when the row is genuinely a fresh arrival. A null rank on a non-new row means
+      // ranking hasn't run for this snapshot yet (status file written before the feature, or the
+      // rank step errored) — that must read as unknown, not as "arrived today".
+      const org = row.edgeRankOrg != null
+        ? `${row.edgeRankOrg}<span class="muted">/${row.edgeRankOrgTotal}</span>`
+        : row.isNewEntry
+          ? `<span class="muted" style="font-size:11px;" title="Opened today — it wasn't in the book the Org ranks were taken against">new</span>`
+          : '—';
+      let drift = '';
+      if (row.edgeRankOrg != null && row.edgeRankNew != null && row.edgeRankNew !== row.edgeRankOrg) {
+        const d = row.edgeRankNew - row.edgeRankOrg;
+        drift = ` <span style="font-size:10px;color:${d > 0 ? '#fca5a5' : '#6ee7a8'}" title="Rank moved ${Math.abs(d)} place${Math.abs(d) === 1 ? '' : 's'} since today's new signals arrived">${d > 0 ? '▼' : '▲'}${Math.abs(d)}</span>`;
+      }
+      const nw = row.edgeRankNew == null ? '—' : `${row.edgeRankNew}<span class="muted">/${row.edgeRankNewTotal}</span>${drift}`;
+      return `<td style="font-size:12px;">${org}</td><td style="font-size:12px;">${nw}</td>`;
     }
 
     function buildOpenTradeRows(rows) {
@@ -688,9 +942,11 @@
           ? `Stop: ${fmt2(levels.stopAvg)} / ${fmt2(levels.stopMax)}<br>Target: ${fmt2(levels.targetAvg)} / ${fmt2(levels.targetMax)}<br><span style="font-size:11px;color:${alertStatusColor}">${alertStatusText}</span>`
           : '—';
         return `
-          <tr class="row-open">
-            <td>${row.symbol || '—'}</td>
+          <tr class="row-open"${row.__overCap ? ' style="background:#2a1810;"' : ''}>
+            <td>${row.symbol || '—'}${row.isNewEntry ? ' <span style="font-size:10px;color:#7dd3fc;" title="Entered today">NEW</span>' : ''}</td>
             <td>${webhookTag(row.timeframe)}</td>
+            <td>${buildEdgeCell(row)}</td>
+            ${buildRankCells(row)}
             <td class="status-open">OPEN</td>
             <td>${row.entryTime || '—'}</td>
             <td>${row.entryPrice ?? '—'}</td>
@@ -735,6 +991,88 @@
       return `${webhookBareTicker(row.symbol)}|${webhookTag(row.timeframe)}|${row.entryTimeRaw}`;
     }
 
+    // Order vocabulary is served by /api/webhook-config so the dropdowns can never offer a value
+    // the server's validateOrderSpec would reject. These are only the fallback if that fetch failed.
+    const ORDER_TYPE_LABELS = { market: 'Market', limit: 'Limit', stop: 'Stop', stop_limit: 'Stop limit', trailing_stop: 'Trailing stop' };
+    const TIF_LABELS = { gtc: 'GTC', day: 'Day', opg: 'At open (OPG)', cls: 'At close (CLS)', ioc: 'IOC', fok: 'FOK' };
+
+    /**
+     * The order form shared by Send (entry) and Close (exit). Price inputs are all rendered up front
+     * and shown/hidden by order type, so reading them back never has to reconstruct DOM.
+     */
+    function buildOrderForm(actionLabel, actionClass) {
+      const types = webhookConfig.orderTypes || Object.keys(ORDER_TYPE_LABELS);
+      const tifs = webhookConfig.timeInForce || Object.keys(TIF_LABELS);
+      const typeOpts = types.map((t) => `<option value="${t}">${ORDER_TYPE_LABELS[t] || t}</option>`).join('');
+      const tifOpts = tifs.map((t) => `<option value="${t}">${TIF_LABELS[t] || t.toUpperCase()}</option>`).join('');
+      return `
+        <div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;max-width:250px;">
+          <select class="wh-order-type" style="font-size:11px;padding:2px;">${typeOpts}</select>
+          <select class="wh-tif" style="font-size:11px;padding:2px;" title="time_in_force — GTC is the executor's default">${tifOpts}</select>
+          <input type="number" step="0.01" min="0" class="wh-limit-price" placeholder="limit px" style="width:66px;font-size:11px;padding:2px;display:none;" />
+          <input type="number" step="0.01" min="0" class="wh-stop-price" placeholder="stop px" style="width:64px;font-size:11px;padding:2px;display:none;" />
+          <input type="number" step="0.1" min="0" class="wh-trail-pct" placeholder="trail %" style="width:60px;font-size:11px;padding:2px;display:none;" />
+          <input type="number" step="0.01" min="0" class="wh-trail-price" placeholder="trail $" style="width:60px;font-size:11px;padding:2px;display:none;" />
+          <button type="button" class="btn ${actionClass}" style="padding:3px 9px;font-size:11px;">${actionLabel}</button>
+        </div>`;
+    }
+
+    /** Mirrors trade_webhook.js validateOrderSpec — the server re-runs it, this is just early feedback. */
+    function readOrderSpec(group) {
+      const num = (sel) => {
+        const raw = group.querySelector(sel)?.value;
+        const n = parseFloat(raw);
+        return Number.isFinite(n) && n > 0 ? n : null;
+      };
+      const orderType = group.querySelector('.wh-order-type')?.value || 'market';
+      const timeInForce = group.querySelector('.wh-tif')?.value || null;
+      const spec = {
+        orderType,
+        timeInForce,
+        limitPrice: num('.wh-limit-price'),
+        stopPrice: num('.wh-stop-price'),
+        trailPercent: num('.wh-trail-pct'),
+        trailPrice: num('.wh-trail-price'),
+      };
+      if ((orderType === 'limit' || orderType === 'stop_limit') && spec.limitPrice == null) return { error: 'Enter a positive limit price.' };
+      if ((orderType === 'stop' || orderType === 'stop_limit') && spec.stopPrice == null) return { error: 'Enter a positive stop price.' };
+      if (orderType === 'trailing_stop' && spec.trailPercent == null && spec.trailPrice == null) return { error: 'Enter a trail percent or a trail price.' };
+      if ((timeInForce === 'opg' || timeInForce === 'cls') && orderType !== 'market' && orderType !== 'limit') {
+        return { error: `${timeInForce.toUpperCase()} is only valid on market or limit orders.` };
+      }
+      return { spec };
+    }
+
+    function wireOrderForm(group) {
+      const select = group.querySelector('.wh-order-type');
+      if (!select) return;
+      const show = () => {
+        const t = select.value;
+        const vis = {
+          '.wh-limit-price': t === 'limit' || t === 'stop_limit',
+          '.wh-stop-price': t === 'stop' || t === 'stop_limit',
+          '.wh-trail-pct': t === 'trailing_stop',
+          '.wh-trail-price': t === 'trailing_stop',
+        };
+        for (const [sel, on] of Object.entries(vis)) {
+          const el = group.querySelector(sel);
+          if (el) el.style.display = on ? '' : 'none';
+        }
+      };
+      select.addEventListener('change', show);
+      show();
+    }
+
+    function describeOrder(spec) {
+      const parts = [ORDER_TYPE_LABELS[spec.orderType] || spec.orderType];
+      if (spec.limitPrice != null) parts.push(`limit ${spec.limitPrice}`);
+      if (spec.stopPrice != null) parts.push(`stop ${spec.stopPrice}`);
+      if (spec.trailPercent != null) parts.push(`trail ${spec.trailPercent}%`);
+      else if (spec.trailPrice != null) parts.push(`trail $${spec.trailPrice}`);
+      if (spec.timeInForce) parts.push(spec.timeInForce.toUpperCase());
+      return parts.join(' · ');
+    }
+
     function buildWebhookCell(row) {
       if (!webhookConfig.configured) {
         return '<span class="muted" style="font-size:11px;" title="Set TRADE_WEBHOOK_URL + TRADE_WEBHOOK_SECRET, or fill webhook.local.json">not configured</span>';
@@ -745,20 +1083,41 @@
         // every refresh with no way to detect it. Refuse rather than risk a duplicate order.
         return '<span class="muted" style="font-size:11px;" title="No entry time — cannot dedupe a send">—</span>';
       }
-      const sent = webhookConfig.sent?.[key];
-      if (sent) {
-        const when = sent.at ? new Date(sent.at).toLocaleString() : '';
-        const exitNote = sent.exit ? ` · exited ${sent.exit.side || ''} ${sent.exit.at ? new Date(sent.exit.at).toLocaleString() : ''}` : '';
-        return `<span style="font-size:11px;color:#6ee7a8;" title="${sent.source || ''} @ ${when}${exitNote}">✓ sent ${sent.side || ''}${sent.exit ? ' · ✓ exited' : ''}</span>`;
-      }
-      const payload = {
+      const base = {
         symbol: webhookBareTicker(row.symbol),
         side: String(row.side || '').toUpperCase() === 'SHORT' ? 'SHORT' : 'LONG',
         timeframe: String(row.timeframe ?? ''),
-        price: row.entryPrice ?? '',
         entryTime: row.entryTimeRaw,
       };
-      return `<button type="button" class="btn webhook-send-btn" style="padding:3px 9px;font-size:11px;" data-payload='${JSON.stringify(payload).replace(/'/g, '&#39;')}'>Send</button>`;
+      const baseAttr = JSON.stringify(base).replace(/'/g, '&#39;');
+      const sent = webhookConfig.sent?.[key];
+      if (sent) {
+        const when = sent.at ? new Date(sent.at).toLocaleString() : '';
+        // A tv-alert record means TradingView's own watchlist alert placed the order and the scanner
+        // only wrote it down — labelled differently so "we sent this" and "we observed this" are never
+        // confused when reconciling against the executor's portfolio.
+        const viaTv = sent.source === 'tv-alert';
+        const status = viaTv
+          ? `<span style="font-size:11px;color:#7dd3fc;" title="Placed by a TradingView watchlist alert, recorded here @ ${when}">◆ via TV alert ${sent.side || ''}</span>`
+          : `<span style="font-size:11px;color:#6ee7a8;" title="${sent.source || ''} @ ${when}">✓ sent ${sent.side || ''}${sent.order_type && sent.order_type !== 'market' ? ` (${sent.order_type})` : ''}</span>`;
+        if (sent.exit) {
+          const exWhen = sent.exit.at ? new Date(sent.exit.at).toLocaleString() : '';
+          const exVia = sent.exit.source === 'tv-alert' ? '◆ closed by TV alert' : `✓ exited ${sent.exit.side || ''}`;
+          return `${status}<br><span style="font-size:11px;color:${sent.exit.source === 'tv-alert' ? '#7dd3fc' : '#6ee7a8'};" title="${sent.exit.source || ''} @ ${exWhen}">${exVia}</span>`;
+        }
+        // Entry is on the books at the executor and no close has gone out — offer the manual close.
+        // This is the slot-freeing action: liquidate a weak position to make room for a better one.
+        return `${status}
+          <div class="webhook-exit-group" style="margin-top:4px;" data-base='${baseAttr}' data-market-price="${row.entryPrice ?? ''}">
+            ${buildOrderForm('Close', 'webhook-exit-btn')}
+          </div>`;
+      }
+      // Order type/prices are picked at send time, not baked in here — bid/ask aren't reliably
+      // available from a scan (no auto-computed limit price), so the user supplies them directly.
+      return `
+        <div class="webhook-send-group" data-base='${baseAttr}' data-market-price="${row.entryPrice ?? ''}">
+          ${buildOrderForm('Send', 'webhook-send-btn')}
+        </div>`;
     }
 
     async function loadWebhookConfig() {
@@ -770,36 +1129,52 @@
     }
 
     function wireWebhookButtons(container) {
-      container.querySelectorAll('.webhook-send-btn').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          let payload;
-          try { payload = JSON.parse(btn.dataset.payload); } catch { return; }
-          if (!confirm(`Send ${payload.side} ${payload.symbol} (${webhookTag(payload.timeframe)}) @ ${payload.price} to the trade executor?\n\nThis places a real order.`)) return;
-          btn.disabled = true;
-          btn.textContent = 'Sending…';
-          try {
-            const resp = await fetch('/api/send-webhook', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload),
-            });
-            const data = await resp.json();
-            if (data?.success) {
-              btn.outerHTML = '<span style="font-size:11px;color:#6ee7a8;">✓ sent</span>';
-              await loadWebhookConfig();
-            } else {
-              btn.disabled = false;
+      const wire = ({ selector, btnSelector, endpoint, verb, successLabel }) => {
+        container.querySelectorAll(selector).forEach((group) => {
+          wireOrderForm(group);
+          const btn = group.querySelector(btnSelector);
+          const inputs = [...group.querySelectorAll('select,input,button')];
+          if (!btn) return;
+          btn.addEventListener('click', async () => {
+            let base;
+            try { base = JSON.parse(group.dataset.base); } catch { return; }
+            const read = readOrderSpec(group);
+            if (read.error) { alert(read.error); return; }
+            const spec = read.spec;
+            const payload = { ...base, price: group.dataset.marketPrice || '', ...spec };
+            const what = `${payload.symbol} (${webhookTag(payload.timeframe)})`;
+            const line = verb === 'close'
+              ? `CLOSE ${what}\n${describeOrder(spec)}`
+              : `${payload.side} ${what}\n${describeOrder(spec)}`;
+            if (!confirm(`${line}\n\nThis places a real order at the trade executor.`)) return;
+            inputs.forEach((el) => { el.disabled = true; });
+            btn.textContent = 'Sending…';
+            try {
+              const resp = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+              });
+              const data = await resp.json();
+              if (data?.success) {
+                group.outerHTML = `<span style="font-size:11px;color:#6ee7a8;">${successLabel}</span>`;
+                await loadWebhookConfig();
+              } else {
+                inputs.forEach((el) => { el.disabled = false; });
+                btn.textContent = 'Retry';
+                btn.title = data?.error || 'Send failed';
+                alert(`Webhook failed: ${data?.error || 'unknown error'}`);
+              }
+            } catch (err) {
+              inputs.forEach((el) => { el.disabled = false; });
               btn.textContent = 'Retry';
-              btn.title = data?.error || 'Send failed';
-              alert(`Webhook failed: ${data?.error || 'unknown error'}`);
+              alert(`Webhook failed: ${err?.message || err}`);
             }
-          } catch (err) {
-            btn.disabled = false;
-            btn.textContent = 'Retry';
-            alert(`Webhook failed: ${err?.message || err}`);
-          }
+          });
         });
-      });
+      };
+      wire({ selector: '.webhook-send-group', btnSelector: '.webhook-send-btn', endpoint: '/api/send-webhook', verb: 'send', successLabel: '✓ sent' });
+      wire({ selector: '.webhook-exit-group', btnSelector: '.webhook-exit-btn', endpoint: '/api/send-webhook-exit', verb: 'close', successLabel: '✓ close sent' });
     }
 
     function buildWebhookArmToggle(timeframe, watchlistName) {
@@ -807,9 +1182,17 @@
       const tf = String(timeframe ?? '');
       if (!tf) return '';
       const armed = (webhookConfig.enabledTimeframes || []).includes(tf);
+      const tvAlert = (webhookConfig.tvAlertTimeframes || []).includes(tf);
+      // Two mutually exclusive modes. auto-send: this scanner places the order. TV alert: a
+      // TradingView watchlist alert places it and the scanner only writes it to the ledger, so the
+      // ledger stays a complete record of live positions (which is what drives price-alert
+      // creation, level monitoring, alert-quota priority and the duplicate-send guard).
       return `<label class="webhook-arm" style="font-size:11px;font-weight:500;display:inline-flex;align-items:center;gap:5px;margin-left:12px;color:${armed ? '#6ee7a8' : '#98a7c6'};cursor:pointer;"
         title="When armed, the scheduled scan POSTs the trade webhook automatically for new OPEN signals on this timeframe">
-        <input type="checkbox" data-tf="${tf}" ${armed ? 'checked' : ''} style="cursor:pointer;" /> auto-send ${armed ? '(ARMED)' : ''}</label>`;
+        <input type="checkbox" data-tf="${tf}" data-mode="auto" ${armed ? 'checked' : ''} ${tvAlert ? 'disabled' : ''} style="cursor:pointer;" /> auto-send ${armed ? '(ARMED)' : ''}</label>
+        <label class="webhook-arm" style="font-size:11px;font-weight:500;display:inline-flex;align-items:center;gap:5px;margin-left:10px;color:${tvAlert ? '#7dd3fc' : '#98a7c6'};cursor:pointer;"
+        title="Use when a TradingView watchlist alert already POSTs this timeframe to the executor. The scanner sends nothing — it records every OPEN/EXIT it sees into the ledger, so those positions get price alerts, level monitoring, alert-quota priority and duplicate-send protection like any sent position.">
+        <input type="checkbox" data-tf="${tf}" data-mode="tv-alert" ${tvAlert ? 'checked' : ''} ${armed ? 'disabled' : ''} style="cursor:pointer;" /> TV alert → ledger ${tvAlert ? '(ON)' : ''}</label>`;
     }
 
     function wireWebhookArmToggles(container) {
@@ -821,8 +1204,14 @@
       container.querySelectorAll('.webhook-arm input[type=checkbox]').forEach((cb) => {
         cb.addEventListener('change', async () => {
           const tf = cb.dataset.tf;
+          const mode = cb.dataset.mode || 'auto';
           const enabled = cb.checked;
-          if (enabled && !confirm(`Arm auto-send for ${webhookTag(tf)}?\n\nEvery new OPEN signal on this timeframe will place a REAL order automatically on the next scheduled scan, with no further confirmation.`)) {
+          // Only auto-send needs the real-money warning. TV-alert mode sends nothing at all — the
+          // order is already being placed by TradingView; this just records it locally.
+          const confirmMsg = mode === 'auto'
+            ? `Arm auto-send for ${webhookTag(tf)}?\n\nEvery new OPEN signal on this timeframe will place a REAL order automatically on the next scheduled scan, with no further confirmation.`
+            : `Mark ${webhookTag(tf)} as handled by a TradingView alert?\n\nThe scanner will NOT send any order for this timeframe. It will record every OPEN/EXIT it detects into the webhook ledger, so those positions get price alerts, level monitoring and duplicate-send protection.\n\nOnly do this if a TradingView watchlist alert really is POSTing this timeframe to the executor.`;
+          if (enabled && !confirm(confirmMsg)) {
             cb.checked = false;
             return;
           }
@@ -831,11 +1220,12 @@
             const resp = await fetch('/api/webhook-toggle', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ timeframe: tf, enabled }),
+              body: JSON.stringify({ timeframe: tf, enabled, mode }),
             });
             const data = await resp.json();
             if (data?.success) {
               webhookConfig.enabledTimeframes = data.enabledTimeframes || [];
+              webhookConfig.tvAlertTimeframes = data.tvAlertTimeframes || [];
               renderOpenTrades(lastOpenTrades);
             } else {
               cb.checked = !enabled;
@@ -851,7 +1241,120 @@
       });
     }
 
+    /**
+     * Positions opened via webhook whose strategy position has since closed with no close order sent.
+     * The scan only detects these; it deliberately doesn't auto-dispatch them, because they are by
+     * definition exits the automatic path already missed (no scan ran on the exit day), and firing a
+     * close off multi-day-old state could try to sell something no longer held. One click, one confirm.
+     */
+    function renderExitPendingBanner(items) {
+      const el = document.getElementById('exit-pending-banner');
+      if (!el) return;
+      const rows = Array.isArray(items) ? items : [];
+      if (!rows.length) { el.innerHTML = ''; return; }
+      el.innerHTML = `
+        <div class="warn-box" style="font-size:12px;margin-bottom:12px;">
+          <strong>${rows.length} position${rows.length === 1 ? '' : 's'} opened by webhook ${rows.length === 1 ? 'has' : 'have'} closed on the strategy with no close order sent.</strong>
+          The automatic close missed ${rows.length === 1 ? 'it' : 'them'} — usually because no scan ran on the day the position exited.
+          Verify against the broker before closing; if it was already closed some other way, sending this would try to sell what you no longer hold.
+          <div id="exit-pending-rows" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+            ${rows.map((r, i) => `
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <span><strong>${escapeHtml(r.symbol || '—')}</strong> <span class="muted">${webhookTag(r.timeframe)}</span></span>
+                <span class="muted">entered ${r.entry_time ? new Date(r.entry_time).toLocaleString() : '—'} @ ${r.entry_price ?? '—'}</span>
+                <span class="muted">exited ${r.exit_time ? new Date(r.exit_time).toLocaleString() : 'time unknown'} @ ${r.exit_price ?? '—'}</span>
+                <button type="button" class="btn exit-pending-btn" data-i="${i}" style="padding:3px 10px;font-size:11px;">Send close</button>
+              </div>`).join('')}
+          </div>
+        </div>`;
+      el.querySelectorAll('.exit-pending-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const r = rows[Number(btn.dataset.i)];
+          if (!confirm(`CLOSE ${webhookBareTicker(r.symbol)} (${webhookTag(r.timeframe)})\nMarket order at the trade executor.\n\nEntered ${r.entry_time ? new Date(r.entry_time).toLocaleString() : '?'}, strategy exited ${r.exit_time ? new Date(r.exit_time).toLocaleString() : 'at an unknown time'}.\n\nConfirm the broker still holds this before sending.`)) return;
+          btn.disabled = true;
+          btn.textContent = 'Sending…';
+          try {
+            const resp = await fetch('/api/send-webhook-exit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                symbol: webhookBareTicker(r.symbol),
+                timeframe: String(r.timeframe ?? ''),
+                entryTime: r.entry_time,
+                price: r.exit_price ?? '',
+                orderType: 'market',
+              }),
+            });
+            const data = await resp.json();
+            if (data?.success) {
+              btn.outerHTML = '<span style="font-size:11px;color:#6ee7a8;">✓ close sent</span>';
+              await loadWebhookConfig();
+            } else {
+              btn.disabled = false;
+              btn.textContent = 'Retry';
+              alert(`Close failed: ${data?.error || 'unknown error'}`);
+            }
+          } catch (err) {
+            btn.disabled = false;
+            btn.textContent = 'Retry';
+            alert(`Close failed: ${err?.message || err}`);
+          }
+        });
+      });
+    }
+
     let lastOpenTrades = [];
+
+    /**
+     * Portfolio slot cap — how many positions the account can actually carry at once.
+     *
+     * Client-side and in localStorage rather than rules.json: it's a personal capacity number that
+     * changes nothing about how scanning or ordering behaves, and keeping it here means it can be
+     * dialled without a scan or a server restart.
+     */
+    let maxPositions = Number(localStorage.getItem('maxPositions') || 15) || 15;
+
+    /**
+     * Rank every open position across ALL timeframes and flag the ones that fall outside the cap.
+     *
+     * Uses the Edge score (an expectancy PERCENTILE within timeframe), which is the only ranking
+     * dimension here that is comparable across timeframes — raw expectancy scales hard with
+     * timeframe (15m ~1.7%/trade vs 4H ~7%), so pooling raw values would rank by timeframe and put
+     * every fast-timeframe position "over cap" regardless of quality.
+     *
+     * Unscored rows (under 8 closed trades, or fewer than 4 ranked peers) sort last but are NEVER
+     * flagged over-cap: "not enough history to judge" must not read as "weak", or the cap would
+     * recommend liquidating positions purely for being new to the log.
+     */
+    function applyPortfolioCap(rows) {
+      const ranked = [...rows].sort((a, b) => {
+        const as = a.edge?.score;
+        const bs = b.edge?.score;
+        const aHas = Number.isFinite(as);
+        const bHas = Number.isFinite(bs);
+        if (aHas !== bHas) return aHas ? -1 : 1;
+        if (aHas && as !== bs) return bs - as;
+        return String(a.symbol || '').localeCompare(String(b.symbol || ''));
+      });
+      ranked.forEach((row, i) => {
+        row.__globalRank = i + 1;
+        row.__overCap = Number.isFinite(row.edge?.score) && (i + 1) > maxPositions;
+      });
+      return ranked.filter((r) => r.__overCap);
+    }
+
+    function buildCapControls(total, overCap) {
+      const weakest = overCap.slice(-3).reverse().map((r) => `${webhookBareTicker(r.symbol)} ${webhookTag(r.timeframe)}`).join(', ');
+      const verdict = total <= maxPositions
+        ? `<span style="color:#6ee7a8;">within cap</span>`
+        : `<span style="color:#fb923c;">${overCap.length} over cap</span>${weakest ? ` <span class="muted">· weakest: ${weakest}</span>` : ''}`;
+      return `
+        <label style="font-size:12px;display:inline-flex;align-items:center;gap:6px;" title="Positions ranked below this many, pooled across every timeframe by Edge score, are flagged as liquidation candidates">
+          Max positions
+          <input type="number" min="1" max="200" step="1" id="max-positions-input" value="${maxPositions}" style="width:56px;font-size:12px;padding:2px 4px;" />
+        </label>
+        <span style="font-size:12px;">${total} open · ${verdict}</span>`;
+    }
 
     function renderOpenTrades(items) {
       const container = document.getElementById('open-trades');
@@ -866,6 +1369,8 @@
         container.appendChild(div);
         return;
       }
+
+      const overCap = applyPortfolioCap(allRows);
 
       // Group by watchlist; within each group, sort by entry date descending.
       const groups = new Map();
@@ -899,6 +1404,9 @@
               <tr>
                 <th>Symbol</th>
                 <th>TF</th>
+                <th title="Expectancy percentile within this timeframe, 0-100, from the closed-trade log. Higher = this symbol's average trade has historically paid better than its timeframe peers.">Edge</th>
+                <th title="Rank by Edge among the positions that were already open before today's new signals arrived">Org</th>
+                <th title="Rank by Edge among every position now open on this timeframe, today's new entries included">New</th>
                 <th>Signal</th>
                 <th>Entry Date / Time</th>
                 <th>Entry Price</th>
@@ -924,7 +1432,8 @@
       container.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
           <span class="muted" style="font-size:13px;">${allRows.length} open trade${allRows.length === 1 ? '' : 's'} across ${groupCountLabel}</span>
-          <div style="display:flex;gap:8px;">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            ${buildCapControls(allRows.length, overCap)}
             <button type="button" class="btn" id="open-trades-expand-all" style="padding:4px 10px;font-size:12px;">Expand all</button>
             <button type="button" class="btn" id="open-trades-collapse-all" style="padding:4px 10px;font-size:12px;">Collapse all</button>
           </div>
@@ -941,9 +1450,117 @@
       if (collapseBtn) collapseBtn.addEventListener('click', () => {
         container.querySelectorAll('details.open-trades-group').forEach((d) => { d.open = false; });
       });
+      const capInput = document.getElementById('max-positions-input');
+      if (capInput) capInput.addEventListener('change', () => {
+        const n = parseInt(capInput.value, 10);
+        if (!Number.isFinite(n) || n < 1) { capInput.value = maxPositions; return; }
+        maxPositions = n;
+        localStorage.setItem('maxPositions', String(n));
+        renderOpenTrades(lastOpenTrades);
+      });
 
       wireWebhookButtons(container);
       wireWebhookArmToggles(container);
+    }
+
+    /* ---------- Executor portfolio (live broker positions) ---------- */
+    // Shape-agnostic on the server side, so this renderer must tolerate null in every mapped field
+    // and still be useful. When mapping fails entirely it shows the raw first row instead of an empty
+    // table — that's the intended way to discover the real schema and tighten the mapping later.
+    function fmtMoney(n) {
+      if (n === null || n === undefined || !Number.isFinite(Number(n))) return '—';
+      const v = Number(n);
+      const s = Math.abs(v) >= 1000 ? v.toLocaleString(undefined, { maximumFractionDigits: 0 }) : v.toFixed(2);
+      return (v < 0 ? '−$' : '$') + s.replace('-', '');
+    }
+    function signedPct(n) {
+      if (n === null || n === undefined || !Number.isFinite(Number(n))) return '—';
+      const v = Number(n);
+      return `<span style="color:${v < 0 ? '#fca5a5' : '#6ee7a8'}">${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}%</span>`;
+    }
+
+    async function loadExecutorPortfolio() {
+      const el = document.getElementById('executor-portfolio');
+      if (!el) return;
+      el.innerHTML = '<div class="muted">Loading…</div>';
+      let data;
+      try {
+        data = await (await fetch('/api/executor-portfolio')).json();
+      } catch (err) {
+        el.innerHTML = `<div class="muted">Could not reach the dashboard server: ${err?.message || err}</div>`;
+        return;
+      }
+      if (!data?.configured) {
+        el.innerHTML = `<div class="muted">Not configured. Add <code>"portfolio_url": "https://your-app.up.railway.app/portfolio"</code> to
+          <code>webhook.local.json</code> and restart the server. Auth defaults to <code>?secret=…</code> using the webhook secret;
+          override with <code>portfolio_auth</code> (<code>bearer</code> / <code>header</code> / <code>body</code> / <code>none</code>).</div>`;
+        return;
+      }
+      if (!data.available) {
+        el.innerHTML = `<div class="warn-box" style="font-size:12px;">Could not read the portfolio: ${data.error || 'unknown error'}
+          ${data.bodySnippet ? `<pre style="white-space:pre-wrap;font-size:11px;margin:6px 0 0;">${escapeHtml(data.bodySnippet)}</pre>` : ''}
+          <div class="muted" style="margin-top:6px;">Tried <code>${data.method}</code> with auth mode <code>${data.auth}</code>.</div></div>`;
+        return;
+      }
+      if (!data.positions.length) {
+        el.innerHTML = `<div class="muted">The executor reported no positions${data.rawRowCount ? ` that could be mapped (${data.rawRowCount} row(s) returned)` : ''}.
+          ${data.rawSample ? `<details style="margin-top:8px;"><summary class="section-toggle">Raw response sample</summary><pre style="white-space:pre-wrap;font-size:11px;">${escapeHtml(JSON.stringify(data.rawSample, null, 2))}</pre></details>` : ''}</div>`;
+        return;
+      }
+
+      const cap = maxPositions;
+      const capNote = data.totalPositions > cap
+        ? `<span style="color:#fb923c;">${data.totalPositions} held vs cap ${cap}</span>`
+        : `<span style="color:#6ee7a8;">${data.totalPositions} held, cap ${cap}</span>`;
+      const concentration = data.maxWeightPct !== null && data.evenWeightPct !== null
+        ? `largest ${data.maxWeightPct.toFixed(1)}% of book (even split would be ${data.evenWeightPct.toFixed(1)}%)`
+        : 'position weights unavailable';
+
+      const rowHtml = (p, flag) => `
+        <tr${flag ? ' style="background:#2a1810;"' : ''}>
+          <td>${escapeHtml(p.symbol || p.ticker || '—')}${flag ? ' <span style="font-size:10px;color:#fb923c;" title="Held at the broker with no open entry in the webhook ledger — entered outside this system, or its close never filled">⚠ untracked</span>' : ''}</td>
+          <td>${p.side ? escapeHtml(p.side.toUpperCase()) : '—'}</td>
+          <td>${p.qty === null ? '—' : p.qty}</td>
+          <td>${p.avgPrice === null ? '—' : fmt2(p.avgPrice)}</td>
+          <td>${p.lastPrice === null ? '—' : fmt2(p.lastPrice)}</td>
+          <td>${fmtMoney(p.marketValue)}</td>
+          <td>${p.weightPct === null ? '—' : p.weightPct.toFixed(1) + '%'}</td>
+          <td>${p.unrealizedPl === null ? '—' : `<span style="color:${p.unrealizedPl < 0 ? '#fca5a5' : '#6ee7a8'}">${fmtMoney(p.unrealizedPl)}</span>`}</td>
+          <td>${signedPct(p.unrealizedPct)}</td>
+          <td style="font-size:11px;">${p.ledgerTimeframes.length ? p.ledgerTimeframes.join(', ') : '<span class="muted">—</span>'}${p.ledgerSources.includes('tv-alert') ? ' <span style="color:#7dd3fc;" title="Recorded from a TradingView alert">◆</span>' : ''}</td>
+        </tr>`;
+
+      const ledgerOnlyHtml = data.ledgerOnly.length
+        ? `<div class="warn-box" style="font-size:12px;margin-top:12px;">
+             <strong>${data.ledgerOnly.length} open ledger record${data.ledgerOnly.length === 1 ? '' : 's'} with no broker position.</strong>
+             Either the entry never filled, or it closed at the broker and this system hasn't seen the EXIT yet.
+             <div style="margin-top:6px;">${data.ledgerOnly.map((r) => `${r.ticker} <span class="muted">(${r.timeframes.join(', ') || 'tf ?'}${r.sources.length ? ' · ' + r.sources.join('/') : ''})</span>`).join(' · ')}</div>
+           </div>`
+        : '';
+
+      el.innerHTML = `
+        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin-bottom:10px;">
+          <span>${capNote}</span>
+          <span class="muted">${fmtMoney(data.totalValue)} total${data.totalUnrealizedPl !== null ? ` · open P&L ${fmtMoney(data.totalUnrealizedPl)}` : ''}</span>
+          <span class="muted">${concentration}</span>
+          <span class="muted">read ${new Date(data.fetchedAt).toLocaleTimeString()}</span>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Symbol</th><th>Side</th><th>Qty</th><th>Avg Price</th><th>Last</th>
+            <th>Market Value</th><th title="Share of total portfolio value — the practical read on relative position sizing">Weight</th>
+            <th>Open P&amp;L</th><th>Open %</th><th title="Timeframes with an open entry in the webhook ledger for this ticker">Ledger TF</th>
+          </tr></thead>
+          <tbody>
+            ${data.matched.map((p) => rowHtml(p, false)).join('')}
+            ${data.executorOnly.map((p) => rowHtml(p, true)).join('')}
+          </tbody>
+        </table>
+        ${ledgerOnlyHtml}
+        ${data.unmappedRows > 0 ? `<div class="muted" style="font-size:11px;margin-top:8px;">${data.unmappedRows} returned row(s) had no recognizable symbol field and were skipped.</div>` : ''}
+        <details style="margin-top:10px;"><summary class="section-toggle">Raw response sample<span class="toggle-meta">for tightening the field mapping</span></summary>
+          <pre style="white-space:pre-wrap;font-size:11px;">${escapeHtml(JSON.stringify(data.rawSample, null, 2))}</pre></details>
+      `;
     }
 
     function renderPriorSignals(items) {
@@ -1275,6 +1892,10 @@
       setTaMetricsOnlyMode(!taMetricsOnlyMode);
     });
 
+    // Manual refresh only — this hits an external service, so it should never be dragged along by the
+    // dashboard's own polling. Loaded once on page load below.
+    document.getElementById('portfolio-refresh').addEventListener('click', () => { loadExecutorPortfolio(); });
+
     async function refresh(force = false) {
       const res = await fetch('/api/status', { cache: 'no-store' });
       const data = await res.json();
@@ -1362,6 +1983,7 @@
         lines.appendChild(li);
       }
 
+      renderExitPendingBanner(data.webhookExitPending || []);
       renderOpenTrades(data.openTrades || []);
       renderPriorSignals(data.priorSignals || []);
       renderWatchlistSyncStatus(data.watchlistSync || [], data.watchlistSyncOptions || []);
@@ -1373,43 +1995,296 @@
     // findWatchlistOrphans in trade_log.js) — this just surfaces it and offers a one-click action
     // instead of requiring `node scripts/archive_trade_log.js --orphans` to be run by hand.
     // Archiving never deletes trade history, only moves it out of live Edge Analysis/Portfolio Sim.
-    function renderOrphanBanner(orphans) {
-      const el = document.getElementById('orphan-banner');
-      if (!orphans.length) { el.innerHTML = ''; return; }
-      const list = orphans.map((o) => `${o.ticker} (${o.trades} trade${o.trades === 1 ? '' : 's'}, ${o.timeframes.join('/')})`).join(', ');
-      el.innerHTML = `
-        <div class="warn-box">
-          <h3>${orphans.length} symbol${orphans.length === 1 ? '' : 's'} logged but no longer in any watchlist</h3>
-          <p>${list}</p>
-          <p class="muted" style="font-size:12px;">Archiving moves their closed-trade history out of Edge
-          Analysis and Portfolio Sim into <code>trade-log/archive/</code> — nothing is deleted, and it's
-          reversible with <code>--restore</code>. Detected during the last watchlist reconciliation.</p>
-          <button type="button" class="btn" id="archive-orphans-btn">Archive Now</button>
+    // Always renders (including an explicit empty state) so the section — and the button — has a
+    // fixed, findable location instead of appearing/disappearing based on whether anything's orphaned.
+    // Set by the manual sweep so the card can state how current the underlying watchlist membership
+    // is. Recomputing can only ever be as fresh as the last reconciliation — saying otherwise would
+    // imply a removal made minutes ago in TradingView is already accounted for.
+    let orphanSweepMeta = null;
+    const selectedOrphanTickers = new Set();
+
+    function orphanFreshnessNote() {
+      if (!orphanSweepMeta) return '';
+      const { membershipAsOf, membershipOldest, watchlistCount, symbolCount } = orphanSweepMeta;
+      if (!membershipAsOf) {
+        return `<p class="muted" style="font-size:12px;">Swept against ${watchlistCount} watchlist(s), but none carry a sync timestamp — membership freshness unknown.</p>`;
+      }
+      const asOf = new Date(membershipAsOf);
+      const stale = (Date.now() - asOf.getTime()) > 24 * 60 * 60 * 1000;
+      const spread = membershipOldest && membershipOldest !== membershipAsOf
+        ? ` (oldest ${new Date(membershipOldest).toLocaleString()})`
+        : '';
+      return `<p class="${stale ? 'warn-box' : 'muted'}" style="font-size:12px;">Swept against watchlist membership as of
+        <strong>${asOf.toLocaleString()}</strong>${spread} — ${watchlistCount} watchlist(s), ${symbolCount} symbols.
+        ${stale ? 'That is over a day old, so symbols removed since then will not show up yet. Run a scan to resync membership first.' : 'A symbol removed in TradingView after that time will not show up until membership is resynced.'}</p>`;
+    }
+
+    function orphanSweepControls(count) {
+      return `
+        <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn" id="sweep-orphans-btn" style="padding:5px 12px;">Sweep now</button>
+          ${count ? `<button type="button" class="btn" id="archive-orphans-btn">Remove from log (${count})</button>` : ''}
+          <input id="archive-symbol-input" class="control-input" type="text" placeholder="Ticker" style="width:90px; padding:6px 8px;" />
+          <button type="button" class="btn btn-small" id="archive-symbol-btn" disabled>Remove symbol</button>
           <span id="archive-orphans-msg" class="action-message" style="margin-top:0;"></span>
         </div>`;
-      document.getElementById('archive-orphans-btn').addEventListener('click', async () => {
-        const tickers = orphans.map((o) => o.ticker).join(', ');
-        if (!confirm(`Archive closed-trade history for: ${tickers}?\n\nThis removes them from Edge Analysis and Portfolio Sim (reversible with --restore). Trade rows are never deleted.`)) return;
-        const btn = document.getElementById('archive-orphans-btn');
+    }
+
+    function setButtonLoading(btn, text) {
+      if (!btn) return;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-inline"></span>${text}`;
+    }
+
+    function clearButtonText(btn, text) {
+      if (!btn) return;
+      btn.disabled = false;
+      btn.textContent = text;
+    }
+
+    function wireOrphanSweep() {
+      const btn = document.getElementById('sweep-orphans-btn');
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
         const msg = document.getElementById('archive-orphans-msg');
-        btn.disabled = true;
-        msg.textContent = 'Archiving…';
-        msg.className = 'action-message';
+        setButtonLoading(btn, 'Sweeping…');
         try {
-          const resp = await fetch('/api/archive-orphans', { method: 'POST' });
-          const data = await resp.json();
+          const data = await (await fetch('/api/detect-orphans', { method: 'POST' })).json();
           if (data?.success) {
+            orphanSweepMeta = data;
             renderOrphanBanner(data.tradeLogOrphans || []);
           } else {
-            msg.textContent = data?.error || 'Archive failed';
+            msg.textContent = data?.error || 'Sweep failed';
             msg.className = 'action-message action-message-error';
-            btn.disabled = false;
+            clearButtonText(btn, 'Sweep now');
           }
         } catch (err) {
-          msg.textContent = err?.message || 'Archive failed';
+          msg.textContent = err?.message || 'Sweep failed';
           msg.className = 'action-message action-message-error';
-          btn.disabled = false;
+          clearButtonText(btn, 'Sweep now');
         }
+      });
+      const archiveAllBtn = document.getElementById('archive-orphans-btn');
+      if (archiveAllBtn) {
+        archiveAllBtn.addEventListener('click', async () => {
+          const msg = document.getElementById('archive-orphans-msg');
+          if (!confirm('Remove all orphaned trade-history rows from the active log? This removes them from live Edge Analysis and Portfolio Sim, but the rows are still recoverable with --restore.')) return;
+          setButtonLoading(archiveAllBtn, 'Removing…');
+          msg.textContent = '';
+          msg.className = 'action-message';
+          try {
+            const resp = await fetch('/api/archive-orphans', { method: 'POST' });
+            const data = await resp.json();
+            if (data?.success) {
+              msg.textContent = 'Removal completed successfully.';
+              msg.className = 'action-message';
+              renderOrphanBanner(data.tradeLogOrphans || []);
+            } else {
+              msg.textContent = data?.error || 'Remove failed';
+              msg.className = 'action-message action-message-error';
+              clearButtonText(archiveAllBtn, `Remove from log (${document.querySelectorAll('.archive-orphan-checkbox').length})`);
+            }
+          } catch (err) {
+            msg.textContent = err?.message || 'Remove failed';
+            msg.className = 'action-message action-message-error';
+            clearButtonText(archiveAllBtn, `Remove from log (${document.querySelectorAll('.archive-orphan-checkbox').length})`);
+          }
+        });
+      }
+
+      const archiveSymbolInput = document.getElementById('archive-symbol-input');
+      const archiveSymbolBtn = document.getElementById('archive-symbol-btn');
+      if (archiveSymbolInput && archiveSymbolBtn) {
+        archiveSymbolInput.addEventListener('input', () => {
+          archiveSymbolBtn.disabled = !archiveSymbolInput.value.trim();
+        });
+        archiveSymbolBtn.addEventListener('click', async () => {
+          const msg = document.getElementById('archive-orphans-msg');
+          const symbol = String(archiveSymbolInput.value || '').trim().toUpperCase();
+          if (!symbol) return;
+          if (!confirm(`Remove trade-history rows for ${symbol} from the active log? This removes them from live Edge Analysis and Portfolio Sim, but the rows are still recoverable with --restore.`)) return;
+          setButtonLoading(archiveSymbolBtn, 'Removing…');
+          msg.textContent = '';
+          msg.className = 'action-message';
+          try {
+            const resp = await fetch('/api/archive-orphans', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ symbols: [symbol] }),
+            });
+            const data = await resp.json();
+            if (data?.success) {
+              msg.textContent = `Removed ${symbol} successfully.`;
+              msg.className = 'action-message';
+              archiveSymbolInput.value = '';
+              archiveSymbolBtn.disabled = true;
+              renderOrphanBanner(data.tradeLogOrphans || []);
+            } else {
+              msg.textContent = data?.error || 'Remove failed';
+              msg.className = 'action-message action-message-error';
+              clearButtonText(archiveSymbolBtn, 'Remove symbol');
+            }
+          } catch (err) {
+            msg.textContent = err?.message || 'Remove failed';
+            msg.className = 'action-message action-message-error';
+            clearButtonText(archiveSymbolBtn, 'Remove symbol');
+          }
+        });
+      }
+    }
+
+    function renderOrphanBanner(orphans) {
+      const el = document.getElementById('orphan-banner');
+      if (!orphans.length) {
+        el.innerHTML = `<p class="muted">No orphaned symbols detected.</p>${orphanFreshnessNote()}${orphanSweepControls(0)}`;
+        wireOrphanSweep();
+        return;
+      }
+      const rows = orphans.map((o) => `
+        <tr>
+          <td><input type="checkbox" class="archive-orphan-checkbox" data-ticker="${o.ticker}" /></td>
+          <td>${o.ticker}</td>
+          <td class="num">${o.trades}</td>
+          <td>${o.timeframes.join('/')}</td>
+          <td>${o.lastTradeAt ? new Date(o.lastTradeAt).toLocaleDateString() : '—'}</td>
+          <td><button type="button" class="btn btn-small archive-orphan-btn" data-ticker="${o.ticker}">Remove</button></td>
+        </tr>`).join('');
+      el.innerHTML = `
+        <table>
+          <thead><tr><th><label style="cursor:pointer; user-select:none;"><input type="checkbox" id="select-all-orphans" style="margin-right:4px; vertical-align:middle;" /><span id="select-all-orphans-label">All</span></label></th><th>Ticker</th><th class="num">Trades</th><th>Timeframes</th><th>Last Trade</th><th>Action</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top:8px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button type="button" class="btn btn-small" id="archive-selected-orphans-btn" disabled>Remove selected</button>
+          <button type="button" class="btn btn-small btn-secondary" id="clear-selected-orphans-btn" disabled>Clear selection</button>
+          ${orphanSweepControls(orphans.length)}
+        </div>
+        ${orphanFreshnessNote()}`;
+      wireOrphanSweep();
+
+      const updateArchiveSelectedState = () => {
+        selectedOrphanTickers.clear();
+        const checkboxes = Array.from(document.querySelectorAll('.archive-orphan-checkbox'));
+        for (const cb of checkboxes) {
+          const ticker = cb.dataset.ticker;
+          if (ticker && cb.checked) selectedOrphanTickers.add(ticker);
+        }
+        const archiveSelectedBtn = document.getElementById('archive-selected-orphans-btn');
+        const selectAll = document.getElementById('select-all-orphans');
+        if (archiveSelectedBtn) archiveSelectedBtn.disabled = selectedOrphanTickers.size === 0;
+        if (selectAll) {
+          const allChecked = checkboxes.length > 0 && checkboxes.every((cb) => cb.checked);
+          selectAll.checked = allChecked;
+          selectAll.indeterminate = selectedOrphanTickers.size > 0 && !allChecked;
+        }
+        updateSelectAllLabel();
+      };
+
+      document.querySelectorAll('.archive-orphan-checkbox').forEach((cb) => {
+        cb.addEventListener('change', updateArchiveSelectedState);
+      });
+
+      const selectAllCb = document.getElementById('select-all-orphans');
+      const selectAllLabel = document.getElementById('select-all-orphans-label');
+      const updateSelectAllLabel = () => {
+        if (!selectAllCb || !selectAllLabel) return;
+        if (selectAllCb.indeterminate) selectAllLabel.textContent = 'All';
+        else selectAllLabel.textContent = selectAllCb.checked ? 'None' : 'All';
+      };
+      if (selectAllCb) {
+        selectAllCb.addEventListener('change', () => {
+          const checkboxes = Array.from(document.querySelectorAll('.archive-orphan-checkbox'));
+          for (const cb of checkboxes) cb.checked = selectAllCb.checked;
+          updateArchiveSelectedState();
+          updateSelectAllLabel();
+        });
+      }
+
+      const archiveSelectedBtn = document.getElementById('archive-selected-orphans-btn');
+      const clearSelectedBtn = document.getElementById('clear-selected-orphans-btn');
+      const clearSelection = () => {
+        const checkboxes = Array.from(document.querySelectorAll('.archive-orphan-checkbox'));
+        for (const cb of checkboxes) cb.checked = false;
+        selectedOrphanTickers.clear();
+        if (archiveSelectedBtn) archiveSelectedBtn.disabled = true;
+        if (clearSelectedBtn) clearSelectedBtn.disabled = true;
+        const selectAllCb = document.getElementById('select-all-orphans');
+        if (selectAllCb) {
+          selectAllCb.checked = false;
+          selectAllCb.indeterminate = false;
+        }
+        if (selectAllLabel) selectAllLabel.textContent = 'All';
+      };
+
+      if (archiveSelectedBtn) {
+        archiveSelectedBtn.addEventListener('click', async () => {
+          const selected = Array.from(selectedOrphanTickers);
+          if (!selected.length) return;
+          if (!confirm(`Remove closed-trade history for: ${selected.join(', ')}?\n\nThis removes them from Edge Analysis and Portfolio Sim (reversible with --restore). Trade rows are never deleted.`)) return;
+          const msg = document.getElementById('archive-orphans-msg');
+          setButtonLoading(archiveSelectedBtn, 'Removing…');
+          msg.textContent = '';
+          msg.className = 'action-message';
+          try {
+            const resp = await fetch('/api/archive-orphans', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ symbols: selected }),
+            });
+            const data = await resp.json();
+            if (data?.success) {
+              renderOrphanBanner(data.tradeLogOrphans || []);
+            } else {
+              msg.textContent = data?.error || 'Remove failed';
+              msg.className = 'action-message action-message-error';
+              clearButtonText(archiveSelectedBtn, 'Remove selected');
+            }
+          } catch (err) {
+            msg.textContent = err?.message || 'Remove failed';
+            msg.className = 'action-message action-message-error';
+            clearButtonText(archiveSelectedBtn, 'Remove selected');
+          }
+        });
+      }
+
+      if (clearSelectedBtn) {
+        clearSelectedBtn.addEventListener('click', () => {
+          clearSelection();
+        });
+      }
+
+      document.querySelectorAll('.archive-orphan-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const ticker = btn.dataset.ticker;
+          if (!ticker) return;
+          if (!confirm(`Remove closed-trade history for ${ticker}?\n\nThis removes it from Edge Analysis and Portfolio Sim (reversible with --restore). Trade rows are never deleted.`)) return;
+          const msg = document.getElementById('archive-orphans-msg');
+          btn.disabled = true;
+          btn.textContent = 'Removing…';
+          msg.textContent = '';
+          msg.className = 'action-message';
+          try {
+            const resp = await fetch('/api/archive-orphans', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ symbols: [ticker] }),
+            });
+            const data = await resp.json();
+            if (data?.success) {
+              renderOrphanBanner(data.tradeLogOrphans || []);
+            } else {
+              msg.textContent = data?.error || 'Remove failed';
+              msg.className = 'action-message action-message-error';
+              btn.disabled = false;
+              btn.textContent = 'Remove';
+            }
+          } catch (err) {
+            msg.textContent = err?.message || 'Remove failed';
+            msg.className = 'action-message action-message-error';
+            btn.disabled = false;
+            btn.textContent = 'Remove';
+          }
+        });
       });
     }
 
@@ -1556,6 +2431,7 @@
 
     refresh(true);
     loadWatchlists();
+    loadExecutorPortfolio();
 
     document.getElementById('run-cron-btn').addEventListener('click', () => runCronNow('cron-watchlist'));
     document.getElementById('run-cron-btn-top').addEventListener('click', () => runCronNow('cron-watchlist-top'));
@@ -1774,6 +2650,310 @@
     let edgeSort = { col: 'expectancyPct', dir: -1 };
     let edgeLoaded = false;
 
+    /* ---------- Webhook Orders tab ---------- */
+    // Reads the ledger directly rather than deriving from openTrades: a webhook order can outlive the
+    // strategy position that prompted it (that mismatch is exactly what this tab is for spotting), so
+    // deriving would hide the very rows worth seeing.
+    let wlData = null;
+
+    function wlSourceBadge(source) {
+      if (source === 'tv-alert') return '<span style="color:#7dd3fc;" title="Placed by a TradingView watchlist alert; recorded here, not sent by this system">TV alert</span>';
+      if (source === 'auto') return '<span style="color:#6ee7a8;" title="Sent automatically by a scheduled scan on an armed timeframe">auto</span>';
+      if (source === 'auto-exit') return '<span style="color:#6ee7a8;" title="Close sent automatically when a scan saw the strategy exit">auto-exit</span>';
+      if (source === 'manual') return '<span class="muted" title="Sent with the Send button">manual</span>';
+      if (source === 'manual-exit') return '<span class="muted" title="Close sent with the Close button">manual-exit</span>';
+      if (source === 'manual-close') return '<span style="color:#c084fc;" title="Closed directly at the broker and recorded here — no order was sent">closed at broker</span>';
+      return `<span class="muted">${escapeHtml(source || '—')}</span>`;
+    }
+
+    function wlOrderLabel(orderType, tif) {
+      const t = orderType && orderType !== 'market' ? orderType : 'market';
+      return `${t}${tif ? ' / ' + tif : ''}`;
+    }
+
+    // Type is computed server-side (trade_webhook.js ledgerRowType) so "sent" means one thing across
+    // the whole system; this only colours it. The distinction it draws is whether an order actually
+    // went out from here — a Manual Close is a position closed at the broker by hand and recorded, so
+    // it must never read like proof this system sent something.
+    const WL_TYPE_STYLE = {
+      'WH Open': { color: '#facc15', title: 'Entry order sent by this system; no close recorded yet' },
+      'WH Close': { color: '#6ee7a8', title: 'Both the entry and the close were sent by this system' },
+      'Manual Close': { color: '#c084fc', title: 'Entry sent by this system; closed directly at the broker and recorded here — no close order was sent' },
+      'TV Open': { color: '#7dd3fc', title: 'Entry placed by a TradingView watchlist alert; recorded here, not sent by this system' },
+      'TV Close': { color: '#7dd3fc', title: 'Closed by TradingView\'s own alert; recorded here, not sent by this system' },
+    };
+
+    function wlTypeBadge(type) {
+      const s = WL_TYPE_STYLE[type];
+      if (!s) return `<span class="muted">${escapeHtml(type || '—')}</span>`;
+      return `<span style="color:${s.color};white-space:nowrap;" title="${escapeHtml(s.title)}">${escapeHtml(type)}</span>`;
+    }
+
+    /**
+     * "Another timeframe of this symbol just exited." Shown under the symbol on an open row, because
+     * the decision it prompts (close early? hold?) is made against that row's own Close buttons.
+     *
+     * A SLOWER exiting timeframe is highlighted and a faster one is muted — holding 2h while the 4h
+     * turns means the larger trend rolled over, whereas holding 2h while the 45m turns is a wiggle
+     * inside your own timeframe. Only the slower kind also pushes to the phone.
+     */
+    function wlCrossTfNote(list) {
+      if (!Array.isArray(list) || !list.length) return '';
+      // Slower first — that's the one that changes the decision.
+      const sorted = [...list].sort((a, b) => (a.relation === 'slower' ? -1 : 1) - (b.relation === 'slower' ? -1 : 1));
+      return `<div style="margin-top:4px;font-size:11px;line-height:1.5;">${sorted.map((x) => {
+        const slower = x.relation === 'slower';
+        const when = x.exit_time ? new Date(x.exit_time).toLocaleDateString() : 'date unknown';
+        const px = x.exit_price && x.exit_price !== '—' ? ` @ ${escapeHtml(String(x.exit_price))}` : '';
+        const pnl = x.exit_pnl && x.exit_pnl !== '—' ? ` ${escapeHtml(String(x.exit_pnl))}` : '';
+        const label = slower ? 'slower TF exited' : 'faster TF exited';
+        return `<div style="color:${slower ? '#fbbf24' : '#94a3b8'};" title="${escapeHtml(
+          slower
+            ? 'A slower timeframe than the one you hold has exited — the larger trend turned. This also pushed to ntfy.'
+            : 'A faster timeframe than the one you hold has exited — a wiggle inside your timeframe. Shown here only, no push.'
+        )}">${slower ? '▲' : '▽'} ${escapeHtml(x.exit_timeframe || '?')} ${label} ${escapeHtml(when)}${px}${pnl}</div>`;
+      }).join('')}</div>`;
+    }
+
+    async function loadWebhookLedger() {
+      const status = document.getElementById('wl-status');
+      try {
+        const data = await (await fetch('/api/webhook-ledger')).json();
+        if (!data?.success) throw new Error(data?.error || 'could not read the ledger');
+        wlData = data;
+        status.textContent = '';
+        status.className = 'action-message';
+
+        const tfSel = document.getElementById('wl-filter-tf');
+        const keep = tfSel.value;
+        tfSel.innerHTML = '<option value="">all</option>' + data.timeframes.map((t) => `<option value="${t}">${t}</option>`).join('');
+        tfSel.value = keep;
+        document.getElementById('wl-symbol-list').innerHTML = data.symbols.map((s) => `<option value="${escapeHtml(s)}"></option>`).join('');
+
+        renderWlOpen();
+        renderWlHistory();
+      } catch (err) {
+        status.textContent = err?.message || 'Could not load the webhook ledger';
+        status.className = 'action-message action-message-error';
+      }
+    }
+
+    function renderWlOpen() {
+      const el = document.getElementById('wl-open');
+      const rows = wlData?.open || [];
+      if (!rows.length) {
+        el.innerHTML = '<div class="muted">No webhook orders are currently open. Anything sent has a matching close recorded.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <table>
+          <thead><tr>
+            <th>Symbol</th><th>TF</th><th>Type</th><th>Side</th><th>Price</th><th>Order</th>
+            <th>Sent</th><th>Origin</th><th>Close</th>
+          </tr></thead>
+          <tbody>${rows.map((r, i) => `
+            <tr>
+              <td><strong>${escapeHtml(r.symbol || '—')}</strong>${wlCrossTfNote(r.crossTfExits)}</td>
+              <td>${escapeHtml(r.tag || '—')}</td>
+              <td style="font-size:11px;">${wlTypeBadge(r.type)}</td>
+              <td>${escapeHtml(String(r.side || '—').toUpperCase())}</td>
+              <td>${r.price ?? '—'}</td>
+              <td style="font-size:11px;">${escapeHtml(wlOrderLabel(r.orderType, r.timeInForce))}</td>
+              <td style="font-size:12px;">${r.sentAt ? new Date(r.sentAt).toLocaleString() : '—'}</td>
+              <td style="font-size:11px;">${wlSourceBadge(r.source)}</td>
+              <td>${r.source === 'tv-alert'
+                ? '<span class="muted" style="font-size:11px;" title="TradingView\'s own alert sends the close for this position">closed by TV alert</span>'
+                : `<div class="wl-close-group" data-i="${i}">${buildOrderForm('Close', 'wl-close-btn')}
+                     <div style="margin-top:3px;">
+                       <button type="button" class="btn wl-mark-closed-btn" style="padding:3px 9px;font-size:11px;"
+                         title="Record this position as closed WITHOUT sending anything — for a position you already closed directly at the broker">Mark closed (no send)</button>
+                     </div>`}</td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+      el.querySelectorAll('.wl-close-group').forEach((group) => {
+        wireOrderForm(group);
+        const row = rows[Number(group.dataset.i)];
+        group.querySelector('.wl-close-btn').addEventListener('click', async () => {
+          const read = readOrderSpec(group);
+          if (read.error) { alert(read.error); return; }
+          const spec = read.spec;
+          if (!confirm(`CLOSE ${row.symbol} (${row.tag})\n${describeOrder(spec)}\n\nEntered ${row.entryTime ? new Date(row.entryTime).toLocaleString() : '?'}\n\nThis places a real order at the trade executor.`)) return;
+          const inputs = [...group.querySelectorAll('select,input,button')];
+          inputs.forEach((el) => { el.disabled = true; });
+          try {
+            const resp = await fetch('/api/send-webhook-exit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              // `tag` goes out as the timeframe: timeframeTag() is idempotent over its own output, so
+              // the key the server rebuilds matches the ledger key this row came from exactly.
+              body: JSON.stringify({ symbol: row.symbol, timeframe: row.tag, entryTime: row.entryTime, price: row.price ?? '', ...spec }),
+            });
+            const data = await resp.json();
+            if (data?.success) { await loadWebhookLedger(); await loadWebhookConfig(); }
+            else { inputs.forEach((el) => { el.disabled = false; }); alert(`Close failed: ${data?.error || 'unknown error'}`); }
+          } catch (err) {
+            inputs.forEach((el) => { el.disabled = false; });
+            alert(`Close failed: ${err?.message || err}`);
+          }
+        });
+
+        // Bookkeeping-only close, for a position already closed by hand at the broker. Confirm-gated
+        // like the real close, but the dialog says the opposite thing — the risk here is recording a
+        // close that never happened, which would drop a live position out of the open list, out of
+        // alert-quota priority, and out of the auto-close path's reach.
+        group.querySelector('.wl-mark-closed-btn').addEventListener('click', async () => {
+          const fill = prompt(`MARK CLOSED — ${row.symbol} (${row.tag})\n\nNo order will be sent. This only records that you already closed this position at the broker.\n\nOptional: fill price (leave blank if unknown), then OK.`, '');
+          if (fill === null) return;
+          const price = fill.trim();
+          if (price && !(Number.isFinite(parseFloat(price)) && parseFloat(price) > 0)) { alert('Fill price must be a positive number, or blank.'); return; }
+          if (!confirm(`Record ${row.symbol} (${row.tag}) as CLOSED at the broker?\n\n${price ? `Fill price: ${price}` : 'No fill price recorded'}\n\nNothing is sent to the executor. Only do this if the position really is closed — the auto-close will no longer fire for it.`)) return;
+          const inputs = [...group.querySelectorAll('select,input,button')];
+          inputs.forEach((el) => { el.disabled = true; });
+          try {
+            const resp = await fetch('/api/close-webhook-local', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ symbol: row.symbol, timeframe: row.tag, entryTime: row.entryTime, price }),
+            });
+            const data = await resp.json();
+            if (data?.success) { await loadWebhookLedger(); await loadWebhookConfig(); }
+            else { inputs.forEach((el) => { el.disabled = false; }); alert(`Could not record the close: ${data?.error || 'unknown error'}`); }
+          } catch (err) {
+            inputs.forEach((el) => { el.disabled = false; });
+            alert(`Could not record the close: ${err?.message || err}`);
+          }
+        });
+      });
+    }
+
+    /**
+     * History period presets. Boundaries are computed in the BROWSER's local timezone, deliberately —
+     * every timestamp in this table is rendered with toLocaleString(), so a row reading "today" that a
+     * "Today" filter excluded (or vice versa) would be indefensible on screen. This is a display
+     * filter over already-fetched rows, not the ET trading-day calendar the scan/notify gates use.
+     *
+     * Each returns [from, to) or null for "no bound".
+     */
+    const wlStartOfDay = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+    const wlAddDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+
+    const WL_PERIODS = {
+      all: { label: 'All time', range: () => null },
+      today: { label: 'Today', range: (n) => [wlStartOfDay(n), wlAddDays(wlStartOfDay(n), 1)] },
+      yesterday: { label: 'Yesterday', range: (n) => [wlAddDays(wlStartOfDay(n), -1), wlStartOfDay(n)] },
+      // Week starts Monday: the trading week does, and a Sunday-start "week to date" reads as a
+      // day-old window every Monday, which is when it is looked at most.
+      wtd: { label: 'Week to date', range: (n) => [wlAddDays(wlStartOfDay(n), -((n.getDay() + 6) % 7)), wlAddDays(wlStartOfDay(n), 1)] },
+      mtd: { label: 'Month to date', range: (n) => [new Date(n.getFullYear(), n.getMonth(), 1), wlAddDays(wlStartOfDay(n), 1)] },
+      last_month: { label: 'Last month', range: (n) => [new Date(n.getFullYear(), n.getMonth() - 1, 1), new Date(n.getFullYear(), n.getMonth(), 1)] },
+      // 30 calendar days INCLUDING today, so it never reads as 31 days of rows.
+      last_30: { label: 'Last 30 days', range: (n) => [wlAddDays(wlStartOfDay(n), -29), wlAddDays(wlStartOfDay(n), 1)] },
+      ytd: { label: 'Year to date', range: (n) => [new Date(n.getFullYear(), 0, 1), wlAddDays(wlStartOfDay(n), 1)] },
+    };
+
+    /**
+     * A row is in the period if EITHER its entry or its close happened inside it — a position opened
+     * last week and closed this morning is part of today's activity, and filtering on the entry alone
+     * would hide exactly the close you came looking for. A row with neither timestamp (impossible for
+     * a written record, but not worth asserting) falls out of every bounded period rather than being
+     * shown under a date it doesn't have.
+     */
+    function wlInPeriod(row, range) {
+      if (!range) return true;
+      const [from, to] = range;
+      const hit = (iso) => {
+        if (!iso) return false;
+        const t = new Date(iso).getTime();
+        return Number.isFinite(t) && t >= from.getTime() && t < to.getTime();
+      };
+      return hit(row.sentAt) || hit(row.exit?.at);
+    }
+
+    function renderWlHistory() {
+      const el = document.getElementById('wl-history');
+      const sym = document.getElementById('wl-filter-symbol').value.trim().toUpperCase();
+      const tf = document.getElementById('wl-filter-tf').value;
+      const st = document.getElementById('wl-filter-status').value;
+      const periodKey = document.getElementById('wl-filter-period').value;
+      const period = WL_PERIODS[periodKey] || WL_PERIODS.all;
+      const range = period.range(new Date());
+      let rows = wlData?.rows || [];
+      // Symbol match is a substring on the bare ticker, so "SOX" finds SOXL and a pasted "BATS:SOXL"
+      // still matches the stored bare form.
+      if (sym) rows = rows.filter((r) => webhookBareTicker(r.symbol || '').toUpperCase().includes(webhookBareTicker(sym)));
+      if (tf) rows = rows.filter((r) => r.tag === tf);
+      if (st === 'open') rows = rows.filter((r) => !r.exit);
+      if (st === 'closed') rows = rows.filter((r) => r.exit);
+      rows = rows.filter((r) => wlInPeriod(r, range));
+
+      const fmtDay = (d) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const periodNote = range
+        ? `${period.label} — ${fmtDay(range[0])} to ${fmtDay(wlAddDays(range[1], -1))}, by entry or close date`
+        : 'All time';
+      // A partial window is stated, never silent — the whole point of archiving overflow instead of
+      // deleting it is that "YTD" can't quietly answer with a few recent weeks.
+      const arch = wlData?.archive;
+      const archNote = arch?.truncated
+        ? `<div class="warn-box" style="font-size:12px;margin-bottom:8px;">Showing the most recent 10,000 archived orders of ${arch.total}. Older history is in <code>status/webhook-sent-archive.jsonl</code> and is not included above.</div>`
+        : (arch?.unreadable
+          ? `<div class="warn-box" style="font-size:12px;margin-bottom:8px;">${arch.unreadable} archived record(s) could not be parsed and are excluded.</div>`
+          : '');
+
+      const total = (wlData?.rows || []).length;
+      if (!rows.length) {
+        el.innerHTML = `${archNote}<div class="muted">No orders match this filter${total ? ` (${total} in the ledger).` : '. Nothing has been sent yet.'}</div>
+          <div class="muted" style="font-size:12px;margin-top:6px;">${escapeHtml(periodNote)}</div>`;
+        return;
+      }
+      el.innerHTML = `
+        ${archNote}
+        <div class="muted" style="font-size:12px;margin-bottom:8px;">Showing ${rows.length} of ${total} order${total === 1 ? '' : 's'} · ${escapeHtml(periodNote)}${arch?.total ? ` · includes ${arch.total} archived` : ''}.</div>
+        <div class="edge-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Symbol</th><th>TF</th><th>Type</th><th>Status</th>
+            <th>Entry side</th><th>Entry price</th><th>Entry order</th><th>Entry sent</th><th>Origin</th>
+            <th>Exit side</th><th>Exit price</th><th>Exit order</th><th>Exit sent</th><th>Exit origin</th>
+          </tr></thead>
+          <tbody>${rows.map((r) => `
+            <tr>
+              <td><strong>${escapeHtml(r.symbol || '—')}</strong></td>
+              <td>${escapeHtml(r.tag || '—')}</td>
+              <td style="font-size:11px;">${wlTypeBadge(r.type)}</td>
+              <td>${r.exit
+                ? '<span class="muted">closed</span>'
+                : '<span style="color:#facc15;">open</span>'}</td>
+              <td>${escapeHtml(String(r.side || '—').toUpperCase())}</td>
+              <td>${r.price ?? '—'}</td>
+              <td style="font-size:11px;">${escapeHtml(wlOrderLabel(r.orderType, r.timeInForce))}</td>
+              <td style="font-size:12px;">${r.sentAt ? new Date(r.sentAt).toLocaleString() : '—'}</td>
+              <td style="font-size:11px;">${wlSourceBadge(r.source)}</td>
+              <td>${r.exit ? escapeHtml(String(r.exit.side || '—').toUpperCase()) : '—'}</td>
+              <td>${r.exit ? (r.exit.price ?? '—') : '—'}</td>
+              <td style="font-size:11px;">${r.exit
+                ? (r.exit.sent === false
+                  ? '<span class="muted" title="No close order was sent — recorded as closed at the broker">not sent</span>'
+                  : escapeHtml(wlOrderLabel(r.exit.orderType, r.exit.timeInForce)))
+                : '—'}</td>
+              <td style="font-size:12px;">${r.exit?.at ? new Date(r.exit.at).toLocaleString() : '—'}</td>
+              <td style="font-size:11px;">${r.exit ? wlSourceBadge(r.exit.source) : '—'}</td>
+            </tr>`).join('')}</tbody>
+        </table></div>`;
+    }
+
+    document.getElementById('wl-refresh').addEventListener('click', () => loadWebhookLedger());
+    document.getElementById('wl-filter-symbol').addEventListener('input', renderWlHistory);
+    document.getElementById('wl-filter-tf').addEventListener('change', renderWlHistory);
+    document.getElementById('wl-filter-status').addEventListener('change', renderWlHistory);
+    document.getElementById('wl-filter-period').addEventListener('change', renderWlHistory);
+    document.getElementById('wl-filter-clear').addEventListener('click', () => {
+      document.getElementById('wl-filter-symbol').value = '';
+      document.getElementById('wl-filter-tf').value = '';
+      document.getElementById('wl-filter-status').value = 'all';
+      document.getElementById('wl-filter-period').value = 'all';
+      renderWlHistory();
+    });
+
     document.querySelectorAll('.tabbtn').forEach((btn) => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tabbtn').forEach((b) => b.classList.toggle('active', b === btn));
@@ -1786,7 +2966,15 @@
         // most visits to this dashboard never open this tab.
         if (btn.dataset.pane === 'pane-edge' && !edgeLoaded) loadEdgeAnalysis();
         if (btn.dataset.pane === 'pane-portfolio' && !psLoaded) initPortfolioSim();
+        // Reloaded on every view rather than once: the stored result is replaced by any sweep, which
+        // can be started from another browser tab, and the staleness check compares against a trade
+        // log that grows on every scan. Both make a cached view wrong rather than merely old.
+        if (btn.dataset.pane === 'pane-sweet') loadSweetSpot();
         if (btn.dataset.pane === 'pane-symbol') document.getElementById('sym-search-input')?.focus();
+        // Always reloaded on view (not once): the ledger changes whenever an order is sent from
+        // anywhere — a scheduled scan, the Signals tab, or this tab — so a cached view could offer
+        // Close on a position that has already been closed.
+        if (btn.dataset.pane === 'pane-webhook') loadWebhookLedger();
       });
     });
 
@@ -1882,6 +3070,9 @@
         // Adopt whatever the server resolved so the chips highlight the variant actually measured.
         if (selectedRule === null && data.ruleType) selectedRule = data.ruleType;
         renderRuleChips('edge-rule-chips', 'edge-rule-note', data, loadEdgeAnalysis);
+        // Independent of the edge-analysis min-trades filter/availability below — fire it regardless
+        // so a rule-chip click or Refresh keeps both sections in sync on the same exit-rule variant.
+        loadConcurrency();
         if (!data.available) {
           document.getElementById('edge-empty').classList.remove('hidden');
           ['edge-tf-card', 'edge-sym-card', 'edge-exit-card'].forEach((id) => document.getElementById(id).classList.add('hidden'));
@@ -1899,6 +3090,56 @@
       } catch (err) {
         statusEl.textContent = `Failed: ${err.message}`;
         statusEl.classList.add('action-message-error');
+      }
+    }
+
+    let concurrencyData = null;
+
+    async function loadConcurrency() {
+      try {
+        const qs = selectedRule === null ? '' : `?rule=${encodeURIComponent(selectedRule)}`;
+        const resp = await fetch(`/api/open-position-concurrency${qs}`);
+        concurrencyData = await resp.json();
+      } catch {
+        concurrencyData = null;
+      }
+      renderEdgeConcurrency();
+    }
+
+    function renderEdgeConcurrency() {
+      const el = document.getElementById('edge-concurrency-table');
+      const noteEl = document.getElementById('edge-concurrency-note');
+      if (!el) return;
+      if (!concurrencyData || !concurrencyData.available) {
+        el.innerHTML = '<p class="muted">Not enough closed trades yet.</p>';
+        if (noteEl) noteEl.textContent = '';
+        return;
+      }
+      const months = concurrencyData.lookbackMonths || [1, 2, 3];
+      const fmtCell = (w) => (w ? `${w.min} / ${n1(w.avg)} / ${w.max}` : '—');
+      const rows = [
+        { label: '<strong>All (pooled)</strong>', windows: concurrencyData.overall },
+        ...concurrencyData.timeframes.map((tf) => ({ label: tf, windows: concurrencyData.byTimeframe[tf] || {} })),
+      ];
+      el.innerHTML = `
+        <table class="edge-table">
+          <thead>
+            <tr>
+              <th>Group</th>
+              ${months.map((m) => `<th class="num">Last ${m} Month${m === 1 ? '' : 's'}<br><span style="font-weight:400;">min / avg / max</span></th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((r) => `
+              <tr>
+                <td>${r.label}</td>
+                ${months.map((m) => `<td class="num">${fmtCell(r.windows[m])}</td>`).join('')}
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+      if (noteEl) {
+        const ruleLabel = concurrencyData.ruleType || 'all variants pooled';
+        noteEl.textContent = `${ruleLabel} · closed trades only — a position still open right now isn't reflected until it closes, so the most recent days may read a little low.`;
       }
     }
 
@@ -2253,18 +3494,25 @@
     }
 
     function renderPsTfChips() {
+      const allLabel = psTfSelected.size === 0 ? 'None' : 'All';
       document.getElementById('ps-tf-chips').innerHTML =
-        `<button type="button" class="chip ${psTfSelected.size === psAllTimeframes.length ? 'active' : ''}" data-all="1">All</button>` +
+        `<button type="button" class="chip ${psTfSelected.size === psAllTimeframes.length ? 'active' : ''}" data-all="1">${allLabel}</button>` +
         psAllTimeframes.map((t) => `<button type="button" class="chip ${psTfSelected.has(t.v) ? 'active' : ''}" data-tf="${t.v}">${t.l}</button>`).join('');
       document.querySelectorAll('#ps-tf-chips .chip').forEach((c) => {
         c.addEventListener('click', () => {
-          if (c.dataset.all) psTfSelected = new Set(psAllTimeframes.map((t) => t.v));
-          else {
+          if (c.dataset.all) {
+            if (psTfSelected.size === psAllTimeframes.length) {
+              psTfSelected.clear();
+            } else {
+              psTfSelected = new Set(psAllTimeframes.map((t) => t.v));
+            }
+          } else {
             const v = c.dataset.tf;
             if (psTfSelected.has(v)) psTfSelected.delete(v); else psTfSelected.add(v);
             if (psTfSelected.size === 0) psTfSelected = new Set(psAllTimeframes.map((t) => t.v));
           }
           renderPsTfChips();
+          runPortfolioSim();
         });
       });
     }
@@ -2345,6 +3593,7 @@
         <div class="metric-grid">
           <div class="metric-box"><div class="mv ${cls(r.totalReturnPct)}">${usd(r.finalEquity)}</div><div class="ml">final equity</div></div>
           <div class="metric-box"><div class="mv ${cls(r.cagr)}">${n1(r.cagr)}%</div><div class="ml">CAGR</div></div>
+          <div class="metric-box"><div class="mv ${cls(r.expectedPct)}" title="Expected = mean per-trade return on the equity that funded it × trades per year. Linear, not compounded, so on a profitable multi-year run it reads below CAGR.">${r.expectedPct === null ? '—' : n1(r.expectedPct) + '%'}</div><div class="ml">Expected</div></div>
           <div class="metric-box"><div class="mv neg">${n1(r.maxDrawdownPct)}%</div><div class="ml">max drawdown (realized)</div></div>
           <div class="metric-box"><div class="mv ${cls(r.cagrDd)}">${n2(r.cagrDd)}</div><div class="ml">CAGR / DD</div></div>
           <div class="metric-box"><div class="mv">${n1(r.totalReturnPct)}%</div><div class="ml">total return</div></div>
@@ -2358,7 +3607,8 @@
               &nbsp;<span class="dim">(${r.signalsSkipped} skipped — no free slot)</span></td></tr>
             <tr><td class="dim">Trades per year</td><td class="num">${n1(r.tradesPerYear)}</td></tr>
             <tr><td class="dim">Avg win / avg loss</td><td class="num"><span class="pos">${usd(r.avgWinUsd)}</span> / <span class="neg">${usd(r.avgLossUsd)}</span></td></tr>
-            <tr><td class="dim">Expectancy per trade</td><td class="num ${cls(r.expectancyUsd)}">${usd(r.expectancyUsd)}</td></tr>
+            <tr><td class="dim">Expectancy per trade</td><td class="num ${cls(r.expectancyUsd)}">${usd(r.expectancyUsd)}
+              &nbsp;<span class="dim" title="Same average measured against the equity that funded each trade. The dollar figure mixes size regimes — position size is equity/slots, so late trades are sized off a much larger account than early ones.">(${r.expectancyPctOfEquity === undefined ? '—' : n2(r.expectancyPctOfEquity) + '% of equity'})</span></td></tr>
             <tr><td class="dim">Drawdown, MAE-based worst case</td><td class="num neg">${n1(r.maeDrawdownEst)}%</td></tr>
             <tr><td class="dim">Margin-call rows excluded</td><td class="num">${r.marginCallsExcluded}</td></tr>
           </tbody>
@@ -2378,6 +3628,20 @@
           still open. Using each trade's logged MAE and assuming concurrent positions bottom together
           gives ${n1(r.maeDrawdownEst)}% against the realized ${n1(r.maxDrawdownPct)}%. Reality sits between
           the two — size for the higher number.</p>`);
+      }
+      // `years` is the union span of every selected timeframe, so a timeframe with much less logged
+      // history than the others has its trades annualized over years it never traded in. The run is
+      // still real; what it describes just is not what the timeframe chips suggest.
+      const thinSpans = (r.timeframeSpans || []).filter((s) => s.coveragePct < 80);
+      if ((r.timeframeSpans || []).length > 1 && thinSpans.length) {
+        warns.push(`<h3>Selected timeframes span very different histories</h3>
+          <p>CAGR and Expected are annualized over the full ${n1(r.years)}y run, which is the union of
+          every selected timeframe's history —
+          ${thinSpans.map((s) => `<strong>${s.timeframe}</strong> covers only ${n0(s.coveragePct)}% of it
+          (${s.startAt} → ${s.endAt}, ${s.trades} signals)`).join('; ')}.
+          Those trades are being annualized over years they were not available for, and for the
+          uncovered stretch the portfolio was really running the other timeframes alone. Compare
+          timeframes one at a time before reading anything into the combined figure.</p>`);
       }
       warns.push(`<h3>Closed trades only</h3>
         <p>Positions still open are absent from the log, and they are disproportionately losers — winners
@@ -2517,6 +3781,408 @@
         </div>`;
     }
 
+    /* =====================  SWEET SPOT TAB  ===================== */
+
+    let swPollTimer = null;
+
+    async function loadSweetSpot() {
+      const st = document.getElementById('sw-status');
+      st.classList.remove('action-message-error');
+      try {
+        const p = new URLSearchParams();
+        if (selectedRule !== null) p.set('rule', selectedRule);
+        const d = await (await fetch(`/api/sweet-spot?${p}`)).json();
+        if (selectedRule === null && d.ruleType) selectedRule = d.ruleType;
+        renderRuleChips('sw-rule-chips', 'sw-rule-note', d, loadSweetSpot);
+        renderSweetSpot(d);
+        // Poll only while a sweep is actually running. A run started from another browser tab (or
+        // left running across a reload) is picked up here too, since `running` comes from the
+        // server's own state rather than from whoever pressed the button.
+        if (d.running && !swPollTimer) swPollTimer = setInterval(pollSweetSpot, 1000);
+        if (!d.running && swPollTimer) { clearInterval(swPollTimer); swPollTimer = null; }
+      } catch (err) {
+        st.textContent = `Failed to load: ${err.message}`;
+        st.classList.add('action-message-error');
+      }
+    }
+
+    async function pollSweetSpot() {
+      try {
+        const p = new URLSearchParams();
+        if (selectedRule !== null) p.set('rule', selectedRule);
+        const d = await (await fetch(`/api/sweet-spot?${p}`)).json();
+        renderSweetSpotProgress(d);
+        if (!d.running) {
+          clearInterval(swPollTimer);
+          swPollTimer = null;
+          // Re-render everything, not just the bar — the run has just replaced the result file.
+          renderSweetSpot(d);
+        }
+      } catch { /* a dropped poll is not worth surfacing; the next tick retries */ }
+    }
+
+    async function startSweetSpot(quick) {
+      const st = document.getElementById('sw-status');
+      st.classList.remove('action-message-error');
+      const label = quick ? 'quick sweep' : 'full sweep';
+      if (!quick && !confirm('Run the FULL sweep?\n\nThis runs ~10,000 portfolio simulations and takes around 4 minutes. The quick sweep gives the same shortlist recommendation in ~30 seconds; the full run adds the grid structure and the walk-forward check.')) return;
+      try {
+        const body = { quick };
+        if (selectedRule && selectedRule !== 'all') body.rule = selectedRule;
+        else if (selectedRule === 'all') body.rule = 'all';
+        const res = await fetch('/api/sweet-spot/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const d = await res.json();
+        if (!res.ok || !d.success) throw new Error(d.error || `HTTP ${res.status}`);
+        st.textContent = `Started ${label}…`;
+        if (!swPollTimer) swPollTimer = setInterval(pollSweetSpot, 1000);
+      } catch (err) {
+        st.textContent = `Could not start ${label}: ${err.message}`;
+        st.classList.add('action-message-error');
+      }
+    }
+
+    function renderSweetSpotProgress(d) {
+      const el = document.getElementById('sw-progress');
+      if (!d.running) { el.innerHTML = ''; return; }
+      const pct = Number.isFinite(d.pct) ? Math.min(100, d.pct) : 0;
+      const started = d.startedAt ? new Date(d.startedAt) : null;
+      const elapsed = started ? Math.round((Date.now() - started.getTime()) / 1000) : 0;
+      el.innerHTML = `
+        <div class="bar-row" style="grid-template-columns:110px 1fr 150px;margin:14px 0 4px;">
+          <span class="tf-label">${d.phase || 'running'}</span>
+          <div class="bar-track"><div class="bar-fill bar-pos" style="width:${pct}%"></div></div>
+          <span class="bar-val">${pct.toFixed(0)}% · ${elapsed}s</span>
+        </div>
+        <p class="muted" style="margin:0;font-size:12px;">Running in a separate process — the rest of the
+        dashboard stays usable, and you can leave this tab.</p>`;
+    }
+
+    function renderSweetSpot(d) {
+      renderSweetSpotProgress(d);
+      const st = document.getElementById('sw-status');
+      const r = d.result;
+      const ids = ['sw-headline', 'sw-shortlist', 'sw-tf', 'sw-slots', 'sw-wf', 'sw-grid', 'sw-stale'];
+
+      if (d.error && !d.running) {
+        st.textContent = `Last sweep failed: ${d.error}`;
+        st.classList.add('action-message-error');
+      }
+      if (!r) {
+        ids.forEach((id) => document.getElementById(id).innerHTML = '');
+        if (!d.error) st.textContent = 'No sweep has been run yet. Start with the quick sweep — it gives the recommendation in about 30 seconds.';
+        renderSweetSpotCaveats(null);
+        return;
+      }
+
+      const age = Date.now() - new Date(r.generatedAt).getTime();
+      const ageTxt = age < 3600e3 ? `${Math.round(age / 60e3)} min ago`
+        : age < 86400e3 ? `${Math.round(age / 3600e3)} h ago`
+        : `${Math.round(age / 86400e3)} d ago`;
+      if (!d.running) {
+        st.textContent = `${r.quick ? 'Quick' : 'Full'} sweep · rule ${r.ruleType || 'all pooled'} · ${r.tradeCount.toLocaleString()} closed trades · ${new Date(r.generatedAt).toLocaleString()} (${ageTxt}) · took ${(r.durationMs / 1000).toFixed(0)}s`;
+      }
+
+      renderSweetSpotStale(d, r);
+      // Grid-derived cards may be showing a carried-over full run rather than this one; every such
+      // card gets its own provenance line so no section is silently attributed to the current sweep.
+      ['sw-tf-card', 'sw-slots-card', 'sw-wf-card', 'sw-grid-card'].forEach((id) => {
+        const card = document.getElementById(id);
+        card.querySelector('.sw-provenance')?.remove();
+        if (!r.gridFrom || !r.grid) return;
+        const p = document.createElement('p');
+        p.className = 'muted sw-provenance';
+        p.style.cssText = 'margin:0 0 4px;font-size:12px;color:#fbbf24;';
+        p.textContent = `From the full sweep of ${new Date(r.gridFrom.generatedAt).toLocaleString()} (${r.gridFrom.tradeCount.toLocaleString()} trades) — not the quick run above.`;
+        card.querySelector('h2').after(p);
+      });
+      renderSweetSpotHeadline(r);
+      renderSweetSpotShortlist(r);
+      renderSweetSpotTf(r);
+      renderSweetSpotSlots(r);
+      renderSweetSpotWf(r);
+      renderSweetSpotGrid(r);
+      renderSweetSpotCaveats(r);
+    }
+
+    // Two independent ways a stored result can be misleading, and neither is visible from the
+    // numbers themselves: it was computed under a different exit-rule variant than the chips now
+    // show, or the trade log has grown since. Both are reported, never auto-corrected — nothing
+    // should silently kick off a multi-minute job.
+    function renderSweetSpotStale(d, r) {
+      const el = document.getElementById('sw-stale');
+      const out = [];
+      const shownRule = selectedRule === 'all' ? null : selectedRule;
+      if ((r.ruleType || null) !== (shownRule || null)) {
+        out.push(`<h3>This result is for a different exit rule</h3>
+          <p>The stored sweep was run on <strong>${r.ruleType || 'all pooled'}</strong>, but the chips above
+          are set to <strong>${shownRule || 'all pooled'}</strong>. Exit-rule variants are different
+          strategies, so these numbers do not describe the current selection. Re-run to update.</p>`);
+      }
+      if (Number.isFinite(d.newTrades) && d.newTrades >= 50) {
+        out.push(`<h3>${d.newTrades.toLocaleString()} trades logged since this sweep</h3>
+          <p>The sweep is a snapshot of a log that grows on every scan — it was computed from
+          ${r.tradeCount.toLocaleString()} closed trades and there are now
+          ${d.currentTradeCount.toLocaleString()}. The ordering is usually stable, but re-run before
+          acting on a close call.</p>`);
+      }
+      if (r.quick) {
+        out.push(`<h3>Quick sweep — shortlist computed, grid ${r.gridFrom ? 'carried over' : 'skipped'}</h3>
+          <p>The recommendation below is unaffected — the quick path drops evidence, it does not change
+          the answer. ${r.gridFrom
+            ? `The grid sections (timeframe contribution, slot count, walk-forward) below are <strong>not</strong>
+               from this run: they were measured ${new Date(r.gridFrom.generatedAt).toLocaleString()} on
+               ${r.gridFrom.tradeCount.toLocaleString()} trades and are kept so a 30-second click does not
+               discard a four-minute result. Each of those cards says so too.`
+            : 'The grid sections below have no data yet — run the full sweep for them.'}</p>`);
+      }
+      el.innerHTML = out.map((w) => `<div class="warn-box">${w}</div>`).join('');
+    }
+
+    function renderSweetSpotHeadline(r) {
+      const best = r.bestAllRound, ret = r.bestReturn;
+      if (!best) { document.getElementById('sw-headline').innerHTML = ''; return; }
+      const same = ret && ret.label === best.label;
+      document.getElementById('sw-headline').innerHTML = `
+        <div class="metric-grid">
+          <div class="metric-box" style="border-color:#15803d;">
+            <div class="mv pos" style="font-size:19px;">${best.label}</div>
+            <div class="ml">best all-round (both-axes rank ${best.rankOverall.toFixed(2)})</div>
+          </div>
+          <div class="metric-box">
+            <div class="mv" style="font-size:19px;">${same ? '— same config —' : ret.label}</div>
+            <div class="ml">highest avg CAGR${same ? '' : ` (${n1(ret.cagr)}%)`}</div>
+          </div>
+          <div class="metric-box"><div class="mv ${cls(best.cagr)}">${n1(best.cagr)}%</div><div class="ml">its avg OOS CAGR</div></div>
+          <div class="metric-box"><div class="mv neg">${n1(best.dd)}%</div><div class="ml">its avg drawdown (realized)</div></div>
+          <div class="metric-box"><div class="mv">${n0(best.fill)}%</div><div class="ml">its avg fill rate</div></div>
+          <div class="metric-box"><div class="mv">${r.universe.length}</div><div class="ml">symbols in universe</div></div>
+        </div>
+        <p class="muted" style="margin:0 0 6px;font-size:12px;">
+          ${same
+            ? `This config tops both axes — highest average CAGR <em>and</em> best combined CAGR / CAGR-per-unit-drawdown
+               rank — so there is no trade-off to weigh here. Note it still runs at ${best.slots} slot${best.slots > 1 ? 's' : ''},
+               and fewer slots means bigger positions; check the slot table below before reading that as edge.`
+            : `The two disagree, which is normal. The top-CAGR config is usually the most concentrated one, and
+               concentration is the position-size divisor rather than an edge. "Best all-round" averages a config's
+               CAGR rank and its CAGR/DD rank across every window, so it favours what keeps landing near the top on
+               <em>both</em> axes instead of what won hardest once.`}
+        </p>`;
+    }
+
+    function renderSweetSpotShortlist(r) {
+      const rows = r.shortlist.averaged;
+      const maxCagr = Math.max(...rows.map((x) => x.cagr).filter(Number.isFinite), 0.01);
+      const windows = r.shortlist.windows;
+      document.getElementById('sw-shortlist').innerHTML = `
+        ${rows.map((x) => `
+          <div class="bar-row" style="grid-template-columns:190px 1fr 92px;">
+            <span class="tf-label">${x.label}</span>
+            <div class="bar-track"><div class="bar-fill ${x.cagr >= 0 ? 'bar-pos' : 'bar-neg'}" style="width:${(Math.abs(x.cagr) / maxCagr) * 100}%"></div></div>
+            <span class="bar-val ${cls(x.cagr)}">${n1(x.cagr)}%</span>
+          </div>`).join('')}
+        <div class="edge-table-wrap" style="margin-top:12px;"><table class="edge-table">
+          <thead><tr><th>config</th><th class="num">avg CAGR</th>
+            <th class="num" title="CAGR's non-compounding sibling: mean per-trade return on the equity that funded it, times trades per year. These windows are months long with heavy compounding — the regime where CAGR's exponent inflates a modest run — so an ordering that survives in this column is the more durable one.">avg Expected</th>
+            <th class="num">avg DD</th>
+            <th class="num">avg C/DD</th><th class="num">avg fill</th>
+            <th class="num" title="Average rank by out-of-sample CAGR alone — the column published in PORTFOLIO_RECKONER.md">CAGR rank</th>
+            <th class="num" title="Mean of the CAGR rank and the CAGR/DD rank in each window. Lower is better on both axes at once — this is what drives the best all-round pick.">both-axes</th>
+            <th class="num" title="Worst single-window CAGR rank. A strong average built on one dominant window is not a finding.">worst</th>
+            ${windows.map((w) => `<th class="num" title="Out-of-sample window starting ${w.splitAt}">OOS ${w.splitAt.slice(5)}</th>`).join('')}</tr></thead>
+          <tbody>${rows.map((x) => {
+            const perWindow = windows.map((w) => w.scored.find((s) => s.label === x.label));
+            const isBest = r.bestAllRound && x.label === r.bestAllRound.label;
+            return `<tr style="${isBest ? 'background:rgba(34,197,94,.10);' : ''}">
+              <td><strong>${x.label}</strong>${isBest ? ' <span class="pos" title="Best all-round">★</span>' : ''}</td>
+              <td class="num ${cls(x.cagr)}"><strong>${n1(x.cagr)}%</strong></td>
+              <td class="num ${cls(x.expected)}" title="${Number.isFinite(x.expected) && Number.isFinite(x.cagr) ? `Compounding accounts for ${n1(x.cagr - x.expected)} points of the CAGR figure` : 'Not available in this stored result — re-run the sweep'}">${Number.isFinite(x.expected) ? n1(x.expected) + '%' : '—'}</td>
+              <td class="num neg">${n1(x.dd)}%</td>
+              <td class="num ${cls(x.cdd)}">${n1(x.cdd)}</td>
+              <td class="num ${x.fill < 65 ? 'neg' : ''}" title="${x.fill < 65 ? 'Below ~65% you are capacity-constrained, which is the only regime where trimming the symbol list pays' : 'Not capacity-constrained — trimming the watchlist here would just remove trades'}">${n0(x.fill)}%</td>
+              <td class="num">${x.rank.toFixed(1)}</td>
+              <td class="num"><strong>${x.rankOverall.toFixed(2)}</strong></td>
+              <td class="num dim">${x.worstRank}</td>
+              ${perWindow.map((s) => `<td class="num ${cls(s?.cagr)}">${s && Number.isFinite(s.cagr) ? n1(s.cagr) + '%' : '—'}</td>`).join('')}
+            </tr>`;
+          }).join('')}</tbody>
+        </table></div>
+        <p class="muted" style="font-size:12px;margin-top:8px;">
+          Bars and the CAGR column are sorted by average CAGR; ★ marks the best <em>both-axes</em> pick, which
+          is often a different row. Universe re-picked inside each window's in-sample half (expectancy
+          percentile within timeframe, ≥8 trades), so nothing leaks forward. The per-window columns are
+          there to check consistency — a good average built from one huge window and two poor ones is not
+          a finding, which is what the "worst" column makes visible at a glance.
+          <strong>Expected</strong> is the same return without compounding, so the gap between it and CAGR is
+          how much of the headline number is the exponent rather than the trades; a config whose ordering
+          holds in both columns is the one to trust.
+        </p>`;
+    }
+
+    function renderSweetSpotTf(r) {
+      const el = document.getElementById('sw-tf');
+      if (!r.grid) { el.innerHTML = '<p class="muted">Full sweep required.</p>'; return; }
+      const rows = r.grid.byTimeframe;
+      const maxAbs = Math.max(...rows.map((x) => Math.abs(x.delta ?? 0)), 0.01);
+      // Diverging bars from a centre line: the sign is the finding here, so a left/right split reads
+      // faster than a length-only encoding.
+      el.innerHTML = `
+        ${rows.map((x) => {
+          const d = x.delta ?? 0;
+          const half = (Math.abs(d) / maxAbs) * 50;
+          return `<div class="bar-row" style="grid-template-columns:56px 1fr 92px;">
+            <span class="tf-label">${x.timeframe}</span>
+            <div class="bar-track" style="position:relative;">
+              <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3b4a6b;"></div>
+              <div class="bar-fill ${d >= 0 ? 'bar-pos' : 'bar-neg'}" style="position:absolute;top:0;bottom:0;height:auto;border-radius:3px;
+                ${d >= 0 ? `left:50%;width:${half}%;` : `right:50%;width:${half}%;`}"></div>
+            </div>
+            <span class="bar-val ${cls(d)}">${d >= 0 ? '+' : ''}${n1(d)}</span>
+          </div>`;
+        }).join('')}
+        <div class="edge-table-wrap" style="margin-top:12px;"><table class="edge-table">
+          <thead><tr><th>timeframe</th><th class="num">avg CAGR with</th><th class="num">avg CAGR without</th>
+            <th class="num">delta</th><th class="num">combos with</th></tr></thead>
+          <tbody>${rows.map((x) => `<tr>
+            <td><strong>${x.timeframe}</strong></td>
+            <td class="num ${cls(x.withCagr)}">${n1(x.withCagr)}%</td>
+            <td class="num ${cls(x.withoutCagr)}">${n1(x.withoutCagr)}%</td>
+            <td class="num ${cls(x.delta)}"><strong>${x.delta === null ? '—' : (x.delta >= 0 ? '+' : '') + n1(x.delta)}</strong></td>
+            <td class="num dim">${x.combosWith}</td></tr>`).join('')}</tbody>
+        </table></div>
+        ${rows.length && rows[rows.length - 1].delta < -20 ? `<p class="muted" style="font-size:12px;margin-top:8px;">
+          <strong>${rows[rows.length - 1].timeframe}</strong> costs ${n1(Math.abs(rows[rows.length - 1].delta))} points of average
+          CAGR wherever it appears — the largest single effect in the grid.</p>` : ''}`;
+    }
+
+    function renderSweetSpotSlots(r) {
+      const el = document.getElementById('sw-slots');
+      if (!r.grid) { el.innerHTML = '<p class="muted">Full sweep required.</p>'; return; }
+      const slotRows = r.grid.bySlots;
+      const cntRows = r.grid.byTfCount;
+      const maxSlotCagr = Math.max(...slotRows.map((x) => x.cagr).filter(Number.isFinite), 0.01);
+      const maxCntCagr = Math.max(...cntRows.map((x) => x.cagr).filter(Number.isFinite), 0.01);
+      const bestCnt = cntRows.reduce((a, b) => (b.cagr > a.cagr ? b : a), cntRows[0]);
+      el.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;">
+          <div>
+            <p class="muted" style="margin:0 0 6px;font-size:12px;font-weight:600;">BY SLOT COUNT (avg over every timeframe subset)</p>
+            ${slotRows.map((x) => `<div class="bar-row">
+              <span class="tf-label">${x.slots} slots</span>
+              <div class="bar-track"><div class="bar-fill bar-pos" style="width:${(x.cagr / maxSlotCagr) * 100}%"></div></div>
+              <span class="bar-val ${cls(x.cagr)}">${n1(x.cagr)}%</span></div>`).join('')}
+            <table class="edge-table" style="margin-top:10px;">
+              <thead><tr><th class="num">slots</th><th class="num">avg CAGR</th>
+                <th class="num" title="Same return without compounding">avg Exp</th>
+                <th class="num">avg DD</th><th class="num">avg fill</th></tr></thead>
+              <tbody>${slotRows.map((x) => `<tr><td class="num"><strong>${x.slots}</strong></td>
+                <td class="num ${cls(x.cagr)}">${n1(x.cagr)}%</td>
+                <td class="num ${cls(x.expected)}">${Number.isFinite(x.expected) ? n1(x.expected) + '%' : '—'}</td>
+                <td class="num neg">${n1(x.dd)}%</td>
+                <td class="num">${n0(x.fill)}%</td></tr>`).join('')}</tbody></table>
+            <p class="muted" style="font-size:12px;margin-top:8px;">CAGR and drawdown fall together as
+            slots rise. Both are monotonic, which is what a size divisor looks like — not an edge to
+            optimize. Expected falls monotonically too, which is the point: the pattern is not an
+            artifact of compounding.</p>
+          </div>
+          <div>
+            <p class="muted" style="margin:0 0 6px;font-size:12px;font-weight:600;">BY NUMBER OF TIMEFRAMES COMBINED</p>
+            ${cntRows.map((x) => `<div class="bar-row">
+              <span class="tf-label">${x.count} TF</span>
+              <div class="bar-track"><div class="bar-fill ${x === bestCnt ? 'bar-pos' : 'bar-neg'}" style="width:${(x.cagr / maxCntCagr) * 100}%"></div></div>
+              <span class="bar-val ${cls(x.cagr)}">${n1(x.cagr)}%</span></div>`).join('')}
+            <table class="edge-table" style="margin-top:10px;">
+              <thead><tr><th class="num">TFs</th><th class="num">avg CAGR</th>
+                <th class="num" title="Same return without compounding">avg Exp</th>
+                <th class="num">avg DD</th><th class="num">avg fill</th></tr></thead>
+              <tbody>${cntRows.map((x) => `<tr><td class="num"><strong>${x.count}</strong></td>
+                <td class="num ${cls(x.cagr)}">${n1(x.cagr)}%</td>
+                <td class="num ${cls(x.expected)}">${Number.isFinite(x.expected) ? n1(x.expected) + '%' : '—'}</td>
+                <td class="num neg">${n1(x.dd)}%</td>
+                <td class="num">${n0(x.fill)}%</td></tr>`).join('')}</tbody></table>
+            <p class="muted" style="font-size:12px;margin-top:8px;">Peaks at <strong>${bestCnt.count}</strong>.
+            Beyond that each addition dilutes — more signals chase the same slots, so fill rate falls and
+            the extra timeframes mostly crowd out the good ones.</p>
+          </div>
+        </div>`;
+    }
+
+    function renderSweetSpotWf(r) {
+      const el = document.getElementById('sw-wf');
+      if (!r.walkForward) { el.innerHTML = '<p class="muted">Full sweep required.</p>'; return; }
+      const rhos = r.walkForward.map((w) => w.rho).filter(Number.isFinite);
+      const avgRho = rhos.length ? rhos.reduce((a, b) => a + b, 0) / rhos.length : null;
+      el.innerHTML = `
+        <div class="edge-table-wrap"><table class="edge-table">
+          <thead><tr><th class="num">split</th><th>OOS starts</th><th>in-sample winner</th>
+            <th class="num">its IS CAGR</th><th class="num">its OOS CAGR</th><th class="num">rho(IS,OOS)</th><th class="num">combos</th></tr></thead>
+          <tbody>${r.walkForward.map((w) => `<tr>
+            <td class="num">q${w.q}</td><td>${w.splitAt}</td>
+            <td>${w.winner ? `<strong>${w.winner.label}</strong>` : '<span class="dim">none viable</span>'}</td>
+            <td class="num ${cls(w.winner?.inSampleCagr)}">${w.winner ? n1(w.winner.inSampleCagr) + '%' : '—'}</td>
+            <td class="num ${cls(w.winner?.oosCagr)}">${w.winner && Number.isFinite(w.winner.oosCagr) ? n1(w.winner.oosCagr) + '%' : '—'}</td>
+            <td class="num ${w.rho === null ? 'dim' : w.rho > 0.3 ? 'pos' : w.rho > 0 ? '' : 'neg'}"><strong>${w.rho === null ? '—' : w.rho.toFixed(3)}</strong></td>
+            <td class="num dim">${w.combos}</td></tr>`).join('')}</tbody>
+        </table></div>
+        <p class="muted" style="font-size:12px;margin-top:8px;">
+          Average rho ${avgRho === null ? '—' : avgRho.toFixed(3)}.
+          ${avgRho !== null && avgRho > 0 && avgRho < 0.6
+            ? 'Positive but unstable — in-sample ranking carries <em>some</em> information forward, nowhere near enough to justify picking the single best of ~1,785 combos. That instability is exactly why the recommendation comes from averaging a shortlist instead.'
+            : avgRho !== null && avgRho <= 0
+              ? 'At or below zero — the in-sample ranking did not survive at all. Treat the grid as descriptive only.'
+              : 'Strong and stable across splits.'}
+          Note the in-sample winner almost always lands at the fewest slots offered; that is what
+          maximizing CAGR does, since fewer slots means bigger positions.
+        </p>`;
+    }
+
+    function renderSweetSpotGrid(r) {
+      const el = document.getElementById('sw-grid');
+      if (!r.grid) { el.innerHTML = '<p class="muted">Full sweep required.</p>'; return; }
+      el.innerHTML = `
+        <p class="muted" style="margin:0 0 8px;font-size:12px;">${r.grid.viable} of ${r.grid.total}
+        combinations were viable (finite CAGR and at least 20 signals taken).</p>
+        <div class="edge-table-wrap"><table class="edge-table">
+          <thead><tr><th class="num">#</th><th>timeframes</th><th class="num">slots</th><th class="num">CAGR</th>
+            <th class="num" title="Same return without compounding">Expected</th>
+            <th class="num">maxDD</th><th class="num">CAGR/DD</th><th class="num">fill</th><th class="num">trades</th></tr></thead>
+          <tbody>${r.grid.top.slice(0, 12).map((x, i) => `<tr>
+            <td class="num dim">${i + 1}</td><td><strong>${x.timeframes.join('+')}</strong></td>
+            <td class="num">${x.slots}</td><td class="num ${cls(x.cagr)}">${n1(x.cagr)}%</td>
+            <td class="num ${cls(x.expectedPct)}">${Number.isFinite(x.expectedPct) ? n1(x.expectedPct) + '%' : '—'}</td>
+            <td class="num neg">${n1(x.dd)}%</td><td class="num ${cls(x.cdd)}">${n1(x.cdd)}</td>
+            <td class="num">${n0(x.fill)}%</td><td class="num dim">${x.n}</td></tr>`).join('')}</tbody>
+        </table></div>
+        <p class="muted" style="font-size:12px;margin-top:8px;">Universe: ${r.universe.join(', ')}</p>`;
+    }
+
+    function renderSweetSpotCaveats(r) {
+      const ddNote = r && r.bestAllRound
+        ? `Its ${n1(r.bestAllRound.dd)}% average is realistically closer to ${n1(r.bestAllRound.dd * 3.5)}%.`
+        : '';
+      document.getElementById('sw-caveats').innerHTML = `
+        <div class="warn-box"><h3>Magnitudes are not forecasts</h3>
+          <p>Out-of-sample windows are months, not years, with heavy compounding, so a three-figure CAGR
+          is not an expectation. The <strong>ordering</strong> is the finding; the levels are not.</p></div>
+        <div class="warn-box"><h3>Drawdowns are understated roughly 3.5×</h3>
+          <p>The equity curve is marked only at exits, so it cannot show pain felt while positions were
+          still open. Scale every drawdown here accordingly. ${ddNote}</p></div>
+        <div class="warn-box"><h3>Closed trades only</h3>
+          <p>Positions still open are absent from the trade log and are disproportionately losers —
+          winners close, losers ride. Every figure here is optimistic by an amount it cannot measure.</p></div>
+        <div class="warn-box"><h3>Do not add a drawdown or ratio screen on top</h3>
+          <p>Tested and rejected: a per-symbol drawdown cap inverts on expectancy and loses on both CAGR
+          and portfolio drawdown. If capacity is genuinely constrained (fill rate materially under ~65%),
+          trim by expectancy percentile within timeframe — never by a DD cap.</p></div>`;
+    }
+
+    document.getElementById('sw-run-quick').addEventListener('click', () => startSweetSpot(true));
+    document.getElementById('sw-run-full').addEventListener('click', () => startSweetSpot(false));
+    document.getElementById('sw-refresh').addEventListener('click', () => loadSweetSpot());
+
     /* =====================  SYMBOL LOOKUP TAB  ===================== */
 
     let symLastQuery = '';
@@ -2605,6 +4271,9 @@
             <tr>
               <th>Symbol</th>
               <th>TF</th>
+              <th title="Expectancy percentile within this timeframe, 0-100, from the closed-trade log">Edge</th>
+              <th title="Rank by Edge among positions already open before today's new signals">Org</th>
+              <th title="Rank by Edge among every position now open on this timeframe">New</th>
               <th>Signal</th>
               <th>Entry Date / Time</th>
               <th>Entry Price</th>
