@@ -17,8 +17,7 @@ import {
   syncWatchlistSymbolsFromTradingView,
   formatSignalLine,
   createDashboardStatus,
-  isMarketHoliday,
-} from '../src/core/morning.js';
+  isMarketHoliday,  buildWatchlistSummaryLines,} from '../src/core/morning.js';
 
 describe('signal detection', () => {
   it('finds bullish signal from Pine labels', () => {
@@ -93,6 +92,39 @@ describe('signal detection', () => {
     });
 
     assert.deepEqual(result.lines, ['2026-05-18T21:00:00Z ET | WATCHLIST: Swing 30min | SYMBOLS: 5 | SCAN: 0s | NO SIGNAL']);
+  });
+
+  it('retains same-day open signal lines when a skipped schedule scan runs', () => {
+    const lines = buildWatchlistSummaryLines(
+      [{
+        watchlist_name: 'Swing 1H',
+        timeframe: '60',
+        symbol_count: 1,
+        scanned_at: '2026-08-04T19:56:38.498Z',
+        scan_duration_ms: 0,
+        skipped_due_schedule: true,
+      }],
+      [],
+      [{
+        watchlistName: 'Swing 1H',
+        timeframe: '60',
+        symbolCount: 1,
+        trades: [
+          {
+            symbol: 'BATS:NYT',
+            signal: 'OPEN',
+            entryPrice: '74.06',
+            entryTime: '08/04/2026, 12:00:00 PM ET',
+            netPnl: '+417.00 USD | +3.54%',
+          },
+        ],
+      }],
+      'America/New_York',
+    );
+
+    assert.equal(lines.length, 1);
+    assert.equal(lines[0].includes('OPEN: BATS:NYT'), true);
+    assert.equal(lines[0].includes('WAITING FOR NEXT 60 BAR'), true);
   });
 });
 

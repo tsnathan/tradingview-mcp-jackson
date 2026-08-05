@@ -1,13 +1,31 @@
 import http from 'node:http';
 import { spawn } from 'node:child_process';
-import { existsSync, openSync, readFileSync, statSync, watch, writeFileSync } from 'node:fs';
+import { existsSync, openSync, readFileSync, renameSync, statSync, watch, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
-import { createDashboardStatus, ensureTradingViewConnection, exportMetricsScan, runBrief, runSignalJob, syncWatchlistSymbolsFromTradingView } from '../src/core/morning.js';
+import { computeExcursionLevels, createDashboardStatus, ensureTradingViewConnection, exportMetricsScan, runBrief, runSignalJob, syncWatchlistSymbolsFromTradingView } from '../src/core/morning.js';
+import * as chart from '../src/core/chart.js';
+import * as data from '../src/core/data.js';
+import * as alerts from '../src/core/alerts.js';
+import { buildPortfolioAnalytics } from '../src/core/portfolio_analytics.js';
+import {
+  validateManualPositionInput,
+  createManualPosition,
+  listManualPositions,
+  getManualPositionById,
+  markManualPositionAlertCreated,
+  markManualPositionAlertsDeleted,
+  validateManualCloseInput,
+  validateManualPositionUpdate,
+  updateManualPosition,
+  closeManualPosition,
+} from '../src/core/manual_ledger.js';
 import { runRegression } from '../src/core/regression.js';
 import { buildEdgeAnalysis } from '../src/core/edge_analysis.js';
-import { readPerfSnapshots, listRuleTypes, findWatchlistOrphans, readAllTradeLogs } from '../src/core/trade_log.js';
+import { readPerfSnapshots, listRuleTypes, findWatchlistOrphans, readAllTradeLogs, summarizeMembershipFilter, timeframeLabel } from '../src/core/trade_log.js';
 import { simulatePortfolio, sweepMaxPositions, computeOpenPositionConcurrency } from '../src/core/portfolio_sim.js';
+import { buildUniverse, buildWatchlistMembership } from '../src/core/universe.js';
+import { replayPaperRun, normalizePaperConfig } from '../src/core/paper_run.js';
 import { lookupSymbol } from '../src/core/symbol_lookup.js';
 import { getExecutorPortfolio } from '../src/core/executor_portfolio.js';
 import {
@@ -26,6 +44,7 @@ import {
   timeframeTag,
   readSentState,
   validateOrderSpec,
+  normalizeWebhookTag,
   ORDER_TYPES,
   TIME_IN_FORCE,
 } from '../src/core/trade_webhook.js';
@@ -41,6 +60,23 @@ const TF_TAG_ORDER = ['1m', '3m', '5m', '15m', '30m', '45m', '1h', '2h', '3h', '
 const STATUS_FILE = join(ROOT, 'status', 'latest-signal-status.json');
 const REGRESSION_FILE = join(ROOT, 'status', 'regression-status.json');
 const SWEET_SPOT_FILE = join(ROOT, 'status', 'sweet-spot.json');
+const PAPER_RUN_FILE = join(ROOT, 'status', 'paper-run.json');
+
+function readPaperConfig() {
+  try {
+    return existsSync(PAPER_RUN_FILE) ? JSON.parse(readFileSync(PAPER_RUN_FILE, 'utf8')) : {};
+  } catch { return {}; }
+}
+
+/**
+ * Persist the paper-run config. Written whole via temp-file + rename so a concurrent GET can never
+ * observe a half-written document — same rule the sweet-spot result file follows.
+ */
+function writePaperConfig(cfg) {
+  const tmp = `${PAPER_RUN_FILE}.tmp`;
+  writeFileSync(tmp, JSON.stringify(cfg, null, 2), 'utf8');
+  renameSync(tmp, PAPER_RUN_FILE);
+}
 
 /**
  * Resolve the `rule` query param to a rule_type filter.
@@ -54,6 +90,28 @@ function resolveRuleType(q) {
   if (asked === 'all') return null;
   if (asked) return asked;
   return listRuleTypes()[0]?.rule_type ?? null;
+}
+
+/**
+ * Resolve the `membership` query param to a (ticker, timeframe) gate for the analysis modules.
+ *
+ * Gated by DEFAULT, so every ranking, simulation and sweep describes a book that can actually be
+ * traded — a symbol dropped from a watchlist can never signal there again, and letting its history
+ * keep ranking put it at the top of a live universe pick (see universe.js). `?membership=off` opts
+ * back into full logged history, which is the correct lens for a purely historical question.
+ *
+ * Rebuilt per request rather than cached: it is two small JSON reads, and a scan rewrites the
+ * baseline underneath a long-lived server, so a cached gate would go stale exactly when a watchlist
+ * changed — the one event it exists to track.
+ */
+function resolveMembership(q) {
+  if (q.get('membership') === 'off') return null;
+  try {
+    return buildWatchlistMembership(loadRulesFile() || {}, loadBaselineFile());
+  } catch {
+    // Unknown membership gates nothing, rather than emptying every analysis on the dashboard.
+    return null;
+  }
 }
 
 function etDateString(isoOrDate) {
@@ -193,6 +251,18 @@ function writeRulesFile(rules) {
   writeFileSync(join(ROOT, 'rules.json'), JSON.stringify(rules, null, 2), 'utf8');
 }
 
+// Brokerage accounts the automated pipeline never touches — the picklist for the Manual Ledger tab.
+// Same read-fresh-per-request, never-cached pattern as loadRulesFile above.
+function loadAccountsFile() {
+  const accountsPath = join(ROOT, 'accounts.json');
+  if (!existsSync(accountsPath)) return null;
+  try {
+    return JSON.parse(readFileSync(accountsPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 // baseline.watchlists is the ground truth for symbol membership (see the "Watchlist Symbols panel"
 // note in CLAUDE.md) — read directly from disk rather than through morning.js's unexported
 // loadBaseline, same pattern scripts/backfill_trade_log.js already uses.
@@ -227,6 +297,70 @@ function patchBaselineFile(patch) {
     const current = existsSync(baselinePath) ? JSON.parse(readFileSync(baselinePath, 'utf8')) : {};
     writeFileSync(baselinePath, JSON.stringify({ ...current, ...patch }, null, 2), 'utf8');
   } catch {}
+}
+
+/**
+ * Create the backup TradingView alerts for a manual-ledger position's stop and/or target legs.
+ *
+ * Navigates FIRST and checks `chart_ready` on both hops: alerts.create() only produces an
+ * exchange-qualified symbol when the chart is already on it, and otherwise synthesizes one from the
+ * bare ticker — which can resolve to a foreign listing of the same ticker. A failed navigation must
+ * therefore abort rather than create an alert on the wrong instrument.
+ *
+ * alerts.create() returns {success:false} instead of throwing, so status is derived from the
+ * results rather than assumed from "no exception was raised". Never throws: the caller's ledger
+ * write is the thing that matters and a notification failure must not undo it.
+ */
+async function createManualLedgerAlerts(row, { legs, label = 'Manual ledger' }) {
+  const alertIds = {};
+  const outcomes = [];
+  try {
+    await ensureTradingViewConnection();
+    const nav = await chart.setSymbol({ symbol: row.symbol, wait_timeout: 4000 });
+    if (!nav?.chart_ready) throw new Error(`chart did not load ${row.symbol}`);
+    const tfNav = await chart.setTimeframe({ timeframe: row.timeframe, wait_timeout: 4000 });
+    if (!tfNav?.chart_ready) throw new Error(`chart did not switch to timeframe ${row.timeframe} for ${row.symbol}`);
+    for (const leg of legs) {
+      if (leg.price == null || !Number.isFinite(Number(leg.price))) continue;
+      const r = await alerts.create({
+        condition: 'cross', // the only condition verified against the live endpoint
+        price: Number(leg.price),
+        message: `${label} ${leg.label}: ${row.symbol} (${row.account})`,
+        symbol: row.symbol,
+        timeframe: row.timeframe,
+      });
+      outcomes.push(r?.success === true);
+      if (r?.success) {
+        alertIds[leg.field] = r.alert_id ?? null;
+      } else {
+        console.error(`[manual-ledger] TV ${leg.label} alert failed for ${row.symbol} ${row.timeframe}: ${r?.error || 'unknown'}`);
+        if (r?.raw) console.error('[manual-ledger] TV alert raw response:', JSON.stringify(r.raw));
+      }
+    }
+  } catch (err) {
+    console.error(`[manual-ledger] TV alert creation failed for ${row.symbol} ${row.timeframe}: ${err?.message || err}`);
+  }
+  const status = outcomes.length === 0 ? 'failed'
+    : outcomes.every(Boolean) ? 'created'
+    : outcomes.some(Boolean) ? 'partial'
+    : 'failed';
+  return { alertIds, outcomes, status };
+}
+
+/** Delete alerts by id. Returns {ok, error} — never throws, for the same reason as the creator. */
+async function deleteManualLedgerAlerts(alertIds) {
+  const ids = (Array.isArray(alertIds) ? alertIds : []).filter(Boolean);
+  if (ids.length === 0) return { ok: true, deleted: 0 };
+  try {
+    await ensureTradingViewConnection();
+    const r = await alerts.deleteAlerts({ alert_ids: ids });
+    // deleteAlerts reports failure in its return value, same as create — a resolved promise is not
+    // by itself evidence the alerts are gone, so anything short of an explicit success is a failure.
+    if (r?.success !== true) return { ok: false, deleted: 0, error: r?.error || 'delete rejected' };
+    return { ok: true, deleted: ids.length };
+  } catch (err) {
+    return { ok: false, deleted: 0, error: err?.message || String(err) };
+  }
 }
 
 function buildOpenBySymbolTf() {
@@ -403,7 +537,11 @@ const server = http.createServer(async (req, res) => {
       const minTrades = Number(url.searchParams.get('min') || 4);
       // Drawdown and open P&L come from the per-symbol snapshot written by each scan; the CSVs
       // hold closed trades only and cannot supply either.
-      sendJson(res, 200, buildEdgeAnalysis({ openBySymbolTf: buildOpenBySymbolTf(), minTrades, ruleType: resolveRuleType(url.searchParams) }));
+      const membership = resolveMembership(url.searchParams);
+      sendJson(res, 200, {
+        ...buildEdgeAnalysis({ openBySymbolTf: buildOpenBySymbolTf(), minTrades, ruleType: resolveRuleType(url.searchParams), membership }),
+        membershipFilter: summarizeMembershipFilter(membership, { ruleType: resolveRuleType(url.searchParams) }),
+      });
     } catch (err) {
       sendJson(res, 500, { available: false, error: err?.message || 'edge analysis failed' });
     }
@@ -414,7 +552,12 @@ const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
       const ruleType = resolveRuleType(url.searchParams);
-      sendJson(res, 200, { ...computeOpenPositionConcurrency({ ruleType }), ruleTypes: listRuleTypes() });
+      const membership = resolveMembership(url.searchParams);
+      sendJson(res, 200, {
+        ...computeOpenPositionConcurrency({ ruleType, membership }),
+        membershipFilter: summarizeMembershipFilter(membership, { ruleType }),
+        ruleTypes: listRuleTypes(),
+      });
     } catch (err) {
       sendJson(res, 500, { available: false, error: err?.message || 'concurrency analysis failed' });
     }
@@ -541,6 +684,183 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  /**
+   * Split a chosen universe into per-timeframe symbol lists ready to import into TradingView.
+   *
+   * Exchange-PREFIXED symbols, taken from `baseline.watchlists` — the form TradingView itself
+   * reported. A bare ticker is ambiguous on import (TV resolves it to whatever exchange it likes),
+   * which is exactly the kind of silent mismatch that would put a different instrument in the alert
+   * list than the one that was ranked.
+   *
+   * The `unmatched` bucket is the point of this endpoint as much as the lists are: the Portfolio
+   * Sim's Top-20 picker ranks each ticker on its BEST timeframe across all eight, so a ticker can be
+   * selected on its 3h record and then be untradable on every timeframe actually chosen. Measured on
+   * 15m+30m, 11 of 20 picks were dead this way. Returning them silently dropped would hide it.
+   */
+  if (req.url.startsWith('/api/watchlist-export') && req.method === 'GET') {
+    try {
+      const q = new URL(req.url, 'http://localhost').searchParams;
+      const csv = (k) => (q.get(k) || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const timeframes = csv('timeframes');
+      const wanted = csv('tickers').map((t) => t.split(':').pop().toUpperCase());
+      if (!timeframes.length) { sendJson(res, 400, { available: false, error: 'timeframes required' }); return; }
+
+      const rules = loadRulesFile() || {};
+      const baseline = loadBaselineFile() || {};
+      const allowed = new Set(Object.keys(rules.watchlists || {}));
+      const byTf = new Map();
+      for (const [name, w] of Object.entries(baseline.watchlists || {})) {
+        if (!allowed.has(name)) continue;   // dead renamed entries must not contribute symbols
+        const label = timeframeLabel(w?.timeframe);
+        if (!timeframes.includes(label)) continue;
+        if (!byTf.has(label)) byTf.set(label, { timeframe: label, watchlists: [], symbols: new Map() });
+        const slot = byTf.get(label);
+        slot.watchlists.push(name);
+        // Keyed by bare ticker so the same symbol under two configured lists dedupes, while the
+        // prefixed form is what gets exported.
+        for (const s of w?.symbols || []) {
+          const full = String(s ?? '').trim();
+          const bare = full.split(':').pop().toUpperCase();
+          if (bare) slot.symbols.set(bare, full);
+        }
+      }
+
+      const groups = timeframes.map((tf) => {
+        const slot = byTf.get(tf);
+        const all = slot ? [...slot.symbols.entries()] : [];
+        const picked = wanted.length ? all.filter(([bare]) => wanted.includes(bare)) : all;
+        return {
+          timeframe: tf,
+          watchlists: slot?.watchlists || [],
+          members: all.length,
+          count: picked.length,
+          symbols: picked.map(([, full]) => full).sort(),
+          tickers: picked.map(([bare]) => bare).sort(),
+        };
+      });
+      const placed = new Set(groups.flatMap((g) => g.tickers));
+      sendJson(res, 200, {
+        available: true,
+        timeframes,
+        requested: wanted.length || null,
+        groups,
+        unmatched: wanted.filter((t) => !placed.has(t)),
+      });
+    } catch (err) {
+      sendJson(res, 500, { available: false, error: err?.message || 'export failed' });
+    }
+    return;
+  }
+
+  // Preview the blended universe for a set of timeframes. Read-only — committing is a separate POST,
+  // because a re-pick changes what the paper run trades and should not happen from a page load.
+  if (req.url.startsWith('/api/universe') && req.method === 'GET') {
+    try {
+      const url = new URL(req.url, 'http://localhost');
+      const q = url.searchParams;
+      const timeframes = (q.get('timeframes') || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const size = Number(q.get('size') || 15);
+      const blend = q.get('blend') === null ? 0.5 : Number(q.get('blend'));
+      // Hysteresis is measured against the CURRENT committed universe unless the caller passes its
+      // own `held`, so a preview shows exactly what a commit would do.
+      const cfg = normalizePaperConfig(readPaperConfig());
+      const current = cfg.universeHistory.length ? cfg.universeHistory[cfg.universeHistory.length - 1].universe : [];
+      const heldParam = q.get('held');
+      const held = heldParam === null ? current : heldParam.split(',').map((s) => s.trim()).filter(Boolean);
+      // Forward-looking pick, so it must be restricted to symbols actually scanned on each
+      // timeframe today. `?membership=off` ranks over all logged history instead, which is only
+      // correct when analysing the PAST — a dropped symbol's trades really happened.
+      const membership = q.get('membership') === 'off'
+        ? null
+        : buildWatchlistMembership(loadRulesFile() || {}, loadBaselineFile());
+      sendJson(res, 200, buildUniverse({ timeframes, size, blend, held, membership, ruleType: resolveRuleType(q) }));
+    } catch (err) {
+      sendJson(res, 500, { available: false, error: String(err?.message || err) });
+    }
+    return;
+  }
+
+  // Replay the paper run across every slot variant.
+  if (req.url.startsWith('/api/paper-run') && req.method === 'GET') {
+    try {
+      let openTrades = [];
+      try { openTrades = JSON.parse(readFileSync(STATUS_FILE, 'utf8'))?.openTrades || []; } catch {}
+      sendJson(res, 200, replayPaperRun(readPaperConfig(), { openTrades }));
+    } catch (err) {
+      sendJson(res, 500, { available: false, error: String(err?.message || err) });
+    }
+    return;
+  }
+
+  // Start a run, or commit a re-picked universe as a new epoch. Both write the same file; a commit
+  // APPENDS an epoch rather than replacing the universe, so the replay can honour what was actually
+  // tradable at each point instead of applying today's list retroactively.
+  if (req.url.startsWith('/api/paper-run/') && req.method === 'POST') {
+    const action = req.url.split('?')[0].split('/').pop();
+    readJsonBody(req).then((body) => {
+      try {
+        const existing = normalizePaperConfig(readPaperConfig());
+        if (action === 'start') {
+          const timeframes = Array.isArray(body.timeframes) ? body.timeframes.filter(Boolean) : [];
+          const universe = Array.isArray(body.universe) ? body.universe.filter(Boolean) : [];
+          if (!timeframes.length) { sendJson(res, 400, { error: 'timeframes required' }); return; }
+          if (!universe.length) { sendJson(res, 400, { error: 'universe required' }); return; }
+          const startedAt = body.startedAt || new Date().toISOString();
+          const cfg = {
+            startedAt,
+            timeframes,
+            capital: Number(body.capital) > 0 ? Number(body.capital) : 100000,
+            slotVariants: Array.isArray(body.slotVariants) && body.slotVariants.length ? body.slotVariants : undefined,
+            liveSlots: Number(body.liveSlots) > 0 ? Number(body.liveSlots) : 3,
+            ruleType: body.ruleType ?? null,
+            note: body.note || '',
+            universeHistory: [{ committedAt: startedAt, universe, added: universe, dropped: [] }],
+          };
+          writePaperConfig(cfg);
+          sendJson(res, 200, { ok: true, config: normalizePaperConfig(cfg) });
+          return;
+        }
+        if (action === 'commit-universe') {
+          if (!existing.startedAt) { sendJson(res, 400, { error: 'no run in progress — start one first' }); return; }
+          const universe = Array.isArray(body.universe) ? body.universe.filter(Boolean) : [];
+          if (!universe.length) { sendJson(res, 400, { error: 'universe required' }); return; }
+          const prev = existing.universeHistory[existing.universeHistory.length - 1]?.universe || [];
+          const prevSet = new Set(prev);
+          const nextSet = new Set(universe);
+          const committedAt = body.committedAt || new Date().toISOString();
+          // An epoch committed at or before the previous one would make the segment negative-length
+          // and silently vanish from the replay.
+          const lastAt = new Date(existing.universeHistory[existing.universeHistory.length - 1].committedAt).getTime();
+          if (new Date(committedAt).getTime() <= lastAt) {
+            sendJson(res, 400, { error: 'committedAt must be after the previous epoch' });
+            return;
+          }
+          const cfg = {
+            ...existing,
+            universeHistory: [...existing.universeHistory, {
+              committedAt,
+              universe,
+              added: universe.filter((t) => !prevSet.has(t)),
+              dropped: prev.filter((t) => !nextSet.has(t)),
+            }],
+          };
+          writePaperConfig(cfg);
+          sendJson(res, 200, { ok: true, config: normalizePaperConfig(cfg) });
+          return;
+        }
+        if (action === 'stop') {
+          writePaperConfig({});
+          sendJson(res, 200, { ok: true, cleared: true });
+          return;
+        }
+        sendJson(res, 404, { error: `unknown action: ${action}` });
+      } catch (err) {
+        sendJson(res, 500, { error: String(err?.message || err) });
+      }
+    }).catch((err) => sendJson(res, 400, { error: String(err?.message || err) }));
+    return;
+  }
+
   if (req.url.startsWith('/api/portfolio-sim')) {
     try {
       const url = new URL(req.url, 'http://localhost');
@@ -556,6 +876,7 @@ const server = http.createServer(async (req, res) => {
       const priority = q.get('priority') || 'chronological';
       const commissionPerTrade = Number(q.get('commission') || 0);
       const ruleType = resolveRuleType(q);
+      const membership = resolveMembership(q);
 
       // Rank priority needs a score per symbol/timeframe; reuse CAGR/DD from the edge analysis so
       // both tabs agree on what "better" means.
@@ -571,17 +892,23 @@ const server = http.createServer(async (req, res) => {
         }
         // Same variant as the simulation, or the ranking would order symbols by an edge measured
         // under a different exit rule than the one being simulated.
-        const edge = buildEdgeAnalysis({ openBySymbolTf, minTrades: 4, ruleType });
+        const edge = buildEdgeAnalysis({ openBySymbolTf, minTrades: 4, ruleType, membership });
         if (edge.available) {
           for (const s of edge.symbols) if (s.cagrDd !== null) rankBy[s.key] = s.cagrDd;
         }
       }
 
-      const result = simulatePortfolio({ capital, maxPositions, timeframes, tickers, priority, rankBy, commissionPerTrade, ruleType });
+      const result = simulatePortfolio({ capital, maxPositions, timeframes, tickers, priority, rankBy, commissionPerTrade, ruleType, membership });
       const sweep = q.get('sweep') === '1'
-        ? sweepMaxPositions({ capital, timeframes, tickers, priority, rankBy, ruleType })
+        ? sweepMaxPositions({ capital, timeframes, tickers, priority, rankBy, ruleType, membership })
         : null;
-      sendJson(res, 200, { ...result, sweep, ruleType, ruleTypes: listRuleTypes() });
+      sendJson(res, 200, {
+        ...result,
+        sweep,
+        ruleType,
+        membershipFilter: summarizeMembershipFilter(membership, { ruleType }),
+        ruleTypes: listRuleTypes(),
+      });
     } catch (err) {
       sendJson(res, 500, { available: false, error: err?.message || 'portfolio sim failed' });
     }
@@ -710,6 +1037,362 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 500, { success: false, error: err?.message || 'Failed to read rules' });
     }
     return;
+  }
+
+  /**
+   * KPIs over the real book — the manual ledger plus the webhook ledger, i.e. positions actually
+   * held, as opposed to the backtest the Edge Analysis / Portfolio Sim / Sweet Spot tabs read.
+   *
+   * `from`/`to` arrive as epoch ms already resolved from ET wall-clock boundaries by the dashboard.
+   * The ET conversion deliberately lives in ONE place (the browser, which also renders every
+   * timestamp here) rather than being reimplemented server-side where it could drift.
+   */
+  if (req.url.split('?')[0] === '/api/portfolio-analytics' && req.method === 'GET') {
+    try {
+      const q = new URL(req.url, 'http://localhost').searchParams;
+      const numParam = (name) => {
+        const v = q.get(name);
+        if (v == null || v === '') return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      };
+      sendJson(res, 200, {
+        success: true,
+        ...buildPortfolioAnalytics({
+          from: numParam('from'),
+          to: numParam('to'),
+          timeframe: q.get('timeframe') || null,
+          account: q.get('account') || null,
+          symbol: q.get('symbol') || null,
+        }),
+      });
+    } catch (err) {
+      sendJson(res, 500, { success: false, error: err?.message || 'could not build portfolio analytics' });
+    }
+    return;
+  }
+
+  // --- Manual ledger -------------------------------------------------------------------------
+  // Positions held in brokerage accounts the automated pipeline never touches. See
+  // MANUAL_LEDGER_PLAN.md; the SQLite half is src/core/manual_ledger.js.
+
+  if (req.url === '/api/accounts') {
+    try {
+      const cfg = loadAccountsFile() || {};
+      const accounts = Array.isArray(cfg.accounts)
+        ? cfg.accounts.filter((a) => typeof a === 'string' && a.trim())
+        : [];
+      sendJson(res, 200, { success: true, accounts });
+    } catch (err) {
+      sendJson(res, 500, { success: false, error: err?.message || 'Failed to read accounts' });
+    }
+    return;
+  }
+
+  /**
+   * Suggested stop/target for a prospective entry, from the strategy's own historical excursion
+   * stats on that symbol+timeframe. Deliberately its OWN endpoint rather than part of the save:
+   * reading the stats costs ~22s (a 16s stats read plus two navigations), which would hang the
+   * add-entry form on every submit.
+   *
+   * Suggestion only — nothing is persisted here, and the dashboard pre-fills the fields so the user
+   * can overwrite them. Falls back to a flat percentage when TradingView is unreachable rather than
+   * failing, so the form stays usable with the Desktop app closed; `source` names which path ran and
+   * is stored on the entry as `levels_source` so a measured level stays distinguishable from a guess.
+   */
+  if (req.method === 'POST' && req.url === '/api/manual-ledger/suggest-levels') {
+    readJsonBody(req).then(async (body) => {
+      const symbol = String(body?.symbol ?? '').trim().toUpperCase();
+      const timeframe = String(body?.timeframe ?? '').trim();
+      const entryNum = Number(body?.entry_price);
+      if (!symbol || !timeframe || !(entryNum > 0)) {
+        sendJson(res, 400, { success: false, error: 'symbol, timeframe and a positive entry_price are required' });
+        return;
+      }
+      const rules = loadRulesFile() || {};
+      try {
+        await ensureTradingViewConnection();
+        const nav = await chart.setSymbol({ symbol, wait_timeout: 4000 });
+        // setSymbol resolves successfully on a timed-out load, so chart_ready is the real check.
+        if (!nav?.chart_ready) throw new Error(`chart did not load ${symbol}`);
+        await chart.setTimeframe({ timeframe, wait_timeout: 3000 });
+        const stats = await data.getAllTradesExcursionStats({ timeout_ms: 16000 });
+        const levels = computeExcursionLevels(entryNum, stats);
+        if (!levels) throw new Error('no excursion stats available for this symbol/timeframe');
+        sendJson(res, 200, { success: true, source: 'strategy_excursion', levels, stats });
+      } catch (err) {
+        const stopPct = Number(rules.manual_ledger?.default_stop_pct ?? 8);
+        const targetPct = Number(rules.manual_ledger?.default_target_pct ?? 15);
+        const round2 = (n) => Math.round(n * 100) / 100;
+        sendJson(res, 200, {
+          success: true,
+          source: 'fallback_pct',
+          reason: err?.message || String(err),
+          levels: {
+            stopAvg: round2(entryNum * (1 - stopPct / 100)),
+            targetAvg: round2(entryNum * (1 + targetPct / 100)),
+            stopMax: null,
+            targetMax: null,
+          },
+        });
+      }
+    }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+    return;
+  }
+
+  if (req.url.split('?')[0] === '/api/manual-ledger' && req.method === 'GET') {
+    try {
+      const status = new URL(req.url, 'http://localhost').searchParams.get('status') || 'all';
+      const rows = listManualPositions({ status });
+      sendJson(res, 200, {
+        success: true,
+        rows,
+        open: rows.filter((r) => r.status === 'open'),
+        closed: rows.filter((r) => r.status === 'closed'),
+      });
+    } catch (err) {
+      sendJson(res, 500, { success: false, error: err?.message || 'could not read the manual ledger' });
+    }
+    return;
+  }
+
+  if (req.url === '/api/manual-ledger' && req.method === 'POST') {
+    readJsonBody(req).then(async (body) => {
+      const parsed = validateManualPositionInput(body);
+      if (!parsed.ok) { sendJson(res, 400, { success: false, error: parsed.error }); return; }
+      const cfg = loadAccountsFile() || {};
+      const knownAccounts = Array.isArray(cfg.accounts) ? cfg.accounts : [];
+      if (!knownAccounts.includes(parsed.value.account)) {
+        sendJson(res, 400, { success: false, error: `Unknown account "${parsed.value.account}" — add it to accounts.json first` });
+        return;
+      }
+      const row = createManualPosition(parsed.value);
+
+      // Backup native TradingView alert — best-effort, never blocks the entry from saving. Same
+      // never-throw-on-notification-failure philosophy as pushNtfyLines/sendTradeWebhook.
+      //
+      // Navigate FIRST: alerts.create() only produces an exchange-qualified symbol when the chart is
+      // already on it, and otherwise synthesizes one from the bare ticker — which resolves to
+      // whatever exchange TradingView prefers, possibly a foreign listing of the same ticker.
+      //
+      // alerts.create() returns {success:false} instead of throwing, so the status is derived from
+      // the results rather than assumed from "no exception was raised".
+      const alertIds = {};
+      const outcomes = [];
+      try {
+        await ensureTradingViewConnection();
+        const nav = await chart.setSymbol({ symbol: row.symbol, wait_timeout: 4000 });
+        if (!nav?.chart_ready) throw new Error(`chart did not load ${row.symbol}`);
+        const tfNav = await chart.setTimeframe({ timeframe: row.timeframe, wait_timeout: 4000 });
+        if (!tfNav?.chart_ready) throw new Error(`chart did not switch to timeframe ${row.timeframe} for ${row.symbol}`);
+        for (const leg of [
+          { field: 'stop_alert_id', price: row.stop_price, label: 'stop' },
+          { field: 'target_alert_id', price: row.target_price, label: 'target' },
+        ]) {
+          if (!Number.isFinite(Number(leg.price)) || leg.price == null) continue;
+          const r = await alerts.create({
+            condition: 'cross', // the only condition verified against the live endpoint
+            price: Number(leg.price),
+            message: `Manual ledger ${leg.label}: ${row.symbol} (${row.account})`,
+            symbol: row.symbol,
+            timeframe: row.timeframe,
+          });
+          outcomes.push(r?.success === true);
+          if (r?.success) {
+            alertIds[leg.field] = r.alert_id ?? null;
+          } else {
+            console.error(`[manual-ledger] TV ${leg.label} alert failed for ${row.symbol} ${row.timeframe}: ${r?.error || 'unknown'}`);
+            if (r?.raw) console.error('[manual-ledger] TV alert raw response:', JSON.stringify(r.raw));
+          }
+        }
+      } catch (err) {
+        console.error(`[manual-ledger] TV alert creation failed for ${row.symbol} ${row.timeframe}: ${err?.message || err}`);
+      }
+      const tvAlertStatus = outcomes.length === 0 ? 'failed'
+        : outcomes.every(Boolean) ? 'created'
+        : outcomes.some(Boolean) ? 'partial'
+        : 'failed';
+      const updated = markManualPositionAlertCreated(row.id, { ...alertIds, tv_alert_status: tvAlertStatus });
+      sendJson(res, 200, { success: true, row: updated || row });
+    }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+    return;
+  }
+
+  if (req.method === 'POST') {
+    const retryMatch = req.url.split('?')[0].match(/^\/api\/manual-ledger\/(\d+)\/retry-alerts$/);
+    if (retryMatch) {
+      readJsonBody(req).then(async () => {
+        const existing = getManualPositionById(retryMatch[1]);
+        if (!existing) { sendJson(res, 404, { success: false, error: 'Manual position not found' }); return; }
+
+        // `stale` means an edit moved the levels but the OLD alerts could not be deleted, so they
+        // are still live at the pre-edit prices. Retrying that row has to clear them first —
+        // recreating around them would leave two alerts on one position, one of them wrong. Every
+        // other status leaves an already-created leg alone and only fills in the missing one.
+        const rebuilding = existing.tv_alert_status === 'stale';
+        if (rebuilding) {
+          const del = await deleteManualLedgerAlerts([existing.stop_alert_id, existing.target_alert_id]);
+          if (!del.ok) {
+            sendJson(res, 502, {
+              success: false,
+              error: `The previous TradingView alerts are still live and could not be deleted (${del.error}). Remove them in TradingView first, otherwise this position would end up with two alerts at different levels.`,
+            });
+            return;
+          }
+        }
+
+        const legs = [
+          { field: 'stop_alert_id', price: existing.stop_price, label: 'stop' },
+          { field: 'target_alert_id', price: existing.target_price, label: 'target' },
+        ].filter((leg) => leg.price != null && Number.isFinite(Number(leg.price)));
+
+        const keep = {
+          stop_alert_id: rebuilding ? null : (existing.stop_alert_id || null),
+          target_alert_id: rebuilding ? null : (existing.target_alert_id || null),
+        };
+        const toCreate = legs.filter((leg) => !keep[leg.field]);
+        const alreadyThere = legs.length - toCreate.length;
+
+        const created = await createManualLedgerAlerts(existing, { label: 'Manual ledger retry', legs: toCreate });
+        const outcomes = [...Array(alreadyThere).fill(true), ...created.outcomes];
+        const tvAlertStatus = outcomes.length === 0 ? 'failed'
+          : outcomes.every(Boolean) ? 'created'
+          : outcomes.some(Boolean) ? 'partial'
+          : 'failed';
+        const updated = markManualPositionAlertCreated(existing.id, {
+          stop_alert_id: created.alertIds.stop_alert_id ?? keep.stop_alert_id,
+          target_alert_id: created.alertIds.target_alert_id ?? keep.target_alert_id,
+          tv_alert_status: tvAlertStatus,
+        });
+        sendJson(res, 200, {
+          success: true,
+          row: updated,
+          rebuilt: rebuilding,
+          // A navigation/creation failure is reported as a warning on a successful response rather
+          // than a 500: the ROW is now in a known, correctly-recorded state either way, and the
+          // caller needs the updated row back to render it. See dashboard-server.log for the cause.
+          warning: tvAlertStatus === 'created' ? null : 'TradingView alert could not be created — check that the Desktop app is running, then retry.',
+        });
+      }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+      return;
+    }
+
+    /**
+     * Edit an open manual-ledger position.
+     *
+     * PARTIAL by design — only the keys present in the body change. The dashboard's inline editor
+     * sends the whole row, but a caller fixing one typo should not have to restate the rest and
+     * risk resetting a field to a default.
+     *
+     * When the edit moves a level (or the instrument itself), the live TradingView alerts are now
+     * watching the wrong thing, so they are torn down and recreated. Order matters: DELETE FIRST,
+     * then create. Creating first and deleting after would leave two live alerts on the same
+     * position if the delete failed, and a stale alert firing at the old stop is worse than no
+     * alert — it looks exactly like a real level hit.
+     */
+    const updateMatch = req.url.split('?')[0].match(/^\/api\/manual-ledger\/(\d+)\/update$/);
+    if (updateMatch) {
+      readJsonBody(req).then(async (body) => {
+        const existing = getManualPositionById(updateMatch[1]);
+        if (!existing) { sendJson(res, 404, { success: false, error: 'Manual position not found' }); return; }
+        const parsed = validateManualPositionUpdate(body, existing);
+        if (!parsed.ok) {
+          sendJson(res, existing.status === 'open' ? 400 : 409, { success: false, error: parsed.error });
+          return;
+        }
+        if (parsed.value.account) {
+          const cfg = loadAccountsFile() || {};
+          const knownAccounts = Array.isArray(cfg.accounts) ? cfg.accounts : [];
+          if (!knownAccounts.includes(parsed.value.account)) {
+            sendJson(res, 400, { success: false, error: `Unknown account "${parsed.value.account}" — add it to accounts.json first` });
+            return;
+          }
+        }
+
+        const result = updateManualPosition(existing.id, parsed.value);
+        if (!result.ok) { sendJson(res, result.status || 400, { success: false, error: result.error }); return; }
+        let row = result.value;
+
+        if (parsed.alertsAffected.length === 0) {
+          sendJson(res, 200, { success: true, row, changed: Object.keys(parsed.value), alertsRebuilt: false });
+          return;
+        }
+
+        // The alerts are rebuilt as a pair rather than per changed leg: a symbol/timeframe change
+        // invalidates both, and a level change on one still leaves the other's alert pointing at
+        // the pre-edit instrument if only the changed leg is touched. Recreating both keeps the
+        // stored ids and the live alerts describing the same version of the row.
+        const del = await deleteManualLedgerAlerts([existing.stop_alert_id, existing.target_alert_id]);
+        if (!del.ok) {
+          // The row IS updated (it is the user's record of what they hold, and refusing to save it
+          // because TradingView is unreachable would be the wrong failure). The alert state is
+          // flagged so the row's Retry button is offered and the stale ids are kept — they are the
+          // only handle left on an alert still live at the old level.
+          markManualPositionAlertCreated(existing.id, {
+            stop_alert_id: existing.stop_alert_id,
+            target_alert_id: existing.target_alert_id,
+            tv_alert_status: 'stale',
+          });
+          sendJson(res, 200, {
+            success: true,
+            row: getManualPositionById(existing.id),
+            changed: Object.keys(parsed.value),
+            alertsRebuilt: false,
+            warning: `Saved, but the old TradingView alerts could not be removed (${del.error}). They are still watching the previous levels — delete them in TradingView, then use Retry alert.`,
+          });
+          return;
+        }
+
+        const created = await createManualLedgerAlerts(row, {
+          label: 'Manual ledger updated',
+          legs: [
+            { field: 'stop_alert_id', price: row.stop_price, label: 'stop' },
+            { field: 'target_alert_id', price: row.target_price, label: 'target' },
+          ],
+        });
+        row = markManualPositionAlertCreated(existing.id, {
+          stop_alert_id: created.alertIds.stop_alert_id ?? null,
+          target_alert_id: created.alertIds.target_alert_id ?? null,
+          tv_alert_status: created.status,
+        });
+        sendJson(res, 200, {
+          success: true,
+          row,
+          changed: Object.keys(parsed.value),
+          alertsRebuilt: true,
+          warning: created.status === 'created' ? null : 'Levels saved, but the replacement TradingView alert could not be created — use Retry alert.',
+        });
+      }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+      return;
+    }
+
+    const closeMatch = req.url.split('?')[0].match(/^\/api\/manual-ledger\/(\d+)\/close$/);
+    if (closeMatch) {
+      readJsonBody(req).then(async (body) => {
+        const parsed = validateManualCloseInput(body);
+        if (!parsed.ok) { sendJson(res, 400, { success: false, error: parsed.error }); return; }
+        const existing = getManualPositionById(closeMatch[1]);
+        const result = closeManualPosition(closeMatch[1], parsed.value);
+        if (!result.ok) { sendJson(res, result.status || 400, { success: false, error: result.error }); return; }
+        // The position's backup alerts are deleted on close — they exist to watch a live position
+        // and an alert outliving one fires on a level nobody holds any more, which reads exactly
+        // like a real exit signal. Best-effort: a failure here must never un-close the position,
+        // but it must not be silent either, so the outcome is written to the row (alert ids cleared
+        // only on a confirmed delete) and returned as a warning the dashboard shows.
+        let row = result.value;
+        const alertIds = [existing?.stop_alert_id, existing?.target_alert_id].filter(Boolean);
+        let warning = null;
+        if (alertIds.length > 0) {
+          const del = await deleteManualLedgerAlerts(alertIds);
+          row = markManualPositionAlertsDeleted(existing.id, { ok: del.ok, reason: del.error }) || row;
+          if (!del.ok) {
+            warning = `Position closed, but its ${alertIds.length} TradingView alert${alertIds.length === 1 ? '' : 's'} could not be deleted (${del.error}). Remove ${alertIds.length === 1 ? 'it' : 'them'} in TradingView so ${alertIds.length === 1 ? 'it does' : 'they do'} not fire on a position you no longer hold.`;
+          }
+        }
+        sendJson(res, 200, { success: true, row, alertsDeleted: alertIds.length > 0 && !warning, warning });
+      }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+      return;
+    }
   }
 
   // Webhook arming state + delivery ledger. The secret is never included in any response — only
@@ -901,6 +1584,56 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Which timeframes are allowed to push to ntfy. The URL itself is never returned — same rule as
+  // the webhook secret.
+  if (req.url === '/api/ntfy-config' && req.method === 'GET') {
+    try {
+      const rules = loadRulesFile() || {};
+      const onlyTimeframes = Array.isArray(rules.ntfy?.only_timeframes) ? rules.ntfy.only_timeframes : [];
+      sendJson(res, 200, {
+        success: true,
+        configured: Boolean(rules.ntfy?.url),
+        onlyTimeframes,
+        // Explicit, so the dashboard never has to infer "empty means everything pushes" — the one
+        // thing about this setting that reads backwards on screen.
+        filtering: onlyTimeframes.length > 0,
+        watchlists: rules.watchlists || {},
+      });
+    } catch (err) {
+      sendJson(res, 500, { success: false, error: err?.message || 'Failed to read ntfy config' });
+    }
+    return;
+  }
+
+  // Per-timeframe ntfy mute, mirroring /api/webhook-toggle above.
+  //
+  // NOTE the inverted semantics this endpoint preserves: an EMPTY only_timeframes means NO filter
+  // (every timeframe pushes), matching the "unset means disabled" convention every other gate in
+  // this codebase follows. So removing the last entry WIDENS notifications rather than silencing
+  // them. That's deliberate and must not be "fixed" here — the dashboard is responsible for
+  // rendering the empty state as its own explicit banner and confirm-gating the last removal.
+  if (req.method === 'POST' && req.url === '/api/ntfy-toggle') {
+    readJsonBody(req).then((body) => {
+      const timeframe = String(body?.timeframe ?? '').trim();
+      if (!timeframe) {
+        sendJson(res, 400, { success: false, error: 'timeframe is required' });
+        return;
+      }
+      const rules = loadRulesFile();
+      if (!rules) {
+        sendJson(res, 500, { success: false, error: 'rules.json not found or invalid' });
+        return;
+      }
+      const set = new Set(Array.isArray(rules.ntfy?.only_timeframes) ? rules.ntfy.only_timeframes : []);
+      if (body?.enabled) set.add(timeframe); else set.delete(timeframe);
+      rules.ntfy = { ...(rules.ntfy || {}), only_timeframes: [...set] };
+      writeRulesFile(rules);
+      console.log(`[ntfy] only_timeframes now ${[...set].join(',') || 'EMPTY (no filter — all timeframes push)'}`);
+      sendJson(res, 200, { success: true, onlyTimeframes: [...set], filtering: set.size > 0 });
+    }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+    return;
+  }
+
   // Manual one-off send for a single row. Goes through the same dedupe ledger as the auto path, so
   // clicking Send on a row the scheduled scan already fired is refused rather than double-ordering.
   if (req.method === 'POST' && req.url === '/api/send-webhook') {
@@ -915,6 +1648,14 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 400, { success: false, error: 'symbol and timeframe are required' });
         return;
       }
+      // An explicit routing tag from the row's Tag field. Refused outright rather than silently
+      // falling back to the timeframe default: the user typed it to route this order somewhere
+      // specific, and quietly filing it under a different group is exactly the wrong recovery.
+      const tag = body?.tag == null || body.tag === '' ? null : normalizeWebhookTag(body.tag);
+      if (body?.tag && !tag) {
+        sendJson(res, 400, { success: false, error: `Invalid tag "${body.tag}" — use letters, digits, dash or underscore (max 20), e.g. "45m"` });
+        return;
+      }
       // Order type / TIF / prices come from the dashboard's manual order form, not an automatic
       // calc. Re-validated here, not just client-side: this places a real order, and a priced type
       // missing its price is a hard 400 at the executor rather than something it guesses at.
@@ -925,13 +1666,18 @@ const server = http.createServer(async (req, res) => {
       }
       const rules = loadRulesFile() || {};
       const settings = loadWebhookSettings(rules);
+      // The dedupe key stays keyed on the TIMEFRAME's canonical tag, never the override. The key
+      // identifies the position; the tag routes the order. Keying on a custom tag would put this
+      // send under a key the automatic dispatch and auto-close paths (which only ever compute the
+      // timeframe form) can never rebuild — silently defeating both the duplicate-send guard and
+      // the "did we open this" lookup a later close depends on.
       const key = sentKey({ symbol, timeframe, entryTime });
       if (key && alreadySent(key) && !body.force) {
         sendJson(res, 409, { success: false, error: 'Already sent for this entry', alreadySent: true });
         return;
       }
       const payload = buildWebhookPayload({
-        symbol, side, timeframe, price, group: settings.group, secret: creds.secret, ...check.spec,
+        symbol, side, timeframe, tag, price, group: settings.group, secret: creds.secret, ...check.spec,
       });
       const result = await sendTradeWebhook({ url: creds.url, payload });
       if (result.success) {
@@ -995,8 +1741,13 @@ const server = http.createServer(async (req, res) => {
       const rules = loadRulesFile() || {};
       const settings = loadWebhookSettings(rules);
       const closeAction = String(entryRecord.side || 'buy').toLowerCase() === 'sell' ? 'buy' : 'sell';
+      // The close is routed with the tag the ENTRY actually went out under, read from the ledger
+      // rather than re-derived or taken from the request — same rule as closeAction above. If the
+      // entry was routed to a non-default group, a close under the timeframe's default tag would
+      // ask the executor to flatten a position it never filed there.
       const payload = buildWebhookPayload({
-        symbol, timeframe, price, action: closeAction, group: settings.group, secret: creds.secret, ...check.spec,
+        symbol, timeframe, tag: entryRecord.tag, price, action: closeAction,
+        group: settings.group, secret: creds.secret, ...check.spec,
       });
       const result = await sendTradeWebhook({ url: creds.url, payload });
       if (result.success) {

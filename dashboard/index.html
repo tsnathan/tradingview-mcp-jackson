@@ -21,6 +21,9 @@
     .pill-status-disconnected { background:#3a1520; color:#fca5a5; }
     .latest-list { list-style:none; padding:0; margin:12px 0 0; }
     .latest-list li { margin:10px 0; padding:10px 12px; background:#0f1728; border-radius:10px; border:1px solid #24314f; white-space:pre-wrap; }
+    .latest-list li.exit-summary { border-color:#0f766e; background:#071c20; }
+    .latest-list li .line-gap { height:0.9em; }
+    .latest-list li.exit-summary .exit-summary-header { display:block; font-weight:700; color:#a5f3fc; background:#05282c; margin:-10px -12px 10px -12px; padding:10px 12px; border-left:4px solid #22d3ee; border-top-right-radius:8px; border-bottom-right-radius:8px; }
     .watchlist-section { margin-top:14px; padding:12px; background:#0f1728; border:1px solid #24314f; border-radius:12px; }
     .watchlist-title { margin:0 0 4px; font-size:18px; }
     .watchlist-meta { margin:0 0 8px; color:#98a7c6; font-size:13px; }
@@ -89,6 +92,10 @@
     body.ta-only-mode #prior-signals-card {
       display: none !important;
     }
+    /* The Symbol Lookup tab reuses buildOpenTradeRows verbatim, so its rows carry the Lookup link
+       too — pointless there, since every row is already the symbol being looked up. Hidden with CSS
+       rather than by branching the shared builder, which must keep producing identical rows. */
+    #sym-open .lookup-from-open { display: none; }
 
     /* ---- Tabs ---- */
     .tabbar { display:flex; gap:6px; margin-bottom:16px; border-bottom:1px solid #24314f; flex-wrap:wrap; }
@@ -141,6 +148,19 @@
       font-family:inherit; text-decoration:underline;
     }
     .warn-stack-tools button:hover { color:#e5eefc; }
+
+    /* Portfolio Sim: notes as a left rail beside the results. `minmax(0,1fr)` on the main column is
+       load-bearing — the default `auto` lets wide tables inside it expand the track instead of
+       scrolling in their own container, which would push the page into horizontal scroll. */
+    .ps-layout { display:grid; grid-template-columns:300px minmax(0,1fr); gap:16px; align-items:start; }
+    .ps-layout > .ps-main { min-width:0; }
+    .ps-notes-card { position:sticky; top:12px; max-height:calc(100vh - 24px); overflow-y:auto; }
+    .ps-notes-card .warn-box { margin:8px 0; }
+    .ps-notes-card .warn-stack-tools { margin:4px 0 0; justify-content:flex-start; }
+    @media (max-width: 1100px) {
+      .ps-layout { grid-template-columns:minmax(0,1fr); }
+      .ps-notes-card { position:static; max-height:none; }
+    }
     .num { font-family:monospace; text-align:right; }
     .pos { color:#6ee7a8; } .neg { color:#fca5a5; } .dim { color:#98a7c6; }
     .tag { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
@@ -167,8 +187,11 @@
       <button type="button" class="tabbtn" data-pane="pane-edge">Edge Analysis</button>
       <button type="button" class="tabbtn" data-pane="pane-portfolio">Portfolio Sim</button>
       <button type="button" class="tabbtn" data-pane="pane-sweet">Sweet Spot</button>
+      <button type="button" class="tabbtn" data-pane="pane-paper">Paper Run</button>
       <button type="button" class="tabbtn" data-pane="pane-symbol">Symbol Lookup</button>
       <button type="button" class="tabbtn" data-pane="pane-webhook">Webhook Orders</button>
+      <button type="button" class="tabbtn" data-pane="pane-manual-ledger">Manual Ledger</button>
+      <button type="button" class="tabbtn" data-pane="pane-book">Portfolio Analytics</button>
     </div>
 
     <div id="pane-signals" class="tabpane">
@@ -263,6 +286,17 @@
         <button id="restart-server-btn" class="btn btn-danger" type="button">↺ Restart Server</button>
         <span id="restart-message" class="action-message" style="margin-top:0;"></span>
       </div>
+    </div>
+
+    <div class="card" id="ntfy-card">
+      <h2>Phone Notifications (ntfy)</h2>
+      <p class="muted" style="font-size:12px;margin:0 0 10px;">Which timeframes are allowed to push to your
+      phone. Affects scheduled scans only (<code>--notify</code>) — dashboard-triggered scans never push.
+      Manual Ledger exits are deliberately exempt from this filter: creating a ledger entry by hand is
+      itself the opt-in.</p>
+      <div id="ntfy-state"></div>
+      <div id="ntfy-toggles" class="muted" style="font-size:12px;">Loading…</div>
+      <div id="ntfy-status" class="action-message"></div>
     </div>
 
     <div class="card" id="open-trades-card">
@@ -478,12 +512,41 @@
           <span class="control-label">Symbols:</span>
           <button type="button" class="chip" id="ps-sym-all">All</button>
           <button type="button" class="chip" id="ps-sym-top20" title="Ranked on expectancy percentile within each timeframe — NOT CAGR/DD, which this project measured as ranking symbols worse than random out-of-sample (rho -0.145 vs expectancy +0.381)">Top 20 by expectancy</button>
+          <button type="button" class="chip" id="ps-sym-blend" title="Ranks ONLY within the timeframes selected above, then blends with the symbol's pooled all-timeframe percentile. Pooled expectancy predicts fast-timeframe expectancy at rho 0.686 on this log, so the blend uses a 3-5x deeper sample to damp the churn a thin fast-only sample produces.">Blended (traded TFs)</button>
+          <input id="ps-sym-blend-size" class="control-input" type="number" value="15" min="3" max="60" step="1"
+            style="width:64px;" title="Universe size for the blended pick" />
+          <button type="button" class="chip" id="ps-sym-export" title="Split the selected universe into one symbol list per selected timeframe, exchange-prefixed and ready to import into TradingView.">⤓ Export for TradingView</button>
           <span id="ps-sym-note" class="toggle-meta"></span>
         </div>
+        <div id="ps-export" style="display:none;"></div>
         <div id="ps-status" class="action-message"></div>
-        <div id="ps-warn"></div>
-        <div id="ps-metrics"></div>
       </div>
+
+      <!-- The notes rail starts immediately after the input section and runs the full height of the
+           results, so the caveats stay beside the numbers they qualify instead of pushing them down
+           the page. The KPI block therefore lives in the right column, not in the controls card
+           above. Collapses to a single column on narrow screens. -->
+      <div class="ps-layout">
+        <aside class="card ps-notes-card" id="ps-notes-card">
+          <h2 style="font-size:15px;">Notes</h2>
+          <div id="ps-warn"></div>
+          <p class="muted" id="ps-notes-empty" style="font-size:12px;">No caveats flagged for this selection.</p>
+        </aside>
+
+        <div class="ps-main">
+          <div class="card" id="ps-metrics-card">
+            <div id="ps-metrics"></div>
+          </div>
+
+          <div class="card" id="ps-curve-card">
+            <h2>Equity Curve</h2>
+            <div id="ps-curve"></div>
+          </div>
+
+          <div class="card" id="ps-detail-card">
+            <h2>Contribution &amp; Contention</h2>
+            <div class="edge-table-wrap"><div id="ps-detail"></div></div>
+          </div>
 
       <div class="card" id="ps-capital-card">
         <h2>Capital Utilization <span class="muted" style="font-size:13px;font-weight:400;">(time-weighted, not event-count)</span></h2>
@@ -493,11 +556,6 @@
         <div id="ps-capital"></div>
       </div>
 
-      <div class="card" id="ps-curve-card">
-        <h2>Equity Curve</h2>
-        <div id="ps-curve"></div>
-      </div>
-
       <div class="card" id="ps-sweep-card">
         <h2>Capacity Sweep</h2>
         <p class="muted" style="margin:0 0 4px;">Same selection at different slot counts. Shows where
@@ -505,10 +563,16 @@
         <div id="ps-sweep"></div>
       </div>
 
-      <div class="card" id="ps-detail-card">
-        <h2>Contribution &amp; Contention</h2>
-        <div class="edge-table-wrap"><div id="ps-detail"></div></div>
+      <div class="card" id="ps-universe-card" style="display:none;">
+        <h2>Selected Universe <span class="muted" style="font-size:13px;font-weight:400;">— how each pick was ranked, and its worst case</span></h2>
+        <p class="muted" style="margin:0 0 4px;">The Top-20 picker takes <strong>one timeframe per
+        ticker</strong> — whichever ranked highest by expectancy percentile — so the TF shown here is the
+        one that <em>earned</em> the ranking, not necessarily one you have selected above. Rows greyed out
+        were ranked on a timeframe outside the current selection.</p>
+        <div id="ps-sym-universe"></div>
       </div>
+        </div><!-- /.ps-main -->
+      </div><!-- /.ps-layout -->
     </div><!-- /pane-portfolio -->
 
     <div id="pane-sweet" class="tabpane hidden">
@@ -559,6 +623,16 @@
         <div id="sw-shortlist"></div>
       </div>
 
+      <div class="card" id="sw-matched-card">
+        <h2>Matched-Window Check <span class="muted" style="font-size:13px;font-weight:400;">— same calendar for every config</span></h2>
+        <p class="muted" style="margin:0 0 4px;">Every pass above scores a config over <em>its own</em> span,
+        so a fast 2-timeframe config and an 8-timeframe one were judged on different markets, not just
+        different configs. This fixes the window to the stretch where <strong>all</strong> selected timeframes
+        have data and re-ranks there, across rolling start dates. Ranked on <strong>total return over the
+        window</strong>, not CAGR — the shared window is short, and annualizing it inflates by an exponent.</p>
+        <div id="sw-matched"></div>
+      </div>
+
       <div class="card" id="sw-tf-card">
         <h2>Timeframe Contribution</h2>
         <p class="muted" style="margin:0 0 4px;">Average CAGR of every combination <em>containing</em> a
@@ -598,6 +672,34 @@
         <div id="sw-caveats"></div>
       </div>
     </div><!-- /pane-sweet -->
+
+    <div id="pane-paper" class="tabpane hidden">
+      <div class="card">
+        <h1>Paper Run</h1>
+        <p class="muted" style="margin:0 0 4px;">
+          Trade <strong>one</strong> live arm and replay the same realized signal stream through every
+          slot count. Fills are deterministic given the signals and the cap, so this yields the whole
+          slot comparison from a single account — running two live arms would collide on the same
+          symbols and split capital for no extra information.
+        </p>
+        <div id="paper-status" class="action-message"></div>
+        <div id="paper-config"></div>
+      </div>
+
+      <div class="card" id="paper-results-card">
+        <h2>Slot Comparison <span class="muted" style="font-size:13px;font-weight:400;">— same signals, different caps</span></h2>
+        <div id="paper-results"></div>
+      </div>
+
+      <div class="card" id="paper-universe-card">
+        <h2>Universe</h2>
+        <p class="muted" style="margin:0 0 4px;">Ranked within the traded timeframes only, blended with
+        each symbol's pooled all-timeframe percentile, with hysteresis so a held name is not dropped for
+        slipping a place or two. Committing a re-pick <strong>appends an epoch</strong> — the replay then
+        honours what was actually tradable at each point rather than applying today's list backwards.</p>
+        <div id="paper-universe"></div>
+      </div>
+    </div><!-- /pane-paper -->
 
     <div id="pane-webhook" class="tabpane hidden">
       <div class="card">
@@ -661,6 +763,186 @@
         <div id="wl-history"></div>
       </div>
     </div><!-- /pane-webhook -->
+
+    <div id="pane-manual-ledger" class="tabpane hidden">
+      <div class="card">
+        <h1>Manual Ledger <button type="button" class="btn" id="ml-refresh" style="padding:3px 10px;font-size:12px;margin-left:10px;font-weight:400;">Refresh</button></h1>
+        <p class="muted" style="margin:0;">Positions held in brokerage accounts the automated pipeline never
+        touches. Nothing here places or closes an order — this records what you hold so the same exit machinery
+        can watch it: a real TradingView price alert as a visible backup, plus an ntfy push when a scheduled
+        scan sees price cross your stop or target. Each level fires once.</p>
+        <div id="ml-status" class="action-message"></div>
+      </div>
+
+      <div class="card">
+        <div class="controls" style="margin:0;">
+          <div class="control-group" style="min-width:150px;">
+            <label class="control-label" for="ml-filter-period">History</label>
+            <select id="ml-filter-period" class="control-input" title="Matches an entry whose OPEN or CLOSE falls in the period. Boundaries are Eastern, so they don't move when you travel.">
+              <option value="all">All time</option>
+              <option value="today">Today</option>
+              <option value="wtd">Week to date</option>
+              <option value="last_week">Last week</option>
+              <option value="mtd">Month to date</option>
+              <option value="last_month">Last month</option>
+              <option value="ytd">Year to date</option>
+            </select>
+          </div>
+          <div class="control-group" style="min-width:170px;">
+            <label class="control-label" for="ml-filter-symbol">Symbol</label>
+            <input id="ml-filter-symbol" class="control-input" type="text" placeholder="all symbols" autocomplete="off" list="ml-symbol-list" />
+            <datalist id="ml-symbol-list"></datalist>
+          </div>
+          <div class="control-group" style="min-width:130px;">
+            <label class="control-label" for="ml-filter-account">Account</label>
+            <select id="ml-filter-account" class="control-input"><option value="">all</option></select>
+          </div>
+          <div class="control-group" style="min-width:110px;">
+            <label class="control-label" for="ml-filter-tf">Timeframe</label>
+            <select id="ml-filter-tf" class="control-input"><option value="">all</option></select>
+          </div>
+          <div class="control-group">
+            <label class="control-label">&nbsp;</label>
+            <button type="button" class="btn" id="ml-filter-clear">Clear</button>
+          </div>
+        </div>
+        <div id="ml-filter-note" class="muted" style="font-size:12px;margin-top:8px;"></div>
+      </div>
+
+      <div class="card">
+        <h2>Add entry</h2>
+        <div class="controls" style="margin-bottom:10px;">
+          <div class="control-group" style="min-width:170px;">
+            <label class="control-label" for="ml-account">Account</label>
+            <select id="ml-account" class="control-input"></select>
+          </div>
+          <div class="control-group" style="min-width:120px;">
+            <label class="control-label" for="ml-symbol">Symbol</label>
+            <input id="ml-symbol" class="control-input" type="text" placeholder="AAPL" autocomplete="off" />
+          </div>
+          <div class="control-group" style="min-width:110px;">
+            <label class="control-label" for="ml-timeframe">Timeframe</label>
+            <select id="ml-timeframe" class="control-input"></select>
+          </div>
+          <div class="control-group" style="min-width:95px;">
+            <label class="control-label" for="ml-side">Side</label>
+            <select id="ml-side" class="control-input" title="Only the sign of realized P&amp;L depends on this — a SHORT gains when price falls.">
+              <option value="LONG">LONG</option>
+              <option value="SHORT">SHORT</option>
+            </select>
+          </div>
+          <div class="control-group" style="min-width:90px;">
+            <label class="control-label" for="ml-qty">Qty</label>
+            <input id="ml-qty" class="control-input" type="number" step="any" min="0" />
+          </div>
+          <div class="control-group" style="min-width:110px;">
+            <label class="control-label" for="ml-entry">Entry price</label>
+            <input id="ml-entry" class="control-input" type="number" step="any" min="0" />
+          </div>
+          <div class="control-group" style="min-width:110px;">
+            <label class="control-label" for="ml-stop">Stop price</label>
+            <input id="ml-stop" class="control-input" type="number" step="any" min="0" />
+          </div>
+          <div class="control-group" style="min-width:110px;">
+            <label class="control-label" for="ml-target">Target price</label>
+            <input id="ml-target" class="control-input" type="number" step="any" min="0" />
+          </div>
+          <div class="control-group" style="min-width:190px;">
+            <label class="control-label" for="ml-entered">Entry date/time (ET)</label>
+            <input id="ml-entered" class="control-input" type="datetime-local" title="Eastern time, matching the Open Trades table. Defaults to now. Carried over when you use the Ledger button on an open trade." />
+          </div>
+          <div class="control-group" style="min-width:200px;">
+            <label class="control-label" for="ml-notes">Notes</label>
+            <input id="ml-notes" class="control-input" type="text" placeholder="optional" autocomplete="off" />
+          </div>
+          <div class="control-group">
+            <label class="control-label">&nbsp;</label>
+            <button type="button" class="btn" id="ml-add">Add entry</button>
+          </div>
+        </div>
+        <div id="ml-suggest-note" class="muted" style="font-size:12px;">Stop and target are suggested from the
+        strategy's own historical excursion on that symbol once you fill in symbol, timeframe and entry price —
+        they pre-fill only if you haven't typed your own. At least one of the two is required.</div>
+        <div id="ml-add-status" class="action-message"></div>
+      </div>
+
+      <div class="card">
+        <h2>Open</h2>
+        <div id="ml-open"><div class="muted">Loading…</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Closed</h2>
+        <div id="ml-closed"><div class="muted">Loading…</div></div>
+      </div>
+    </div><!-- /pane-manual-ledger -->
+
+    <div id="pane-book" class="tabpane hidden">
+      <div class="card">
+        <h1>Portfolio Analytics <button type="button" class="btn" id="pb-refresh" style="padding:3px 10px;font-size:12px;margin-left:10px;font-weight:400;">Refresh</button></h1>
+        <p class="muted" style="margin:0;">KPIs over the <strong>real book</strong> — positions you actually
+        held, from the Manual Ledger and the Webhook Orders ledger together. This is a different question from
+        the Edge Analysis, Portfolio Sim and Sweet Spot tabs, which all measure the strategy's <em>backtest</em>
+        over <code>trade-log/*.csv</code> regardless of whether a share was ever bought. Periods are Eastern.</p>
+        <div id="pb-status" class="action-message"></div>
+      </div>
+
+      <div class="card">
+        <div class="controls" style="margin:0;">
+          <div class="control-group" style="min-width:150px;">
+            <label class="control-label" for="pb-period">History</label>
+            <select id="pb-period" class="control-input">
+              <option value="all">All time</option>
+              <option value="today">Today</option>
+              <option value="wtd">Week to date</option>
+              <option value="last_week">Last week</option>
+              <option value="mtd">Month to date</option>
+              <option value="last_month">Last month</option>
+              <option value="ytd">Year to date</option>
+            </select>
+          </div>
+          <div class="control-group" style="min-width:170px;">
+            <label class="control-label" for="pb-symbol">Symbol</label>
+            <input id="pb-symbol" class="control-input" type="text" placeholder="all symbols" autocomplete="off" list="pb-symbol-list" />
+            <datalist id="pb-symbol-list"></datalist>
+          </div>
+          <div class="control-group" style="min-width:150px;">
+            <label class="control-label" for="pb-account">Account</label>
+            <select id="pb-account" class="control-input"><option value="">all</option></select>
+          </div>
+          <div class="control-group" style="min-width:110px;">
+            <label class="control-label" for="pb-tf">Timeframe</label>
+            <select id="pb-tf" class="control-input"><option value="">all</option></select>
+          </div>
+          <div class="control-group">
+            <label class="control-label">&nbsp;</label>
+            <button type="button" class="btn" id="pb-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Headline</h2>
+        <div id="pb-kpis"><div class="muted">Loading…</div></div>
+        <div id="pb-caveats"></div>
+      </div>
+
+      <div class="card">
+        <h2>Breakdown</h2>
+        <div class="controls" style="margin:0 0 10px;">
+          <div class="control-group" style="min-width:150px;">
+            <label class="control-label" for="pb-group">Group by</label>
+            <select id="pb-group" class="control-input">
+              <option value="byTimeframe">Timeframe</option>
+              <option value="byAccount">Account</option>
+              <option value="bySymbol">Symbol</option>
+              <option value="bySource">Source</option>
+            </select>
+          </div>
+        </div>
+        <div id="pb-breakdown"></div>
+      </div>
+    </div><!-- /pane-book -->
 
     <div id="pane-symbol" class="tabpane hidden">
       <div class="card">
@@ -967,7 +1249,7 @@
         return `
           <tr class="row-open"${row.__overCap ? ' style="background:#2a1810;"' : ''}>
             <td>${row.symbol || '—'}${row.isNewEntry ? ' <span style="font-size:10px;color:#7dd3fc;" title="Entered today">NEW</span>' : ''}</td>
-            <td>${webhookTag(row.timeframe)}</td>
+            <td>${buildTagCell(row)}</td>
             <td>${buildEdgeCell(row)}</td>
             ${buildRankCells(row)}
             <td class="status-open">OPEN</td>
@@ -977,7 +1259,7 @@
             <td>${mfe}</td>
             <td>${mae}</td>
             <td style="font-size:12px;line-height:1.6">${alertCell}</td>
-            <td>${buildWebhookCell(row)}</td>
+            <td>${buildLookupLink(row)}${buildWebhookCell(row)}${buildLedgerButton(row)}</td>
           </tr>
         `;
       }).join('');
@@ -997,6 +1279,85 @@
       if (u === 'D' || u === '1D') return '1d';
       if (u === 'W' || u === '1W') return '1w';
       return raw.toLowerCase();
+    }
+
+    /* ---------- Per-position routing tag ----------
+     * `tag` is what the executor files an order under. It defaults to the watchlist's own timeframe
+     * (a Swing 45m position defaults to "45m") and is editable per position, so a signal can be
+     * routed to a group other than its timeframe's default without touching rules.json.
+     *
+     * Overrides live in localStorage, not on the server: this is a per-operator routing preference
+     * attached to a position that exists only until it closes, and persisting it server-side would
+     * make it a second source of truth about a position the ledger already owns. The tag that
+     * actually went out is recorded in the ledger by the send itself, which is the durable record.
+     *
+     * Keyed by the position's identity (bare ticker | timeframe tag | raw entry time) rather than by
+     * row index, so it survives re-renders, re-sorts and the row moving between scans.
+     */
+    const TAG_OVERRIDE_STORE = 'openTradeTagOverrides';
+
+    function tagOverrideKey(row) {
+      if (!row.entryTimeRaw) return null;
+      return `${webhookBareTicker(row.symbol)}|${webhookTag(row.timeframe)}|${row.entryTimeRaw}`;
+    }
+
+    function readTagOverrides() {
+      try { return JSON.parse(localStorage.getItem(TAG_OVERRIDE_STORE) || '{}') || {}; } catch { return {}; }
+    }
+
+    function writeTagOverride(key, value) {
+      if (!key) return;
+      const all = readTagOverrides();
+      // A tag equal to the timeframe default is stored as "no override" — otherwise clearing the
+      // field back to the default would leave a stale entry that outlives the position.
+      if (value) all[key] = value; else delete all[key];
+      try { localStorage.setItem(TAG_OVERRIDE_STORE, JSON.stringify(all)); } catch {}
+    }
+
+    /** Mirrors normalizeWebhookTag in trade_webhook.js — the server re-runs it and 400s on a mismatch. */
+    function normalizeTagInput(v) {
+      const raw = String(v ?? '').trim().toLowerCase();
+      return /^[a-z0-9_-]{1,20}$/.test(raw) ? raw : null;
+    }
+
+    function tagForRow(row) {
+      const key = tagOverrideKey(row);
+      const stored = key ? readTagOverrides()[key] : null;
+      return normalizeTagInput(stored) || webhookTag(row.timeframe);
+    }
+
+    function buildTagCell(row) {
+      const def = webhookTag(row.timeframe);
+      const current = tagForRow(row);
+      const custom = current !== def;
+      const key = tagOverrideKey(row);
+      if (!key) {
+        // No entry time means no stable identity to hang an override off — and the send is refused
+        // for the same reason, so an editable field here would promise something unsendable.
+        return `<span title="No entry time — tag is fixed at the timeframe default">${def}</span>`;
+      }
+      return `<input type="text" class="wh-tag" value="${escapeHtml(current)}" data-default="${escapeHtml(def)}" data-key="${escapeHtml(key)}"
+        style="width:58px;padding:2px 5px;font-size:11px;background:#0f1728;color:${custom ? '#fcd34d' : '#e5eefc'};border:1px solid ${custom ? '#a16207' : '#334155'};border-radius:6px;"
+        title="Routing tag sent to the executor. Defaults to this watchlist's timeframe (${escapeHtml(def)}); edit to file the order under a different group. Saved in this browser until the position closes." />`;
+    }
+
+    function wireTagInputs(container) {
+      container.querySelectorAll('.wh-tag').forEach((input) => {
+        input.addEventListener('change', () => {
+          const def = input.dataset.default;
+          const normalized = normalizeTagInput(input.value);
+          if (!normalized) {
+            input.value = def;
+            writeTagOverride(input.dataset.key, null);
+          } else {
+            input.value = normalized;
+            writeTagOverride(input.dataset.key, normalized === def ? null : normalized);
+          }
+          const custom = input.value !== def;
+          input.style.color = custom ? '#fcd34d' : '#e5eefc';
+          input.style.borderColor = custom ? '#a16207' : '#334155';
+        });
+      });
     }
 
     function webhookBareTicker(sym) {
@@ -1096,6 +1457,27 @@
       return parts.join(' · ');
     }
 
+    /**
+     * "Lookup" — carry this row's symbol into the Symbol Lookup tab.
+     *
+     * Outside buildWebhookCell for the same reason as the Ledger button below it: that function
+     * short-circuits to "not configured" when no webhook credentials exist, and reading a symbol's
+     * history has nothing to do with whether this system can place orders.
+     *
+     * Passes the BARE ticker. The lookup matches on ticker with the exchange prefix ignored anyway,
+     * and a bare ticker is what the search box shows on a hand-typed query — so a row-driven search
+     * and a typed one leave the tab in the same state.
+     */
+    function buildLookupLink(row) {
+      const ticker = webhookBareTicker(row.symbol);
+      if (!ticker) return '';
+      return `<div style="margin-bottom:5px;">
+        <a href="#" class="lookup-from-open" data-symbol="${escapeHtml(ticker)}"
+          style="font-size:11px;color:#7dd3fc;text-decoration:underline;"
+          title="Open ${escapeHtml(ticker)} in the Symbol Lookup tab — watchlist membership, every timeframe's stats and full closed-trade history.">Lookup</a>
+      </div>`;
+    }
+
     function buildWebhookCell(row) {
       if (!webhookConfig.configured) {
         return '<span class="muted" style="font-size:11px;" title="Set TRADE_WEBHOOK_URL + TRADE_WEBHOOK_SECRET, or fill webhook.local.json">not configured</span>';
@@ -1120,9 +1502,15 @@
         // only wrote it down — labelled differently so "we sent this" and "we observed this" are never
         // confused when reconciling against the executor's portfolio.
         const viaTv = sent.source === 'tv-alert';
+        // The tag the order actually went out under, shown only when it isn't the timeframe default
+        // — the ledger is the record of what was sent, and a routed order should be identifiable
+        // without opening the Webhook Orders tab.
+        const sentTag = sent.tag && sent.tag !== webhookTag(row.timeframe)
+          ? ` <span style="color:#fcd34d;" title="Routed under tag &quot;${sent.tag}&quot;">#${sent.tag}</span>`
+          : '';
         const status = viaTv
-          ? `<span style="font-size:11px;color:#7dd3fc;" title="Placed by a TradingView watchlist alert, recorded here @ ${when}">◆ via TV alert ${sent.side || ''}</span>`
-          : `<span style="font-size:11px;color:#6ee7a8;" title="${sent.source || ''} @ ${when}">✓ sent ${sent.side || ''}${sent.order_type && sent.order_type !== 'market' ? ` (${sent.order_type})` : ''}</span>`;
+          ? `<span style="font-size:11px;color:#7dd3fc;" title="Placed by a TradingView watchlist alert, recorded here @ ${when}">◆ via TV alert ${sent.side || ''}${sentTag}</span>`
+          : `<span style="font-size:11px;color:#6ee7a8;" title="${sent.source || ''} @ ${when}">✓ sent ${sent.side || ''}${sent.order_type && sent.order_type !== 'market' ? ` (${sent.order_type})` : ''}${sentTag}</span>`;
         if (sent.exit) {
           const exWhen = sent.exit.at ? new Date(sent.exit.at).toLocaleString() : '';
           const exVia = sent.exit.source === 'tv-alert' ? '◆ closed by TV alert' : `✓ exited ${sent.exit.side || ''}`;
@@ -1130,8 +1518,12 @@
         }
         // Entry is on the books at the executor and no close has gone out — offer the manual close.
         // This is the slot-freeing action: liquidate a weak position to make room for a better one.
+        //
+        // data-tag pins the close to the tag the ENTRY went out under, so the confirm dialog names
+        // the group actually being flattened rather than the row's editable field (the server picks
+        // the ledger's tag regardless; this only keeps the dialog from claiming otherwise).
         return `${status}
-          <div class="webhook-exit-group" style="margin-top:4px;" data-base='${baseAttr}' data-market-price="${row.entryPrice ?? ''}">
+          <div class="webhook-exit-group" style="margin-top:4px;" data-base='${baseAttr}' data-tag="${escapeHtml(sent.tag || '')}" data-market-price="${row.entryPrice ?? ''}">
             ${buildOrderForm('Close', 'webhook-exit-btn')}
           </div>`;
       }
@@ -1142,6 +1534,156 @@
           ${buildOrderForm('Send', 'webhook-send-btn')}
         </div>`;
     }
+
+    /**
+     * "Ledger" — carry this open position into the Manual Ledger add form.
+     *
+     * Deliberately OUTSIDE buildWebhookCell: that function short-circuits to "not configured" when
+     * no webhook credentials exist, and recording a position you hold elsewhere has nothing to do
+     * with whether this system can place orders.
+     *
+     * Carries the row's already-computed alertLevels as the stop/target. Those are the same
+     * excursion-derived numbers /api/manual-ledger/suggest-levels would recompute, except the scan
+     * already paid for them — so the prefill is instant instead of a ~22s round trip, and the
+     * ledger entry gets the identical levels the Alert Levels column is showing right next to it.
+     */
+    function buildLedgerButton(row) {
+      const payload = {
+        symbol: webhookBareTicker(row.symbol),
+        timeframe: String(row.timeframe ?? ''),
+        entryPrice: row.entryPrice ?? '',
+        entryTimeRaw: row.entryTimeRaw || '',
+        stop: row.alertLevels?.stopAvg ?? '',
+        target: row.alertLevels?.targetAvg ?? '',
+        levelsSource: row.alertLevels ? 'strategy_excursion' : 'manual',
+        side: String(row.side || '').toUpperCase() === 'SHORT' ? 'SHORT' : 'LONG',
+      };
+      const attr = JSON.stringify(payload).replace(/'/g, '&#39;');
+      return `<div style="margin-top:4px;">
+        <button type="button" class="btn ledger-from-open" data-payload='${attr}'
+          style="padding:3px 9px;font-size:11px;"
+          title="Record this in the Manual Ledger — carries symbol, timeframe, entry date/price and the stop/target above. Sends nothing.">Ledger</button>
+      </div>`;
+    }
+
+    /* ---------- ET time handling for the Manual Ledger ----------
+     * Every date the ledger shows or accepts is EASTERN, never browser-local. Two reasons, and the
+     * second is the load-bearing one:
+     *   1. The Open Trades table this tab is fed from renders entry times as ET. Carrying a row over
+     *      with the Ledger button and having the form show a different clock time would look like a
+     *      mistake — on a Pacific machine a 10:00 AM ET entry would read 07:00.
+     *   2. The user works from more than one timezone. A browser-local ledger would silently
+     *      re-label every historical entry depending on where the laptop happened to be, and the
+     *      period filter would move its own boundaries with it.
+     * A `datetime-local`/`date` input carries no zone of its own, so the wall clock in it is ET by
+     * construction and the conversion has to happen explicitly at both edges.
+     */
+
+    // Minutes ET is offset from UTC at a given instant (negative — ET is behind UTC).
+    function etOffsetMinutes(date) {
+      const p = {};
+      for (const part of new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', hour12: false,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      }).formatToParts(date)) p[part.type] = part.value;
+      const asIfUtc = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second);
+      return (asIfUtc - Math.floor(date.getTime() / 1000) * 1000) / 60000;
+    }
+
+    // "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm" read as an ET wall clock -> a real ISO instant.
+    function etWallClockToIso(wall) {
+      if (!wall) return null;
+      const [datePart, timePart = '00:00'] = String(wall).split('T');
+      const [Y, M, D] = datePart.split('-').map(Number);
+      const [h, m] = timePart.split(':').map(Number);
+      if (!Y || !M || !D) return null;
+      const guess = Date.UTC(Y, M - 1, D, h || 0, m || 0);
+      // Two passes: a wall clock near a DST transition must resolve using the offset in force at the
+      // instant it actually lands on, not the one at the naive first guess.
+      let ts = guess - etOffsetMinutes(new Date(guess)) * 60000;
+      ts = guess - etOffsetMinutes(new Date(ts)) * 60000;
+      return new Date(ts).toISOString();
+    }
+
+    // ISO instant -> the ET wall clock a date / datetime-local input wants.
+    function isoToEtInput(iso, withTime) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return '';
+      const p = {};
+      for (const part of new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/New_York', hour12: false,
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+      }).formatToParts(d)) p[part.type] = part.value;
+      const date = `${p.year}-${p.month}-${p.day}`;
+      return withTime ? `${date}T${String(+p.hour % 24).padStart(2, '0')}:${p.minute}` : date;
+    }
+
+    // ISO instant -> ET display string, always suffixed so the zone is never in doubt.
+    function fmtEt(iso, withTime) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return '—';
+      return d.toLocaleString('en-US', {
+        timeZone: 'America/New_York',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}),
+      }) + ' ET';
+    }
+
+    // Delegated, like the Ledger button below: open-trade rows are re-rendered on every poll, so a
+    // handler bound per row would have to be re-wired on each render.
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('.lookup-from-open');
+      if (!link) return;
+      e.preventDefault();
+      const symbol = link.dataset.symbol || '';
+      if (!symbol) return;
+      // Click the tab button rather than toggling the pane directly, so the tab's own on-show work
+      // (active styling, lazy loads, focusing the search box) runs exactly as it does for a click.
+      document.querySelector('.tabbtn[data-pane="pane-symbol"]')?.click();
+      const input = document.getElementById('sym-search-input');
+      if (input) input.value = symbol;
+      runSymbolLookup(symbol);
+    });
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.ledger-from-open');
+      if (!btn) return;
+      let p;
+      try { p = JSON.parse(btn.dataset.payload); } catch { return; }
+      document.querySelector('.tabbtn[data-pane="pane-manual-ledger"]')?.click();
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+      set('ml-symbol', p.symbol);
+      set('ml-entry', p.entryPrice);
+      set('ml-stop', p.stop);
+      set('ml-target', p.target);
+      set('ml-entered', isoToEtInput(p.entryTimeRaw, true));
+      set('ml-side', p.side || 'LONG');
+      set('ml-qty', '');
+      set('ml-notes', '');
+      const stopEl = document.getElementById('ml-stop');
+      if (stopEl) stopEl.dataset.source = p.levelsSource;
+      // These levels were computed against the open trade's entry price, so record that as the
+      // basis — editing the entry price here then rescales them instead of leaving them behind.
+      mlSetLevelBasis(p.entryPrice);
+      // The timeframe <select> is populated by loadManualLedgerTab, which the tab click above kicks
+      // off asynchronously — so set it once the option actually exists rather than silently no-oping.
+      const applyTf = (tries = 0) => {
+        const sel = document.getElementById('ml-timeframe');
+        if (sel && [...sel.options].some((o) => o.value === p.timeframe)) { sel.value = p.timeframe; return; }
+        if (tries < 20) setTimeout(() => applyTf(tries + 1), 100);
+      };
+      applyTf();
+      const note = document.getElementById('ml-suggest-note');
+      if (note) {
+        note.textContent = p.levelsSource === 'strategy_excursion'
+          ? `Carried from the open ${p.symbol} position — stop/target are the avg excursion levels already computed for it. Pick an account, set qty, adjust anything, then Add entry.`
+          : `Carried from the open ${p.symbol} position. No excursion levels were available, so enter stop and/or target by hand.`;
+      }
+      document.getElementById('ml-account')?.focus();
+    });
 
     async function loadWebhookConfig() {
       try {
@@ -1164,8 +1706,18 @@
             const read = readOrderSpec(group);
             if (read.error) { alert(read.error); return; }
             const spec = read.spec;
+            // Close: the tag the entry went out under (data-tag), which the server re-reads from the
+            // ledger anyway. Send: the row's Tag field, read live at click time rather than baked
+            // into data-base at render, since it can be retyped between the two. Only sent when it
+            // differs from the timeframe default, so an untouched row's payload is unchanged.
+            const tagInput = group.closest('tr')?.querySelector('.wh-tag');
+            const rowTag = tagInput && tagInput.value && tagInput.value !== tagInput.dataset.default
+              ? tagInput.value
+              : undefined;
+            const tag = verb === 'close' ? (group.dataset.tag || undefined) : rowTag;
             const payload = { ...base, price: group.dataset.marketPrice || '', ...spec };
-            const what = `${payload.symbol} (${webhookTag(payload.timeframe)})`;
+            if (tag) payload.tag = tag;
+            const what = `${payload.symbol} (${tag || webhookTag(payload.timeframe)})`;
             const line = verb === 'close'
               ? `CLOSE ${what}\n${describeOrder(spec)}`
               : `${payload.side} ${what}\n${describeOrder(spec)}`;
@@ -1426,7 +1978,7 @@
             <thead>
               <tr>
                 <th>Symbol</th>
-                <th>TF</th>
+                <th title="The routing tag sent to the executor. Defaults to this watchlist's timeframe; editable per position.">Tag</th>
                 <th title="Expectancy percentile within this timeframe, 0-100, from the closed-trade log. Higher = this symbol's average trade has historically paid better than its timeframe peers.">Edge</th>
                 <th title="Rank by Edge among the positions that were already open before today's new signals arrived">Org</th>
                 <th title="Rank by Edge among every position now open on this timeframe, today's new entries included">New</th>
@@ -1482,6 +2034,7 @@
         renderOpenTrades(lastOpenTrades);
       });
 
+      wireTagInputs(container);
       wireWebhookButtons(container);
       wireWebhookArmToggles(container);
     }
@@ -1926,6 +2479,9 @@
       // Refreshed alongside status so the "✓ sent" markers reflect what the scheduled scan fired
       // while the page was open, not just what was clicked in this browser session.
       await loadWebhookConfig();
+      // Same reasoning: rules.json can be edited outside this browser, so re-read rather than
+      // trusting the state this page last rendered.
+      loadNtfyConfig();
 
       // Always check scanRunning before the early-return guard — the clock must stop
       // even when updatedAt hasn't changed (e.g. cron-finished SSE was missed).
@@ -2002,7 +2558,24 @@
         : (data.lines && data.lines.length ? data.lines : [data.summary || 'NO SIGNAL']);
       for (const line of entries) {
         const li = document.createElement('li');
-        li.textContent = line;
+        const text = String(line || '');
+        if (text.includes('EXIT SUMMARY:')) {
+          li.classList.add('exit-summary');
+        }
+        const parts = text.split('\n').map((part) => {
+          const escaped = part.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          if (/^\s*EXIT SUMMARY:/i.test(part)) {
+            return `<div class="exit-summary-header">${escaped.trim()}</div>`;
+          }
+          // buildWatchlistSummaryLines separates the OPEN group from the EXIT group with a blank
+          // line, but an empty <div> collapses to zero height, so the summary header rendered flush
+          // against the last OPEN row. Give the blank its own height rather than adding a margin to
+          // the header — the header's negative top margin is what bleeds its background into the
+          // li's padding, and a positive margin there would undo that.
+          if (!part.trim()) return '<div class="line-gap"></div>';
+          return `<div>${escaped}</div>`;
+        });
+        li.innerHTML = parts.join('');
         lines.appendChild(li);
       }
 
@@ -2738,6 +3311,751 @@
       }).join('')}</div>`;
     }
 
+    // --- ntfy per-timeframe mute -------------------------------------------------------------
+    // The one thing to get right here: an EMPTY only_timeframes means NO filter — every timeframe
+    // pushes. So unchecking the last box WIDENS notifications. Rendering that as a row of unchecked
+    // boxes would read as the exact opposite, hence the explicit banner and the confirm on the last
+    // removal.
+    async function loadNtfyConfig() {
+      const toggles = document.getElementById('ntfy-toggles');
+      const stateEl = document.getElementById('ntfy-state');
+      try {
+        const data = await (await fetch('/api/ntfy-config')).json();
+        if (!data?.success) throw new Error(data?.error || 'could not read ntfy config');
+        const tfs = [...new Set(Object.values(data.watchlists || {}).map((v) => String(v?.timeframe ?? v)))]
+          .filter(Boolean);
+        const on = new Set((data.onlyTimeframes || []).map(String));
+
+        stateEl.innerHTML = !data.configured
+          ? '<div class="warn-box" style="font-size:12px;margin-bottom:10px;">No ntfy URL configured in <code>rules.json</code> — nothing pushes regardless of these switches.</div>'
+          : data.filtering
+            ? `<div class="muted" style="font-size:12px;margin-bottom:10px;">Filtering active — only <strong>${[...on].join(', ')}</strong> push.</div>`
+            : '<div class="warn-box" style="font-size:12px;margin-bottom:10px;"><strong>No filter — every timeframe pushes.</strong> Tick a timeframe below to restrict pushes to just that one.</div>';
+
+        toggles.innerHTML = tfs.length === 0
+          ? '<span class="muted">No timeframes configured in rules.json.</span>'
+          : tfs.map((tf) => `<label style="margin-right:14px;display:inline-block;">
+              <input type="checkbox" class="ntfy-tf" data-tf="${escapeHtml(tf)}" ${on.has(tf) ? 'checked' : ''} /> ${escapeHtml(tf)}
+            </label>`).join('');
+
+        toggles.querySelectorAll('.ntfy-tf').forEach((box) => {
+          box.addEventListener('change', async () => {
+            const tf = box.dataset.tf;
+            const enabled = box.checked;
+            // Removing the LAST entry turns filtering off entirely rather than muting everything.
+            if (!enabled && on.size === 1 && on.has(tf)) {
+              const ok = confirm('Unticking the last timeframe turns the filter OFF entirely — every timeframe will push, not none.\n\nContinue?');
+              if (!ok) { box.checked = true; return; }
+            }
+            const msg = document.getElementById('ntfy-status');
+            try {
+              const resp = await (await fetch('/api/ntfy-toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ timeframe: tf, enabled }),
+              })).json();
+              if (!resp?.success) throw new Error(resp?.error || 'toggle failed');
+              msg.textContent = '';
+              msg.className = 'action-message';
+              loadNtfyConfig();
+            } catch (err) {
+              box.checked = !enabled;
+              msg.textContent = err?.message || 'Could not update the ntfy filter';
+              msg.className = 'action-message action-message-error';
+            }
+          });
+        });
+      } catch (err) {
+        toggles.innerHTML = '';
+        stateEl.innerHTML = `<div class="warn-box" style="font-size:12px;">Could not read the ntfy config: ${escapeHtml(err?.message || 'unknown error')}</div>`;
+      }
+    }
+
+    // --- Manual ledger -----------------------------------------------------------------------
+    let mlSuggestBusy = false;
+    let mlData = null;
+    let mlAccounts = [];
+
+    /**
+     * Accounts offered by an open row's inline account picker.
+     *
+     * The row's CURRENT account is unioned in even when accounts.json no longer lists it — the
+     * server rejects an unknown account on save, so silently dropping it from the dropdown would
+     * make an unrelated edit (fixing a stop price, say) fail on a field the user never touched.
+     */
+    function mlAccountOptions(current) {
+      const list = [...mlAccounts];
+      const rows = mlData ? [...(mlData.open || [])] : [];
+      for (const a of [...rows.map((r) => r.account), current]) {
+        if (a && !list.includes(a)) list.push(a);
+      }
+      return list;
+    }
+
+    /**
+     * Period bounds as ET instants — so "Today" means the ET trading day regardless of where the
+     * laptop is, and a boundary can't move just because you travelled.
+     *
+     * Calendar arithmetic runs on a UTC-anchored proxy date (UTC has no DST, so adding days is
+     * always exact), and each resulting ET midnight is converted to a real instant at the end.
+     * Weeks start Monday; ranges are half-open [from, to).
+     */
+    function mlPeriodBounds(period) {
+      const [Y, M, D] = isoToEtInput(new Date().toISOString(), false).split('-').map(Number);
+      const proxy = new Date(Date.UTC(Y, M - 1, D));
+      const dow = (proxy.getUTCDay() + 6) % 7; // Monday = 0
+      const shift = (base, days) => { const d = new Date(base); d.setUTCDate(d.getUTCDate() + days); return d; };
+      const wall = (d) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      const ms = (d) => new Date(etWallClockToIso(wall(d))).getTime();
+      const weekStart = shift(proxy, -dow);
+      switch (period) {
+        case 'today': return { from: ms(proxy), to: null };
+        case 'wtd': return { from: ms(weekStart), to: null };
+        case 'last_week': return { from: ms(shift(weekStart, -7)), to: ms(weekStart) };
+        case 'mtd': return { from: ms(new Date(Date.UTC(Y, M - 1, 1))), to: null };
+        case 'last_month': return {
+          from: ms(new Date(Date.UTC(Y, M - 2, 1))),
+          to: ms(new Date(Date.UTC(Y, M - 1, 1))),
+        };
+        case 'ytd': return { from: ms(new Date(Date.UTC(Y, 0, 1))), to: null };
+        default: return null;
+      }
+    }
+
+    /**
+     * A row matches the period if EITHER its entry or its close falls inside it — a position opened
+     * last month and closed this morning is part of this month's activity, and filtering on the
+     * entry alone would hide exactly the close you came looking for.
+     */
+    function mlApplyFilters(rows) {
+      const period = document.getElementById('ml-filter-period')?.value || 'all';
+      const sym = (document.getElementById('ml-filter-symbol')?.value || '').trim().toUpperCase();
+      const acct = document.getElementById('ml-filter-account')?.value || '';
+      const tf = document.getElementById('ml-filter-tf')?.value || '';
+      const bounds = mlPeriodBounds(period);
+      return (rows || []).filter((r) => {
+        if (sym && !String(r.symbol || '').toUpperCase().includes(sym)) return false;
+        if (acct && r.account !== acct) return false;
+        if (tf && String(r.timeframe) !== tf) return false;
+        if (!bounds) return true;
+        const stamps = [r.entered_at, r.closed_at].filter(Boolean)
+          .map((s) => new Date(s).getTime()).filter((t) => !Number.isNaN(t));
+        if (!stamps.length) return false;
+        return stamps.some((t) => t >= bounds.from && (bounds.to == null || t < bounds.to));
+      });
+    }
+
+    function renderManualLedger() {
+      if (!mlData) return;
+      const open = mlApplyFilters(mlData.open || []);
+      const closed = mlApplyFilters(mlData.closed || []);
+      const totalOpen = (mlData.open || []).length;
+      const totalClosed = (mlData.closed || []).length;
+      const note = document.getElementById('ml-filter-note');
+      if (note) {
+        const filtered = open.length !== totalOpen || closed.length !== totalClosed;
+        note.textContent = filtered
+          ? `Showing ${open.length} of ${totalOpen} open and ${closed.length} of ${totalClosed} closed.`
+          : `${totalOpen} open, ${totalClosed} closed.`;
+      }
+      renderMlOpen(open);
+      renderMlClosed(closed);
+    }
+
+    async function loadManualLedgerTab() {
+      const status = document.getElementById('ml-status');
+      try {
+        const [accountsResp, rulesResp, ledgerResp] = await Promise.all([
+          fetch('/api/accounts').then((r) => r.json()),
+          fetch('/api/ntfy-config').then((r) => r.json()),
+          fetch('/api/manual-ledger').then((r) => r.json()),
+        ]);
+        if (!ledgerResp?.success) throw new Error(ledgerResp?.error || 'could not read the manual ledger');
+        mlData = ledgerResp;
+
+        // Filter vocabularies come from the data itself, so a filter can never offer a value that
+        // matches nothing — same rule the Webhook Orders tab follows.
+        const allRows = ledgerResp.rows || [];
+        document.getElementById('ml-symbol-list').innerHTML =
+          [...new Set(allRows.map((r) => r.symbol).filter(Boolean))].sort()
+            .map((s) => `<option value="${escapeHtml(s)}"></option>`).join('');
+        const acctSel = document.getElementById('ml-filter-account');
+        const keepAcctF = acctSel.value;
+        acctSel.innerHTML = '<option value="">all</option>' +
+          [...new Set(allRows.map((r) => r.account).filter(Boolean))].sort()
+            .map((a) => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+        acctSel.value = keepAcctF;
+        const tfSelF = document.getElementById('ml-filter-tf');
+        const keepTfF = tfSelF.value;
+        tfSelF.innerHTML = '<option value="">all</option>' +
+          [...new Set(allRows.map((r) => String(r.timeframe)).filter(Boolean))].sort()
+            .map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+        tfSelF.value = keepTfF;
+
+        const accSel = document.getElementById('ml-account');
+        const keepAcc = accSel.value;
+        const accounts = accountsResp?.accounts || [];
+        mlAccounts = accounts;
+        accSel.innerHTML = accounts.length
+          ? accounts.map((a) => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('')
+          : '<option value="">(add accounts to accounts.json)</option>';
+        if (keepAcc) accSel.value = keepAcc;
+
+        const tfSel = document.getElementById('ml-timeframe');
+        const keepTf = tfSel.value;
+        const tfs = [...new Set(Object.values(rulesResp?.watchlists || {}).map((v) => String(v?.timeframe ?? v)))].filter(Boolean);
+        tfSel.innerHTML = tfs.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+        if (keepTf) tfSel.value = keepTf;
+
+        status.textContent = '';
+        status.className = 'action-message';
+        renderManualLedger();
+      } catch (err) {
+        status.textContent = err?.message || 'Could not load the manual ledger';
+        status.className = 'action-message action-message-error';
+      }
+    }
+
+    function mlAlertBadge(s) {
+      if (s === 'created') return '<span style="color:#86efac;">✓ created</span>';
+      if (s === 'partial') return '<span style="color:#fcd34d;" title="One of the two alerts failed">◐ partial</span>';
+      if (s === 'failed') return '<span style="color:#fca5a5;" title="TradingView unreachable or the alert was rejected — the entry saved anyway">✗ failed</span>';
+      if (s === 'stale') return '<span style="color:#fca5a5;" title="The levels were edited but the old alerts could not be deleted — they are still live at the PREVIOUS prices. Retry rebuilds them.">⚠ stale</span>';
+      if (s === 'deleted') return '<span class="muted" title="Removed from TradingView when the position closed">✓ removed</span>';
+      if (s === 'delete_failed') return '<span style="color:#fca5a5;" title="The position closed but its alerts could not be deleted — remove them in TradingView so they do not fire on a position you no longer hold">⚠ not removed</span>';
+      return '<span class="muted">—</span>';
+    }
+
+    /** Statuses whose recovery is "create/rebuild the alerts" — the Retry button's gate. */
+    function mlNeedsAlertRetry(s) {
+      return s === 'failed' || s === 'partial' || s === 'stale';
+    }
+
+    function renderMlOpen(rows) {
+      const el = document.getElementById('ml-open');
+      if (!rows.length) {
+        el.innerHTML = '<div class="muted">No open manual positions.</div>';
+        return;
+      }
+      const today = isoToEtInput(new Date().toISOString(), false); // ET trading day, not machine-local
+      const accounts = mlAccountOptions();
+      const cellInput = 'width:100%;box-sizing:border-box;padding:3px 5px;font-size:11px;background:#0f1728;color:#e5eefc;border:1px solid #334155;border-radius:6px;';
+      el.innerHTML = `
+        <table>
+          <thead><tr>
+            <th>Account</th><th>Symbol</th><th>TF</th><th>Side</th><th>Entered</th><th>Qty</th><th>Entry</th><th>Stop</th><th>Target</th>
+            <th>TV alert</th><th>Exit fired</th><th>Edit</th><th>Close</th>
+          </tr></thead>
+          <tbody>${rows.map((r) => {
+            // Every row carries BOTH a read view and an edit view; "Edit" swaps which is shown
+            // rather than re-rendering, so a re-render triggered elsewhere (the 60s poll) cannot
+            // wipe out half-typed values in a row being edited.
+            const edit = (html) => `<span class="ml-view">${html}</span>`;
+            return `
+            <tr class="ml-row" data-id="${r.id}">
+              <td>${edit(escapeHtml(r.account || '—'))}<select class="ml-edit ml-f-account hidden" style="${cellInput}">${
+                accounts.map((a) => `<option value="${escapeHtml(a)}"${a === r.account ? ' selected' : ''}>${escapeHtml(a)}</option>`).join('')
+              }</select></td>
+              <td>${edit(`<strong>${escapeHtml(r.symbol || '—')}</strong>`)}<input type="text" class="ml-edit ml-f-symbol hidden" value="${escapeHtml(r.symbol || '')}" style="${cellInput}width:90px;" /></td>
+              <td>${edit(escapeHtml(r.timeframe || '—'))}<input type="text" class="ml-edit ml-f-timeframe hidden" value="${escapeHtml(r.timeframe || '')}" style="${cellInput}width:56px;" title="TradingView resolution, e.g. 45 or D" /></td>
+              <td>${edit(escapeHtml(r.side || 'LONG'))}<select class="ml-edit ml-f-side hidden" style="${cellInput}width:74px;">
+                <option value="LONG"${r.side !== 'SHORT' ? ' selected' : ''}>LONG</option>
+                <option value="SHORT"${r.side === 'SHORT' ? ' selected' : ''}>SHORT</option>
+              </select></td>
+              <td style="font-size:12px;">${edit(fmtEt(r.entered_at, true))}<input type="datetime-local" class="ml-edit ml-f-entered hidden" value="${escapeHtml(isoToEtInput(r.entered_at, true) || '')}" style="${cellInput}width:170px;" title="Eastern time" /></td>
+              <td>${edit(r.qty ?? '—')}<input type="number" step="any" min="0" class="ml-edit ml-f-qty hidden" value="${r.qty ?? ''}" style="${cellInput}width:70px;" /></td>
+              <td>${edit(r.entry_price ?? '—')}<input type="number" step="any" min="0" class="ml-edit ml-f-entry hidden" value="${r.entry_price ?? ''}" style="${cellInput}width:80px;" /></td>
+              <td>${edit(r.stop_price ?? '<span class="muted">—</span>')}<input type="number" step="any" min="0" class="ml-edit ml-f-stop hidden" value="${r.stop_price ?? ''}" style="${cellInput}width:80px;" placeholder="none" /></td>
+              <td>${edit(r.target_price ?? '<span class="muted">—</span>')}<input type="number" step="any" min="0" class="ml-edit ml-f-target hidden" value="${r.target_price ?? ''}" style="${cellInput}width:80px;" placeholder="none" /></td>
+              <td style="font-size:11px;">${mlAlertBadge(r.tv_alert_status)}</td>
+              <td style="font-size:11px;">${r.exit_alert_fired_at
+                ? `<span style="color:#fcd34d;">${escapeHtml(r.exit_alert_level || 'hit')}</span><br><span class="muted">${fmtEt(r.exit_alert_fired_at, true)}</span>`
+                : '<span class="muted">—</span>'}</td>
+              <td style="white-space:nowrap;">
+                ${mlNeedsAlertRetry(r.tv_alert_status) ? `<button type="button" class="btn ml-retry-alert-btn" data-id="${r.id}" style="padding:3px 8px;font-size:11px;margin-bottom:4px;">Retry alert</button><br>` : ''}
+                <button type="button" class="btn ml-edit-btn" style="padding:3px 9px;font-size:11px;">Edit</button>
+                <button type="button" class="btn ml-save-btn hidden" style="padding:3px 9px;font-size:11px;">Save</button>
+                <button type="button" class="btn ml-cancel-btn hidden" style="padding:3px 9px;font-size:11px;">Cancel</button>
+              </td>
+              <td>
+                <div class="ml-close-group" data-id="${r.id}" style="display:flex;gap:4px;align-items:center;">
+                  <input type="number" step="any" min="0" class="control-input ml-exit-price" placeholder="exit price" style="width:100px;padding:3px 6px;font-size:11px;" />
+                  <input type="date" class="control-input ml-exit-date" value="${today}" style="width:135px;padding:3px 6px;font-size:11px;" title="ET. Defaults to today; editable for a back-dated close" />
+                  <button type="button" class="btn ml-close-btn" style="padding:3px 9px;font-size:11px;">Close</button>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+
+      wireMlRowEditing(el);
+
+      el.querySelectorAll('.ml-close-group').forEach((group) => {
+        group.querySelector('.ml-close-btn').addEventListener('click', async () => {
+          const id = group.dataset.id;
+          const price = Number(group.querySelector('.ml-exit-price').value);
+          const date = group.querySelector('.ml-exit-date').value;
+          const msg = document.getElementById('ml-status');
+          if (!(price > 0)) {
+            msg.textContent = 'Enter a positive exit price before closing.';
+            msg.className = 'action-message action-message-error';
+            return;
+          }
+          if (!confirm(`Close this manual position at ${price} on ${date} ET?\n\nThis records the exit and removes its TradingView alerts. No order is sent.`)) return;
+          try {
+            const resp = await (await fetch(`/api/manual-ledger/${id}/close`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              // ET midnight as a real instant. Sending the bare "YYYY-MM-DD" would be parsed as UTC
+              // midnight, which renders as the PREVIOUS day anywhere west of Greenwich.
+              body: JSON.stringify({ exit_price: price, closed_at: etWallClockToIso(date) }),
+            })).json();
+            if (!resp?.success) throw new Error(resp?.error || 'close failed');
+            // The alert cleanup is best-effort on the server, so a successful close can still carry
+            // a warning that a live alert was left behind — that has to be visible, not just logged.
+            // Set AFTER the reload: loadManualLedgerTab clears #ml-status on success.
+            await loadManualLedgerTab();
+            if (resp.warning) {
+              msg.textContent = resp.warning;
+              msg.className = 'action-message action-message-error';
+            }
+          } catch (err) {
+            msg.textContent = err?.message || 'Could not close the position';
+            msg.className = 'action-message action-message-error';
+          }
+        });
+      });
+
+      el.querySelectorAll('.ml-retry-alert-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const msg = document.getElementById('ml-status');
+          btn.disabled = true;
+          const originalText = btn.textContent;
+          btn.textContent = 'Retrying…';
+          try {
+            const resp = await (await fetch(`/api/manual-ledger/${id}/retry-alerts`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            })).json();
+            if (!resp?.success) throw new Error(resp?.error || 'retry failed');
+            await loadManualLedgerTab();
+            if (resp.warning) {
+              msg.textContent = resp.warning;
+              msg.className = 'action-message action-message-error';
+            }
+          } catch (err) {
+            msg.textContent = err?.message || 'Retry failed';
+            msg.className = 'action-message action-message-error';
+            btn.disabled = false;
+            btn.textContent = originalText;
+          }
+        });
+      });
+    }
+
+    /**
+     * A stop/target rescaled to keep its PERCENT distance from a changed entry price.
+     *
+     * computeExcursionLevels builds every level as `entry * (1 ± pct/100)`, so the percent gap is
+     * the thing that carries meaning — the absolute price is just where that gap landed against the
+     * old entry. Rescaling by the ratio reproduces the same percentage exactly, whatever produced
+     * it (measured excursion, the flat-percent fallback, or a hand-typed level), and works with
+     * TradingView closed. Re-running /suggest-levels instead would cost ~22s, need the Desktop app,
+     * and would silently overwrite a level the user had chosen by hand with a fresh measurement.
+     *
+     * Ratio-scaling is direction-agnostic: a SHORT's stop sits above entry and its target below,
+     * and both keep their side and their gap under the same arithmetic. round2 matches
+     * computeExcursionLevels, so a rescaled level is rounded exactly like a freshly computed one.
+     */
+    function mlRescaleLevel(storedEntry, newEntry, storedLevel) {
+      const e0 = Number(storedEntry);
+      const e1 = Number(newEntry);
+      const l0 = Number(storedLevel);
+      if (!(e0 > 0) || !(e1 > 0) || !(l0 > 0)) return null;
+      return Math.round(e1 * (l0 / e0) * 100) / 100;
+    }
+
+    /**
+     * Inline editing of an open ledger row.
+     *
+     * The whole row is sent on Save, not just what changed: the server's validator is partial (it
+     * only touches the keys present), but "at least one of stop/target" is a cross-field rule it
+     * checks on the merged row, and sending a diff would make which fields the check sees depend on
+     * which ones happened to be retyped.
+     *
+     * A blank stop/target is sent as '' — the deliberate "clear this level" signal, distinct from
+     * omitting the key. The server refuses to clear both, so a level can never silently disappear.
+     *
+     * Editing the ENTRY PRICE rescales the levels in the form, live, so what is confirmed and saved
+     * is what is on screen. Deliberately done here and not on the server: the server would have to
+     * either recompute behind the user's back (they would confirm 144.36 and get 141.50) or hold a
+     * second copy of the rule, and this project has been bitten by both. The server's existing
+     * "levels moved -> rebuild the alerts" path then syncs TradingView with no special case.
+     */
+    function wireMlRowEditing(container) {
+      container.querySelectorAll('tr.ml-row').forEach((tr) => {
+        const views = [...tr.querySelectorAll('.ml-view')];
+        const edits = [...tr.querySelectorAll('.ml-edit')];
+        const editBtn = tr.querySelector('.ml-edit-btn');
+        const saveBtn = tr.querySelector('.ml-save-btn');
+        const cancelBtn = tr.querySelector('.ml-cancel-btn');
+        const closeGroup = tr.querySelector('.ml-close-group');
+        const entryEl = tr.querySelector('.ml-f-entry');
+        const levelEls = [tr.querySelector('.ml-f-stop'), tr.querySelector('.ml-f-target')].filter(Boolean);
+        const val = (cls) => tr.querySelector(cls)?.value ?? '';
+
+        // A level the user has typed into is never rescaled underneath them — an explicit level
+        // outranks a derived one. Tracked per editing session; Cancel re-renders the row, which
+        // drops these flags with the elements themselves.
+        for (const el of levelEls) {
+          el.addEventListener('input', () => { el.dataset.touched = '1'; });
+        }
+
+        // Rescale from the STORED pair (defaultValue), never from the current values, so repeated
+        // edits to the entry price can't compound their own rounding.
+        entryEl?.addEventListener('input', () => {
+          for (const el of levelEls) {
+            if (el.dataset.touched === '1') continue;
+            if (!el.defaultValue) continue; // a level that was never set stays unset
+            const next = mlRescaleLevel(entryEl.defaultValue, entryEl.value, el.defaultValue);
+            el.value = next == null ? el.defaultValue : String(next);
+            const moved = String(el.value) !== String(el.defaultValue);
+            el.style.borderColor = moved ? '#a16207' : '#334155';
+            el.title = moved
+              ? `Rescaled from ${el.defaultValue} to keep the same % distance from the entry price. Type over it to set your own.`
+              : '';
+          }
+        });
+
+        const setMode = (editing) => {
+          views.forEach((v) => v.classList.toggle('hidden', editing));
+          edits.forEach((e) => e.classList.toggle('hidden', !editing));
+          editBtn.classList.toggle('hidden', editing);
+          saveBtn.classList.toggle('hidden', !editing);
+          cancelBtn.classList.toggle('hidden', !editing);
+          // Closing and editing at once would race two writes against the same row, and a close
+          // sent from a row showing unsaved edits is ambiguous about which version it closed.
+          if (closeGroup) closeGroup.style.display = editing ? 'none' : 'flex';
+        };
+
+        editBtn.addEventListener('click', () => setMode(true));
+        // Cancel discards by re-rendering from mlData, which still holds the pre-edit row — no
+        // separate "original values" snapshot to keep in sync.
+        cancelBtn.addEventListener('click', () => renderManualLedger());
+
+        saveBtn.addEventListener('click', async () => {
+          const msg = document.getElementById('ml-status');
+          const body = {
+            account: val('.ml-f-account'),
+            symbol: val('.ml-f-symbol'),
+            timeframe: val('.ml-f-timeframe'),
+            side: val('.ml-f-side'),
+            qty: val('.ml-f-qty'),
+            entry_price: val('.ml-f-entry'),
+            stop_price: val('.ml-f-stop'),
+            target_price: val('.ml-f-target'),
+            entered_at: etWallClockToIso(val('.ml-f-entered')),
+          };
+          if (!body.entered_at) delete body.entered_at; // blank input: leave the stored value alone
+          if (!(Number(body.qty) > 0) || !(Number(body.entry_price) > 0)) {
+            msg.textContent = 'Qty and entry price must both be positive.';
+            msg.className = 'action-message action-message-error';
+            return;
+          }
+          if (!body.stop_price && !body.target_price) {
+            msg.textContent = 'Keep at least one of stop or target — they are the only levels the exit check watches.';
+            msg.className = 'action-message action-message-error';
+            return;
+          }
+          // Exactly the four fields the server's alertsAffected watches, compared the same way, so
+          // the dialog can never promise a rebuild the server won't do (or stay silent about one
+          // it will). Each move is spelled out — a stop that moved because the entry price was
+          // rescaled must not slip past on a generic "levels changed" line.
+          const moves = [
+            ['Symbol', tr.querySelector('.ml-f-symbol')?.defaultValue, body.symbol],
+            ['Timeframe', tr.querySelector('.ml-f-timeframe')?.defaultValue, body.timeframe],
+            ['Stop', tr.querySelector('.ml-f-stop')?.defaultValue, body.stop_price],
+            ['Target', tr.querySelector('.ml-f-target')?.defaultValue, body.target_price],
+          ].filter(([, from, to]) => String(from ?? '') !== String(to ?? ''))
+            .map(([label, from, to]) => `  ${label}: ${from || '—'} → ${to || '—'}`);
+          const levelsMoved = moves.length > 0;
+          if (levelsMoved && !confirm(
+            `Save these changes?\n\n${moves.join('\n')}\n\n`
+            + 'The existing TradingView alerts for this position will be deleted and recreated at the new levels. No order is sent.',
+          )) return;
+
+          saveBtn.disabled = true;
+          saveBtn.textContent = levelsMoved ? 'Rebuilding alerts…' : 'Saving…';
+          try {
+            const resp = await (await fetch(`/api/manual-ledger/${tr.dataset.id}/update`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            })).json();
+            if (!resp?.success) throw new Error(resp?.error || 'update failed');
+            // After the reload, which clears #ml-status — otherwise the warning is wiped as it lands.
+            await loadManualLedgerTab();
+            msg.textContent = resp.warning || `Saved${resp.alertsRebuilt ? ' — TradingView alerts rebuilt at the new levels' : ''}.`;
+            msg.className = resp.warning ? 'action-message action-message-error' : 'action-message';
+          } catch (err) {
+            msg.textContent = err?.message || 'Could not update the position';
+            msg.className = 'action-message action-message-error';
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+          }
+        });
+      });
+    }
+
+    function renderMlClosed(rows) {
+      const el = document.getElementById('ml-closed');
+      if (!rows.length) {
+        el.innerHTML = '<div class="muted">No closed manual positions yet.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <table>
+          <thead><tr>
+            <th>Account</th><th>Symbol</th><th>TF</th><th>Entered</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Closed</th>
+          </tr></thead>
+          <tbody>${rows.map((r) => {
+            const entry = Number(r.entry_price);
+            const exit = Number(r.exit_price);
+            const pct = (entry > 0 && Number.isFinite(exit)) ? ((exit - entry) / entry) * 100 : null;
+            return `
+            <tr>
+              <td>${escapeHtml(r.account || '—')}</td>
+              <td><strong>${escapeHtml(r.symbol || '—')}</strong></td>
+              <td>${escapeHtml(r.timeframe || '—')}</td>
+              <td style="font-size:12px;">${fmtEt(r.entered_at, false)}</td>
+              <td>${r.qty ?? '—'}</td>
+              <td>${r.entry_price ?? '—'}</td>
+              <td>${r.exit_price ?? '—'}</td>
+              <td style="color:${pct == null ? '' : pct >= 0 ? '#86efac' : '#fca5a5'};">${pct == null ? '—' : pct.toFixed(2) + '%'}</td>
+              <td style="font-size:12px;">${fmtEt(r.closed_at, false)}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+    }
+
+    /**
+     * Record the entry price the add form's current stop/target were derived from.
+     *
+     * Without this, changing the entry price after the levels are filled leaves them pointing at
+     * the old price: mlSuggestLevels refuses to re-suggest over a non-empty field (correctly — it
+     * must not overwrite a chosen level), so nothing would ever move them. Called from both places
+     * that fill the levels: the suggestion, and the Ledger button carrying an open trade over.
+     */
+    function mlSetLevelBasis(entry) {
+      for (const id of ['ml-stop', 'ml-target']) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.dataset.basisEntry = String(entry ?? '');
+        el.dataset.basisLevel = String(el.value ?? '');
+        delete el.dataset.touched; // a fresh fill is derived again, not hand-chosen
+      }
+    }
+
+    /** Rescale the add form's derived levels to a changed entry price. Same rule as the row editor. */
+    function mlRescaleAddForm() {
+      const entry = document.getElementById('ml-entry')?.value;
+      const moved = [];
+      for (const [id, label] of [['ml-stop', 'Stop'], ['ml-target', 'Target']]) {
+        const el = document.getElementById(id);
+        if (!el || el.dataset.touched === '1') continue;
+        if (!el.dataset.basisEntry || !el.dataset.basisLevel) continue;
+        const next = mlRescaleLevel(el.dataset.basisEntry, entry, el.dataset.basisLevel);
+        if (next == null) continue;
+        el.value = String(next);
+        if (String(next) !== String(el.dataset.basisLevel)) moved.push(`${label} ${el.dataset.basisLevel} → ${next}`);
+      }
+      return moved;
+    }
+
+    // Pre-fill stop/target from the strategy's own excursion history. Never overwrites a value the
+    // user typed, and never blocks the form — a failure here just leaves the fields empty.
+    async function mlSuggestLevels() {
+      const symbol = document.getElementById('ml-symbol').value.trim();
+      const timeframe = document.getElementById('ml-timeframe').value;
+      const entry = Number(document.getElementById('ml-entry').value);
+      const note = document.getElementById('ml-suggest-note');
+      const stopEl = document.getElementById('ml-stop');
+      const targetEl = document.getElementById('ml-target');
+      if (!symbol || !timeframe || !(entry > 0) || mlSuggestBusy) return;
+      if (stopEl.value || targetEl.value) return; // user already decided
+
+      mlSuggestBusy = true;
+      note.textContent = 'Reading historical excursion for a suggestion… (can take ~20s)';
+      try {
+        const resp = await (await fetch('/api/manual-ledger/suggest-levels', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symbol, timeframe, entry_price: entry }),
+        })).json();
+        if (!resp?.success) throw new Error(resp?.error || 'suggestion failed');
+        if (!stopEl.value && resp.levels?.stopAvg != null) stopEl.value = resp.levels.stopAvg;
+        if (!targetEl.value && resp.levels?.targetAvg != null) targetEl.value = resp.levels.targetAvg;
+        stopEl.dataset.source = resp.source;
+        targetEl.dataset.source = resp.source;
+        mlSetLevelBasis(entry);
+        note.textContent = resp.source === 'strategy_excursion'
+          ? `Suggested from this symbol's historical excursion on ${timeframe} (avg stop / avg target). Edit freely.`
+          : `TradingView unavailable (${resp.reason || 'unknown'}) — suggested from a flat percentage instead. Edit freely.`;
+      } catch (err) {
+        note.textContent = `Could not suggest levels (${err?.message || 'unknown'}) — enter stop and/or target by hand.`;
+      } finally {
+        mlSuggestBusy = false;
+      }
+    }
+
+    // --- Portfolio Analytics (the real book) -------------------------------------------------
+    let pbData = null;
+
+    function pbFmtPct(v, digits = 2) {
+      if (v == null || !Number.isFinite(v)) return '—';
+      return `${v >= 0 ? '+' : ''}${v.toFixed(digits)}%`;
+    }
+    function pbFmtUsd(v) {
+      if (v == null || !Number.isFinite(v)) return '—';
+      return `${v >= 0 ? '+' : '-'}$${Math.abs(v).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    }
+    function pbColor(v) {
+      return v == null || !Number.isFinite(v) ? '' : v >= 0 ? '#86efac' : '#fca5a5';
+    }
+    function pbFmtHold(d) {
+      if (d == null || !Number.isFinite(d)) return '—';
+      if (d < 1) return `${(d * 24).toFixed(1)}h`;
+      if (d < 30) return `${d.toFixed(1)}d`;
+      return `${(d / 30.44).toFixed(1)}mo`;
+    }
+
+    async function loadPortfolioAnalytics() {
+      const status = document.getElementById('pb-status');
+      try {
+        const bounds = mlPeriodBounds(document.getElementById('pb-period').value);
+        const p = new URLSearchParams();
+        if (bounds?.from != null) p.set('from', String(bounds.from));
+        if (bounds?.to != null) p.set('to', String(bounds.to));
+        const sym = document.getElementById('pb-symbol').value.trim();
+        const acct = document.getElementById('pb-account').value;
+        const tf = document.getElementById('pb-tf').value;
+        if (sym) p.set('symbol', sym);
+        if (acct) p.set('account', acct);
+        if (tf) p.set('timeframe', tf);
+
+        const data = await (await fetch(`/api/portfolio-analytics?${p}`)).json();
+        if (!data?.success) throw new Error(data?.error || 'could not build portfolio analytics');
+        pbData = data;
+        status.textContent = '';
+        status.className = 'action-message';
+
+        // Facets come from the unfiltered set, so selecting one never empties another's options.
+        document.getElementById('pb-symbol-list').innerHTML =
+          data.facets.symbols.map((s) => `<option value="${escapeHtml(s)}"></option>`).join('');
+        const acctSel = document.getElementById('pb-account');
+        acctSel.innerHTML = '<option value="">all</option>' +
+          data.facets.accounts.map((a) => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+        acctSel.value = acct;
+        const tfSel = document.getElementById('pb-tf');
+        tfSel.innerHTML = '<option value="">all</option>' +
+          data.facets.timeframes.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+        tfSel.value = tf;
+
+        renderPbKpis();
+        renderPbBreakdown();
+      } catch (err) {
+        status.textContent = err?.message || 'Could not load portfolio analytics';
+        status.className = 'action-message action-message-error';
+      }
+    }
+
+    function renderPbKpis() {
+      const k = pbData?.kpis;
+      const el = document.getElementById('pb-kpis');
+      const caveats = document.getElementById('pb-caveats');
+      if (!k) return;
+
+      if (k.closedCount === 0 && k.openCount === 0) {
+        el.innerHTML = '<div class="muted">Nothing in the book for this selection. Record a position from the Manual Ledger tab, or use the Ledger button on an open trade.</div>';
+        caveats.innerHTML = '';
+        return;
+      }
+
+      const cell = (label, value, color, title) => `
+        <div style="min-width:150px;padding:10px 14px;background:#121a2b;border:1px solid #24314f;border-radius:6px;"${title ? ` title="${escapeHtml(title)}"` : ''}>
+          <div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;">${label}</div>
+          <div style="font-size:20px;font-weight:600;${color ? `color:${color};` : ''}">${value}</div>
+        </div>`;
+
+      el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:10px;">
+        ${cell('Expectancy', pbFmtPct(k.expectancyPct), pbColor(k.expectancyPct), 'Mean percent return per closed position. Percent, not dollars, because webhook rows carry no quantity.')}
+        ${cell('Win rate', k.winRatePct == null ? '—' : `${k.winRatePct.toFixed(0)}%`, null, `${k.scoredCount} scored positions`)}
+        ${cell('Profit factor', k.profitFactor == null ? (k.scoredCount ? 'no losses' : '—') : k.profitFactor.toFixed(2), pbColor(k.profitFactor == null ? null : k.profitFactor - 1), 'Gross percent gains / gross percent losses.')}
+        ${cell('Total return', pbFmtPct(k.totalReturnPct), pbColor(k.totalReturnPct), 'Sum of percent returns — not compounded, and not position-weighted.')}
+        ${cell('Realized $', pbFmtUsd(k.realizedUsd), pbColor(k.realizedUsd), `Manual-ledger positions only (${k.usdCount} of ${k.scoredCount} scored) — webhook rows have no quantity recorded.`)}
+        ${cell('Avg win / loss', `${pbFmtPct(k.avgWinPct, 1)} / ${pbFmtPct(k.avgLossPct, 1)}`, null, 'Average percent of the winners and of the losers.')}
+        ${cell('Hold (med/avg)', `${pbFmtHold(k.medianHoldDays)} / ${pbFmtHold(k.avgHoldDays)}`, null, 'Median first — the distribution is right-skewed, so the mean alone misleads.')}
+        ${cell('Open now', String(k.openCount), null, `${k.openBySource.manual} manual, ${k.openBySource.webhook} webhook`)}
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:10px;">
+        ${k.closedCount} closed position${k.closedCount === 1 ? '' : 's'} in this selection, ${k.scoredCount} with a recorded exit price.
+      </div>`;
+
+      // The excluded rows are stated rather than quietly dropped: a missing exit price shrinks the
+      // denominator, and a reader who can't see that would over-trust every number above.
+      const notes = [];
+      if (k.excludedNoExit > 0) {
+        notes.push(`<strong>${k.excludedNoExit}</strong> closed position${k.excludedNoExit === 1 ? ' is' : 's are'} excluded from every P&amp;L figure above — closed, but no exit price was ever recorded. They are still counted as activity. This is normal for webhook orders closed at market, where the fill price is not written back to the ledger.`);
+      }
+      if (k.usdCount < k.scoredCount) {
+        notes.push(`Realized $ covers <strong>${k.usdCount} of ${k.scoredCount}</strong> scored positions. Webhook rows have no quantity — the executor sizes each account itself — so only Manual Ledger positions can produce a dollar figure. The percent metrics cover all ${k.scoredCount}.`);
+      }
+      caveats.innerHTML = notes.length
+        ? `<div class="warn-box" style="font-size:12px;margin-top:12px;">${notes.join('<br><br>')}</div>`
+        : '';
+    }
+
+    function renderPbBreakdown() {
+      const el = document.getElementById('pb-breakdown');
+      const groups = pbData?.[document.getElementById('pb-group').value] || [];
+      if (!groups.length) {
+        el.innerHTML = '<div class="muted">Nothing to break down for this selection.</div>';
+        return;
+      }
+      el.innerHTML = `<div style="overflow-x:auto;"><table>
+        <thead><tr>
+          <th></th><th>Closed</th><th>Open</th><th>Expectancy</th><th>Win rate</th>
+          <th>Profit factor</th><th>Total</th><th>Realized $</th><th>Hold (med)</th>
+        </tr></thead>
+        <tbody>${groups.map((g) => `
+          <tr>
+            <td><strong>${escapeHtml(String(g.key))}</strong></td>
+            <td>${g.closedCount}${g.excludedNoExit ? ` <span class="muted" style="font-size:11px;" title="${g.excludedNoExit} of these have no exit price and are excluded from P&L">(${g.scoredCount} scored)</span>` : ''}</td>
+            <td>${g.openCount || '—'}</td>
+            <td style="color:${pbColor(g.expectancyPct)}">${pbFmtPct(g.expectancyPct)}</td>
+            <td>${g.winRatePct == null ? '—' : g.winRatePct.toFixed(0) + '%'}</td>
+            <td>${g.profitFactor == null ? (g.scoredCount ? '<span class="muted">no losses</span>' : '—') : g.profitFactor.toFixed(2)}</td>
+            <td style="color:${pbColor(g.totalReturnPct)}">${pbFmtPct(g.totalReturnPct)}</td>
+            <td style="color:${pbColor(g.realizedUsd)}">${pbFmtUsd(g.realizedUsd)}</td>
+            <td>${pbFmtHold(g.medianHoldDays)}</td>
+          </tr>`).join('')}</tbody>
+      </table></div>`;
+    }
+
+    document.getElementById('pb-refresh').addEventListener('click', () => loadPortfolioAnalytics());
+    ['pb-period', 'pb-account', 'pb-tf'].forEach((id) =>
+      document.getElementById(id).addEventListener('change', loadPortfolioAnalytics));
+    document.getElementById('pb-symbol').addEventListener('input', loadPortfolioAnalytics);
+    document.getElementById('pb-group').addEventListener('change', renderPbBreakdown);
+    document.getElementById('pb-clear').addEventListener('click', () => {
+      document.getElementById('pb-period').value = 'all';
+      document.getElementById('pb-symbol').value = '';
+      document.getElementById('pb-account').value = '';
+      document.getElementById('pb-tf').value = '';
+      loadPortfolioAnalytics();
+    });
+
     async function loadWebhookLedger() {
       const status = document.getElementById('wl-status');
       try {
@@ -2964,6 +4282,88 @@
         </table></div>`;
     }
 
+    document.getElementById('ml-refresh').addEventListener('click', () => loadManualLedgerTab());
+    document.getElementById('ml-entry').addEventListener('blur', mlSuggestLevels);
+    document.getElementById('ml-timeframe').addEventListener('change', mlSuggestLevels);
+    // Typing a level marks it as chosen, so a later entry-price edit leaves it alone.
+    ['ml-stop', 'ml-target'].forEach((id) => {
+      document.getElementById(id).addEventListener('input', (e) => { e.target.dataset.touched = '1'; });
+    });
+    // Entry price drives the derived levels. On `input` (not blur) so the numbers move as you type
+    // and the field you submit is the field you saw — mlSuggestLevels still runs on blur, and its
+    // "don't overwrite a non-empty level" guard means the two never fight over the same field.
+    document.getElementById('ml-entry').addEventListener('input', () => {
+      const moved = mlRescaleAddForm();
+      const note = document.getElementById('ml-suggest-note');
+      if (moved.length && note) {
+        note.textContent = `Rescaled to the new entry price, keeping the same % distance — ${moved.join(', ')}. Type over either to set your own.`;
+      }
+    });
+    document.getElementById('ml-filter-period').addEventListener('change', renderManualLedger);
+    document.getElementById('ml-filter-symbol').addEventListener('input', renderManualLedger);
+    document.getElementById('ml-filter-account').addEventListener('change', renderManualLedger);
+    document.getElementById('ml-filter-tf').addEventListener('change', renderManualLedger);
+    document.getElementById('ml-filter-clear').addEventListener('click', () => {
+      document.getElementById('ml-filter-period').value = 'all';
+      document.getElementById('ml-filter-symbol').value = '';
+      document.getElementById('ml-filter-account').value = '';
+      document.getElementById('ml-filter-tf').value = '';
+      renderManualLedger();
+    });
+
+    document.getElementById('ml-add').addEventListener('click', async () => {
+      const msg = document.getElementById('ml-add-status');
+      const stop = document.getElementById('ml-stop').value;
+      const target = document.getElementById('ml-target').value;
+      // Mirrors the server validation rather than replacing it — an entry with neither level would
+      // silently never notify, which is the whole point of the feature.
+      if (!stop && !target) {
+        msg.textContent = 'Enter at least one of stop price or target price.';
+        msg.className = 'action-message action-message-error';
+        return;
+      }
+      // Blank entry date means "now" — the server defaults it. Otherwise the input holds an ET wall
+      // clock with no zone attached, which the server's new Date() would read in ITS timezone; it is
+      // converted to a real instant here so the stored value means the same thing everywhere.
+      const enteredRaw = document.getElementById('ml-entered').value;
+      const body = {
+        account: document.getElementById('ml-account').value,
+        symbol: document.getElementById('ml-symbol').value.trim(),
+        timeframe: document.getElementById('ml-timeframe').value,
+        side: document.getElementById('ml-side').value,
+        qty: document.getElementById('ml-qty').value,
+        entry_price: document.getElementById('ml-entry').value,
+        stop_price: stop,
+        target_price: target,
+        notes: document.getElementById('ml-notes').value.trim(),
+        levels_source: document.getElementById('ml-stop').dataset.source || 'manual',
+        ...(enteredRaw ? { entered_at: etWallClockToIso(enteredRaw) } : {}),
+      };
+      msg.textContent = 'Saving… (creating the TradingView alert can take a few seconds)';
+      msg.className = 'action-message';
+      try {
+        const resp = await (await fetch('/api/manual-ledger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })).json();
+        if (!resp?.success) throw new Error(resp?.error || 'could not save the entry');
+        ['ml-symbol', 'ml-qty', 'ml-entry', 'ml-stop', 'ml-target', 'ml-notes', 'ml-entered'].forEach((id) => {
+          const el = document.getElementById(id);
+          el.value = '';
+          delete el.dataset.source;
+        });
+        msg.textContent = resp.row?.tv_alert_status === 'created'
+          ? 'Saved, TradingView alert created.'
+          : `Saved. TradingView alert: ${resp.row?.tv_alert_status || 'unknown'} — the entry is still tracked and will notify via ntfy on a scheduled scan.`;
+        msg.className = 'action-message';
+        loadManualLedgerTab();
+      } catch (err) {
+        msg.textContent = err?.message || 'Could not save the entry';
+        msg.className = 'action-message action-message-error';
+      }
+    });
+
     document.getElementById('wl-refresh').addEventListener('click', () => loadWebhookLedger());
     document.getElementById('wl-filter-symbol').addEventListener('input', renderWlHistory);
     document.getElementById('wl-filter-tf').addEventListener('change', renderWlHistory);
@@ -2998,6 +4398,11 @@
         // anywhere — a scheduled scan, the Signals tab, or this tab — so a cached view could offer
         // Close on a position that has already been closed.
         if (btn.dataset.pane === 'pane-webhook') loadWebhookLedger();
+        if (btn.dataset.pane === 'pane-manual-ledger') loadManualLedgerTab();
+        if (btn.dataset.pane === 'pane-book') loadPortfolioAnalytics();
+        // Always reloaded: the replay is over a trade log that grows on every scan, so a cached
+        // view of a live run goes stale the moment a position closes.
+        if (btn.dataset.pane === 'pane-paper') loadPaperRun();
       });
     });
 
@@ -3029,6 +4434,53 @@
     }
 
     /** Render a list of {title, body} as a collapsible stack, with an expand/collapse-all control. */
+    /**
+     * Note describing the active-watchlist gate, for any tab that ranks or simulates.
+     *
+     * Always rendered when the gate is on — silence would leave a number that moved because symbols
+     * left a watchlist indistinguishable from one that moved because the strategy changed. Returns
+     * null only when the gate is off and there is nothing to say.
+     */
+    function membershipNote(mf) {
+      if (!mf) return null;
+      if (!mf.applied) {
+        if (mf.reason === 'empty_membership') {
+          return {
+            title: 'Watchlist membership unknown — showing all logged history',
+            body: `<p>No usable watchlist data was found, so nothing was filtered. Symbols removed from a
+              watchlist are still ranking here and can appear in a pick they can never signal on again.
+              Run a scan to resync membership.</p>`,
+          };
+        }
+        return {
+          title: 'Membership filter OFF — every logged symbol included',
+          body: `<p>This view is over the full trade log, including symbols no longer in any watchlist.
+            That is the right lens for “what would this have returned historically”, and the wrong one
+            for choosing what to trade next.</p>`,
+        };
+      }
+      const pairs = mf.excludedPairs || [];
+      if (!pairs.length) {
+        return {
+          title: 'Active watchlist members only — nothing excluded',
+          body: `<p>Every logged (symbol, timeframe) pair is still in a configured watchlist, so the gate
+            removed nothing. Archived trade history is excluded everywhere regardless.</p>`,
+        };
+      }
+      const shown = pairs.slice(0, 12).map((p) => `<code>${escapeHtml(p.pair)}</code> <span class="dim">(${p.trades})</span>`).join(', ');
+      return {
+        title: `Active watchlist members only — ${pairs.length} dropped pair${pairs.length > 1 ? 's' : ''}, ${mf.excludedRows} trade${mf.excludedRows === 1 ? '' : 's'} excluded`,
+        body: `<p>Symbols removed from a watchlist keep their history in the trade log forever, so without
+          this gate they keep ranking — and can win a slot they can never signal on again. The gate is per
+          <em>(symbol, timeframe)</em>: a symbol dropped from 30m but still live on 3h is excluded on 30m only.</p>
+        <p>Excluded: ${shown}${pairs.length > 12 ? ` <span class="dim">and ${pairs.length - 12} more</span>` : ''}.</p>
+        <p class="dim">This is survivorship filtering by construction — those trades really happened while the
+          symbol was scanned. Measured on the current log it is mild and does not flatter: excluded trades
+          average 3.31%/trade against 3.74% for the kept ones, and gating <em>lowers</em> the 15m+30m
+          headline CAGR. Add <code>?membership=off</code> to any analysis endpoint for the unfiltered view.</p>`,
+      };
+    }
+
     function warnStack(items) {
       if (!items.length) return '';
       const anyOpen = items.some((w) => warnOpenState[warnKey(w.title)]);
@@ -3361,6 +4813,7 @@
           the right lens for "what does a trade like this actually pay, this often."</p>
         </div>
         ${warnStack([
+          ...(membershipNote(edgeData.membershipFilter) ? [membershipNote(edgeData.membershipFilter)] : []),
           ...(shortSpan > 0 ? [{
             title: `${shortSpan} of ${qualified.length} symbols have under a year of history`,
             body: `<p>Annualizing a few months magnifies noise — a good 3-month run becomes a spectacular
@@ -3554,6 +5007,9 @@
     let psTfSelected = new Set();
     let psTickers = null;       // null = all
     let psAllTimeframes = [];
+    // The Top-20 rows as picked, kept so the universe table can re-render when the timeframe
+    // selection changes — which row is "off-selection" depends on that selection, not on the pick.
+    let psTop20 = null;
     const usd = (v) => (Number.isFinite(v) ? '$' + Math.round(v).toLocaleString() : '—');
 
     async function initPortfolioSim() {
@@ -3593,17 +5049,68 @@
             if (psTfSelected.size === 0) psTfSelected = new Set(psAllTimeframes.map((t) => t.v));
           }
           renderPsTfChips();
+          renderPsSymUniverse(psTop20);
           runPortfolioSim();
         });
       });
     }
 
+    // Which specific trade drove each Top-20 symbol's risk figures — an aggregate % alone can't be
+    // traced back to a row, and this is exactly the "is this symbol's worst case something I'd
+    // tolerate" question a picker used for portfolio construction should answer up front.
+    function renderPsSymUniverse(top) {
+      const el = document.getElementById('ps-sym-universe');
+      const card = document.getElementById('ps-universe-card');
+      if (!top || !top.length) { el.innerHTML = ''; card.style.display = 'none'; return; }
+      card.style.display = '';
+      // A ticker enters the universe on its best-ranked timeframe, which may not be one of the
+      // timeframes being simulated — the ticker still trades (on the selected TFs), but the numbers
+      // in this row describe a timeframe that isn't in the run. Marking that is the honest option;
+      // hiding the row would imply the ticker isn't in the universe, which is false.
+      const offSelection = (s) => psTfSelected.size > 0 && !psTfSelected.has(s.timeframe);
+      const tradeCell = (t) => t
+        ? `<span style="font-size:11px;white-space:nowrap;">${t.entryTimeEt || '—'} @ ${fmt2(t.entryPrice)}
+           &rarr; ${t.exitTimeEt || '—'} @ ${fmt2(t.exitPrice)}</span>`
+        : '<span class="muted" style="font-size:11px;">—</span>';
+      el.innerHTML = `
+        <div class="edge-table-wrap" style="margin-top:6px;"><table class="edge-table">
+          <thead><tr>
+            <th>Ticker</th><th class="num">TF</th><th class="num">Expectancy</th>
+            <th class="num" title="Worst single-trade adverse excursion">Max MAE</th>
+            <th title="Entry and exit of the trade that produced the Max MAE figure">MAE trade (entry &rarr; exit)</th>
+            <th class="num" title="Worst single-trade P&amp;L">Max Loss</th>
+            <th title="Entry and exit of the trade that produced the Max Loss figure">Loss trade (entry &rarr; exit)</th>
+          </tr></thead>
+          <tbody>${top.map((s) => {
+            const off = offSelection(s);
+            return `
+            <tr${off ? ' style="opacity:.45;" title="Ranked on ' + (s.tfDisplay || s.timeframe) + ', which is not in the current timeframe selection"' : ''}>
+              <td><strong>${s.ticker}</strong></td>
+              <td class="num">${s.tfDisplay || s.timeframe}${off ? ' <span class="dim">*</span>' : ''}</td>
+              <td class="num ${cls(s.expectancyPct)}">${n1(s.expectancyPct)}%</td>
+              <td class="num neg">${n1(s.maxMaePct)}%</td>
+              <td>${tradeCell(s.maxMaeTrade)}</td>
+              <td class="num neg">${n1(s.maxLossPct)}%</td>
+              <td>${tradeCell(s.maxLossTrade)}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table></div>
+        ${top.some(offSelection) ? `<p class="muted" style="font-size:12px;margin-top:6px;">
+          <span class="dim">*</span> ${top.filter(offSelection).length} of ${top.length} tickers were ranked on a
+          timeframe outside the current selection. They are still traded — on whichever selected timeframes
+          they have signals for — but the Expectancy/MAE/Loss figures in those rows describe the ranking
+          timeframe, not the simulated one.</p>` : ''}`;
+    }
+
     document.getElementById('ps-run').addEventListener('click', () => runPortfolioSim());
     document.getElementById('ps-sym-all').addEventListener('click', () => {
       psTickers = null;
+      psTop20 = null;
       document.getElementById('ps-sym-note').textContent = 'all logged symbols';
       document.getElementById('ps-sym-all').classList.add('active');
       document.getElementById('ps-sym-top20').classList.remove('active');
+      document.getElementById('ps-sym-blend').classList.remove('active');
+      renderPsSymUniverse([]);
       runPortfolioSim();
     });
     document.getElementById('ps-sym-top20').addEventListener('click', async () => {
@@ -3626,11 +5133,129 @@
         if (!prev || score(s) > score(prev)) best.set(s.ticker, s);
       }
       const top = [...best.values()].sort((a, b) => score(b) - score(a)).slice(0, 20);
+      psTop20 = top;
       psTickers = top.map((s) => s.ticker);
       document.getElementById('ps-sym-note').textContent = `${psTickers.length} symbols: ${psTickers.join(', ')}`;
       document.getElementById('ps-sym-top20').classList.add('active');
       document.getElementById('ps-sym-all').classList.remove('active');
+      document.getElementById('ps-sym-blend').classList.remove('active');
+      renderPsSymUniverse(top);
       runPortfolioSim();
+    });
+
+    // Blended pick. Unlike Top-20 this is computed server-side, because the blend and hysteresis
+    // rules must exist in exactly one place — the paper run commits the same list this shows.
+    document.getElementById('ps-sym-blend').addEventListener('click', async () => {
+      const note = document.getElementById('ps-sym-note');
+      const tfs = [...psTfSelected];
+      if (!tfs.length) { note.textContent = 'select at least one timeframe first'; return; }
+      const size = Number(document.getElementById('ps-sym-blend-size').value) || 15;
+      note.textContent = 'picking…';
+      try {
+        // `held=` (empty) forces a COLD pick — hysteresis is a property of the running paper book,
+        // and applying it here would show a list the ranking alone doesn't imply.
+        const q = new URLSearchParams({ timeframes: tfs.join(','), size: String(size), held: '' });
+        if (selectedRule !== null) q.set('rule', selectedRule);
+        const u = await (await fetch(`/api/universe?${q}`)).json();
+        if (!u.available) { note.textContent = `unavailable: ${u.reason || 'unknown'}`; return; }
+        // The universe endpoint returns ranking fields only; MAE/worst-loss come from the edge
+        // analysis this page already holds, matched on the same ticker|timeframe key.
+        if (!edgeData) { try { edgeData = await (await fetch(`/api/edge-analysis?min=5${ruleParam()}`)).json(); } catch {} }
+        const edgeBy = new Map((edgeData?.symbols || []).map((s) => [`${s.ticker}|${s.timeframe}`, s]));
+        psTop20 = u.universe.map((c) => {
+          const e = edgeBy.get(`${c.ticker}|${c.timeframe}`) || {};
+          return {
+            ticker: c.ticker, timeframe: c.timeframe, tfDisplay: e.tfDisplay || c.timeframe,
+            expectancyPct: c.tradedExpPct,
+            maxMaePct: e.maxMaePct, maxLossPct: e.maxLossPct,
+            maxMaeTrade: e.maxMaeTrade || null, maxLossTrade: e.maxLossTrade || null,
+          };
+        });
+        psTickers = u.universe.map((c) => c.ticker);
+        note.textContent = `${psTickers.length} of ${u.eligible} eligible (blended): ${psTickers.join(', ')}`
+          + (u.excludedStale?.length
+            ? ` · ${u.excludedStale.length} excluded as no longer scanned: ${u.excludedStale.map((e) => `${e.ticker}|${e.timeframe}`).join(', ')}`
+            : '');
+        document.getElementById('ps-sym-blend').classList.add('active');
+        document.getElementById('ps-sym-top20').classList.remove('active');
+        document.getElementById('ps-sym-all').classList.remove('active');
+        renderPsSymUniverse(psTop20);
+        runPortfolioSim();
+      } catch (err) {
+        note.textContent = `failed: ${err.message}`;
+      }
+    });
+
+    /**
+     * Split the current universe into one TradingView-importable list per selected timeframe.
+     *
+     * Deliberately built from `psTickers` — whatever universe is actually selected — rather than
+     * re-deriving a pick, so the exported lists and the simulated book can never disagree.
+     */
+    document.getElementById('ps-sym-export').addEventListener('click', async () => {
+      const el = document.getElementById('ps-export');
+      const tfs = [...psTfSelected];
+      if (!tfs.length) { el.style.display = ''; el.innerHTML = '<p class="muted">Select at least one timeframe first.</p>'; return; }
+      el.style.display = '';
+      el.innerHTML = '<p class="muted">Building lists…</p>';
+      try {
+        const q = new URLSearchParams({ timeframes: tfs.join(',') });
+        if (psTickers) q.set('tickers', psTickers.join(','));
+        const d = await (await fetch(`/api/watchlist-export?${q}`)).json();
+        if (!d.available) { el.innerHTML = `<p class="muted">Export failed: ${escapeHtml(d.error || 'unknown')}</p>`; return; }
+
+        const blocks = d.groups.map((g) => {
+          const list = g.symbols.join(',');
+          const empty = g.count === 0;
+          return `<div class="card" style="margin:8px 0;padding:12px;">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+              <strong>${escapeHtml(g.timeframe)}</strong>
+              <span class="dim">${g.count} of ${g.members} members${psTickers ? ' in the selected universe' : ''}</span>
+              <span style="margin-left:auto;display:flex;gap:6px;">
+                <button type="button" class="chip" data-copy="${escapeHtml(list)}" ${empty ? 'disabled' : ''}>Copy</button>
+                <button type="button" class="chip" data-dl="${escapeHtml(g.symbols.join('\n'))}"
+                  data-name="Swing-${escapeHtml(g.timeframe)}-Top.txt" ${empty ? 'disabled' : ''}>Download .txt</button>
+              </span>
+            </div>
+            ${empty
+              ? '<p class="muted" style="margin:8px 0 0;">No selected symbol is a member of this timeframe.</p>'
+              : `<textarea readonly rows="2" style="width:100%;margin-top:8px;font-family:ui-monospace,monospace;font-size:12px;">${escapeHtml(list)}</textarea>`}
+          </div>`;
+        }).join('');
+
+        // A ticker selected by the cross-timeframe Top-20 picker but tradable on none of the chosen
+        // timeframes is a dead universe slot, not a rounding error — it is the single most common
+        // way this list silently shrinks, so it gets a warn box rather than a footnote.
+        const dead = d.unmatched.length
+          ? warnStack([{
+              title: `${d.unmatched.length} selected symbol${d.unmatched.length > 1 ? 's are' : ' is'} not a member of any selected timeframe`,
+              body: `<p><code>${d.unmatched.map(escapeHtml).join('</code>, <code>')}</code></p>
+                <p>The “Top 20 by expectancy” picker ranks each ticker on its <em>best</em> timeframe across
+                all eight, so a symbol can be chosen on its 3h or 1d record and then have no history — and no
+                watchlist membership — on the timeframes you are actually trading. These occupy universe
+                slots and contribute nothing. Use <strong>Blended (traded TFs)</strong> to rank only within
+                the selected timeframes and avoid this entirely.</p>`,
+            }])
+          : '';
+
+        el.innerHTML = `<div style="margin-top:10px;">
+          <p class="muted" style="margin:0 0 4px;">Exchange-prefixed, as TradingView reported them — a bare ticker can import as a different instrument.
+          In TradingView: watchlist menu → <strong>Import list…</strong></p>
+          ${dead}${blocks}</div>`;
+
+        el.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'Copied ✓'; setTimeout(() => { b.textContent = 'Copy'; }, 1500); }
+          catch { b.textContent = 'Copy failed'; }
+        }));
+        el.querySelectorAll('[data-dl]').forEach((b) => b.addEventListener('click', () => {
+          const url = URL.createObjectURL(new Blob([b.dataset.dl], { type: 'text/plain' }));
+          const a = document.createElement('a');
+          a.href = url; a.download = b.dataset.name; a.click();
+          URL.revokeObjectURL(url);
+        }));
+      } catch (err) {
+        el.innerHTML = `<p class="muted">Export failed: ${escapeHtml(err.message)}</p>`;
+      }
     });
 
     async function runPortfolioSim() {
@@ -3655,6 +5280,7 @@
           st.textContent = r.reason === 'no_trades_in_selection' ? 'No trades match this selection.' : (r.error || 'Simulation unavailable.');
           st.classList.add('action-message-error');
           ['ps-metrics', 'ps-capital', 'ps-curve', 'ps-sweep', 'ps-detail', 'ps-warn'].forEach((id) => document.getElementById(id).innerHTML = '');
+          document.getElementById('ps-notes-empty').style.display = '';
           return;
         }
         const ruleLabel = r.ruleType ? `${r.ruleType} · ` : 'all variants pooled · ';
@@ -3697,6 +5323,8 @@
       renderPsCapitalUtilization(r);
 
       const warns = [];
+      const memNote = membershipNote(r.membershipFilter);
+      if (memNote) warns.push(memNote);
       if (r.fillRate < 50) {
         warns.push({
           title: `Capacity is the binding constraint — only ${n0(r.fillRate)}% of signals taken`,
@@ -3736,6 +5364,7 @@
           measure. The open positions currently carrying −25% or worse are the ones missing here.</p>`,
       });
       document.getElementById('ps-warn').innerHTML = warnStack(warns);
+      document.getElementById('ps-notes-empty').style.display = warns.length ? 'none' : '';
     }
 
     function renderPsCapitalUtilization(r) {
@@ -3823,6 +5452,10 @@
         <div class="edge-table-wrap"><table class="edge-table">
           <thead><tr><th class="num">slots</th><th class="num">CAGR</th><th class="num">maxDD</th>
             <th class="num">CAGR/DD</th><th class="num">final equity</th><th class="num">fill%</th>
+            <th class="num" title="Share of the CALENDAR holding at least one position — time-weighted. Different question from fill%: you can take most signals and still sit in cash most of the year if the positions are short.">in mkt%</th>
+            <th class="num" title="Time-weighted average share of capital actually at work. Position size is equity/slots, so this falls as slots rise even when in-market time does not.">deployed%</th>
+            <th class="num" title="Share of time every slot was occupied — i.e. the cap was genuinely binding, not just occasionally tight.">full%</th>
+            <th class="num" title="Time-weighted average number of concurrent open positions.">avg open</th>
             <th class="num">taken</th><th class="num">skipped</th><th class="num">win%</th></tr></thead>
           <tbody>${s.map((x) => `
             <tr style="${x.maxPositions === best.maxPositions ? 'background:rgba(34,197,94,.12);' : ''}">
@@ -3832,6 +5465,10 @@
               <td class="num ${cls(x.cagrDd)}"><strong>${n2(x.cagrDd)}</strong></td>
               <td class="num">${usd(x.finalEquity)}</td>
               <td class="num ${x.fillRate < 50 ? 'neg' : ''}">${n0(x.fillRate)}%</td>
+              <td class="num ${x.timeInMarketPct != null && x.timeInMarketPct < 50 ? 'neg' : ''}">${x.timeInMarketPct == null ? '—' : n0(x.timeInMarketPct) + '%'}</td>
+              <td class="num">${x.avgCapitalDeployedPct == null ? '—' : n0(x.avgCapitalDeployedPct) + '%'}</td>
+              <td class="num dim">${x.fullyDeployedPct == null ? '—' : n0(x.fullyDeployedPct) + '%'}</td>
+              <td class="num dim">${x.avgPositionsOpen == null ? '—' : n1(x.avgPositionsOpen)}</td>
               <td class="num">${x.signalsTaken}</td>
               <td class="num dim">${x.signalsSkipped}</td>
               <td class="num">${n0(x.winRate)}%</td>
@@ -3840,6 +5477,13 @@
         <p class="muted" style="font-size:12px;margin-top:8px;">
           ★ best CAGR/DD. More slots cut drawdown through diversification but dilute into weaker signals,
           so the ratio usually peaks in the middle rather than at either extreme.
+        </p>
+        <p class="muted" style="font-size:12px;margin-top:4px;">
+          <strong>fill%</strong> is what share of <em>signals</em> you took; <strong>in mkt%</strong> is what share of the
+          <em>calendar</em> you held anything. They answer different questions and diverge at low slot counts —
+          a 1-slot book can fill few signals yet still be invested most of the time, because one position is
+          always occupying the only slot. <strong>deployed%</strong> falls as slots rise because position size is
+          equity ÷ slots, so unfilled slots sit in cash.
         </p>`;
     }
 
@@ -3852,10 +5496,14 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
           <div>
             <p class="muted" style="margin:0 0 6px;font-size:12px;font-weight:600;">TOP CONTRIBUTORS (P&amp;L)</p>
-            <table class="edge-table"><thead><tr><th>Symbol</th><th>TF</th><th class="num">trades</th><th class="num">P&amp;L</th><th class="num">win%</th></tr></thead>
+            <table class="edge-table"><thead><tr><th>Symbol</th><th>TF</th><th class="num">trades</th><th class="num">P&amp;L</th><th class="num">win%</th>
+              <th class="num" title="Worst adverse excursion of any position this run actually took — how far underwater it went before closing. Not the symbol's full trade-log history: a signal skipped for lack of a slot never became a position.">max MAE</th>
+              <th class="num" title="Worst single-position return this run actually realized. A positive value means even the weakest position closed green.">worst</th></tr></thead>
             <tbody>${contrib.map((s) => `<tr><td><strong>${s.ticker}</strong></td><td>${s.timeframe}</td>
               <td class="num">${s.trades}</td><td class="num ${cls(s.pnlUsd)}">${usd(s.pnlUsd)}</td>
-              <td class="num">${n0((s.wins / s.trades) * 100)}%</td></tr>`).join('')}</tbody></table>
+              <td class="num">${n0((s.wins / s.trades) * 100)}%</td>
+              <td class="num neg">${Number.isFinite(s.maxMaePct) ? n1(s.maxMaePct) + '%' : '—'}</td>
+              <td class="num ${cls(s.worstPnlPct)}">${Number.isFinite(s.worstPnlPct) ? n1(s.worstPnlPct) + '%' : '—'}</td></tr>`).join('')}</tbody></table>
           </div>
           <div>
             <p class="muted" style="margin:0 0 6px;font-size:12px;font-weight:600;">MOST-SKIPPED SIGNALS (lost to contention)</p>
@@ -3953,7 +5601,7 @@
       renderSweetSpotProgress(d);
       const st = document.getElementById('sw-status');
       const r = d.result;
-      const ids = ['sw-headline', 'sw-shortlist', 'sw-tf', 'sw-slots', 'sw-wf', 'sw-grid', 'sw-stale'];
+      const ids = ['sw-headline', 'sw-shortlist', 'sw-matched', 'sw-tf', 'sw-slots', 'sw-wf', 'sw-grid', 'sw-stale'];
 
       if (d.error && !d.running) {
         st.textContent = `Last sweep failed: ${d.error}`;
@@ -3989,6 +5637,7 @@
       });
       renderSweetSpotHeadline(r);
       renderSweetSpotShortlist(r);
+      renderSweetSpotMatched(r);
       renderSweetSpotTf(r);
       renderSweetSpotSlots(r);
       renderSweetSpotWf(r);
@@ -4103,8 +5752,8 @@
               <td class="num dim">${x.worstRank}</td>
               ${perWindow.map((s) => `<td class="num ${cls(s?.cagr)}">${s && Number.isFinite(s.cagr) ? n1(s.cagr) + '%' : '—'}</td>`).join('')}
               <td><button type="button" class="btn sw-to-sim" style="padding:2px 8px;font-size:11px;font-weight:400;"
-                data-tfs="${x.timeframes.join(',')}" data-slots="${x.slots}"
-                title="Load these timeframes, this slot count and the Top-20 universe into the Portfolio Sim">&rarr; Sim</button></td>
+                data-tfs="${x.timeframes.join(',')}" data-slots="${x.slots}" data-capital="${r.capital}"
+                title="Load this row's exact settings into the Portfolio Sim: timeframes, slot count, Top-20 universe, $${r.capital.toLocaleString()} capital, zero commission and first-signal-wins contention — everything the sweep itself used">&rarr; Sim</button></td>
             </tr>`;
           }).join('')}</tbody>
         </table></div>
@@ -4134,6 +5783,92 @@
             count and the Top-20 universe across so you can inspect its equity curve and contention. It
             fixes the universe difference but <em>not</em> the window one, so expect a lower CAGR there —
             that is the honest full-history number, not a disagreement.</p>
+        </div>`;
+    }
+
+    function renderSweetSpotMatched(r) {
+      const el = document.getElementById('sw-matched');
+      const m = r.matchedWindow;
+      if (!m) {
+        el.innerHTML = '<p class="muted">Not present in this stored result — re-run the sweep to compute it.</p>';
+        return;
+      }
+      if (!m.available) {
+        const why = m.reason === 'common_window_too_short'
+          ? `The window shared by all timeframes is only ${n2(m.commonYears)}y — too short to rank anything. ${m.binding ? `<code>${m.binding.timeframe}</code> is the constraint.` : ''}`
+          : m.reason === 'insufficient_timeframes'
+            ? 'Fewer than two timeframes have logged trades.'
+            : `Could not compute: ${escapeHtml(m.error || m.reason || 'unknown')}`;
+        el.innerHTML = `<div class="warn-box" style="font-size:12px;">${why}</div>`;
+        return;
+      }
+      const best = m.best;
+      const maxRet = Math.max(...m.configs.map((x) => x.ret).filter(Number.isFinite), 0.01);
+      el.innerHTML = `
+        <p style="margin:0 0 10px;">Shared window <strong>${m.commonStartAt} &rarr; ${m.endAt}</strong>
+          (${n2(m.commonYears)}y), bound by <code>${m.binding.timeframe}</code> — the youngest timeframe in the
+          shortlist, whose log starts ${new Date(m.binding.firstMs).toISOString().slice(0, 10)}.
+          Re-ranked across ${m.windows.length} rolling start dates.
+          ${best ? `Most stable: <strong class="pos">${best.label}</strong> (avg rank ${best.avgRank.toFixed(2)}, worst ${best.worstRank}).` : ''}</p>
+        ${m.anyLookahead ? `<div class="warn-box" style="font-size:12px;margin-bottom:10px;">
+          At least one window had too little pre-window history to rank 20 symbols and fell back to
+          full-history universe picking. Those windows contain lookahead and their ranks are optimistic.</div>` : ''}
+        ${m.configs.map((x) => {
+          // A config that never traded in any window has no return to draw — width must collapse to
+          // zero rather than emitting "NaN%", which silently renders as a full-width bar.
+          const w = Number.isFinite(x.ret) ? (Math.abs(x.ret) / maxRet) * 100 : 0;
+          return `
+          <div class="bar-row" style="grid-template-columns:190px 1fr 92px;">
+            <span class="tf-label">${x.label}</span>
+            <div class="bar-track"><div class="bar-fill ${x.ret >= 0 ? 'bar-pos' : 'bar-neg'}" style="width:${w}%"></div></div>
+            <span class="bar-val ${cls(x.ret)}">${n1(x.ret)}%</span>
+          </div>`;
+        }).join('')}
+        <div class="edge-table-wrap" style="margin-top:12px;"><table class="edge-table">
+          <thead><tr><th>config</th>
+            <th class="num" title="Average rank by total return across every rolling start. Lower is better.">avg rank</th>
+            <th class="num" title="Worst finish in any single window. The windows overlap heavily, so a config that ever lands near the bottom is fragile regardless of its average.">worst</th>
+            <th class="num" title="Mean total return over the window — NOT annualized. The shared window is short and CAGR's exponent would inflate it.">return</th>
+            <th class="num">maxDD</th>
+            <th class="num" title="Return divided by max drawdown over the same window">ret/DD</th>
+            <th class="num" title="Below ~65% you are capacity-constrained, which is the only regime where trimming the symbol list pays">fill</th>
+            <th class="num">trades</th>
+            ${m.windows.map((w) => `<th class="num" title="Rank in the window starting ${w.startAt} (${n2(w.years)}y)">${w.startAt.slice(5)}</th>`).join('')}
+          </tr></thead>
+          <tbody>${m.configs.map((x, i) => `
+            <tr style="${i === 0 ? 'background:rgba(34,197,94,.10);' : ''}">
+              <td><strong>${x.label}</strong>${i === 0 ? ' <span class="pos" title="Most stable ordering">★</span>' : ''}</td>
+              <td class="num"><strong>${x.avgRank.toFixed(2)}</strong></td>
+              <td class="num ${x.worstRank > m.configs.length / 2 ? 'neg' : 'dim'}">${x.worstRank}</td>
+              <td class="num ${cls(x.ret)}">${n1(x.ret)}%</td>
+              <td class="num neg">${n1(x.dd)}%</td>
+              <td class="num ${cls(x.retDd)}">${Number.isFinite(x.retDd) ? n1(x.retDd) : '—'}</td>
+              <td class="num ${x.fill < 65 ? 'neg' : ''}">${n0(x.fill)}%</td>
+              <td class="num dim">${n0(x.trades)}</td>
+              ${x.ranks.map((rk) => `<td class="num ${rk === 1 ? 'pos' : 'dim'}">#${rk}</td>`).join('')}
+            </tr>`).join('')}</tbody>
+        </table></div>
+        <div class="edge-table-wrap" style="margin-top:12px;"><table class="edge-table">
+          <thead><tr><th>timeframe</th><th class="num">log starts</th><th class="num">log ends</th>
+            <th class="num">years</th><th class="num">trades</th></tr></thead>
+          <tbody>${m.spans.map((s) => `<tr>
+            <td><strong>${s.timeframe}</strong>${s.timeframe === m.binding.timeframe ? ' <span class="dim" title="Binds the shared window">&larr; binds</span>' : ''}</td>
+            <td class="num">${new Date(s.firstMs).toISOString().slice(0, 10)}</td>
+            <td class="num">${new Date(s.lastMs).toISOString().slice(0, 10)}</td>
+            <td class="num">${n2(s.years)}y</td>
+            <td class="num dim">${s.trades}</td></tr>`).join('')}</tbody>
+        </table></div>
+        <div class="warn-box" style="font-size:12px;margin-top:10px;">
+          <h3 style="font-size:13px;">The rolling windows are not independent samples</h3>
+          <p style="margin:4px 0;">Every window ends on the same date and they start only weeks apart, so
+            they share most of their trades. Treat this as a <strong>consistency check on the
+            ordering</strong> — does a config keep finishing near the top when the start date moves — not as
+            ${m.windows.length} separate experiments. That is why the <strong>worst</strong> column carries as
+            much weight here as the average: a config that wins one window and finishes last in another has
+            not shown anything.</p>
+          <p style="margin:4px 0;">The shared window is only as long as the <em>youngest</em> timeframe in the
+            shortlist allows. Dropping that timeframe would buy a much longer comparison — at the cost of no
+            longer being able to say anything about it.</p>
         </div>`;
     }
 
@@ -4279,6 +6014,7 @@
         ? `Its ${n1(r.bestAllRound.dd)}% average is realistically closer to ${n1(r.bestAllRound.dd * 3.5)}%.`
         : '';
       document.getElementById('sw-caveats').innerHTML = warnStack([
+        ...(membershipNote(r && r.membershipFilter) ? [membershipNote(r.membershipFilter)] : []),
         {
           title: 'Magnitudes are not forecasts — read the ordering',
           body: `<p>Out-of-sample windows are months, not years, with heavy compounding, so a three-figure
@@ -4311,10 +6047,17 @@
      * exist in two places. Note this reproduces the universe and the config, NOT the out-of-sample
      * window, so the CAGR there is legitimately lower; the card text says so.
      */
-    async function openConfigInSim(timeframes, slots) {
+    async function openConfigInSim(timeframes, slots, capital) {
       document.querySelector('.tabbtn[data-pane="pane-portfolio"]')?.click();
       if (!psLoaded) await initPortfolioSim();
       document.getElementById('ps-max').value = slots;
+      // Every other input the sweep pinned has to be pinned here too, or a value left over from an
+      // earlier hand-run silently makes this a different simulation than the row it came from. The
+      // sweep always runs: the row's capital, zero commission, chronological contention. (Exit rule
+      // needs no handling — `selectedRule` is one shared variable across both tabs.)
+      if (Number.isFinite(capital) && capital > 0) document.getElementById('ps-capital').value = capital;
+      document.getElementById('ps-commission').value = 0;
+      document.getElementById('ps-priority').value = 'chronological';
       const known = timeframes.filter((t) => psAllTimeframes.some((a) => a.v === t));
       // An unknown timeframe would silently narrow the selection to nothing and then be reset to
       // "all" by renderPsTfChips, quietly running a different config than the row claims.
@@ -4332,12 +6075,265 @@
     document.addEventListener('click', (e) => {
       const btn = e.target.closest?.('.sw-to-sim');
       if (!btn) return;
-      openConfigInSim(btn.dataset.tfs.split(','), Number(btn.dataset.slots));
+      openConfigInSim(btn.dataset.tfs.split(','), Number(btn.dataset.slots), Number(btn.dataset.capital));
     });
 
     document.getElementById('sw-run-quick').addEventListener('click', () => startSweetSpot(true));
     document.getElementById('sw-run-full').addEventListener('click', () => startSweetSpot(false));
     document.getElementById('sw-refresh').addEventListener('click', () => loadSweetSpot());
+
+    /* =====================  PAPER RUN TAB  ===================== */
+
+    let paperData = null;
+    let paperPreview = null;
+
+    async function loadPaperRun() {
+      const st = document.getElementById('paper-status');
+      st.textContent = 'Loading…';
+      st.classList.remove('action-message-error');
+      try {
+        paperData = await (await fetch('/api/paper-run')).json();
+        renderPaperRun();
+      } catch (err) {
+        st.textContent = `Failed: ${err.message}`;
+        st.classList.add('action-message-error');
+      }
+    }
+
+    function renderPaperRun() {
+      const r = paperData || {};
+      const st = document.getElementById('paper-status');
+      const cfgEl = document.getElementById('paper-config');
+      const started = r.config?.startedAt;
+
+      if (!started) {
+        st.textContent = 'No run in progress.';
+        cfgEl.innerHTML = `
+          <div class="controls" style="margin-top:12px;">
+            <div class="control-group"><span class="control-label">Timeframes (comma-separated)</span>
+              <input id="paper-new-tfs" class="control-input" type="text" value="15m,30m" style="width:140px;" /></div>
+            <div class="control-group"><span class="control-label">Universe size</span>
+              <input id="paper-new-size" class="control-input" type="number" value="15" min="3" max="60" /></div>
+            <div class="control-group"><span class="control-label">Live slots</span>
+              <input id="paper-new-slots" class="control-input" type="number" value="3" min="1" max="30" /></div>
+            <div class="control-group"><span class="control-label">Capital ($)</span>
+              <input id="paper-new-capital" class="control-input" type="number" value="100000" min="1000" step="1000" /></div>
+            <div class="control-group"><button type="button" class="btn btn-primary" id="paper-start">Start Run</button></div>
+          </div>
+          <p class="muted" style="font-size:12px;margin-top:8px;">Starting picks the universe now and stamps
+          today as the run's first epoch. Nothing is ordered — this only defines what to measure.</p>`;
+        document.getElementById('paper-start').addEventListener('click', startPaperRun);
+        document.getElementById('paper-results').innerHTML = '<p class="muted">No run in progress.</p>';
+        document.getElementById('paper-universe').innerHTML = '';
+        return;
+      }
+
+      const c = r.config;
+      st.textContent = `${c.timeframes.join('+')} · live arm ${c.liveSlots || '?'} slots · $${c.capital.toLocaleString()}`
+        + ` · rule ${c.ruleType || 'all pooled'} · started ${new Date(started).toLocaleDateString()}`
+        + ` (${n0(r.daysElapsed)} days) · ${r.epochs?.length || 0} universe epoch${(r.epochs?.length || 0) === 1 ? '' : 's'}`;
+      cfgEl.innerHTML = `
+        <div class="controls" style="margin-top:10px;">
+          <div class="control-group"><button type="button" class="btn" id="paper-refresh">Refresh</button></div>
+          <div class="control-group"><button type="button" class="btn" id="paper-stop">End run</button></div>
+        </div>
+        ${c.note ? `<p class="muted" style="font-size:12px;margin-top:6px;">${escapeHtml(c.note)}</p>` : ''}`;
+      document.getElementById('paper-refresh').addEventListener('click', loadPaperRun);
+      document.getElementById('paper-stop').addEventListener('click', async () => {
+        if (!confirm('End the paper run and clear its config? The trade log is untouched — only the run definition is removed.')) return;
+        await fetch('/api/paper-run/stop', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        loadPaperRun();
+      });
+
+      renderPaperResults(r);
+      renderPaperUniverse(r);
+    }
+
+    function renderPaperResults(r) {
+      const el = document.getElementById('paper-results');
+      if (!r.available) {
+        el.innerHTML = `<div class="warn-box" style="font-size:12px;">
+          ${r.reason === 'no_closed_trades_yet'
+            ? `No positions have <em>closed</em> yet inside this run, so there is nothing to replay.
+               ${r.openNow ? `${r.openNow} are open right now and will appear here as they close.` : ''}`
+            : `Not replayable: ${escapeHtml(r.reason || 'unknown')}`}</div>`;
+        return;
+      }
+      const live = r.config.liveSlots;
+      const best = [...r.variants].sort((a, b) => b.totalReturnPct - a.totalReturnPct)[0];
+      const maxRet = Math.max(...r.variants.map((v) => Math.abs(v.totalReturnPct)), 0.01);
+      el.innerHTML = `
+        ${r.variants.map((v) => `
+          <div class="bar-row" style="grid-template-columns:120px 1fr 92px;">
+            <span class="tf-label">${v.slots} slot${v.slots === 1 ? '' : 's'}${v.slots === live ? ' <span class="pos" title="Your live arm">●</span>' : ''}</span>
+            <div class="bar-track"><div class="bar-fill ${v.totalReturnPct >= 0 ? 'bar-pos' : 'bar-neg'}" style="width:${(Math.abs(v.totalReturnPct) / maxRet) * 100}%"></div></div>
+            <span class="bar-val ${cls(v.totalReturnPct)}">${n1(v.totalReturnPct)}%</span>
+          </div>`).join('')}
+        <div class="edge-table-wrap" style="margin-top:12px;"><table class="edge-table">
+          <thead><tr><th class="num">slots</th><th class="num">final equity</th><th class="num">return</th>
+            <th class="num">maxDD</th><th class="num">ret/DD</th><th class="num">fill</th>
+            <th class="num">taken</th><th class="num">skipped</th><th class="num">win%</th><th class="num">PF</th></tr></thead>
+          <tbody>${r.variants.map((v) => `
+            <tr style="${v.slots === live ? 'background:rgba(34,197,94,.10);' : ''}">
+              <td class="num"><strong>${v.slots}</strong>${v.slots === live ? ' <span class="pos">●</span>' : ''}</td>
+              <td class="num">$${Math.round(v.finalEquity).toLocaleString()}</td>
+              <td class="num ${cls(v.totalReturnPct)}"><strong>${n1(v.totalReturnPct)}%</strong></td>
+              <td class="num neg">${n1(v.maxDrawdownPct)}%</td>
+              <td class="num ${cls(v.returnDd)}">${Number.isFinite(v.returnDd) ? n1(v.returnDd) : '—'}</td>
+              <td class="num ${v.fillRate < 65 ? 'neg' : ''}">${n0(v.fillRate)}%</td>
+              <td class="num">${v.signalsTaken}</td>
+              <td class="num dim">${v.signalsSkipped}</td>
+              <td class="num">${n0(v.winRate)}%</td>
+              <td class="num">${v.profitFactor === null ? '∞' : n2(v.profitFactor)}</td>
+            </tr>`).join('')}</tbody>
+        </table></div>
+        <p class="muted" style="font-size:12px;margin-top:8px;">
+          ● marks the arm you are actually trading. Best return so far: <strong>${best.slots} slots</strong>
+          at ${n1(best.totalReturnPct)}%. ${r.closedInRun} closed position${r.closedInRun === 1 ? '' : 's'} in
+          the run so far.</p>
+        ${warnStack([
+          {
+            title: `Closed trades only — ${r.openNow} position${r.openNow === 1 ? ' is' : 's are'} open right now and not counted`,
+            body: `<p>A position with no exit row yet is invisible to the replay, so early in a run this
+              describes only what has finished. ${r.openNow ? `Currently open in this universe:
+              <code>${r.openNowSymbols.slice(0, 20).map(escapeHtml).join('</code>, <code>')}</code>.` : ''}
+              Open positions skew loser-heavy (winners close, losers ride), so treat an early result as
+              optimistic.</p>`,
+          },
+          {
+            title: 'Two months cannot separate 3 slots from 5 — and does not need to',
+            body: `<p>Per-trade dispersion on 15m+30m is ~3.96%, so ~30-50 closed positions leaves a 95%
+              confidence interval of roughly &plusmn;1.1-1.4% on mean per-trade return, against an
+              expectancy of ~2-3%. That is enough to say "this is positive", not to rank slot counts.</p>
+              <p>Most of the 3-vs-5 difference is the deterministic size divisor
+              (<code>size = equity / slots</code>), which needs no experiment. What this run <em>does</em>
+              test is fill quality against logged prices, whether live signals match the log, and whether
+              a freshly-rankable universe holds up.</p>`,
+          },
+          ...(r.epochs.length > 1 ? [{
+            title: `${r.epochs.length} universe epochs — positions open at a re-pick are force-closed`,
+            body: `<p>Each epoch is simulated separately with equity chained forward, so a position still
+              open when the universe changed is closed at the boundary. With median holds of ~2 days (15m)
+              and ~4 days (30m) against monthly epochs this touches few positions, and it touches every
+              slot variant identically — the comparison stays fair even where an absolute figure drifts.</p>`,
+          }] : []),
+        ])}`;
+    }
+
+    async function renderPaperUniverse(r) {
+      const el = document.getElementById('paper-universe');
+      const epochs = r.config.universeHistory || [];
+      const current = epochs.length ? epochs[epochs.length - 1] : null;
+      el.innerHTML = `
+        <div class="controls" style="margin-bottom:10px;">
+          <div class="control-group"><span class="control-label">Re-pick size</span>
+            <input id="paper-repick-size" class="control-input" type="number" value="${current?.universe.length || 15}" min="3" max="60" /></div>
+          <div class="control-group"><button type="button" class="btn" id="paper-preview">Preview re-pick</button></div>
+          <div class="control-group"><button type="button" class="btn btn-primary" id="paper-commit" disabled>Commit as new epoch</button></div>
+        </div>
+        <div id="paper-preview-out"></div>
+        <p class="muted" style="font-size:12px;margin-top:10px;font-weight:600;">CURRENT UNIVERSE (${current?.universe.length || 0})</p>
+        <p style="font-size:13px;">${(current?.universe || []).map((t) => `<code>${escapeHtml(t)}</code>`).join(' ') || '<span class="muted">none</span>'}</p>
+        ${epochs.length > 1 ? `<div class="edge-table-wrap" style="margin-top:10px;"><table class="edge-table">
+          <thead><tr><th>epoch committed</th><th class="num">size</th><th>added</th><th>dropped</th></tr></thead>
+          <tbody>${epochs.map((e) => `<tr>
+            <td>${new Date(e.committedAt).toLocaleDateString()}</td>
+            <td class="num">${e.universe.length}</td>
+            <td class="pos" style="font-size:12px;">${(e.added || []).join(', ') || '—'}</td>
+            <td class="neg" style="font-size:12px;">${(e.dropped || []).join(', ') || '—'}</td>
+          </tr>`).join('')}</tbody></table></div>` : ''}`;
+
+      document.getElementById('paper-preview').addEventListener('click', async () => {
+        const out = document.getElementById('paper-preview-out');
+        out.innerHTML = '<p class="muted">Picking…</p>';
+        const size = Number(document.getElementById('paper-repick-size').value) || 15;
+        const q = new URLSearchParams({ timeframes: r.config.timeframes.join(','), size: String(size) });
+        if (r.config.ruleType) q.set('rule', r.config.ruleType);
+        try {
+          const u = await (await fetch(`/api/universe?${q}`)).json();
+          if (!u.available) { out.innerHTML = `<div class="warn-box" style="font-size:12px;">Unavailable: ${escapeHtml(u.reason || '')}</div>`; return; }
+          paperPreview = u;
+          out.innerHTML = `
+            <div class="edge-table-wrap"><table class="edge-table">
+              <thead><tr><th class="num">#</th><th>ticker</th><th class="num">TF</th>
+                <th class="num" title="Expectancy on the traded timeframes only">traded exp</th>
+                <th class="num">traded %ile</th><th class="num" title="Expectancy pooled across all timeframes">pooled exp</th>
+                <th class="num">pooled %ile</th><th class="num">blend</th><th>status</th></tr></thead>
+              <tbody>${u.universe.map((c, i) => `<tr>
+                <td class="num dim">${i + 1}</td><td><strong>${c.ticker}</strong></td>
+                <td class="num">${c.timeframe}</td>
+                <td class="num ${cls(c.tradedExpPct)}">${n1(c.tradedExpPct)}%</td>
+                <td class="num dim">${n0(c.tradedPercentile)}</td>
+                <td class="num ${cls(c.pooledExpPct)}">${c.pooledExpPct === null ? '—' : n1(c.pooledExpPct) + '%'}</td>
+                <td class="num dim">${c.pooledPercentile === null ? '—' : n0(c.pooledPercentile)}</td>
+                <td class="num"><strong>${n1(c.score)}</strong></td>
+                <td><span class="tag ${c.status === 'new' ? 'tag-watch' : c.status === 'held-hysteresis' ? 'tag-thin' : 'tag-keep'}"
+                  title="${c.status === 'held-hysteresis' ? 'Slipped below the cut but kept by hysteresis, so the book is not rebuilt on noise' : c.status === 'held' ? 'Already in the universe and still ranks' : 'Newly added by this re-pick'}">${c.status}</span></td>
+              </tr>`).join('')}</tbody></table></div>
+            <p class="muted" style="font-size:12px;margin-top:6px;">
+              ${u.eligible} eligible · <span class="pos">+${u.added.length} added</span> ·
+              <span class="neg">−${u.dropped.length} dropped</span> · ${u.kept.length} kept
+              ${u.added.length ? `<br>Adding: <code>${u.added.join('</code>, <code>')}</code>` : ''}
+              ${u.dropped.length ? `<br>Dropping: <code>${u.dropped.join('</code>, <code>')}</code>` : ''}
+            </p>
+            ${u.excludedStale?.length ? `<div class="warn-box" style="font-size:12px;">
+              <h3 style="font-size:13px;">${u.excludedStale.length} symbol${u.excludedStale.length === 1 ? '' : 's'} excluded — ranked well but no longer scanned on that timeframe</h3>
+              <p style="margin:4px 0;">Their trade-log history is real, but they are not in the current watchlist
+                for that timeframe, so they can never produce another signal there and a slot spent on one is
+                wasted. Shown rather than silently dropped, because a deliberate removal and a watchlist that
+                needs re-adding look identical once the row disappears.</p>
+              <table class="edge-table" style="margin-top:6px;">
+                <thead><tr><th>ticker</th><th class="num">TF</th><th class="num">trades</th><th class="num">expectancy</th></tr></thead>
+                <tbody>${u.excludedStale.map((e) => `<tr><td><strong>${escapeHtml(e.ticker)}</strong></td>
+                  <td class="num">${escapeHtml(e.timeframe)}</td><td class="num dim">${e.trades}</td>
+                  <td class="num ${cls(e.exp)}">${n1(e.exp)}%</td></tr>`).join('')}</tbody></table>
+            </div>` : ''}`;
+          document.getElementById('paper-commit').disabled = false;
+        } catch (err) {
+          out.innerHTML = `<div class="warn-box" style="font-size:12px;">Failed: ${escapeHtml(err.message)}</div>`;
+        }
+      });
+
+      document.getElementById('paper-commit').addEventListener('click', async () => {
+        if (!paperPreview) return;
+        const u = paperPreview;
+        if (!confirm(`Commit a new universe epoch?\n\n+${u.added.length} added, −${u.dropped.length} dropped, ${u.kept.length} kept.\n\nThis changes what the run trades from now on. Earlier epochs are preserved.`)) return;
+        const resp = await fetch('/api/paper-run/commit-universe', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ universe: u.universe.map((c) => c.ticker) }),
+        });
+        const j = await resp.json();
+        if (!resp.ok) { alert(`Commit failed: ${j.error || resp.status}`); return; }
+        paperPreview = null;
+        loadPaperRun();
+      });
+    }
+
+    async function startPaperRun() {
+      const tfs = (document.getElementById('paper-new-tfs').value || '').split(',').map((s) => s.trim()).filter(Boolean);
+      const size = Number(document.getElementById('paper-new-size').value) || 15;
+      const liveSlots = Number(document.getElementById('paper-new-slots').value) || 3;
+      const capital = Number(document.getElementById('paper-new-capital').value) || 100000;
+      const st = document.getElementById('paper-status');
+      if (!tfs.length) { st.textContent = 'Enter at least one timeframe.'; return; }
+      st.textContent = 'Picking universe…';
+      const q = new URLSearchParams({ timeframes: tfs.join(','), size: String(size), held: '' });
+      if (selectedRule !== null && selectedRule !== 'all') q.set('rule', selectedRule);
+      const u = await (await fetch(`/api/universe?${q}`)).json();
+      if (!u.available) { st.textContent = `Cannot pick a universe: ${u.reason}`; return; }
+      const tickers = u.universe.map((c) => c.ticker);
+      if (!confirm(`Start a paper run?\n\n${tfs.join('+')} · ${tickers.length} symbols · live arm ${liveSlots} slots\n\n${tickers.join(', ')}\n\nNothing is ordered — this only defines what to measure.`)) {
+        st.textContent = 'Cancelled.';
+        return;
+      }
+      const resp = await fetch('/api/paper-run/start', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timeframes: tfs, universe: tickers, capital, liveSlots, ruleType: u.ruleType ?? null }),
+      });
+      const j = await resp.json();
+      if (!resp.ok) { st.textContent = `Failed: ${j.error || resp.status}`; return; }
+      loadPaperRun();
+    }
 
     /* =====================  SYMBOL LOOKUP TAB  ===================== */
 
@@ -4457,7 +6453,9 @@
           <thead><tr>
             <th>TF</th><th class="num">n</th><th class="num">span</th><th class="num">win%</th>
             <th class="num">exp/trade</th><th class="num">CAGR</th><th class="num">Expected</th><th class="num">CAGR/DD</th>
-            <th class="num">MAE</th><th class="num">hold</th>
+            <th class="num" title="Average adverse excursion across all closed trades">MAE</th>
+            <th class="num" title="Worst single trade's adverse excursion">max MAE</th>
+            <th class="num">hold</th>
           </tr></thead>
           <tbody>${sorted.map((s) => `
             <tr>
@@ -4470,6 +6468,7 @@
               <td class="num ${cls(s.expectedPct)}">${s.expectedPct === null ? '—' : n1(s.expectedPct) + '%'}</td>
               <td class="num ${cls(s.cagrDd)}">${n2(s.cagrDd)}</td>
               <td class="num neg">${n1(s.avgMaePct)}%</td>
+              <td class="num neg">${n1(s.maxMaePct)}%</td>
               <td class="num">${fmtHold(s.medianHoldDays)}</td>
             </tr>`).join('')}</tbody>
         </table>`;
@@ -4491,7 +6490,8 @@
           <thead><tr>
             <th>TF</th><th>Side</th><th>Entry</th><th class="num">Entry $</th>
             <th>Exit</th><th class="num">Exit $</th><th>Exit reason</th>
-            <th class="num">P&amp;L%</th><th class="num">hold</th><th>rule</th><th>webhook</th>
+            <th class="num">P&amp;L%</th><th class="num" title="This trade's own worst adverse excursion (max running loss before exit)">MAE</th>
+            <th class="num">hold</th><th>rule</th><th>webhook</th>
           </tr></thead>
           <tbody>${rows.map((t) => {
             const holdDays = (t.exit_time_ms && t.entry_time_ms) ? (t.exit_time_ms - t.entry_time_ms) / 864e5 : NaN;
@@ -4511,6 +6511,7 @@
               <td class="num">${fmt2(t.exit_price)}</td>
               <td style="font-size:12px;">${t.exit_signal || '—'}</td>
               <td class="num ${cls(t.pnl_pct)}"><strong>${n2(t.pnl_pct)}%</strong></td>
+              <td class="num neg">${t.mae_pct === null || t.mae_pct === undefined ? '—' : n1(t.mae_pct) + '%'}</td>
               <td class="num">${fmtHold(holdDays)}</td>
               <td><span class="muted" style="font-size:11px;">${t.rule_type || '—'}</span></td>
               <td>${webhookCell}</td>

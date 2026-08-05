@@ -25,6 +25,14 @@
   "watchlists": {
     "Swing 15m": "15",
     "Swing 30m": "30",
+    "Swing 15m Top": {
+      "timeframe": "15",
+      "scan": false
+    },
+    "Swing 30m Top": {
+      "timeframe": "30",
+      "scan": false
+    },
     "Swing 45m": "45",
     "Swing 1H": "60",
     "Swing 2H": "120",
@@ -45,13 +53,6 @@
       "Fri"
     ],
     "holidays": [
-      "2026-01-01",
-      "2026-01-19",
-      "2026-02-16",
-      "2026-04-03",
-      "2026-05-25",
-      "2026-06-19",
-      "2026-07-03",
       "2026-09-07",
       "2026-11-26",
       "2026-12-25"
@@ -111,14 +112,25 @@
     "topic": "swing-signals-tsnat",
     "url": "https://ntfy.sh/swing-signals-tsnat",
     "priority": "high",
-    "signal_format": "[{timeframe}] {symbol} → {direction} @ {price}"
+    "signal_format": "[{timeframe}] {symbol} → {direction} @ {price}",
+    "only_timeframes": [
+      "15",
+      "45",
+      "60"
+    ]
   },
   "notes": "Swing Profile Strategy [BigBeluga] modified to use trailing stop exit. IS/OOS split 66/34 visible on chart (bottom-right table). Parameter sweep testing 8 trail % values simultaneously (top-right table). Pine script: C:/Users/tsnat/tradingview-mcp-jackson/swing-profile-trailing.pine",
   "webhook": {
     "group": "swing",
     "enabled_timeframes": [],
     "tv_alert_timeframes": [
-      "15"
-    ]
+      "15",
+      "30"
+    ],
+    "tv_alert_watchlists": [
+      "Swing 15m Top",
+      "Swing 30m Top"
+    ],
+    "auto_price_alerts_disabled": true
   }
 }

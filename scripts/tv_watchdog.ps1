@@ -13,10 +13,27 @@ function Convert-IanaToWindowsTimeZoneId([string]$id) {
   }
 }
 
+# See the matching comment in run_signal_job.ps1: unions rules.json's hand-maintained holidays with
+# the generated status\market-holidays.json (current + next year, past dates purged) so this gate is
+# not limited to whatever years were last typed in by hand. Union, never replace, so an ad-hoc
+# closure still counts and a missing file degrades to the old behaviour rather than opening the gate.
+function Add-GeneratedHolidays([string[]]$holidays) {
+  $out = @($holidays)
+  $calendarPath = Join-Path (Get-Location) 'status\market-holidays.json'
+  if (-not (Test-Path $calendarPath)) { return $out }
+  try {
+    $calendar = Get-Content $calendarPath -Raw | ConvertFrom-Json
+    if ($calendar.holidays) {
+      $out = @($out + @($calendar.holidays | ForEach-Object { [string]$_ }) | Sort-Object -Unique)
+    }
+  } catch {}
+  return $out
+}
+
 function Get-ScheduleGate {
   $d = @{ timezone='America/New_York'; open='09:30'; close='16:00'; days=@('Mon','Tue','Wed','Thu','Fri'); holidays=@(); disabled=$false }
   $p = Join-Path (Get-Location) 'rules.json'
-  if (-not (Test-Path $p)) { return $d }
+  if (-not (Test-Path $p)) { $d.holidays = Add-GeneratedHolidays $d.holidays; return $d }
   try {
     $r = Get-Content $p -Raw | ConvertFrom-Json
     if ($r.market_hours) {
@@ -30,6 +47,7 @@ function Get-ScheduleGate {
       $d.disabled = if ($r.schedule.disabled) { [bool]$r.schedule.disabled } else { $d.disabled }
     }
   } catch {}
+  $d.holidays = Add-GeneratedHolidays $d.holidays
   return $d
 }
 

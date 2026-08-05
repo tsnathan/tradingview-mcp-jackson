@@ -122,7 +122,37 @@ function basicStats(trades) {
   const grossProfit = wins.reduce((s, t) => s + t.pnl_usd, 0);
   const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnl_usd, 0));
   const avg = (arr, f) => (arr.length ? arr.reduce((s, t) => s + (f(t) || 0), 0) / arr.length : 0);
+  // Finds the single trade with the highest (mode="max") or lowest (mode="min") value of f(t), and
+  // carries back enough of that trade's own record (entry/exit time + price) to answer "which trade
+  // was that" without a second lookup — an aggregate number alone can't be traced back to a row.
+  const extreme = (arr, f, mode = "max") => {
+    let bestVal = null, bestTrade = null;
+    for (const t of arr) {
+      const v = Number(f(t));
+      if (!Number.isFinite(v)) continue;
+      if (bestVal === null || (mode === "max" ? v > bestVal : v < bestVal)) {
+        bestVal = v;
+        bestTrade = t;
+      }
+    }
+    if (bestTrade === null) return { value: 0, trade: null };
+    return {
+      value: bestVal,
+      trade: {
+        entryTimeEt: bestTrade.entry_time_et || null,
+        entryPrice: bestTrade.entry_price ?? null,
+        exitTimeEt: bestTrade.exit_time_et || null,
+        exitPrice: bestTrade.exit_price ?? null,
+        pnlPct: bestTrade.pnl_pct ?? null,
+        maePct: bestTrade.mae_pct ?? null,
+      },
+    };
+  };
   const holds = trades.map(holdDays).filter((d) => d !== null && d >= 0);
+  const maxMae = extreme(trades, (t) => t.mae_pct, "max");
+  // Worst single trade by P&L — the most negative pnl_pct, not the average loser. "avgLossPct"
+  // already answers "what does a typical loser look like"; this answers "how bad can one get."
+  const maxLoss = extreme(trades, (t) => t.pnl_pct, "min");
   return {
     trades: trades.length,
     wins: wins.length,
@@ -135,6 +165,14 @@ function basicStats(trades) {
     expectancyPct: avg(trades, (t) => t.pnl_pct),
     avgMfePct: avg(trades, (t) => t.mfe_pct),
     avgMaePct: avg(trades, (t) => t.mae_pct),
+    // Worst single-trade adverse excursion, alongside the average — the average alone can't answer
+    // "how bad did the worst one get," and a single outlier trade routinely dwarfs it (see the
+    // right-skew note on hold time above; same shape here). Trade ref lets a caller show which
+    // specific entry/exit produced it.
+    maxMaePct: maxMae.value,
+    maxMaeTrade: maxMae.trade,
+    maxLossPct: maxLoss.value,
+    maxLossTrade: maxLoss.trade,
     avgBarsWin: avg(wins, (t) => t.bars_held),
     avgBarsLoss: avg(losses, (t) => t.bars_held),
     // Median alongside the mean because hold time is right-skewed: most trades exit on a quick
@@ -162,8 +200,8 @@ function basicStats(trades) {
  * variant's closed trades mixes regimes. The returned `ruleType` is reported back so the caller can
  * surface which variant the numbers describe.
  */
-export function buildEdgeAnalysis({ openBySymbolTf = {}, minTrades = 4, ruleType = null } = {}) {
-  const rows = readAllTradeLogs({ ruleType });
+export function buildEdgeAnalysis({ openBySymbolTf = {}, minTrades = 4, ruleType = null, membership = null } = {}) {
+  const rows = readAllTradeLogs({ ruleType, membership });
   const ruleTypes = listRuleTypes();
   if (!rows.length) {
     return {
@@ -399,8 +437,8 @@ export function buildWindowComparison(rows, monthsList = [6, 12, 24]) {
  * unrankable symbol must read as "unknown", never as "weak", or the cap logic would evict positions
  * purely for having short history.
  */
-export function buildSymbolEdgeScores({ ruleType = null } = {}) {
-  const rows = readAllTradeLogs({ ruleType });
+export function buildSymbolEdgeScores({ ruleType = null, membership = null } = {}) {
+  const rows = readAllTradeLogs({ ruleType, membership });
   const byKey = new Map();
   for (const r of rows) {
     const ticker = bareTicker(r.ticker).toUpperCase();

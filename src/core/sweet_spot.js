@@ -19,11 +19,16 @@
  *   3. SHORTLIST — score a fixed handful of candidate configs across every out-of-sample window and
  *      average. This is the pass recommendations come from, because a single grid maximum is
  *      unstable (rho 0.19-0.52 across splits) while an average over a shortlist is not.
+ *   4. MATCHED WINDOW — passes 1-3 all score each config over ITS OWN span, which is not a like-for-
+ *      like comparison: 30m's log starts 2026-01-12 while 1d's reaches back to 2016, so `15m+30m`
+ *      and `all 8 TF` were being judged on different markets, not just different configs. This pass
+ *      fixes the calendar window to the stretch where every timeframe has data and re-ranks there,
+ *      across rolling start dates so a single lucky stretch cannot decide the ordering.
  *
  * The symbol universe is re-picked inside each in-sample window. Picking it once over all history
  * and then walking forward would leak the answer into the question.
  */
-import { readAllTradeLogs } from "./trade_log.js";
+import { readAllTradeLogs, summarizeMembershipFilter } from "./trade_log.js";
 import { simulatePortfolio } from "./portfolio_sim.js";
 
 export const SWEET_SPOT_TIMEFRAMES = ["15m", "30m", "45m", "1h", "2h", "3h", "4h", "1d"];
@@ -54,6 +59,14 @@ export const SWEET_SPOT_CANDIDATES = [
   { label: "all 8 TF @ 15", timeframes: SWEET_SPOT_TIMEFRAMES, slots: 15 },
   { label: "all-but-1d @ 15", timeframes: SWEET_SPOT_TIMEFRAMES.filter((t) => t !== "1d"), slots: 15 },
 ];
+
+/**
+ * How many rolling start dates the matched-window pass re-ranks across. They all END at the last
+ * trade in the log, so they overlap heavily and are NOT independent samples — this is a consistency
+ * check on the ordering, not six separate experiments. Consumers must say so.
+ */
+export const MATCHED_WINDOW_STARTS = 6;
+const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
 
 const mean = (arr, pick = (x) => x) => (arr.length ? arr.reduce((s, x) => s + pick(x), 0) / arr.length : NaN);
 
@@ -120,6 +133,140 @@ export function topTickers(rows, n = UNIVERSE_SIZE, { endMs = null } = {}) {
 }
 
 /**
+ * Pass 4 — re-rank the shortlist over a FIXED calendar window shared by every timeframe.
+ *
+ * Why this exists: the other passes score each config over its own union span. Logged history per
+ * timeframe ranges from 1d at ~9.7y down to 30m at ~0.55y, so a 2-timeframe fast config and an
+ * 8-timeframe config were never being run over the same market. Any ordering between them was
+ * partly a statement about which years each one happened to cover.
+ *
+ * Three deliberate choices:
+ *  - **Ranked on TOTAL RETURN over the window, not CAGR.** The common window is short (bounded by
+ *    the youngest timeframe), and CAGR's 1/years exponent inflates a short stretch — the same trap
+ *    PORTFOLIO_RECKONER.md's "magnitudes are not forecasts" caveat describes. CAGR is still carried
+ *    per row for continuity with the other tables, it just isn't what decides the ordering.
+ *  - **The universe is picked from data strictly BEFORE each window opens.** Picking it over all
+ *    history would leak the window's own outcome into the selection. When there isn't enough
+ *    pre-window history to rank 10 symbols the run falls back to full-history picking and sets
+ *    `lookahead: true` on that window rather than silently substituting.
+ *  - **Rolling starts all share the same END date**, so they overlap heavily. That makes this a
+ *    consistency check on the ordering, not N independent trials, and `worstRank` matters as much
+ *    as `avgRank` — a config that averages well by winning one window and finishing last in another
+ *    is not a finding.
+ */
+export function computeMatchedWindow(rows, {
+  candidates = SWEET_SPOT_CANDIDATES,
+  capital = CAPITAL,
+  ruleType = null,
+  membership = null,
+  universeSize = UNIVERSE_SIZE,
+  startCount = MATCHED_WINDOW_STARTS,
+  onProgress = null,
+} = {}) {
+  const usedTfs = [...new Set(candidates.flatMap((c) => c.timeframes))];
+  const spans = [];
+  for (const tf of usedTfs) {
+    const tfRows = rows.filter((r) => r.timeframe === tf);
+    if (!tfRows.length) continue;
+    const firstMs = Math.min(...tfRows.map((r) => r.entry_time_ms));
+    const lastMs = Math.max(...tfRows.map((r) => r.exit_time_ms));
+    spans.push({ timeframe: tf, firstMs, lastMs, years: (lastMs - firstMs) / MS_PER_YEAR, trades: tfRows.length });
+  }
+  if (spans.length < 2) return { available: false, reason: "insufficient_timeframes" };
+
+  // The youngest timeframe is what binds the shared window — naming it makes the cost of including
+  // it legible ("this comparison is short because 30m only starts here").
+  spans.sort((a, b) => b.firstMs - a.firstMs);
+  const binding = spans[0];
+  const commonStartMs = binding.firstMs;
+  const endMs = Math.max(...spans.map((s) => s.lastMs));
+  const commonYears = (endMs - commonStartMs) / MS_PER_YEAR;
+  if (commonYears <= 0.08) return { available: false, reason: "common_window_too_short", commonYears, binding };
+
+  // Starts spread over the first third of the shared window, so even the last one retains ~2/3 of
+  // the data. Beyond that the later windows get too thin to rank anything.
+  const startSpanMs = (endMs - commonStartMs) / 3;
+  const starts = Array.from({ length: startCount }, (_, i) =>
+    Math.round(commonStartMs + (startSpanMs * i) / Math.max(1, startCount - 1)));
+
+  const perConfig = new Map();
+  for (const c of candidates) perConfig.set(c.label, { label: c.label, timeframes: [...c.timeframes], slots: c.slots, runs: [] });
+  const windows = [];
+
+  for (const startMs of starts) {
+    let universe = topTickers(rows, universeSize, { endMs: startMs });
+    let lookahead = false;
+    if (universe.length < 10) {
+      universe = topTickers(rows, universeSize);
+      lookahead = true;
+    }
+    const scored = [];
+    for (const c of candidates) {
+      const r = simulatePortfolio({
+        capital, maxPositions: c.slots, timeframes: c.timeframes, tickers: universe,
+        priority: "chronological", ruleType, membership, startMs, endMs,
+      });
+      if (onProgress) onProgress({ phase: "matched-window", note: `${c.label} @${new Date(startMs).toISOString().slice(0, 10)}` });
+      const ok = r.available && r.signalsTaken > 0;
+      scored.push({
+        label: c.label,
+        ret: ok ? r.totalReturnPct : null,
+        dd: ok ? r.maxDrawdownPct : null,
+        cagr: ok ? r.cagr : null,
+        fill: ok ? r.fillRate : null,
+        n: ok ? r.signalsTaken : 0,
+        retDd: ok && r.maxDrawdownPct > 0 ? r.totalReturnPct / r.maxDrawdownPct : null,
+      });
+    }
+    // Unrankable rows sort last rather than being dropped, so a config that failed to trade in a
+    // window carries that failure into its average instead of quietly skipping it.
+    const ranked = [...scored].sort((a, b) => (b.ret ?? -Infinity) - (a.ret ?? -Infinity));
+    scored.forEach((s) => { s.rank = ranked.indexOf(s) + 1; });
+    for (const s of scored) perConfig.get(s.label).runs.push(s);
+    windows.push({
+      startMs,
+      startAt: new Date(startMs).toISOString().slice(0, 10),
+      years: (endMs - startMs) / MS_PER_YEAR,
+      universeSize: universe.length,
+      lookahead,
+    });
+  }
+
+  const configs = [...perConfig.values()].map((c) => {
+    const ok = c.runs.filter((r) => Number.isFinite(r.ret));
+    return {
+      label: c.label,
+      timeframes: c.timeframes,
+      slots: c.slots,
+      ranks: c.runs.map((r) => r.rank),
+      avgRank: mean(c.runs, (r) => r.rank),
+      worstRank: c.runs.length ? Math.max(...c.runs.map((r) => r.rank)) : null,
+      bestRank: c.runs.length ? Math.min(...c.runs.map((r) => r.rank)) : null,
+      ret: mean(ok, (r) => r.ret),
+      dd: mean(ok, (r) => r.dd),
+      cagr: mean(ok.filter((r) => Number.isFinite(r.cagr)), (r) => r.cagr),
+      retDd: mean(ok.filter((r) => Number.isFinite(r.retDd)), (r) => r.retDd),
+      fill: mean(ok, (r) => r.fill),
+      trades: mean(ok, (r) => r.n),
+      scoredWindows: ok.length,
+    };
+  }).sort((a, b) => a.avgRank - b.avgRank);
+
+  return {
+    available: true,
+    spans: [...spans].sort((a, b) => a.firstMs - b.firstMs),
+    binding,
+    commonStartAt: new Date(commonStartMs).toISOString().slice(0, 10),
+    endAt: new Date(endMs).toISOString().slice(0, 10),
+    commonYears,
+    windows,
+    anyLookahead: windows.some((w) => w.lookahead),
+    configs,
+    best: configs[0] ?? null,
+  };
+}
+
+/**
  * Run the whole analysis.
  *
  * `quick` skips passes 1 and 2 (the two that cost minutes) and returns the shortlist only. It is
@@ -137,10 +284,11 @@ export function runSweetSpotAnalysis({
   candidates = SWEET_SPOT_CANDIDATES,
   capital = CAPITAL,
   universeSize = UNIVERSE_SIZE,
+  membership = null,
   onProgress = null,
 } = {}) {
   const startedAt = Date.now();
-  const rows = readAllTradeLogs({ ruleType }).filter((r) => r.entry_time_ms && r.exit_time_ms);
+  const rows = readAllTradeLogs({ ruleType, membership }).filter((r) => r.entry_time_ms && r.exit_time_ms);
   if (!rows.length) {
     return { available: false, reason: "no_trades", ruleType };
   }
@@ -164,7 +312,7 @@ export function runSweetSpotAnalysis({
   const runOne = (tfs, maxPositions, tickers, startMs = null, endMs = null) => {
     const r = simulatePortfolio({
       capital, maxPositions, timeframes: tfs, tickers,
-      priority: "chronological", ruleType, startMs, endMs,
+      priority: "chronological", ruleType, membership, startMs, endMs,
     });
     return {
       cagr: r.available ? r.cagr : null,
@@ -347,6 +495,17 @@ export function runSweetSpotAnalysis({
   const bestReturn = averaged[0] ?? null;
   const bestAllRound = [...averaged].sort((a, b) => a.rankOverall - b.rankOverall)[0] ?? null;
 
+  // ------------------------------------------------------------------ 4. matched window
+  // Runs in BOTH modes: it is ~66 simulations against an already-loaded (memoized) trade log, which
+  // is the same order of cost as the shortlist pass quick mode already pays. Wrapped because it is
+  // additive evidence — a failure here must not cost the caller the three passes above.
+  let matchedWindow = null;
+  try {
+    matchedWindow = computeMatchedWindow(rows, { candidates, capital, ruleType, membership, universeSize, onProgress });
+  } catch (err) {
+    matchedWindow = { available: false, reason: "error", error: String(err?.message || err) };
+  }
+
   return {
     available: true,
     ruleType,
@@ -354,6 +513,9 @@ export function runSweetSpotAnalysis({
     generatedAt: new Date().toISOString(),
     durationMs: Date.now() - startedAt,
     tradeCount: rows.length,
+    // Recorded so a stored result can never be misread later: a sweep run under the gate and one run
+    // without it are measuring different universes, and the trade count alone does not say which.
+    membershipFilter: summarizeMembershipFilter(membership, { ruleType }),
     capital,
     timeframes,
     slots,
@@ -364,5 +526,6 @@ export function runSweetSpotAnalysis({
     shortlist: { windows, averaged },
     bestReturn,
     bestAllRound,
+    matchedWindow,
   };
 }

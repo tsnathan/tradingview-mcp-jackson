@@ -693,8 +693,44 @@ function tradeLogSignature(files) {
   }).join("|");
 }
 
-export function readAllTradeLogs({ ruleType = null } = {}) {
+/**
+ * Is this row's (ticker, timeframe) pair still scanned today?
+ *
+ * The pair granularity is the whole point and cannot be expressed by `simulatePortfolio`'s existing
+ * ticker-level `tickers` option: a symbol dropped from the 30m watchlist while still live on 3h is
+ * a member as a *ticker* and a non-member as a *pair*. Measured 2026-08-01, filtering by ticker
+ * changed nothing at all (all 133 logged tickers remain a member somewhere) while the pair filter
+ * removes 321 rows.
+ */
+function isActiveMember(row, membership) {
+  const set = membership.byTimeframe.get(timeframeLabel(row.timeframe));
+  if (!set) return false;
+  return set.has(String(row.ticker ?? "").split(":").pop().toUpperCase());
+}
+
+/**
+ * @param membership  Result of `buildWatchlistMembership()` (universe.js). When given, only trades
+ *                    whose (ticker, timeframe) pair is STILL in a configured watchlist are returned,
+ *                    so analysis describes a book that can actually be traded rather than one
+ *                    containing symbols that can never signal again.
+ *
+ *                    An empty membership map means "unknown", not "nothing is tradable", and is
+ *                    ignored — the same convention `buildUniverse` and `findWatchlistOrphans` use,
+ *                    and for the same reason: a failed watchlist read must not silently empty every
+ *                    analysis on the dashboard.
+ *
+ *                    Note this is a FORWARD-looking lens. Those trades genuinely happened while the
+ *                    symbol was scanned, so excluding them is survivorship filtering by
+ *                    construction. Measured on the real log it is a mild one — the excluded rows
+ *                    average 3.31%/trade against 3.74% for the kept ones, moving pooled expectancy
+ *                    by +0.03pp, and the per-timeframe tilt changes sign (1d and 4h get *worse*) —
+ *                    but a caller asking "what would this config have returned historically" should
+ *                    still omit this option.
+ */
+export function readAllTradeLogs({ ruleType = null, membership = null } = {}) {
   if (!existsSync(TRADE_LOG_DIR)) return [];
+  // Non-recursive by design: this is what keeps `trade-log/archive/` out of every analysis. The
+  // `.csv` anchor likewise drops the `.pre-*-key` migration backups sitting next to the live files.
   const files = readdirSync(TRADE_LOG_DIR).filter((f) => /^trades-.*\.csv$/.test(f)).sort();
 
   let all;
@@ -716,9 +752,40 @@ export function readAllTradeLogs({ ruleType = null } = {}) {
   // cached array is never handed out directly — a filtered copy is, and the unfiltered case gets a
   // shallow copy of the array. Rows themselves are shared; treat them as read-only, which every
   // current consumer already does.
-  if (ruleType == null) return all.slice();
+  const gate = membership && membership.total ? membership : null;
+  if (ruleType == null) return gate ? all.filter((r) => isActiveMember(r, gate)) : all.slice();
   const wanted = new Set((Array.isArray(ruleType) ? ruleType : [ruleType]).map(String));
-  return all.filter((r) => wanted.has(r.rule_type));
+  return all.filter((r) => wanted.has(r.rule_type) && (!gate || isActiveMember(r, gate)));
+}
+
+/**
+ * What the membership gate is actually removing, for display.
+ *
+ * Every gated surface reports this rather than quietly returning a smaller number: a config whose
+ * CAGR moved because six symbols left the watchlist looks identical to one whose CAGR moved because
+ * the strategy changed, and only this distinguishes them.
+ */
+export function summarizeMembershipFilter(membership, { ruleType = null } = {}) {
+  if (!membership || !membership.total) {
+    return { applied: false, reason: membership ? "empty_membership" : "not_requested", pairs: 0, excludedRows: 0, excludedPairs: [] };
+  }
+  const all = readAllTradeLogs({ ruleType });
+  const byPair = new Map();
+  for (const r of all) {
+    if (isActiveMember(r, membership)) continue;
+    const key = `${String(r.ticker ?? "").split(":").pop().toUpperCase()}|${timeframeLabel(r.timeframe)}`;
+    byPair.set(key, (byPair.get(key) || 0) + 1);
+  }
+  const excludedPairs = [...byPair.entries()]
+    .map(([pair, trades]) => ({ pair, ticker: pair.split("|")[0], timeframe: pair.split("|")[1], trades }))
+    .sort((a, b) => b.trades - a.trades);
+  return {
+    applied: true,
+    pairs: membership.total,
+    totalRows: all.length,
+    excludedRows: excludedPairs.reduce((s, p) => s + p.trades, 0),
+    excludedPairs,
+  };
 }
 
 /**

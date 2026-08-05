@@ -20,6 +20,25 @@ function Convert-IanaToWindowsTimeZoneId {
   }
 }
 
+# Unions the hand-maintained rules.json holidays with status\market-holidays.json, which the Node
+# scan regenerates on every run (computed NYSE holidays for the current and next year, past dates
+# purged). Without this, this gate knew only the years somebody had typed into rules.json by hand —
+# correct through 2026-12-25 and wrong every day of 2027. Union rather than replace so a hand-added
+# ad-hoc closure (a national day of mourning, which no rule predicts) still counts, and so a missing
+# or unreadable generated file degrades to the old behaviour instead of opening the gate.
+function Add-GeneratedHolidays([string[]]$holidays) {
+  $out = @($holidays)
+  $calendarPath = Join-Path (Get-Location) 'status\market-holidays.json'
+  if (-not (Test-Path $calendarPath)) { return $out }
+  try {
+    $calendar = Get-Content $calendarPath -Raw | ConvertFrom-Json
+    if ($calendar.holidays) {
+      $out = @($out + @($calendar.holidays | ForEach-Object { [string]$_ }) | Sort-Object -Unique)
+    }
+  } catch {}
+  return $out
+}
+
 function Get-ScheduleGate {
   $default = @{
     timezone = 'America/New_York'
@@ -32,6 +51,7 @@ function Get-ScheduleGate {
 
   $rulesPath = Join-Path (Get-Location) 'rules.json'
   if (-not (Test-Path $rulesPath)) {
+    $default.holidays = Add-GeneratedHolidays $default.holidays
     return $default
   }
 
@@ -48,6 +68,8 @@ function Get-ScheduleGate {
       $default.disabled = if ($rules.schedule.disabled) { [bool]$rules.schedule.disabled } else { $default.disabled }
     }
   } catch {}
+
+  $default.holidays = Add-GeneratedHolidays $default.holidays
 
   return $default
 }

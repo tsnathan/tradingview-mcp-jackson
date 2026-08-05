@@ -19,9 +19,26 @@ import { writeFileSync, mkdirSync, renameSync, readFileSync, existsSync } from "
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runSweetSpotAnalysis } from "../src/core/sweet_spot.js";
+import { buildWatchlistMembership } from "../src/core/universe.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_FILE = join(ROOT, "status", "sweet-spot.json");
+
+/**
+ * Membership is rebuilt here rather than passed in from the server: it contains a Map, so it does
+ * not survive a process boundary as JSON, and both sides read the same two files anyway.
+ */
+function loadMembership() {
+  try {
+    const rules = JSON.parse(readFileSync(join(ROOT, "rules.json"), "utf8"));
+    const baseline = JSON.parse(readFileSync(join(ROOT, "swing-signal-baseline.json"), "utf8"));
+    return buildWatchlistMembership(rules, baseline);
+  } catch {
+    // Unreadable config means membership is UNKNOWN, and the established convention for unknown is
+    // to gate nothing rather than to silently sweep an empty universe.
+    return null;
+  }
+}
 
 const arg = (name, fallback = null) => {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
@@ -36,9 +53,14 @@ const ruleType = ruleArg === "all" ? null : ruleArg;
 let lastEmit = 0;
 const emit = (obj) => { try { process.stdout.write(JSON.stringify(obj) + "\n"); } catch {} };
 
+// Gated by default so the sweep describes a book that can actually be traded. `--no-membership`
+// opts back into full logged history, which is the right lens for "what would this have returned".
+const membership = process.argv.includes("--no-membership") ? null : loadMembership();
+
 const result = runSweetSpotAnalysis({
   ruleType,
   quick,
+  membership,
   onProgress: ({ phase, done, total, note }) => {
     // Thousands of ticks, so throttle: one line every 250 ms is enough to animate a bar and keeps
     // the pipe from becoming the bottleneck. The final 100% line is emitted below regardless.
@@ -66,13 +88,19 @@ if (!result.available) {
 if (result.quick && existsSync(OUT_FILE)) {
   try {
     const prev = JSON.parse(readFileSync(OUT_FILE, "utf8"));
-    if (prev?.grid && (prev.ruleType ?? null) === (result.ruleType ?? null)) {
+    // Membership state is part of that identity for exactly the same reason as the rule variant: a
+    // grid swept over all logged history and one swept over current watchlist members are measuring
+    // different universes, and carrying one into the other would relabel it as the current run's.
+    const sameUniverse =
+      Boolean(prev?.membershipFilter?.applied) === Boolean(result.membershipFilter?.applied);
+    if (prev?.grid && (prev.ruleType ?? null) === (result.ruleType ?? null) && sameUniverse) {
       result.grid = prev.grid;
       result.walkForward = prev.walkForward ?? null;
       result.gridFrom = {
         generatedAt: prev.generatedAt,
         tradeCount: prev.tradeCount,
         ruleType: prev.ruleType ?? null,
+        membershipApplied: Boolean(prev.membershipFilter?.applied),
       };
     }
   } catch { /* an unreadable previous result is simply not carried forward */ }

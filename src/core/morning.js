@@ -30,6 +30,10 @@ import {
   bareTicker,
   timeframeTag,
 } from "./trade_webhook.js";
+import {
+  listManualPositions,
+  markManualPositionExitAlerted,
+} from "./manual_ledger.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../");
@@ -208,15 +212,18 @@ function getLastWeekday(year, month, weekday) {
 }
 
 function getObservedDate(year, month, day) {
+  const iso = formatDateString(year, month, day);
   const date = new Date(Date.UTC(year, month - 1, day));
   const weekday = date.getUTCDay();
-  if (weekday === 6) {
-    return formatDateString(year, month, day - 1);
-  }
-  if (weekday === 0) {
-    return formatDateString(year, month, day + 1);
-  }
-  return formatDateString(year, month, day);
+  // Saturday holidays are observed the preceding Friday, Sunday holidays the following Monday.
+  // Shift with addDays(), never `day ± 1`: New Year's Day on a Saturday is observed on Dec 31 of
+  // the PREVIOUS year, and raw day arithmetic emitted "YYYY-01-00" — a well-formed string that can
+  // never equal a real market date, so the closure silently disappeared instead of erroring. Next
+  // occurrence is Fri 2027-12-31 (for Jan 1 2028, a Saturday); before this fix both the Node gate
+  // and the PowerShell gates treated it as a normal trading day.
+  if (weekday === 6) return addDays(iso, -1);
+  if (weekday === 0) return addDays(iso, 1);
+  return iso;
 }
 
 function getEasterSunday(year) {
@@ -261,6 +268,115 @@ function getUsMarketHolidayDates(year) {
   return Array.from(holidays);
 }
 
+export const MARKET_HOLIDAY_CALENDAR_PATH = join(PROJECT_ROOT, "status", "market-holidays.json");
+
+/**
+ * Materialized holiday list for consumers that cannot run the generator above — specifically
+ * `run_signal_job.ps1` and `tv_watchdog.ps1`, whose gates read a flat list out of JSON. Those two
+ * are the only reason this exists: `isMarketHoliday()` computes holidays for any year, so the Node
+ * scan has never needed a stored list, but the PowerShell gates read `rules.json` alone and were
+ * therefore correct only as far as whatever year somebody last typed in by hand.
+ *
+ * Reimplementing the ten NYSE rules (and Easter) in PowerShell was the alternative and is rejected
+ * for the reason `sweet_spot.js` gives for sharing its sweep: two implementations of one rule drift,
+ * and the failure is silent — the gates would disagree about whether the market is open with nothing
+ * indicating which one had gone stale.
+ *
+ * Always generates the current year AND next year rather than appending next year once December's
+ * last holiday has passed. Two reasons, both load-bearing:
+ *   - A cross-year observed holiday belongs to the FOLLOWING year's generator: Jan 1 2028 is a
+ *     Saturday, so the closure lands on Fri 2027-12-31 and only `getUsMarketHolidayDates(2028)`
+ *     emits it. A list holding "2027 only" would miss a 2027 trading day.
+ *   - It does not depend on the machine being powered on during a particular week of December. If
+ *     it is asleep from Dec 20 to Jan 5, the next run still produces a fully covered list.
+ *
+ * Past dates are dropped (`>= today`, so today itself survives while it is still today), which is
+ * the purge. Manual entries in `rules.json` → `market_hours.holidays` that are not computed
+ * holidays — ad-hoc closures like a national day of mourning, which no rule can predict — are
+ * carried through, since discarding them would silently reopen a day the exchange had closed.
+ */
+export function buildMarketHolidayCalendar({
+  marketHours = DEFAULT_MARKET_HOURS,
+  now = new Date(),
+  yearsAhead = 1,
+} = {}) {
+  const timezone = marketHours?.timezone || DEFAULT_MARKET_HOURS.timezone;
+  const today = toMarketDateString(now, timezone);
+  const { year } = toDateParts(now, timezone);
+
+  const computed = new Set();
+  for (let y = year; y <= year + yearsAhead; y += 1) {
+    for (const date of getUsMarketHolidayDates(y)) computed.add(date);
+  }
+
+  const manual = [];
+  for (const date of getCustomHolidaySet(marketHours)) {
+    if (!computed.has(date)) manual.push(date);
+  }
+
+  // ISO yyyy-mm-dd sorts and compares lexicographically in calendar order, so no date parsing here.
+  const holidays = [...computed, ...manual].filter((date) => date >= today).sort();
+
+  return {
+    today,
+    timezone,
+    coversYears: [year, year + yearsAhead],
+    holidays,
+    manual: manual.filter((date) => date >= today).sort(),
+  };
+}
+
+/**
+ * Writes the calendar to `status/market-holidays.json`, but only when its contents actually change —
+ * so the ~15-minute scan cadence costs one comparison of a ten-element array on all but the handful
+ * of runs per year where a holiday has just passed.
+ *
+ * Never writes an empty list. An empty file would read as "no holidays" to both PowerShell gates,
+ * which fails in the dangerous direction: scanning and driving TradingView on a closed market. If
+ * generation somehow yields nothing, the previous good file is left exactly as it is.
+ */
+export function syncMarketHolidayCalendar({
+  marketHours = DEFAULT_MARKET_HOURS,
+  now = new Date(),
+  path = MARKET_HOLIDAY_CALENDAR_PATH,
+  yearsAhead = 1,
+} = {}) {
+  const built = buildMarketHolidayCalendar({ marketHours, now, yearsAhead });
+  if (built.holidays.length === 0) {
+    return { changed: false, reason: "generated_empty", holidays: [], added: [], removed: [] };
+  }
+
+  const existing = parseJsonFile(path, null);
+  const previous = Array.isArray(existing?.holidays) ? existing.holidays : null;
+  const unchanged =
+    previous !== null &&
+    previous.length === built.holidays.length &&
+    previous.every((date, index) => date === built.holidays[index]);
+
+  const added = built.holidays.filter((date) => !previous || !previous.includes(date));
+  const removed = previous ? previous.filter((date) => !built.holidays.includes(date)) : [];
+
+  if (unchanged) {
+    return { changed: false, reason: "unchanged", holidays: built.holidays, added: [], removed: [] };
+  }
+
+  writeJsonFile(path, {
+    generated_at: new Date().toISOString(),
+    generated_by: "syncMarketHolidayCalendar",
+    note:
+      "Generated file — do not hand-edit. Computed NYSE holidays for the current and next year, " +
+      "purged of past dates, plus any non-computable ad-hoc closures listed in rules.json " +
+      "market_hours.holidays. Consumed by run_signal_job.ps1 and tv_watchdog.ps1.",
+    today: built.today,
+    timezone: built.timezone,
+    covers_years: built.coversYears,
+    holidays: built.holidays,
+    manual_extras: built.manual,
+  });
+
+  return { changed: true, reason: previous === null ? "created" : "rolled", holidays: built.holidays, added, removed };
+}
+
 const MARKET_HOLIDAY_CACHE = new Map();
 
 function getMarketHolidaySet(year) {
@@ -297,7 +413,12 @@ function timeToMinutes(value) {
 
 export function buildScanTargets(rules = {}) {
   const fallbackSymbols = Array.isArray(rules.watchlist) ? rules.watchlist : [];
-  const watchlistEntries = Object.entries(rules.watchlists || {});
+  // `scan: false` keeps a watchlist in the config — so its membership is still synced live from
+  // TradingView and still gates the tv-alert ledger — without adding it to the scan queue. The
+  // top-pick alert lists are strict subsets of the full scanned lists, so scanning them too would
+  // re-navigate the same symbol/timeframe pairs for signals the parent watchlist already produced.
+  const watchlistEntries = Object.entries(rules.watchlists || {})
+    .filter(([, config]) => !(typeof config === 'object' && config?.scan === false));
   if (watchlistEntries.length > 0) {
     return watchlistEntries.map(([watchlistName, config]) => ({
       watchlistName,
@@ -634,12 +755,85 @@ function hasMeaningfulTradeValue(value) {
     && lowered !== 'in progress';
 }
 
-function parseEntryTimestamp(value) {
+function parseTimestamp(value) {
   const cleaned = String(value || '')
     .replace(/\s+ET$/i, '')
     .trim();
   const parsed = Date.parse(cleaned);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function parseEntryTimestamp(value) {
+  return parseTimestamp(value);
+}
+
+function parseUsdValue(value) {
+  const match = String(value || '').match(/([-+]?\d[\d,\.]*?)\s*USD/i);
+  if (!match) return null;
+  const num = Number(match[1].replace(/,/g, ''));
+  return Number.isFinite(num) ? num : null;
+}
+
+// netPnl carries both units in one string ("+96.00 USD | +3.87%", built by usdPctText in data.js).
+// Anchored on the trailing "%" so it can never pick up the USD figure when the percent half is
+// missing — that case must read as "no percent available", not as a percent of the dollar amount.
+function parsePctValue(value) {
+  const match = String(value || '').match(/([-+]?\d[\d,\.]*)\s*%/);
+  if (!match) return null;
+  const num = Number(match[1].replace(/,/g, ''));
+  return Number.isFinite(num) ? num : null;
+}
+
+function formatUsdValue(value) {
+  if (!Number.isFinite(value)) return '—';
+  const sign = value >= 0 ? '+' : '';
+  return `${sign}${value.toFixed(2)} USD`;
+}
+
+function formatPctValue(value) {
+  if (!Number.isFinite(value)) return '—';
+  const sign = value >= 0 ? '+' : '';
+  return `${sign}${value.toFixed(2)}%`;
+}
+
+function formatPnlPercentOrUsd(value) {
+  const pct = parsePctValue(value);
+  if (Number.isFinite(pct)) return formatPctValue(pct);
+  const usd = parseUsdValue(value);
+  if (Number.isFinite(usd)) return formatUsdValue(usd);
+  return normalizeTradeDisplay(value, '—');
+}
+
+/**
+ * The exit block's header line, reported in PERCENT (user request 2026-08-05) rather than the USD
+ * figures it previously carried — every EXIT row below it already shows its own percent, so the
+ * summary now reads in the same unit as the rows it summarizes.
+ *
+ * NET is the sum and AVG the mean of the per-row percents, i.e. the identical arithmetic the USD
+ * version used, only re-based on the other half of netPnl's "USD | PCT%" string. Keeping NET as the
+ * plain sum preserves the NET = AVG x count relationship the line has always shown. It is a
+ * position-weighted return only insofar as positions are equal-sized (which this book's
+ * equity/maxPositions sizing makes roughly true) — it is not a portfolio return, and neither was
+ * the dollar version.
+ *
+ * Falls back to the USD line when NOT ONE exit carries a percent (a DOM-sourced trade read, where
+ * usdPctText had no pctFraction to work with) — a summary in the wrong unit is recoverable, a
+ * summary of "—" is not.
+ */
+function buildExitSummary(recentExits) {
+  const rows = Array.isArray(recentExits) ? recentExits : [];
+  const percents = rows.map((row) => parsePctValue(row.netPnl)).filter(Number.isFinite);
+  if (percents.length > 0) {
+    const net = percents.reduce((sum, v) => sum + v, 0);
+    const avg = net / percents.length;
+    return `  EXIT SUMMARY: NET P&L: ${formatPctValue(net)} | AVG P&L: ${formatPctValue(avg)} (${percents.length} exits)`;
+  }
+
+  const amounts = rows.map((row) => parseUsdValue(row.netPnl)).filter(Number.isFinite);
+  if (amounts.length === 0) return null;
+  const net = amounts.reduce((sum, v) => sum + v, 0);
+  const avg = net / amounts.length;
+  return `  EXIT SUMMARY: NET P&L: ${formatUsdValue(net)} | AVG P&L: ${formatUsdValue(avg)} (${amounts.length} exits)`;
 }
 
 function formatEntryTimeDisplay(value, timezone = DEFAULT_MARKET_HOURS.timezone) {
@@ -698,8 +892,8 @@ export function filterScanTargetsBySchedule(
 }
 
 function isSameTradingDay(value, reference = new Date(), timezone = DEFAULT_MARKET_HOURS.timezone) {
-  const input = Date.parse(String(value || ''));
-  const ref = Date.parse(String(reference || ''));
+  const input = parseTimestamp(value);
+  const ref = parseTimestamp(reference);
   if (!Number.isFinite(input) || !Number.isFinite(ref)) return false;
   const fmt = new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,
@@ -711,8 +905,8 @@ function isSameTradingDay(value, reference = new Date(), timezone = DEFAULT_MARK
 }
 
 function isSameOrPreviousTradingDay(value, reference = new Date(), timezone = DEFAULT_MARKET_HOURS.timezone) {
-  const input = Date.parse(String(value || ''));
-  const ref = Date.parse(String(reference || ''));
+  const input = parseTimestamp(value);
+  const ref = parseTimestamp(reference);
   if (!Number.isFinite(input) || !Number.isFinite(ref)) return false;
 
   const fmt = new Intl.DateTimeFormat('en-CA', {
@@ -969,7 +1163,7 @@ export function buildPriorSignalsByWatchlist(
   });
 }
 
-function buildWatchlistSummaryLines(
+export function buildWatchlistSummaryLines(
   watchlistSummaries = [],
   results = [],
   priorSignalsByWatchlist = [],
@@ -1044,16 +1238,21 @@ function buildWatchlistSummaryLines(
         netPnl: normalizeTradeDisplay(entry.trade?.netPnl),
       }));
 
+    const exitSummary = buildExitSummary(recentExits);
+
     if (rowsToShow.length > 0 || recentExits.length > 0) {
       const openDetails = rowsToShow
         .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${normalizeTradeDisplay(row.entryTime)}`);
       const exitDetails = recentExits
-        .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${normalizeTradeDisplay(row.netPnl)} | AT: ${normalizeTradeDisplay(row.exitTime)}`);
+        .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${formatPnlPercentOrUsd(row.netPnl)} | AT: ${normalizeTradeDisplay(row.exitTime)}`);
+      const exitGroup = exitDetails.length > 0
+        ? [exitSummary, ...exitDetails].filter(Boolean)
+        : [];
       // Grouped OPEN-then-EXIT (never interleaved), with a blank line between the two groups when
       // both are present — so a busy block reads as two clearly separate lists rather than one
       // run-on block. The per-row "OPEN:"/"EXIT:" prefix is untouched so hasMeaningfulSummary's
       // /OPEN:\s*\w/i and /EXIT:\s*\w/i regex checks keep matching every row, not just a header.
-      const groups = [openDetails, exitDetails].filter((g) => g.length > 0);
+      const groups = [openDetails, exitGroup].filter((g) => g.length > 0);
       const details = groups.map((g) => g.join('\n')).join('\n\n');
       return `${prefix} | SIGNAL\n${details}`;
     }
@@ -1399,18 +1598,27 @@ function normalizeWatchlistName(value) {
  * This just re-derives the same display shape from that persisted baseline instead of from the
  * current scan's (usually empty) live-sync result.
  */
-function buildWatchlistSyncFromBaseline(baseline) {
-  return Object.entries(baseline?.watchlists || {}).map(([watchlistName, w]) => ({
-    watchlistName,
-    timeframe: w?.timeframe || null,
-    symbols: Array.isArray(w?.symbols) ? w.symbols : [],
-    count: Array.isArray(w?.symbols) ? w.symbols.length : 0,
-    source: w?.source || "watchlist_unavailable",
-    selected: null,
-    activeWatchlistName: null,
-    selectError: null,
-    cached: true,
-  }));
+function buildWatchlistSyncFromBaseline(baseline, watchlistNames = null) {
+  // `baseline.watchlists` accumulates dead entries under old names forever — nothing prunes them on
+  // a rename, since syncWatchlistSymbolsFromTradingView only ever iterates rules.json's configured
+  // names. Without this allowlist the panel reports a watchlist that is not being scanned as though
+  // it were: observed live 2026-08-01 showing 9 watchlists, the extra one being a superseded
+  // `"Swing 30min"` still listing KORU as a 30m member weeks after it was removed from the real
+  // list. Same allowlist that findWatchlistOrphans and buildWatchlistMembership already require.
+  const allowed = Array.isArray(watchlistNames) ? new Set(watchlistNames) : null;
+  return Object.entries(baseline?.watchlists || {})
+    .filter(([watchlistName]) => !allowed || allowed.has(watchlistName))
+    .map(([watchlistName, w]) => ({
+      watchlistName,
+      timeframe: w?.timeframe || null,
+      symbols: Array.isArray(w?.symbols) ? w.symbols : [],
+      count: Array.isArray(w?.symbols) ? w.symbols.length : 0,
+      source: w?.source || "watchlist_unavailable",
+      selected: null,
+      activeWatchlistName: null,
+      selectError: null,
+      cached: true,
+    }));
 }
 
 export async function syncWatchlistSymbolsFromTradingView({
@@ -2170,7 +2378,7 @@ export async function runBrief({
   // Bounded: a stuck network/UI call inside createExcursionAlerts (e.g. TradingView's
   // alerts REST API not responding) must never block the whole scan indefinitely.
   openTrades = await Promise.race([
-    createExcursionAlerts(openTrades, baselinePath),
+    createExcursionAlerts(openTrades, baselinePath, rules),
     new Promise((resolve) => setTimeout(() => resolve(null), 4 * 60 * 1000)),
   ])
     .then((result) => result ?? enrichOpenTradesFromBaseline(openTrades, displayBaseline.excursion_alerts))
@@ -2318,7 +2526,34 @@ function parseEntryPriceNum(str) {
 // TSX_DLY:TD having a webhook sent but only local (no real TradingView alert) monitoring.
 //
 // Returns openTrades array augmented with excursionStats and alertLevels fields.
-export async function createExcursionAlerts(openTrades, baselinePath) {
+
+/**
+ * Stop/target price levels from an entry price and the strategy's historical excursion stats.
+ *
+ * Shared by createExcursionAlerts (the scan path, which persists these into
+ * baseline.excursion_alerts for the dashboard's Alert Levels column) and the manual ledger's
+ * /api/manual-ledger/suggest-levels endpoint. Deliberately one implementation: two copies would
+ * drift silently and the dashboard would show one set of levels while the ledger suggested another,
+ * with nothing indicating which had gone stale — same reasoning as sweet_spot.js vs
+ * sweep_portfolio_grid.mjs.
+ *
+ * Stats percentages are already in percent units (getAllTradesExcursionStats scales the raw
+ * fractions). Returns null rather than NaN levels when either input is unusable.
+ */
+export function computeExcursionLevels(entryNum, stats) {
+  const entry = Number(entryNum);
+  if (!Number.isFinite(entry) || entry <= 0 || !stats) return null;
+  const round2 = n => Math.round(n * 100) / 100;
+  const levels = {
+    stopAvg:   round2(entry * (1 - stats.avgAdversePct   / 100)),
+    stopMax:   round2(entry * (1 - stats.maxAdversePct   / 100)),
+    targetAvg: round2(entry * (1 + stats.avgFavorablePct / 100)),
+    targetMax: round2(entry * (1 + stats.maxFavorablePct / 100)),
+  };
+  return Object.values(levels).every(Number.isFinite) ? levels : null;
+}
+
+export async function createExcursionAlerts(openTrades, baselinePath, rules = null) {
   if (!Array.isArray(openTrades) || openTrades.length === 0) return openTrades;
 
   const baseline = loadBaseline(baselinePath);
@@ -2444,13 +2679,7 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
         continue;
       }
 
-      const round2 = n => Math.round(n * 100) / 100;
-      levels = {
-        stopAvg:    round2(entryNum * (1 - stats.avgAdversePct   / 100)),
-        stopMax:    round2(entryNum * (1 - stats.maxAdversePct   / 100)),
-        targetAvg:  round2(entryNum * (1 + stats.avgFavorablePct / 100)),
-        targetMax:  round2(entryNum * (1 + stats.maxFavorablePct / 100)),
-      };
+      levels = computeExcursionLevels(entryNum, stats);
     }
 
     if (!stats || !entryNum || !levels) {
@@ -2473,10 +2702,19 @@ export async function createExcursionAlerts(openTrades, baselinePath) {
     // manually; only the TradingView-mutating/monitoring half stops. Pre-existing real alerts on a
     // non-webhook position (created before this policy) are untouched — the "already created" check
     // at the top of this loop already skipped this trade entirely if one exists.
-    if (!isWebhookSent) {
+    //
+    // `webhook.auto_price_alerts_disabled` is a separate, blanket transition-mode switch (2026-08-02):
+    // while the user is migrating watchlist alerts over to TradingView's own "Top" lists, NO position
+    // should get a new real alert here regardless of webhook-sent status — TradingView is placing and
+    // monitoring those orders itself now. Same skip path, distinct reason so the two causes stay
+    // distinguishable in the baseline/dashboard.
+    const autoAlertsDisabled = rules?.webhook?.auto_price_alerts_disabled === true;
+    if (!isWebhookSent || autoAlertsDisabled) {
       const raw = parseJsonFile(baselinePath, {});
       if (!raw.excursion_alerts) raw.excursion_alerts = {};
-      const skipReason = "No webhook sent — auto-alert creation disabled, create manually if needed";
+      const skipReason = autoAlertsDisabled
+        ? "Auto TV alert creation disabled (transition mode)"
+        : "No webhook sent — auto-alert creation disabled, create manually if needed";
       raw.excursion_alerts[key] = {
         created: false,
         created_at: new Date().toISOString(),
@@ -2662,6 +2900,107 @@ function findOrphanedExcursionAlerts(baseline, watchlistNames = null) {
     });
   }
   return orphans;
+}
+
+// Transition-mode ntfy filter (2026-08-02): `rules.ntfy.only_timeframes` restricts every push
+// channel to the listed timeframes, accepting either raw resolution ("15") or human tag ("15m") on
+// either side so a caller doesn't have to know which form a given field carries. Empty/absent means
+// no filtering — same "unset means disabled" convention every other gate in this codebase follows.
+function timeframeMatchesAllowlist(tf, allowlist) {
+  if (!Array.isArray(allowlist) || allowlist.length === 0) return true;
+  const norm = (v) => String(v ?? '').trim().toLowerCase().replace(/^(\d+)m$/, '$1');
+  const want = norm(tf);
+  return allowlist.some((a) => norm(a) === want);
+}
+
+/**
+ * CDP half of the manual-ledger exit check: navigates the chart to each open manual-ledger symbol
+ * in turn and reads its quote. Sequential (TradingView Desktop is one chart) with per-symbol
+ * try/catch so a delisted or mistyped symbol can't abort the rest.
+ *
+ * Three guards here are load-bearing, not defensive padding — each covers a path that yields a
+ * plausible WRONG price rather than an error, which would then fire a real ntfy push naming the
+ * wrong instrument:
+ *
+ *  1. `wait_timeout` + `chart_ready`. setSymbol resolves `{success: true, chart_ready: false}` on a
+ *     timed-out load (chart.js:51-52) — it never throws, so a try/catch alone catches nothing.
+ *  2. `getQuote()` with NO argument. Passing one makes it echo that symbol back as `quote.symbol`
+ *     (data.js:956) while `last` still comes from the active chart's bars (data.js:961-966); with
+ *     no argument it reports the chart's actual symbol instead.
+ *  3. Comparing the chart's reported symbol against the requested ticker, because setSymbol's
+ *     early-return is a substring match (chart.js:40-42) and may not have navigated at all.
+ */
+async function fetchManualLedgerQuotes(openPositions) {
+  const quotesById = {};
+  const bare = (s) => String(s || '').split(':').pop().toUpperCase();
+  for (const pos of openPositions) {
+    try {
+      const nav = await chart.setSymbol({ symbol: pos.symbol, wait_timeout: 4000 });
+      if (!nav?.chart_ready) {
+        console.error(`[manual-ledger-exit] chart not ready for ${pos.symbol}, skipping`);
+        continue;
+      }
+      const q = await data.getQuote(); // no argument: reports the chart's ACTUAL symbol
+      if (bare(q?.symbol) !== bare(pos.symbol)) {
+        console.error(`[manual-ledger-exit] chart shows ${q?.symbol}, wanted ${pos.symbol}, skipping`);
+        continue;
+      }
+      quotesById[pos.id] = Number(q?.last ?? q?.close);
+    } catch (err) {
+      console.error(`[manual-ledger-exit] quote fetch failed for ${pos.symbol}: ${err?.message || err}`);
+    }
+  }
+  return quotesById;
+}
+
+/**
+ * Manual-ledger exit detection. Pure: no CDP, no I/O — takes the open rows and a map of already
+ * fetched quotes keyed by row id (see fetchManualLedgerQuotes for the CDP half).
+ *
+ * Mirrors the fired-once dedup pattern in processLevelViolationsAndCleanup below: a position whose
+ * exit_alert_fired_at is set is never re-evaluated. Without that, a position sitting past its stop
+ * would re-push on every ~15-minute scan for as long as it stayed there.
+ *
+ * A missing/unusable quote is skipped rather than treated as a level miss — silence is the correct
+ * behaviour when the price could not be read, and fetchManualLedgerQuotes deliberately omits any
+ * symbol it could not verify the chart had actually navigated to.
+ */
+export function evaluateManualLedgerExits(openPositions, quotesById, { timezone = DEFAULT_MARKET_HOURS.timezone } = {}) {
+  // Number(null) is 0, and 0 is finite — so a plain Number() coercion turns an UNSET target_price
+  // (SQLite NULL) into a level of 0 that every real price satisfies, firing a bogus "Target 0" exit
+  // on the very first scan. Absent must stay absent.
+  const price = (v) => {
+    if (v == null || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const hits = [];
+  for (const pos of openPositions || []) {
+    if (!pos || pos.exit_alert_fired_at) continue;
+    const last = price(quotesById?.[pos.id]);
+    if (last == null) continue;
+
+    const stop = price(pos.stop_price);
+    const target = price(pos.target_price);
+    let level = null;
+    if (stop != null && last <= stop) level = 'stop';
+    else if (target != null && last >= target) level = 'target';
+    if (!level) continue;
+
+    const triggerPrice = level === 'stop' ? stop : target;
+    hits.push({
+      id: pos.id,
+      level,
+      symbol: pos.symbol,
+      account: pos.account,
+      last,
+      triggerPrice,
+      line: `${formatTimestamp(new Date(), timezone)} ET | MANUAL EXIT: ${pos.symbol} (${pos.account}) | `
+        + `${level === 'stop' ? 'Stop' : 'Target'} ${triggerPrice} (last ${last}) | Entry ${pos.entry_price}`,
+    });
+  }
+  return hits;
 }
 
 export function processLevelViolationsAndCleanup({ results = [], baselinePath, timezone = DEFAULT_MARKET_HOURS.timezone, watchlistNames = null } = {}) {
@@ -2884,6 +3223,21 @@ export async function runSignalJob({
 
   const now = new Date();
 
+  // Roll the materialized holiday calendar before any gate runs. It is additive — nothing in this
+  // function reads it, because isMarketHoliday() computes holidays directly — so a failure costs a
+  // log line and never a scan. It exists for the PowerShell gates, which read the file.
+  try {
+    const rolled = syncMarketHolidayCalendar({ marketHours, now });
+    if (rolled.changed) {
+      const parts = [];
+      if (rolled.added.length) parts.push(`added ${rolled.added.join(', ')}`);
+      if (rolled.removed.length) parts.push(`purged ${rolled.removed.join(', ')}`);
+      console.log(`[holidays] calendar ${rolled.reason}${parts.length ? ` — ${parts.join('; ')}` : ''}`);
+    }
+  } catch (error) {
+    console.log(`[holidays] calendar sync failed: ${error?.message || error}`);
+  }
+
   const scheduleDisabled = Boolean(rules.schedule?.disabled);
   if (!force && scheduleDisabled) {
     const skippedResult = buildOutsideHoursResult({
@@ -2998,7 +3352,7 @@ export async function runSignalJob({
 
   result.watchlist_sync = Array.isArray(syncResult?.synced) && syncResult.synced.length > 0
     ? syncResult.synced
-    : buildWatchlistSyncFromBaseline(baseline);
+    : buildWatchlistSyncFromBaseline(baseline, Object.keys(rules.watchlists || {}));
   result.trade_log_orphans = Array.isArray(baseline.trade_log_orphans) ? baseline.trade_log_orphans : [];
   result.watchlistOptions = Array.isArray(syncResult?.watchlistOptions) ? syncResult.watchlistOptions : [];
   result.activeWatchlistName = syncResult?.activeWatchlistName || null;
@@ -3023,8 +3377,54 @@ export async function runSignalJob({
     result.alert_cleanup = { drained: [], remaining: null };
   }
 
-  if (notify && result.notify_signal_lines.length > 0 && rules.ntfy?.url) {
-    await pushNtfyLines(result.notify_signal_lines, {
+  // Manual-ledger exit check. Runs AFTER the pine-strategy scan has finished for this cycle rather
+  // than interleaved with it, so only one chart navigation is ever in flight. Manual positions are
+  // deliberately NOT added to buildScanTargets — that universe drives the actual Swing Profile
+  // backtest per symbol, and a hand-tracked holding has nothing to do with that strategy; merging
+  // it in would produce irrelevant "new signal" pushes and trade-log rows for it.
+  //
+  // Additive and wrapped: nothing downstream gates on these fields, so a failure costs a log line,
+  // never the scan's own results.
+  result.manual_ledger_exits = [];
+  try {
+    const openManual = listManualPositions({ status: 'open' });
+    if (openManual.length > 0) {
+      const quotesById = await fetchManualLedgerQuotes(openManual);
+      const hits = evaluateManualLedgerExits(openManual, quotesById, {
+        timezone: marketHours.timezone || DEFAULT_MARKET_HOURS.timezone,
+      });
+      for (const hit of hits) {
+        markManualPositionExitAlerted(hit.id, { level: hit.level, firedAt: new Date().toISOString() });
+      }
+      result.manual_ledger_exits = hits;
+
+      // DELIBERATELY NOT filtered by rules.ntfy.only_timeframes, unlike the three pushes below.
+      // Creating a manual ledger entry by hand IS the per-position opt-in, and it is finer-grained
+      // than a timeframe allowlist. Filtering here would mean a 4H ledger entry created under the
+      // current ["15"] transition setting silently never notifies — the feature would look wired up
+      // and do nothing. If this ever needs to be mutable, give it its own switch rather than
+      // folding it into only_timeframes.
+      if (notify && hits.length > 0 && rules.ntfy?.url) {
+        await pushNtfyLines(hits.map((h) => h.line), {
+          url: rules.ntfy.url,
+          title: "Manual ledger exit",
+          priority: rules.ntfy.priority || 'high',
+          logPrefix: '[manual-ledger-exit]',
+        });
+      }
+    }
+  } catch (err) {
+    console.error(`[manual-ledger-exit] check failed: ${err?.message || err}`);
+  }
+
+  // `rules.ntfy.only_timeframes` mutes the push side only — dashboard fields above
+  // (result.notify_signal_lines, watchlist_summary_lines/summary_line) stay unfiltered, since muting
+  // a phone push is not the same claim as hiding something from the dashboard.
+  const ntfyOnlyTimeframes = rules.ntfy?.only_timeframes || null;
+  const ntfySignalLines = result.notify_signal_lines.filter((_, i) =>
+    timeframeMatchesAllowlist(result.notify_signal_events[i]?.timeframe, ntfyOnlyTimeframes));
+  if (notify && ntfySignalLines.length > 0 && rules.ntfy?.url) {
+    await pushNtfyLines(ntfySignalLines, {
       url: rules.ntfy.url,
       title: "TradingView signal scan",
       priority: rules.ntfy.priority,
@@ -3034,8 +3434,11 @@ export async function runSignalJob({
 
   // Level violations push separately with their own title so a stop/target hit is
   // distinguishable from a new-signal notification at a glance.
-  if (notify && levelCheck.violation_lines.length > 0 && rules.ntfy?.url) {
-    await pushNtfyLines(levelCheck.violation_lines, {
+  const ntfyViolationLines = levelCheck.violations
+    .filter((v) => timeframeMatchesAllowlist(v.timeframe, ntfyOnlyTimeframes))
+    .map((v) => v.line);
+  if (notify && ntfyViolationLines.length > 0 && rules.ntfy?.url) {
+    await pushNtfyLines(ntfyViolationLines, {
       url: rules.ntfy.url,
       title: "TradingView level alert",
       priority: rules.ntfy.priority,
@@ -3058,10 +3461,13 @@ export async function runSignalJob({
   // only writes down an order somebody else already placed. Gating it would leave the ledger with
   // holes on any day a manual scan was the one that first observed the position — and the ledger's
   // completeness is the whole point of this mode.
+  // The baseline supplies the live-synced membership of the tv-alert watchlists, which scopes the
+  // recording to the symbols TradingView actually alerts on (see recordTvAlertLedger).
   result.webhook_tv_alert_ledger = recordTvAlertLedger(
     result.notify_signal_events || [],
     result.notify_exit_events || [],
     rules,
+    parseJsonFile(baselinePath, {}),
   );
 
   result.webhook_exit_pending = findUnclosedWebhookExits(result.all_scan_results);
@@ -3075,13 +3481,18 @@ export async function runSignalJob({
     console.error(`[cross-tf] detection failed: ${err?.message || err}`);
     result.cross_tf_exits = [];
   }
-  if (notify && result.cross_tf_exits.length > 0 && rules.ntfy?.url) {
+  // Filtered on the HELD leg's timeframe, not the exit's — "mute except 15m" means "only tell me
+  // about a position I actually hold on 15m," regardless of which slower timeframe's exit triggered
+  // the notice. result.cross_tf_exits itself stays unfiltered (dashboard rows attach every entry).
+  const ntfyCrossTfExits = result.cross_tf_exits.filter((x) =>
+    timeframeMatchesAllowlist(x.held_timeframe, ntfyOnlyTimeframes));
+  if (notify && ntfyCrossTfExits.length > 0 && rules.ntfy?.url) {
     try {
       // Dedupe state lives on the baseline alongside pending_alert_cleanup — a standing EXIT stays
       // the last closed trade for days, so without persistence every 15-minute scan would re-push it.
       const raw = parseJsonFile(baselinePath, {});
       const seen = Array.isArray(raw.cross_tf_notified) ? raw.cross_tf_notified : [];
-      const { lines, keys } = crossTfExitNotifyLines(result.cross_tf_exits, {
+      const { lines, keys } = crossTfExitNotifyLines(ntfyCrossTfExits, {
         alreadyNotified: new Set(seen),
         now,
         timezone: marketHours?.timezone,
@@ -3293,13 +3704,56 @@ export function findUnclosedWebhookExits(scanResults) {
  * those fields today — `alreadySent()` only tests for the record's existence — they exist so the UI
  * can label the row honestly and so a future reconciliation can tell the two origins apart.
  */
-export function recordTvAlertLedger(entryEvents, exitEvents, rules) {
-  const out = { recorded: [], recorded_exits: [], skipped: [], timeframes: [] };
+export function recordTvAlertLedger(entryEvents, exitEvents, rules, baseline = null) {
+  const out = { recorded: [], recorded_exits: [], skipped: [], timeframes: [], scope: null };
   const settings = loadWebhookSettings(rules);
   out.timeframes = settings.tvAlertTimeframes;
   if (settings.tvAlertTimeframes.length === 0) return out;
 
-  const onTvAlertTimeframe = (ev) => settings.tvAlertTimeframes.includes(String(ev.timeframe));
+  /**
+   * Symbol scope: the (ticker, timeframe) pairs TradingView actually alerts on.
+   *
+   * Built from the named watchlists' live-synced membership, so it tracks whatever is really in the
+   * TradingView list rather than a hand-maintained copy that silently drifts.
+   *
+   * **Fails CLOSED, deliberately inverting this project's usual "unknown membership gates nothing"
+   * convention.** That convention is right for analysis, where over-including is harmless. Here
+   * over-including writes a ledger record asserting a live broker position, which takes alert quota
+   * from real positions and offers a Close button that sends a real order. When the scope is
+   * configured but unresolvable, record nothing and say why.
+   */
+  let scopeSet = null;
+  if (settings.tvAlertWatchlists.length) {
+    scopeSet = new Set();
+    const wl = baseline?.watchlists || {};
+    for (const name of settings.tvAlertWatchlists) {
+      const entry = wl[name];
+      const tf = String(entry?.timeframe ?? rules?.watchlists?.[name]?.timeframe ?? "");
+      for (const s of entry?.symbols || []) {
+        const t = String(s ?? "").split(":").pop().toUpperCase();
+        if (t && tf) scopeSet.add(`${t}|${tf}`);
+      }
+    }
+    out.scope = { watchlists: settings.tvAlertWatchlists, pairs: scopeSet.size };
+  }
+
+  const inScope = (ev) => {
+    if (!settings.tvAlertTimeframes.includes(String(ev.timeframe))) return false;
+    if (!scopeSet) return true;
+    const t = String(ev.symbol ?? "").split(":").pop().toUpperCase();
+    return scopeSet.has(`${t}|${String(ev.timeframe)}`);
+  };
+
+  if (scopeSet && scopeSet.size === 0) {
+    console.warn(
+      `[webhook] tv_alert_watchlists is set (${settings.tvAlertWatchlists.join(", ")}) but resolved to 0 symbols — ` +
+      "recording nothing this run rather than assuming every scanned symbol is traded by TradingView.",
+    );
+    out.skipped.push({ reason: "tv_alert_scope_unresolved", watchlists: settings.tvAlertWatchlists });
+    return out;
+  }
+
+  const onTvAlertTimeframe = inScope;
 
   for (const ev of (Array.isArray(entryEvents) ? entryEvents : []).filter(onTvAlertTimeframe)) {
     const key = sentKey({ symbol: ev.symbol, timeframe: ev.timeframe, entryTime: ev.entry_time });

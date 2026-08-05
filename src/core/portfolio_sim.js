@@ -129,6 +129,9 @@ export function simulatePortfolio({
   endMs = null,
   commissionPerTrade = 0,
   ruleType = null,          // exit-rule variant to simulate; null pools all (see readAllTradeLogs)
+  // Restrict to (ticker, timeframe) pairs still in a configured watchlist. Forward-looking lens;
+  // omit for "what would this have returned historically". See readAllTradeLogs.
+  membership = null,
   // "oracle-worst-final" evicts the open position with the worst FINAL pnl_pct in favor of a
   // contending signal, IF that signal's own final pnl_pct is better. This is a deliberately
   // dishonest upper bound, not a tradeable policy — see the block comment above evictPolicy's use
@@ -138,7 +141,7 @@ export function simulatePortfolio({
   // Pooling variants here would be worse than in the edge analysis: the simulator allocates a
   // finite number of slots chronologically, so trades from two different exit rules would compete
   // for the same capital and produce a portfolio that never existed under either rule.
-  let rows = readAllTradeLogs({ ruleType }).filter((r) => r.entry_time_ms && r.exit_time_ms);
+  let rows = readAllTradeLogs({ ruleType, membership }).filter((r) => r.entry_time_ms && r.exit_time_ms);
   if (timeframes?.length) rows = rows.filter((r) => timeframes.includes(r.timeframe));
   if (tickers?.length) rows = rows.filter((r) => tickers.includes(r.ticker));
   if (startMs) rows = rows.filter((r) => r.entry_time_ms >= startMs);
@@ -397,10 +400,25 @@ export function simulatePortfolio({
   const perSymbol = {};
   for (const t of taken) {
     const k = `${t.ticker}|${t.timeframe}`;
-    perSymbol[k] = perSymbol[k] || { ticker: t.ticker, timeframe: t.timeframe, trades: 0, pnlUsd: 0, wins: 0 };
-    perSymbol[k].trades++;
-    perSymbol[k].pnlUsd += t.pnlUsd;
-    if (t.pnlUsd > 0) perSymbol[k].wins++;
+    perSymbol[k] = perSymbol[k] || {
+      ticker: t.ticker, timeframe: t.timeframe, trades: 0, pnlUsd: 0, wins: 0,
+      // Worst single-trade adverse excursion and worst single-trade return AMONG THE POSITIONS THIS
+      // RUN ACTUALLY TOOK — not the symbol's whole trade-log history. A signal skipped for lack of a
+      // slot never became a position, so its excursion is not risk this portfolio carried.
+      //
+      // `worstPnlPct` is the true minimum and starts null, NOT 0: a symbol whose every position won
+      // has no loss, and flooring at 0 would render as "lost 0.0%" — implying a break-even trade
+      // that never happened, rather than "even the worst one made money".
+      maxMaePct: 0, worstPnlPct: null,
+    };
+    const e = perSymbol[k];
+    e.trades++;
+    e.pnlUsd += t.pnlUsd;
+    if (t.pnlUsd > 0) e.wins++;
+    if (Number.isFinite(t.maePct) && t.maePct > e.maxMaePct) e.maxMaePct = t.maePct;
+    // An eviction rewrites takenRef.pnlPct to the interpolated partial, so this correctly reflects
+    // what was realized rather than the position's untouched final outcome.
+    if (Number.isFinite(t.pnlPct) && (e.worstPnlPct === null || t.pnlPct < e.worstPnlPct)) e.worstPnlPct = t.pnlPct;
   }
 
   const expectancyUsd = taken.length ? (gp - gl) / taken.length : 0;
@@ -538,10 +556,10 @@ function downsample(curve, maxPoints) {
 }
 
 /** Run the same selection across several slot counts, to expose where capacity stops binding. */
-export function sweepMaxPositions({ capital, timeframes, tickers, priority, rankBy, ruleType = null, evictPolicy = null, slots = [1, 2, 3, 5, 8, 10, 15, 20] } = {}) {
+export function sweepMaxPositions({ capital, timeframes, tickers, priority, rankBy, ruleType = null, membership = null, evictPolicy = null, slots = [1, 2, 3, 5, 8, 10, 15, 20] } = {}) {
   const out = [];
   for (const maxPositions of slots) {
-    const r = simulatePortfolio({ capital, maxPositions, timeframes, tickers, priority, rankBy, ruleType, evictPolicy });
+    const r = simulatePortfolio({ capital, maxPositions, timeframes, tickers, priority, rankBy, ruleType, membership, evictPolicy });
     if (!r.available) continue;
     out.push({
       maxPositions,
@@ -555,6 +573,14 @@ export function sweepMaxPositions({ capital, timeframes, tickers, priority, rank
       signalsTaken: r.signalsTaken,
       signalsSkipped: r.signalsSkipped,
       winRate: r.winRate,
+      // Time-in-market, all TIME-WEIGHTED over the calendar (see capitalUtilization above). Fill
+      // rate answers "what share of signals did I take"; these answer "what share of the time was
+      // my money actually at risk" — a selection can fill most of its signals and still sit in cash
+      // most of the year if those positions are short, and the two diverge hard at low slot counts.
+      timeInMarketPct: 100 - (r.capitalUtilization?.fullyIdlePct ?? 0),
+      avgCapitalDeployedPct: r.capitalUtilization?.avgCapitalDeployedPct ?? null,
+      fullyDeployedPct: r.capitalUtilization?.fullyDeployedPct ?? null,
+      avgPositionsOpen: r.capitalUtilization?.avgPositionsOpen ?? null,
       contentionPct: r.signalsAvailable ? (r.contention.events / r.signalsAvailable) * 100 : 0,
       contentionWouldBeatPct: r.contention.wouldBeatPct,
       evictions: r.contention.evictions,
@@ -584,10 +610,11 @@ export function sweepMaxPositions({ capital, timeframes, tickers, priority, rank
  */
 export function computeOpenPositionConcurrency({
   ruleType = null,
+  membership = null,
   lookbackMonths = [1, 2, 3],
   now = Date.now(),
 } = {}) {
-  const allRows = readAllTradeLogs({ ruleType });
+  const allRows = readAllTradeLogs({ ruleType, membership });
   const { positions: allPositions } = mergePositionTranches(allRows, ruleType);
   const withTimes = allPositions.filter(
     (p) => Number.isFinite(p.entry_time_ms) && Number.isFinite(p.exit_time_ms) && p.exit_time_ms >= p.entry_time_ms,

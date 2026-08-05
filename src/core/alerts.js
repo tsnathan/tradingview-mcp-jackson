@@ -104,7 +104,16 @@ export async function create({ condition = 'crossing', price, message, symbol, t
         });
 
         var data = await resp.json();
-        return { success: data.s === 'ok', alert_id: (data.r && data.r.alert_id) || null, raw: data };
+        var err = null;
+        if (data.s !== 'ok') {
+          err = data.err?.code || data.err?.errmsg || data.err?.message || JSON.stringify(data.err) || 'invalid_request';
+        }
+        return {
+          success: data.s === 'ok',
+          alert_id: (data.r && data.r.alert_id) || null,
+          raw: data,
+          error: err,
+        };
       } catch(e) {
         return { success: false, error: e.message };
       }
@@ -117,7 +126,7 @@ export async function create({ condition = 'crossing', price, message, symbol, t
     condition,
     message: message || '(none)',
     alert_id: result?.alert_id || null,
-    error: result?.error || (result?.success === false ? (result?.raw?.err?.code || 'unknown error') : null),
+    error: result?.error || null,
     source: 'rest_api',
   };
 }

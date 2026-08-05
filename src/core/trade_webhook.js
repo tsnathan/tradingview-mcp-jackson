@@ -73,11 +73,19 @@ export function loadWebhookSettings(rules) {
   // guessing wrong here is a duplicate real order.
   const tvAlertTimeframes = Array.isArray(w.tv_alert_timeframes) ? w.tv_alert_timeframes.map(String) : [];
   const tvSet = new Set(tvAlertTimeframes);
+  // Optional SYMBOL scope on top of the timeframe gate: names of watchlists whose members are the
+  // ones TradingView actually alerts on. Needed when the alert list is a strict subset of the
+  // scanned list — the common "scan broad, trade narrow" setup. Without it the ledger would claim
+  // TradingView placed an order for every scanned symbol on that timeframe, and each phantom record
+  // would render a Close button that sends a REAL order for a position that was never opened.
+  // Empty/absent means no symbol scope, i.e. the whole timeframe — the original behaviour.
+  const tvAlertWatchlists = Array.isArray(w.tv_alert_watchlists) ? w.tv_alert_watchlists.map(String) : [];
   return {
     group: w.group || "swing",
     // Timeframes are TradingView resolution strings ("30", "45", "D") to match rules.watchlists.
     enabledTimeframes: enabledTimeframes.filter((tf) => !tvSet.has(tf)),
     tvAlertTimeframes,
+    tvAlertWatchlists,
   };
 }
 
@@ -100,6 +108,25 @@ export function timeframeTag(timeframe) {
   if (upper === "W" || upper === "1W") return "1w";
   if (upper === "M" || upper === "1M") return "1mo";
   return raw.toLowerCase();
+}
+
+/**
+ * A caller-supplied `tag` override for the payload, validated rather than trusted.
+ *
+ * The tag is a ROUTING field at the executor (it selects the strategy group an order is filed
+ * under), and the timeframe-derived default is only the convention — the dashboard lets a tag be
+ * changed per position so one signal can be routed somewhere other than its own timeframe's bucket.
+ *
+ * Returns null for anything absent or unusable so the caller falls back to timeframeTag(); the
+ * charset is deliberately narrow (the same shape timeframeTag itself emits) because this string is
+ * echoed into the ledger, the console log and the executor's own records, and a tag carrying
+ * whitespace or punctuation would silently fragment those.
+ */
+export function normalizeWebhookTag(tag) {
+  const raw = String(tag ?? "").trim().toLowerCase();
+  if (!raw) return null;
+  if (!/^[a-z0-9_-]{1,20}$/.test(raw)) return null;
+  return raw;
 }
 
 /** `{{ticker}}` expands without the exchange prefix, so BATS:SOXL must go out as SOXL. */
@@ -223,7 +250,7 @@ export function validateOrderSpec({ orderType, timeInForce, limitPrice, stopPric
  * because that is the one it actually reads.
  */
 export function buildWebhookPayload({
-  symbol, side, action, timeframe, price, group, secret,
+  symbol, side, action, timeframe, tag, price, group, secret,
   orderType, timeInForce, limitPrice, stopPrice, trailPercent, trailPrice,
 }) {
   const check = validateOrderSpec({ orderType, timeInForce, limitPrice, stopPrice, trailPercent, trailPrice });
@@ -235,7 +262,10 @@ export function buildWebhookPayload({
     symbol: bareTicker(symbol),
     side: action || orderAction(side),
     group: group || "swing",
-    tag: timeframeTag(timeframe),
+    // Defaults to the timeframe's own tag; an explicit override is only honoured when it survives
+    // normalizeWebhookTag, so a malformed one degrades to the default rather than going out. The
+    // automatic dispatch paths never pass `tag`, so their payload is unchanged byte-for-byte.
+    tag: normalizeWebhookTag(tag) || timeframeTag(timeframe),
     // Sent as a string because TradingView's own placeholder expansion produces a string, and the
     // Railway side is already parsing that shape.
     price: effectivePrice === null || effectivePrice === undefined ? "" : String(effectivePrice),

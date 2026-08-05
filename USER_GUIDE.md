@@ -27,14 +27,15 @@ It reads the watchlists configured in `rules.json`, checks the TradingView chart
 
 Important detail: the PowerShell scheduler only gates by market-hours window. The Node.js scan logic still decides which watchlists are actually due based on each watchlist timeframe. Even when no watchlist is due yet, the status file is still refreshed so the dashboard timestamp and next-run information stay current.
 
-Two separate Windows Scheduled Tasks drive this automation:
+Three separate Windows Scheduled Tasks drive this automation:
 
 | Task name | Interval | What it does |
 |---|---|---|
 | `TradingViewSignalScan15m` | every 15 min | runs `scripts/run_signal_job.ps1` — the signal scan |
 | `TVWatchdog` | every 5 min | runs `scripts/tv_watchdog.ps1` — keeps the CDP debug connection alive |
+| `TVDashboardWatchdog` | every 5 min, plus at logon | runs `scripts/dashboard_watchdog.ps1` — restarts the dashboard server if it has crashed |
 
-Both already skip themselves outside market hours, on weekends, and (as of this update) on configured holidays — see below. Watchlist symbol sync (re-reading the TradingView watchlist panel) is intentionally **not** part of every 15-minute cycle; it only runs once near market open, once near market close, or when you trigger it manually. See "Watchlist sync timing" further down.
+The first two skip themselves outside market hours, on weekends, and (as of this update) on configured holidays — see below. `TVDashboardWatchdog` deliberately does **not**: the dashboard is a read-only local UI over already-collected data, so it should be up at night and on weekends too, and it is the one task that also runs on battery. Watchlist symbol sync (re-reading the TradingView watchlist panel) is intentionally **not** part of every 15-minute cycle; it only runs once near market open, once near market close, or when you trigger it manually. See "Watchlist sync timing" further down.
 
 ---
 
@@ -42,16 +43,24 @@ Both already skip themselves outside market hours, on weekends, and (as of this 
 
 ### Finding the scheduled tasks
 
-Both tasks live directly in the root of the Task Scheduler Library — not inside a subfolder — which is easy to miss if you're browsing folders instead of using the search/filter box:
+All three tasks live directly in the root of the Task Scheduler Library — not inside a subfolder — which is easy to miss if you're browsing folders instead of using the search/filter box:
 
 1. Open **Task Scheduler** (Start Menu → type "Task Scheduler")
 2. Click **Task Scheduler Library** in the left pane (the top-level node, not a subfolder underneath it)
-3. Look for `TradingViewSignalScan15m` and `TVWatchdog` in the main list — sort by "Name" if the list is long
+3. Look for `TradingViewSignalScan15m`, `TVWatchdog` and `TVDashboardWatchdog` in the main list — sort by "Name" if the list is long
 
 Or confirm from PowerShell without hunting through the GUI at all:
 
 ```powershell
-Get-ScheduledTask -TaskName TradingViewSignalScan15m, TVWatchdog | Select-Object TaskName, State
+Get-ScheduledTask -TaskName TradingViewSignalScan15m, TVWatchdog, TVDashboardWatchdog | Select-Object TaskName, State
+```
+
+**Check `NextRunTime`, not just `State`.** A task can sit at `State: Ready` forever with no scheduled run left — see "A task that is Enabled but never fires again" below. `State` alone will not show it:
+
+```powershell
+Get-ScheduledTask -TaskName TradingViewSignalScan15m, TVWatchdog, TVDashboardWatchdog |
+  ForEach-Object { Get-ScheduledTaskInfo -TaskName $_.TaskName } |
+  Select-Object TaskName, LastRunTime, NextRunTime, NumberOfMissedRuns
 ```
 
 ### Option 1 — Desktop shortcut (recommended)
@@ -73,16 +82,22 @@ $shortcut.Save()
 ### Option 2 — Manual PowerShell (no shortcut)
 
 ```powershell
-# Suspend both tasks
+# Suspend both scanning tasks
 Disable-ScheduledTask -TaskName TradingViewSignalScan15m
 Disable-ScheduledTask -TaskName TVWatchdog
 
-# Resume both tasks
+# Resume both scanning tasks
 Enable-ScheduledTask -TaskName TradingViewSignalScan15m
 Enable-ScheduledTask -TaskName TVWatchdog
 ```
 
-No admin elevation is required — both tasks run under your own user account at "Limited" run level.
+No admin elevation is required — the tasks run under your own user account at "Limited" run level.
+
+`TVDashboardWatchdog` is intentionally left out of both the toggle shortcut and the commands above. Suspending scans means "stop driving TradingView and stop placing orders"; it does not mean "take the dashboard offline", and you almost always still want to read the dashboard while scanning is paused. Disable it separately if you genuinely want the server to stay down:
+
+```powershell
+Disable-ScheduledTask -TaskName TVDashboardWatchdog   # then stop the server by hand
+```
 
 ### Option 3 — Config-level pause (task still fires, but does no work)
 
@@ -90,9 +105,31 @@ Setting `rules.json` → `schedule.disabled: true` makes the Node scan logic its
 
 ### Holidays
 
-`rules.json` → `market_hours.holidays` is a list of `YYYY-MM-DD` dates the scheduled tasks should skip even though it's a weekday during normal hours. The current year's list is already filled in with standard NYSE holidays. Add or remove dates as needed — no code changes required.
+Holidays are **computed, not hand-maintained**, and the list now rolls itself forward.
 
-Separately, the Node.js scan logic (`isMarketHoliday` in `src/core/morning.js`) already computes standard U.S. market holidays algorithmically for every year (New Year's, MLK Day, Presidents Day, Good Friday, Memorial Day, Juneteenth, July 4th, Labor Day, Thanksgiving, Christmas — all with their observed-date rules), so it self-skips holidays even without the `rules.json` list. The list in `rules.json` exists so the **PowerShell-level** gate (which decides whether to launch TradingView at all) can also skip those dates, and so you can add one-off closures the algorithm wouldn't know about.
+The Node scan logic (`isMarketHoliday` in `src/core/morning.js`) derives the standard U.S. market holidays algorithmically for any year — New Year's, MLK Day, Presidents Day, Good Friday (via an Easter calculation), Memorial Day, Juneteenth, July 4th, Labor Day, Thanksgiving and Christmas, each with its observed-date rule for weekends. So the scan self-skips holidays in 2027, 2030, whenever, with nothing to update.
+
+The two **PowerShell** gates (`run_signal_job.ps1`, which decides whether to launch the scan at all, and `tv_watchdog.ps1`) can't run that generator, so they read a flat list out of JSON. That list used to be `rules.json` → `market_hours.holidays`, typed in by hand one year at a time — which meant those gates were correct only as far as the last year somebody remembered to fill in.
+
+**`status/market-holidays.json` now carries it.** Every scan regenerates it: computed holidays for the current **and next** year, with past dates purged, plus any ad-hoc closures still listed in `rules.json`. Both PowerShell gates union it with `rules.json`, so:
+
+- next year appears automatically, well before you need it
+- elapsed dates disappear on their own
+- a missing or unreadable file falls back to `rules.json` rather than opening the gate
+
+It regenerates only when the contents actually change, so almost every scan does no write at all.
+
+To roll it by hand, or to see what it would look like on a future date:
+
+```powershell
+node scripts/roll_holidays.js                    # roll now
+node scripts/roll_holidays.js --dry-run          # show what would change, write nothing
+node scripts/roll_holidays.js --as-of 2027-12-28 # preview a future date (always a dry run)
+```
+
+`status/market-holidays.json` is generated — **don't hand-edit it**, your changes are overwritten on the next scan.
+
+**`rules.json` → `market_hours.holidays` is now only for closures no rule can predict** — a national day of mourning, an unscheduled closure. Add those there and they're carried into the generated file (and never purged while still in the future). You don't need to add regular holidays; the generator already has them. Note the reverse, too: *removing* a regular holiday from `rules.json` will not make the scanner trade that day, because the generator puts it back. Half-day sessions (1:00 PM ET closes the day after Thanksgiving, and around Christmas and July 4th) are **not** holidays and are not tracked — scans will keep running until the normal 4:15 PM cutoff on those days.
 
 ### Watchlist sync timing
 
@@ -161,6 +198,10 @@ You will also see:
 
 A `▶ Run Scan Now` button appears directly in this card. Click it to trigger a fresh scan immediately without waiting for the next scheduled run.
 
+The Current Signal list now preserves a same-day OPEN signal until the ET trading day changes, even if the scan runs on a tick when that watchlist is not due. This keeps a live signal visible until the market day rolls over rather than clearing it on intermediate schedule skips.
+
+Exit rows also now include a dedicated `EXIT SUMMARY` header with the net P&L and average P&L for the current batch of exits, making it easier to spot the exit signal block and overall result.
+
 If a configured watchlist name such as `Swing 15m` is not loading, make sure the TradingView watchlist panel is visible and the watchlist button is exposed in the UI. The latest version improves watchlist selector robustness for TradingView UI variations by matching more button and label variants.
 
 While the scan runs, a status bar appears below the button showing:
@@ -220,6 +261,10 @@ The table includes these additional columns derived from the full trade history:
 Alerts are created via TradingView's internal price-alerts REST API and count against your plan's active alert limit — only genuinely *active* alerts count, so old expired/inactive ones don't eat into the quota. Alert creation is idempotent — once alerts are recorded for a `symbol|timeframe` key at a given entry price, subsequent scans skip that trade. If the entry price changes (a new trade on the same symbol), alerts are re-created.
 
 Pre-existing alerts created before the webhook-only policy are left alone, not torn down.
+
+### Retry failed manual ledger alerts
+
+If a manual-ledger row shows `TV alert: ✗ failed` or `◐ partial`, a new **Retry alert** button appears in the open row. Click it to retry TradingView alert creation for that position without recreating the entire manual ledger entry. The dashboard will refresh the row after the retry and update the `TV alert` status to `created`, `partial`, or `failed`.
 
 ### Ranking signals for a fixed-size portfolio
 
@@ -729,6 +774,42 @@ To trigger the watchdog immediately:
 ```powershell
 Start-ScheduledTask -TaskName TVWatchdog
 ```
+
+### Dashboard watchdog
+
+The dashboard server (`scripts/serve_signal_status.js`) is a long-lived process, unlike the scan job which is a fresh process per run. If it crashes, nothing used to bring it back — it simply stayed down until somebody noticed the page wasn't loading. Found 2026-08-05 after it had been dead since a crash on 08-04 at 4:28 PM.
+
+`TVDashboardWatchdog` runs `scripts/dashboard_watchdog.ps1` every 5 minutes, and again at logon so the dashboard comes back after a reboot. Each run:
+
+1. Probes `http://127.0.0.1:3030/api/scan-state` — the cheapest route on the server (in-memory only, no file reads, no logging), so the check itself can never be what stalls
+2. If it answers, does nothing at all and exits silently
+3. If nothing is listening on the port, starts the server via `scripts/start_dashboard_detached.cmd` and waits up to 24 s for it to answer
+4. If something *is* listening but not answering, waits 3 consecutive checks (~15 min) before killing and relaunching — a slow request is far more likely than a wedged process, and killing mid-write is worse than waiting another 5 minutes
+5. If the port is held by a process that is **not** the dashboard, refuses to touch it and logs what owns it
+
+It retries every 5 minutes indefinitely rather than backing off after repeated failures. That is deliberate: the 08-04 outage was a syntax error that had already been fixed in the file by the time it was noticed, so a plain retry loop would have recovered on its own. After 3 consecutive failed launches it runs `node --check` on the server file and writes the syntax error into the log, so the log names the cause instead of leaving you to correlate two files.
+
+Actions are logged to `dashboard-watchdog.log`; the server's own output is appended to `dashboard-server.log`. A healthy run writes nothing, so a quiet log means a healthy week:
+
+```powershell
+Get-Content C:\Users\tsnat\tradingview-mcp-jackson\dashboard-watchdog.log -Tail 20
+```
+
+One limitation worth knowing: the probe cannot detect a *partially* wedged server — one that answers simple GETs while logging routes hang. If the dashboard responds but specific actions do nothing, restart it by hand rather than waiting for the watchdog, and check `dashboard-server.log`.
+
+### A task that is Enabled but never fires again
+
+`State: Ready` does not mean a task is still scheduled. Found 2026-08-05: `TVWatchdog` had been **dead since 2026-04-24** — three and a half months — while showing `State: Ready` the whole time. CDP recovery had not run once in that period.
+
+The cause was its trigger, not its script. It used a one-shot `TimeTrigger` whose repetition carried `<Duration>P1D</Duration>` with `<StopAtDurationEnd>true</StopAtDurationEnd>`, so the 5-minute repetition ran for exactly one day after its 2026-04-23 start boundary and then stopped permanently. The tell is `NextRunTime` being **empty** with `LastRunTime` months in the past:
+
+```powershell
+Get-ScheduledTaskInfo -TaskName TVWatchdog | Select-Object LastRunTime, NextRunTime, NumberOfMissedRuns
+```
+
+This is a fourth silent off-switch, alongside a disabled task, `rules.json` → `schedule.disabled`, and `DisallowStartIfOnBatteries`. It is the hardest of the four to notice, because every surface that normally reveals a stopped task looks correct.
+
+Both watchdogs now use a **daily** `CalendarTrigger` (`ScheduleByDay`, `DaysInterval` 1) with a 5-minute repetition scoped to one day, which re-arms every single day and cannot expire. If you ever recreate one of these tasks, use that shape — an "every 5 minutes" repetition hung off a single one-time trigger is the trap.
 
 ### Note for Microsoft Store (MSIX) installs
 
