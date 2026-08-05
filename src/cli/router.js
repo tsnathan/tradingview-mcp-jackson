@@ -3,6 +3,7 @@
  * Zero dependencies — uses only Node.js built-ins.
  */
 import { parseArgs } from 'node:util';
+import { finishProcess } from '../exit.js';
 
 /** @type {Map<string, { description: string, options?: object, handler: Function, subcommands?: Map<string, object> }>} */
 const commands = new Map();
@@ -55,7 +56,7 @@ export async function run(argv) {
 
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
     printHelp();
-    process.exit(0);
+    return finishProcess(0);
   }
 
   const cmdName = args[0];
@@ -64,7 +65,7 @@ export async function run(argv) {
   if (!cmd) {
     console.error(`Unknown command: ${cmdName}`);
     console.error('Run "tv --help" for a list of commands.');
-    process.exit(1);
+    return finishProcess(1);
   }
 
   // Handle subcommands (e.g., tv pine get)
@@ -73,13 +74,13 @@ export async function run(argv) {
     const subName = args[1];
     if (!subName || subName === '--help' || subName === '-h') {
       printCommandHelp(cmdName, cmd);
-      process.exit(0);
+      return finishProcess(0);
     }
     const sub = cmd.subcommands.get(subName);
     if (!sub) {
       console.error(`Unknown subcommand: ${cmdName} ${subName}`);
       printCommandHelp(cmdName, cmd);
-      process.exit(1);
+      return finishProcess(1);
     }
     handler = sub.handler;
     options = sub.options || {};
@@ -101,11 +102,11 @@ export async function run(argv) {
             console.log(`  ${flag.padEnd(20)}${v.description || ''}`);
           }
         }
-        process.exit(0);
+        return finishProcess(0);
       }
       await execute(handler, values, positionals);
     } catch (err) {
-      handleError(err);
+      await handleError(err);
     }
   } else {
     handler = cmd.handler;
@@ -119,11 +120,11 @@ export async function run(argv) {
       });
       if (values.help) {
         printCommandHelp(cmdName, cmd);
-        process.exit(0);
+        return finishProcess(0);
       }
       await execute(handler, values, positionals);
     } catch (err) {
-      handleError(err);
+      await handleError(err);
     }
   }
 }
@@ -132,19 +133,19 @@ async function execute(handler, values, positionals) {
   try {
     const result = await handler(values, positionals);
     console.log(JSON.stringify(result, null, 2));
-    process.exit(0);
+    await finishProcess(0);
   } catch (err) {
-    handleError(err);
+    await handleError(err);
   }
 }
 
-function handleError(err) {
+// Every exit goes through finishProcess() rather than process.exit(). A forced exit immediately
+// after a command's work crashes Node on Windows when that work did network I/O — `pine check`
+// POSTs with fetch() and aborted 3/3 with a libuv assertion after printing a correct result. See
+// src/exit.js for the measurements.
+async function handleError(err) {
   const message = err.message || String(err);
-  // Connection failures get exit code 2
-  if (/CDP|connection|ECONNREFUSED|not running/i.test(message)) {
-    console.error(JSON.stringify({ success: false, error: message }, null, 2));
-    process.exit(2);
-  }
   console.error(JSON.stringify({ success: false, error: message }, null, 2));
-  process.exit(1);
+  // Connection failures get exit code 2
+  await finishProcess(/CDP|connection|ECONNREFUSED|not running/i.test(message) ? 2 : 1);
 }

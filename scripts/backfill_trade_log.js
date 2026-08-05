@@ -21,6 +21,7 @@ import { fileURLToPath } from "node:url";
 import * as chart from "../src/core/chart.js";
 import * as tradeLog from "../src/core/trade_log.js";
 import { disconnect } from "../src/connection.js";
+import { finishProcess } from "../src/exit.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "..");
@@ -98,10 +99,15 @@ if (unstable) {
 }
 console.log(`Files in ${tradeLog.TRADE_LOG_DIR}`);
 
-// The open CDP socket keeps the event loop alive forever, so without this the process finishes its
-// work, prints the summary, and then hangs as a zombie holding a connection. Eight of those
-// accumulated in one session and starved a later run of a usable CDP session — it produced no
-// output at all until they were killed. Close explicitly, then force exit in case anything else
-// (timers, listeners) is still registered.
+// The open CDP socket keeps the event loop alive forever, so without an explicit teardown this
+// process finishes its work, prints the summary, and then hangs as a zombie holding a connection.
+// Eight of those accumulated in one session and starved a later run of a usable CDP session — it
+// produced no output at all until they were killed.
+//
+// finishProcess() closes CDP and lets the loop drain, with a forced exit only as a backstop for
+// anything else still registered. It replaces a bare `process.exit()` here: that was not crashing
+// this script today (verified — nothing on this path does network I/O beyond CDP), but a forced exit
+// straight after network I/O aborts Node on Windows with a libuv assertion, and this file is one
+// `fetch()` away from that. See src/exit.js.
 try { await disconnect(); } catch { /* already gone */ }
-process.exit(failures > 0 ? 1 : 0);
+await finishProcess(failures > 0 ? 1 : 0);
