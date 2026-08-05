@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-08-05T16:34:14.258Z",
+  "generated_by": "syncMarketHolidayCalendar",
+  "note": "Generated file — do not hand-edit. Computed NYSE holidays for the current and next year, purged of past dates, plus any non-computable ad-hoc closures listed in rules.json market_hours.holidays. Consumed by run_signal_job.ps1 and tv_watchdog.ps1.",
+  "today": "2026-08-05",
+  "timezone": "America/New_York",
+  "covers_years": [
+    2026,
+    2027
+  ],
+  "holidays": [
+    "2026-09-07",
+    "2026-11-26",
+    "2026-12-25",
+    "2027-01-01",
+    "2027-01-18",
+    "2027-02-15",
+    "2027-03-26",
+    "2027-05-31",
+    "2027-06-18",
+    "2027-07-05",
+    "2027-09-06",
+    "2027-11-25",
+    "2027-12-24"
+  ],
+  "manual_extras": []
+}

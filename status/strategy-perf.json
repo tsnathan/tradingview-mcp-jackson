@@ -1,16 +1,16 @@
 {
   "TNA|15m": {
-    "maxDDPercent": 0.07197110582244658,
-    "openPLPercent": 0.01530017381429913,
-    "openPL": 184.67999999999972,
-    "netProfitPercent": 0.2070451109999991,
-    "netProfit": 2070.451109999991,
-    "totalTrades": 16,
-    "sharpe": 0.3652104732625581,
-    "sortino": 0.826392914893326,
+    "maxDDPercent": 0.07162927209566054,
+    "openPLPercent": -0.0027834521464410143,
+    "openPL": -33.660000000002,
+    "netProfitPercent": 0.20928969599999947,
+    "netProfit": 2092.8969599999946,
+    "totalTrades": 15,
+    "sharpe": 0.33897119939289105,
+    "sortino": 0.7807425051848061,
     "symbol": "AMEX:TNA",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:17:41.567Z"
+    "updated_at": "2026-08-05T18:08:58.600Z"
   },
   "MEXX|15m": {
     "maxDDPercent": 0.30770674879271676,
@@ -23,7 +23,7 @@
     "sortino": 1.0754979727144693,
     "symbol": "AMEX:MEXX",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:17:44.760Z"
+    "updated_at": "2026-08-05T18:09:02.375Z"
   },
   "EWO|15m": {
     "maxDDPercent": 0.11600690703298064,
@@ -36,7 +36,7 @@
     "sortino": 0.7391396750523322,
     "symbol": "AMEX:EWO",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:17:47.840Z"
+    "updated_at": "2026-08-05T18:09:06.054Z"
   },
   "FAS|15m": {
     "maxDDPercent": 0.061631951276647695,
@@ -66,55 +66,55 @@
   },
   "DUSL|15m": {
     "maxDDPercent": 0.14434435095514858,
-    "openPLPercent": 0.032993910154606544,
-    "openPL": 592.0000000000006,
-    "netProfitPercent": 0.7942705099999998,
-    "netProfit": 7942.705099999998,
-    "totalTrades": 16,
-    "sharpe": 1.047530280429112,
-    "sortino": 3.8594632065246,
-    "symbol": "AMEX:DUSL",
-    "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:17:51.221Z"
-  },
-  "EDC|15m": {
-    "maxDDPercent": 0.17589087378767157,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.5186256429999996,
-    "netProfit": 5186.256429999996,
-    "totalTrades": 15,
-    "sharpe": 1.830921587645198,
+    "netProfitPercent": 0.99772241,
+    "netProfit": 9977.2241,
+    "totalTrades": 17,
+    "sharpe": 1.0537032020885355,
+    "sortino": 4.031992870380534,
+    "symbol": "AMEX:DUSL",
+    "watchlist": "Swing 15m",
+    "updated_at": "2026-08-05T18:09:11.701Z"
+  },
+  "EDC|15m": {
+    "maxDDPercent": 0.1753124665826258,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.39581313199999973,
+    "netProfit": 3958.1313199999972,
+    "totalTrades": 14,
+    "sharpe": 1.5884934562467234,
     "sortino": 0,
     "symbol": "AMEX:EDC",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:17:54.413Z"
+    "updated_at": "2026-08-05T18:09:15.378Z"
   },
   "USLV|15m": {
     "maxDDPercent": 0.08169854661953536,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.09130817800000023,
-    "netProfit": 913.0817800000023,
+    "openPLPercent": -0.009979229829053927,
+    "openPL": -108.80000000000109,
+    "netProfitPercent": 0.09026449800000023,
+    "netProfit": 902.6449800000023,
     "totalTrades": 14,
-    "sharpe": 0.19832371075828958,
-    "sortino": 0.37855568401746065,
+    "sharpe": 0.13915745611126096,
+    "sortino": 0.25573258309532176,
     "symbol": "LSE:USLV",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:01.870Z"
+    "updated_at": "2026-08-05T18:09:22.811Z"
   },
   "YINN|15m": {
-    "maxDDPercent": 0.15601545399999978,
-    "openPLPercent": 0.011357331282939415,
-    "openPL": 133.37999999999715,
-    "netProfitPercent": 0.17439560999999987,
-    "netProfit": 1743.9560999999987,
-    "totalTrades": 10,
-    "sharpe": 0.1571174847610617,
-    "sortino": 0.2939613790745073,
+    "maxDDPercent": 0.07006141499999995,
+    "openPLPercent": -0.007217358849630405,
+    "openPL": -95.76000000000221,
+    "netProfitPercent": 0.3268011469999998,
+    "netProfit": 3268.0114699999976,
+    "totalTrades": 11,
+    "sharpe": 0.2950619212421655,
+    "sortino": 2.3170304488738735,
     "symbol": "AMEX:YINN",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:05.368Z"
+    "updated_at": "2026-08-05T18:09:26.976Z"
   },
   "RY|15m": {
     "maxDDPercent": 0.024486059999999997,
@@ -169,30 +169,30 @@
     "updated_at": "2026-07-28T19:37:32.770Z"
   },
   "UDOW|30m": {
-    "maxDDPercent": 0.06718470833688539,
+    "maxDDPercent": 0.0670763619099073,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.1851751589999997,
-    "netProfit": 1851.7515899999971,
-    "totalTrades": 14,
-    "sharpe": 0.2773702124668071,
-    "sortino": 1.1603922338046908,
+    "netProfitPercent": 0.16464322199999973,
+    "netProfit": 1646.4322199999974,
+    "totalTrades": 13,
+    "sharpe": 0.2606644164733662,
+    "sortino": 1.058611200033296,
     "symbol": "AMEX:UDOW",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:18:55.398Z"
+    "updated_at": "2026-08-05T17:56:45.171Z"
   },
   "FAS|30m": {
-    "maxDDPercent": 0.07666588900000006,
-    "openPLPercent": 0.011960462641568057,
-    "openPL": 142.99999999999926,
-    "netProfitPercent": 0.1956059250000004,
-    "netProfit": 1956.0592500000039,
+    "maxDDPercent": 0.06479962548719224,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.27376575600000047,
+    "netProfit": 2737.6575600000047,
     "totalTrades": 15,
-    "sharpe": 0.6825262584854458,
-    "sortino": 2.1985620394102505,
+    "sharpe": 1.053167736854242,
+    "sortino": 0,
     "symbol": "AMEX:FAS",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:18:58.380Z"
+    "updated_at": "2026-08-05T17:55:48.689Z"
   },
   "MU|30m": {
     "maxDDPercent": 0.1945623395453441,
@@ -209,16 +209,16 @@
   },
   "TD|30m": {
     "maxDDPercent": 0.03521649140481934,
-    "openPLPercent": -0.009787932604921876,
-    "openPL": -115.70000000000007,
-    "netProfitPercent": 0.1820678040000007,
-    "netProfit": 1820.6780400000068,
-    "totalTrades": 14,
-    "sharpe": 1.3023672886717286,
-    "sortino": 0,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.17946702400000075,
+    "netProfit": 1794.6702400000074,
+    "totalTrades": 15,
+    "sharpe": 1.0509844519045328,
+    "sortino": 12.353131302012438,
     "symbol": "TSX:TD",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:01.537Z"
+    "updated_at": "2026-08-05T17:56:36.871Z"
   },
   "ASHR|1h": {
     "maxDDPercent": 0.07569434564343508,
@@ -261,16 +261,16 @@
   },
   "PILL|1h": {
     "maxDDPercent": 0.2899917875478828,
-    "openPLPercent": -0.0186558296869461,
-    "openPL": -293.41000000000076,
-    "netProfitPercent": 0.5727523510000003,
-    "netProfit": 5727.523510000003,
-    "totalTrades": 12,
-    "sharpe": 0.6465509648055277,
-    "sortino": 1.1028654058073046,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.7059287710000003,
+    "netProfit": 7059.287710000002,
+    "totalTrades": 13,
+    "sharpe": 0.737512038431279,
+    "sortino": 1.2794509473460616,
     "symbol": "AMEX:PILL",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:45.793Z"
+    "updated_at": "2026-08-05T15:24:07.969Z"
   },
   "SPXL|1h": {
     "maxDDPercent": 0.1328086114254464,
@@ -283,7 +283,7 @@
     "sortino": 1.4727560510941757,
     "symbol": "AMEX:SPXL",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:56.012Z"
+    "updated_at": "2026-08-05T15:24:19.240Z"
   },
   "TQQQ|1h": {
     "maxDDPercent": 0.2298309965823896,
@@ -300,16 +300,16 @@
   },
   "UDOW|1h": {
     "maxDDPercent": 0.11986524800000006,
-    "openPLPercent": 0.02878858205376095,
-    "openPL": 366.3900000000013,
-    "netProfitPercent": 0.2726920669999999,
-    "netProfit": 2726.9206699999995,
-    "totalTrades": 14,
-    "sharpe": 1.1760392328661788,
-    "sortino": 20.586874999807897,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.3365579150000001,
+    "netProfit": 3365.579150000001,
+    "totalTrades": 15,
+    "sharpe": 1.220728245456065,
+    "sortino": 20.289705346265777,
     "symbol": "AMEX:UDOW",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:36:10.759Z"
+    "updated_at": "2026-08-05T15:24:34.223Z"
   },
   "UPRO|1h": {
     "maxDDPercent": 0.13362352350308757,
@@ -322,7 +322,7 @@
     "sortino": 1.191726175466344,
     "symbol": "AMEX:UPRO",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:36:14.205Z"
+    "updated_at": "2026-08-05T15:24:37.730Z"
   },
   "URTY|1h": {
     "maxDDPercent": 0.17639967528697503,
@@ -335,33 +335,33 @@
     "sortino": 1.7320654938144997,
     "symbol": "AMEX:URTY",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:36:18.018Z"
+    "updated_at": "2026-08-03T15:14:32.675Z"
   },
   "FAS|1h": {
     "maxDDPercent": 0.1559987580000001,
-    "openPLPercent": 0.03387003215170307,
-    "openPL": 512.3999999999995,
-    "netProfitPercent": 0.5128417879999997,
-    "netProfit": 5128.417879999997,
-    "totalTrades": 15,
-    "sharpe": 1.2607167520008526,
-    "sortino": 4.109149194974991,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.5945007079999998,
+    "netProfit": 5945.007079999998,
+    "totalTrades": 16,
+    "sharpe": 1.2992812606260276,
+    "sortino": 3.9176481153579723,
     "symbol": "AMEX:FAS",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:41.730Z"
+    "updated_at": "2026-08-05T17:57:41.212Z"
   },
   "DUSL|1h": {
     "maxDDPercent": 0.2723349371235003,
-    "openPLPercent": 0.049137837124053174,
-    "openPL": 695.6000000000004,
-    "netProfitPercent": 0.4156097230000001,
-    "netProfit": 4156.097230000001,
-    "totalTrades": 14,
-    "sharpe": 0.5285179652505362,
-    "sortino": 0.8818605874778876,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.6064853230000001,
+    "netProfit": 6064.8532300000015,
+    "totalTrades": 15,
+    "sharpe": 0.5546534391837155,
+    "sortino": 1.0236893772167208,
     "symbol": "AMEX:DUSL",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:31.191Z"
+    "updated_at": "2026-08-05T17:57:29.072Z"
   },
   "BE|1h": {
     "maxDDPercent": 0.30511635473130083,
@@ -378,42 +378,42 @@
   },
   "TD|1h": {
     "maxDDPercent": 0.030033174054667884,
-    "openPLPercent": -0.0037442031152778365,
-    "openPL": -46.22999999999914,
-    "netProfitPercent": 0.23470865699999985,
-    "netProfit": 2347.0865699999986,
-    "totalTrades": 11,
-    "sharpe": 1.1687355584490333,
-    "sortino": 24.674566141658733,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.2390548289999999,
+    "netProfit": 2390.5482899999993,
+    "totalTrades": 12,
+    "sharpe": 1.089715608413686,
+    "sortino": 24.202787947897015,
     "symbol": "TSX:TD",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:36:00.091Z"
+    "updated_at": "2026-08-05T15:24:23.017Z"
   },
   "ASHR|4h": {
     "maxDDPercent": 0.12465732697479458,
-    "openPLPercent": -0.015848271677379594,
-    "openPL": -224.45999999999935,
+    "openPLPercent": -0.0046451830778527,
+    "openPL": -65.79000000000066,
     "netProfitPercent": 0.4163058570000001,
     "netProfit": 4163.058570000001,
     "totalTrades": 13,
-    "sharpe": 0.4913167001514561,
-    "sortino": 1.6664632752664648,
+    "sharpe": 0.5020153546990113,
+    "sortino": 1.8727789534796726,
     "symbol": "AMEX:ASHR",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:13.311Z"
+    "updated_at": "2026-08-05T15:59:48.514Z"
   },
   "EPI|4h": {
     "maxDDPercent": 0.16248171179534918,
-    "openPLPercent": 0.024121254234168263,
-    "openPL": 266.43000000000006,
-    "netProfitPercent": 0.10454455400000047,
-    "netProfit": 1045.4455400000047,
-    "totalTrades": 14,
-    "sharpe": 0.10995665065154739,
-    "sortino": 0.15131379120851668,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.13633438400000045,
+    "netProfit": 1363.3438400000045,
+    "totalTrades": 15,
+    "sharpe": 0.11008455168684361,
+    "sortino": 0.1520429984621311,
     "symbol": "AMEX:EPI",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:16.746Z"
+    "updated_at": "2026-08-05T16:00:06.007Z"
   },
   "EURL|4h": {
     "maxDDPercent": 0.33278054241660127,
@@ -426,7 +426,7 @@
     "sortino": 0.7949977185535388,
     "symbol": "AMEX:EURL",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:20.168Z"
+    "updated_at": "2026-08-04T17:59:02.242Z"
   },
   "FAS|4h": {
     "maxDDPercent": 0.363286728036779,
@@ -443,29 +443,29 @@
   },
   "GLD|4h": {
     "maxDDPercent": 0.14981249337214994,
-    "openPLPercent": -0.0965696299187787,
-    "openPL": -1228.4399999999987,
-    "netProfitPercent": 0.2720769470000001,
-    "netProfit": 2720.769470000001,
-    "totalTrades": 11,
-    "sharpe": 0.17261397802857392,
-    "sortino": 0.23223794629363867,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.18515147700000018,
+    "netProfit": 1851.5147700000018,
+    "totalTrades": 12,
+    "sharpe": 0.23783646313108114,
+    "sortino": 0.3650351792144035,
     "symbol": "AMEX:GLD",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:23.881Z"
+    "updated_at": "2026-08-05T16:00:11.127Z"
   },
   "GLTR|4h": {
     "maxDDPercent": 0.1665271287562041,
-    "openPLPercent": -0.13802348527794958,
-    "openPL": -2532.16,
-    "netProfitPercent": 0.834586335,
-    "netProfit": 8345.86335,
-    "totalTrades": 13,
-    "sharpe": 0.3302938576022214,
-    "sortino": 0.5174493115581976,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.6500846950000003,
+    "netProfit": 6500.846950000003,
+    "totalTrades": 14,
+    "sharpe": 0.38887511967584487,
+    "sortino": 0.719328578298506,
     "symbol": "AMEX:GLTR",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:27.389Z"
+    "updated_at": "2026-08-05T16:00:14.243Z"
   },
   "JNUG|4h": {
     "maxDDPercent": 0.4771093967092992,
@@ -504,176 +504,176 @@
     "sortino": 0.708370260179896,
     "symbol": "AMEX:PILL",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:31.050Z"
+    "updated_at": "2026-08-05T16:00:17.666Z"
   },
   "QTUM|4h": {
-    "maxDDPercent": 0.18107277437105823,
-    "openPLPercent": -0.07783496561823065,
-    "openPL": -1063.2300000000002,
-    "netProfitPercent": 0.3660056139999996,
-    "netProfit": 3660.056139999996,
+    "maxDDPercent": 0.1808019818713195,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.33425846099999973,
+    "netProfit": 3342.584609999997,
     "totalTrades": 11,
-    "sharpe": 0.21579280900094439,
-    "sortino": 0.4524716599239905,
+    "sharpe": 0.2924947309205241,
+    "sortino": 0.8113041552205873,
     "symbol": "NASDAQ:QTUM",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:34.521Z"
+    "updated_at": "2026-08-05T16:00:21.364Z"
   },
   "SOXL|4h": {
-    "maxDDPercent": 0.6862101918975703,
-    "openPLPercent": -0.3403113597859958,
-    "openPL": -11679.3,
-    "netProfitPercent": 2.431945382999999,
-    "netProfit": 24319.45382999999,
-    "totalTrades": 13,
-    "sharpe": 0.2774515500476922,
-    "sortino": 0.4630882658070975,
+    "maxDDPercent": 0.6856477874626802,
+    "openPLPercent": -0.27965311697179124,
+    "openPL": -8690.849999999999,
+    "netProfitPercent": 2.1077250609999996,
+    "netProfit": 21077.250609999996,
+    "totalTrades": 12,
+    "sharpe": 0.28137493222331617,
+    "sortino": 0.48501492779487043,
     "symbol": "AMEX:SOXL",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:38.039Z"
+    "updated_at": "2026-08-05T16:00:24.840Z"
   },
   "TMF|4h": {
     "maxDDPercent": 0.33596586000000006,
-    "openPLPercent": -0.12284919623139336,
-    "openPL": -1115.999999999999,
+    "openPLPercent": -0.08544844093428032,
+    "openPL": -776.2399999999998,
     "netProfitPercent": -0.09156914799999959,
     "netProfit": -915.6914799999959,
     "totalTrades": 13,
-    "sharpe": -0.14923300289330574,
-    "sortino": -0.17170685626640783,
+    "sharpe": -0.12649944468369878,
+    "sortino": -0.14840832869307677,
     "symbol": "AMEX:TMF",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:41.313Z"
+    "updated_at": "2026-08-05T16:00:28.315Z"
   },
   "TNA|4h": {
     "maxDDPercent": 0.5473123574308458,
-    "openPLPercent": -0.0016697813436779045,
-    "openPL": -33.719999999997285,
-    "netProfitPercent": 1.019426084,
-    "netProfit": 10194.260839999999,
-    "totalTrades": 16,
-    "sharpe": 0.36006849107214245,
-    "sortino": 0.6073838535924292,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 1.1348530159999999,
+    "netProfit": 11348.530159999998,
+    "totalTrades": 17,
+    "sharpe": 0.3777063203023913,
+    "sortino": 0.6376263892376275,
     "symbol": "AMEX:TNA",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:44.501Z"
+    "updated_at": "2026-08-05T16:00:32.129Z"
   },
   "UDOW|4h": {
     "maxDDPercent": 0.4033841747171966,
-    "openPLPercent": -0.006966083811461592,
-    "openPL": -104.5199999999992,
-    "netProfitPercent": 0.5004126110000002,
-    "netProfit": 5004.126110000002,
-    "totalTrades": 14,
-    "sharpe": 0.30481067823689995,
-    "sortino": 0.5241895913378892,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.5291115920000002,
+    "netProfit": 5291.115920000002,
+    "totalTrades": 15,
+    "sharpe": 0.31643147862889287,
+    "sortino": 0.5438003202719501,
     "symbol": "AMEX:UDOW",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:48.256Z"
+    "updated_at": "2026-08-05T16:00:36.038Z"
   },
   "UTSL|4h": {
     "maxDDPercent": 0.18566508072572216,
-    "openPLPercent": -0.008037126003308751,
-    "openPL": -143.99999999999977,
+    "openPLPercent": -0.06943183852858403,
+    "openPL": -1243.9999999999998,
     "netProfitPercent": 0.7916852360000002,
     "netProfit": 7916.852360000002,
     "totalTrades": 14,
-    "sharpe": 0.6111173281269091,
-    "sortino": 4.797127376251608,
+    "sharpe": 0.47397676846489556,
+    "sortino": 1.3923641900537382,
     "symbol": "AMEX:UTSL",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:51.449Z"
+    "updated_at": "2026-08-05T16:00:39.731Z"
   },
   "WQTM|4h": {
     "maxDDPercent": 0.1781580587384073,
-    "openPLPercent": -0.10594890065933679,
-    "openPL": -1137.1500000000005,
-    "netProfitPercent": 0.07330042399999998,
-    "netProfit": 733.0042399999998,
-    "totalTrades": 2,
-    "sharpe": -0.13922756515505,
-    "sortino": -0.1599207301219662,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": -0.012563236000000132,
+    "netProfit": -125.63236000000131,
+    "totalTrades": 3,
+    "sharpe": -0.0685706597279458,
+    "sortino": -0.08611850649023894,
     "symbol": "CBOE:WQTM",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:54.675Z"
+    "updated_at": "2026-08-05T16:00:43.630Z"
   },
   "EWY|4h": {
     "maxDDPercent": 0.2371741924400426,
-    "openPLPercent": -0.13952113055851034,
-    "openPL": -2070.519999999999,
+    "openPLPercent": -0.09454326788382267,
+    "openPL": -1403.0400000000006,
     "netProfitPercent": 0.48401893800000034,
     "netProfit": 4840.189380000003,
     "totalTrades": 10,
-    "sharpe": 0.17495854324036136,
-    "sortino": 0.28218571743337867,
+    "sharpe": 0.21441024881912252,
+    "sortino": 0.3871595231195984,
     "symbol": "AMEX:EWY",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:36:58.226Z"
+    "updated_at": "2026-08-05T16:00:47.253Z"
   },
   "MU|4h": {
-    "maxDDPercent": 0.3133546906990928,
-    "openPLPercent": -0.1319877790760602,
-    "openPL": -3044.7999999999993,
-    "netProfitPercent": 1.3068802440000002,
-    "netProfit": 13068.802440000003,
-    "totalTrades": 12,
-    "sharpe": 0.35448887836247395,
-    "sortino": 0.9708832275652975,
+    "maxDDPercent": 0.31275966576746395,
+    "openPLPercent": -0.07107248559566375,
+    "openPL": -1641.64,
+    "netProfitPercent": 1.3098108730000004,
+    "netProfit": 13098.108730000004,
+    "totalTrades": 11,
+    "sharpe": 0.41322910442127914,
+    "sortino": 1.486599894281252,
     "symbol": "NASDAQ:MU",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:02.027Z"
+    "updated_at": "2026-08-05T16:00:52.444Z"
   },
   "RY|4h": {
     "maxDDPercent": 0.09778201444179599,
-    "openPLPercent": 0.008799408434017638,
-    "openPL": 110.2899999999999,
+    "openPLPercent": 0.00778535021299701,
+    "openPL": 97.57999999999981,
     "netProfitPercent": 0.2533797110000002,
     "netProfit": 2533.797110000002,
     "totalTrades": 12,
-    "sharpe": 0.43308708508545635,
-    "sortino": 1.3845267929185443,
+    "sharpe": 0.4180466484294507,
+    "sortino": 1.3397919419495046,
     "symbol": "TSX:RY",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:05.407Z"
+    "updated_at": "2026-08-05T16:00:56.394Z"
   },
   "BE|4h": {
     "maxDDPercent": 0.3428626669126766,
-    "openPLPercent": -0.11226233771185169,
-    "openPL": -5349.090000000004,
-    "netProfitPercent": 3.7648125889999995,
-    "netProfit": 37648.125889999996,
-    "totalTrades": 14,
-    "sharpe": 0.6356584657148199,
-    "sortino": 1.7317076689787738,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 3.5113063489999994,
+    "netProfit": 35113.06348999999,
+    "totalTrades": 15,
+    "sharpe": 0.6587545145672152,
+    "sortino": 2.0349952026682856,
     "symbol": "NYSE:BE",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:09.092Z"
+    "updated_at": "2026-08-05T16:01:00.611Z"
   },
   "TD|4h": {
     "maxDDPercent": 0.07892040400000006,
-    "openPLPercent": 0.015554966226822845,
-    "openPL": 191.09999999999928,
+    "openPLPercent": 0.019657374902028877,
+    "openPL": 241.4999999999992,
     "netProfitPercent": 0.2285465440000002,
     "netProfit": 2285.465440000002,
     "totalTrades": 11,
-    "sharpe": 0.30011858932824625,
-    "sortino": 0.7515840180826588,
+    "sharpe": 0.2975058700801143,
+    "sortino": 0.7488669650418865,
     "symbol": "TSX:TD",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:12.822Z"
+    "updated_at": "2026-08-05T16:01:05.393Z"
   },
   "SBIN|4h": {
     "maxDDPercent": 0.14466779999999999,
-    "openPLPercent": 0.016357920045724905,
-    "openPL": 254.09999999999968,
+    "openPLPercent": 0.03997100573156478,
+    "openPL": 620.9000000000003,
     "netProfitPercent": 0.553375975,
     "netProfit": 5533.75975,
     "totalTrades": 13,
-    "sharpe": 0.3098436378360044,
-    "sortino": 0.7477058619266246,
+    "sharpe": 0.31913600593933816,
+    "sortino": 0.778736693652729,
     "symbol": "BSE:SBIN",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:16.866Z"
+    "updated_at": "2026-08-05T16:01:11.060Z"
   },
   "KARURVYSYA|4h": {
     "maxDDPercent": 0.12720106212054091,
@@ -686,7 +686,7 @@
     "sortino": 12.150774385861046,
     "symbol": "BSE:KARURVYSYA",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:20.472Z"
+    "updated_at": "2026-08-05T16:01:15.018Z"
   },
   "ICICIBANK|4h": {
     "maxDDPercent": 0.10934542444804822,
@@ -699,33 +699,33 @@
     "sortino": 1.875310413378359,
     "symbol": "NSE:ICICIBANK",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:58.300Z"
+    "updated_at": "2026-08-05T16:01:53.713Z"
   },
   "GLD|1d": {
     "maxDDPercent": 0.1293491747767228,
-    "openPLPercent": -0.06540248118291343,
-    "openPL": -802.4800000000023,
+    "openPLPercent": -0.027543892110180258,
+    "openPL": -337.9600000000014,
     "netProfitPercent": 0.226987089,
     "netProfit": 2269.87089,
     "totalTrades": 8,
-    "sharpe": 0.006306893176241379,
-    "sortino": 0.013248602452312058,
+    "sharpe": 0.02685350881949051,
+    "sortino": 0.06957135861184213,
     "symbol": "AMEX:GLD",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:40:32.629Z"
+    "updated_at": "2026-08-05T16:02:18.421Z"
   },
   "IYC|1d": {
     "maxDDPercent": 0.32822515199999996,
-    "openPLPercent": 0.01376117346674119,
-    "openPL": 172.54999999999865,
+    "openPLPercent": 0.02837648873486649,
+    "openPL": 355.8099999999994,
     "netProfitPercent": 0.25389015999999986,
     "netProfit": 2538.901599999999,
     "totalTrades": 10,
-    "sharpe": 0.0637918304737811,
-    "sortino": 0.09525028936158596,
+    "sharpe": 0.06863542640112776,
+    "sortino": 0.10285456790096406,
     "symbol": "AMEX:IYC",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:40:37.455Z"
+    "updated_at": "2026-08-05T16:02:22.918Z"
   },
   "IYG|1d": {
     "maxDDPercent": 0.3954949483782902,
@@ -738,33 +738,33 @@
     "sortino": 0.31751974092131774,
     "symbol": "AMEX:IYG",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:40:42.294Z"
+    "updated_at": "2026-08-05T16:02:27.574Z"
   },
   "JNUG|1d": {
     "maxDDPercent": 0.7157433346016003,
-    "openPLPercent": -0.22947599261980917,
-    "openPL": -4575.49,
+    "openPLPercent": -0.07774064791317678,
+    "openPL": -1550.059999999999,
     "netProfitPercent": 0.9938861350000004,
     "netProfit": 9938.861350000005,
     "totalTrades": 11,
-    "sharpe": 0.08774318104477172,
-    "sortino": 0.1420676254017184,
+    "sharpe": 0.10624085823309237,
+    "sortino": 0.17931268038417805,
     "symbol": "AMEX:JNUG",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:40:47.363Z"
+    "updated_at": "2026-08-05T16:02:32.914Z"
   },
   "MEXX|1d": {
     "maxDDPercent": 0.8452058205028086,
-    "openPLPercent": 0.16259818209831275,
-    "openPL": 570.7800000000002,
+    "openPLPercent": 0.17264840085935626,
+    "openPL": 606.0599999999998,
     "netProfitPercent": -0.6489628649999999,
     "netProfit": -6489.628649999999,
     "totalTrades": 8,
-    "sharpe": -0.0033521919559343963,
-    "sortino": -0.004206037370162232,
+    "sharpe": -0.0025451140783948846,
+    "sortino": -0.0031974488563027053,
     "symbol": "AMEX:MEXX",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:40:54.776Z"
+    "updated_at": "2026-08-05T16:02:37.649Z"
   },
   "URTY|1d": {
     "maxDDPercent": 0.7989188822123723,
@@ -777,7 +777,7 @@
     "sortino": 0.26291085345399745,
     "symbol": "AMEX:URTY",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:40:59.619Z"
+    "updated_at": "2026-08-05T16:02:42.231Z"
   },
   "XLI|1d": {
     "maxDDPercent": 0.3728310621676182,
@@ -790,33 +790,33 @@
     "sortino": 0.5095867614292598,
     "symbol": "AMEX:XLI",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:04.126Z"
+    "updated_at": "2026-08-05T16:02:46.871Z"
   },
   "NVDA|1d": {
     "maxDDPercent": 0.4472370259962354,
-    "openPLPercent": 0.030308800731310145,
-    "openPL": 800,
+    "openPLPercent": 0.12724846899033257,
+    "openPL": 3358.720000000001,
     "netProfitPercent": 1.6394973759999998,
     "netProfit": 16394.973759999997,
     "totalTrades": 9,
-    "sharpe": 0.19987797649047434,
-    "sortino": 0.5007684272824493,
+    "sharpe": 0.21303304334122183,
+    "sortino": 0.54532780463998,
     "symbol": "NASDAQ:NVDA",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:09.824Z"
+    "updated_at": "2026-08-05T16:02:51.787Z"
   },
   "INTL|1d": {
     "maxDDPercent": 0.3408121208762246,
-    "openPLPercent": 0.011098810162899379,
-    "openPL": 234.15000000000094,
+    "openPLPercent": 0.03615041024487214,
+    "openPL": 762.6600000000004,
     "netProfitPercent": 1.1096856019999997,
     "netProfit": 11096.856019999997,
     "totalTrades": 15,
-    "sharpe": 0.16534337228541512,
-    "sortino": 0.3275936183923499,
+    "sharpe": 0.17017539842990784,
+    "sortino": 0.3383551703238436,
     "symbol": "CBOE:INTL",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:15.256Z"
+    "updated_at": "2026-08-05T16:02:56.542Z"
   },
   "MU|1d": {
     "maxDDPercent": 0.4876198596580832,
@@ -829,20 +829,20 @@
     "sortino": 0.2470557136633099,
     "symbol": "NASDAQ:MU",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:21.144Z"
+    "updated_at": "2026-08-05T16:03:02.476Z"
   },
   "PLTR|1d": {
     "maxDDPercent": 0.560286876669647,
-    "openPLPercent": 0.019069560218631418,
-    "openPL": 604.7999999999979,
-    "netProfitPercent": 2.1715466590000005,
-    "netProfit": 21715.466590000004,
-    "totalTrades": 9,
-    "sharpe": 0.19775132299163245,
-    "sortino": 0.49852939316520833,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 3.222084259,
+    "netProfit": 32220.84259,
+    "totalTrades": 10,
+    "sharpe": 0.22617463898117074,
+    "sortino": 0.6018254738990342,
     "symbol": "NASDAQ:PLTR",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:26.267Z"
+    "updated_at": "2026-08-05T16:03:07.314Z"
   },
   "AAPL|1d": {
     "maxDDPercent": 0.23912155865387902,
@@ -855,7 +855,7 @@
     "sortino": 1.2315094095035577,
     "symbol": "NASDAQ:AAPL",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:32.102Z"
+    "updated_at": "2026-08-05T16:03:12.387Z"
   },
   "WQTM|1d": {
     "maxDDPercent": 0.08850353400000004,
@@ -872,29 +872,29 @@
   },
   "QTUM|1d": {
     "maxDDPercent": 0.36859777446897685,
-    "openPLPercent": -0.004255713639245336,
-    "openPL": -56.959999999998786,
+    "openPLPercent": 0.05093557261971867,
+    "openPL": 681.7399999999997,
     "netProfitPercent": 0.33843591999999995,
     "netProfit": 3384.3591999999994,
     "totalTrades": 9,
-    "sharpe": 0.06813135575192839,
-    "sortino": 0.10181015058943689,
+    "sharpe": 0.08542761851135394,
+    "sortino": 0.1291310901000669,
     "symbol": "NASDAQ:QTUM",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:37.188Z"
+    "updated_at": "2026-08-05T16:03:17.362Z"
   },
   "WTAI|1d": {
     "maxDDPercent": 0.24147393839348405,
-    "openPLPercent": -0.03100750552575818,
-    "openPL": -508.25999999999965,
+    "openPLPercent": 0.03797818506255669,
+    "openPL": 622.5200000000021,
     "netProfitPercent": 0.6391515260000002,
     "netProfit": 6391.515260000003,
     "totalTrades": 8,
-    "sharpe": 0.2905036542646223,
-    "sortino": 1.767216719914828,
+    "sharpe": 0.33826197854009227,
+    "sortino": 6.771548581134337,
     "symbol": "CBOE:WTAI",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:42.239Z"
+    "updated_at": "2026-08-05T16:03:22.290Z"
   },
   "SPCX|1d": {
     "maxDDPercent": 0,
@@ -907,7 +907,7 @@
     "sortino": 0,
     "symbol": "NASDAQ:SPCX",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:47.251Z"
+    "updated_at": "2026-08-05T16:03:26.788Z"
   },
   "FAS|1d": {
     "maxDDPercent": 0.804347436188927,
@@ -920,20 +920,20 @@
     "sortino": 0.20712997581437073,
     "symbol": "AMEX:FAS",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:52.313Z"
+    "updated_at": "2026-08-05T16:03:32.736Z"
   },
   "BE|1d": {
     "maxDDPercent": 0.7343208300000003,
-    "openPLPercent": -0.061106466399875,
-    "openPL": -2901.6799999999967,
+    "openPLPercent": 0.014143221455900086,
+    "openPL": 671.600000000001,
     "netProfitPercent": 3.7485645480000005,
     "netProfit": 37485.64548000001,
     "totalTrades": 13,
-    "sharpe": 0.17826429552721898,
-    "sortino": 0.4333112622641233,
+    "sharpe": 0.18411373706270912,
+    "sortino": 0.45004705228063474,
     "symbol": "NYSE:BE",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:41:58.016Z"
+    "updated_at": "2026-08-05T16:03:38.016Z"
   },
   "JNJ|1d": {
     "maxDDPercent": 0.17876910154495612,
@@ -946,7 +946,7 @@
     "sortino": 3.021871835129466,
     "symbol": "NYSE:JNJ",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:02.793Z"
+    "updated_at": "2026-08-05T16:03:43.483Z"
   },
   "GOOGL|1d": {
     "maxDDPercent": 0.23694874199826624,
@@ -972,7 +972,7 @@
     "sortino": 0.33444721993809245,
     "symbol": "BSE:KARURVYSYA",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:07.806Z"
+    "updated_at": "2026-08-05T16:03:48.364Z"
   },
   "ICICIBANK|1d": {
     "maxDDPercent": 0.43210949541855337,
@@ -985,7 +985,7 @@
     "sortino": 0.1249738006078663,
     "symbol": "BSE:ICICIBANK",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:12.787Z"
+    "updated_at": "2026-08-05T16:03:53.330Z"
   },
   "EWO|45m": {
     "maxDDPercent": 0.11690554359007306,
@@ -1024,46 +1024,46 @@
     "sortino": 2.696738675185388,
     "symbol": "CBOE:WTAI",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:03:56.633Z"
+    "updated_at": "2026-08-05T18:10:22.860Z"
   },
   "UDOW|45m": {
-    "maxDDPercent": 0.05700652799999989,
-    "openPLPercent": 0.03211502009310255,
-    "openPL": 427.8000000000021,
-    "netProfitPercent": 0.332086976,
-    "netProfit": 3320.8697599999996,
+    "maxDDPercent": 0.05643547503791414,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.36669680000000016,
+    "netProfit": 3666.9680000000017,
     "totalTrades": 14,
-    "sharpe": 1.658832551945128,
+    "sharpe": 3.1692397924159734,
     "sortino": 0,
     "symbol": "AMEX:UDOW",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:03:59.775Z"
+    "updated_at": "2026-08-05T18:10:26.572Z"
   },
   "FAS|45m": {
     "maxDDPercent": 0.07461937496004832,
-    "openPLPercent": 0.013126867317745346,
-    "openPL": 176.11999999999966,
-    "netProfitPercent": 0.34167578400000015,
-    "netProfit": 3416.7578400000016,
-    "totalTrades": 14,
-    "sharpe": 1.7600778358659024,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.39074585000000017,
+    "netProfit": 3907.4585000000015,
+    "totalTrades": 15,
+    "sharpe": 1.6597546031937815,
     "sortino": 0,
     "symbol": "AMEX:FAS",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:03.040Z"
+    "updated_at": "2026-08-05T18:10:49.140Z"
   },
   "TD|45m": {
     "maxDDPercent": 0.030018572668943345,
-    "openPLPercent": -0.0035189553201934497,
-    "openPL": -40.31999999999971,
-    "netProfitPercent": 0.14579459900000022,
-    "netProfit": 1457.9459900000022,
-    "totalTrades": 9,
-    "sharpe": 1.0407224949897969,
-    "sortino": 17.005246475247016,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.1498258310000003,
+    "netProfit": 1498.258310000003,
+    "totalTrades": 10,
+    "sharpe": 0.9692368722697432,
+    "sortino": 16.73509206560432,
     "symbol": "TSX:TD",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:06.187Z"
+    "updated_at": "2026-08-05T18:10:52.734Z"
   },
   "SBIN|45m": {
     "maxDDPercent": 0.13657661526944387,
@@ -1106,42 +1106,42 @@
   },
   "SPXL|2h": {
     "maxDDPercent": 0.19854283098736386,
-    "openPLPercent": 0.006087025073709161,
-    "openPL": 84.7699999999981,
-    "netProfitPercent": 0.3926343160000006,
-    "netProfit": 3926.343160000006,
-    "totalTrades": 13,
-    "sharpe": 0.6088346239452679,
-    "sortino": 0.9722033603377408,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.39592662600000056,
+    "netProfit": 3959.266260000006,
+    "totalTrades": 14,
+    "sharpe": 0.5975776894983563,
+    "sortino": 0.9587198308400315,
     "symbol": "AMEX:SPXL",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:20:25.131Z"
+    "updated_at": "2026-08-05T17:58:58.495Z"
   },
   "TNA|2h": {
     "maxDDPercent": 0.2224701017935749,
-    "openPLPercent": -0.008969658394236224,
-    "openPL": -118.95000000000104,
-    "netProfitPercent": 0.32613745999999993,
-    "netProfit": 3261.374599999999,
-    "totalTrades": 10,
-    "sharpe": 0.5838260583023356,
-    "sortino": 2.5091887350806905,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.36235773499999985,
+    "netProfit": 3623.5773499999987,
+    "totalTrades": 11,
+    "sharpe": 0.6343861449303445,
+    "sortino": 2.8249266251804848,
     "symbol": "AMEX:TNA",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:20:29.238Z"
+    "updated_at": "2026-08-05T17:59:02.123Z"
   },
   "UTSL|2h": {
-    "maxDDPercent": 0.1191209272870841,
-    "openPLPercent": -0.0035744952433462217,
-    "openPL": -53.440000000001234,
-    "netProfitPercent": 0.4950362599999995,
-    "netProfit": 4950.362599999995,
-    "totalTrades": 15,
-    "sharpe": 0.6640732637750414,
-    "sortino": 2.5705219476865513,
+    "maxDDPercent": 0.11914916265326017,
+    "openPLPercent": -0.06951889812587529,
+    "openPL": -948.4800000000014,
+    "netProfitPercent": 0.3643484369999996,
+    "netProfit": 3643.4843699999956,
+    "totalTrades": 14,
+    "sharpe": 0.36498932599737055,
+    "sortino": 0.729666249548751,
     "symbol": "AMEX:UTSL",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:20:32.551Z"
+    "updated_at": "2026-08-05T17:59:05.462Z"
   },
   "YINN|2h": {
     "maxDDPercent": 0.246059905168073,
@@ -1158,81 +1158,81 @@
   },
   "QTUM|2h": {
     "maxDDPercent": 0.17173670336603497,
-    "openPLPercent": -0.10944786465883835,
-    "openPL": -1317.7600000000002,
-    "netProfitPercent": 0.20400704399999994,
-    "netProfit": 2040.0704399999995,
-    "totalTrades": 8,
-    "sharpe": 0.12203742929428958,
-    "sortino": 0.15682267900657323,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.09569455599999988,
+    "netProfit": 956.9455599999987,
+    "totalTrades": 9,
+    "sharpe": 0.16465264268539526,
+    "sortino": 0.22674605262077957,
     "symbol": "NASDAQ:QTUM",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:20:36.250Z"
+    "updated_at": "2026-08-05T17:59:09.153Z"
   },
   "MNST|2h": {
     "maxDDPercent": 0.09150961023711653,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.3555649870000002,
-    "netProfit": 3555.649870000002,
+    "openPLPercent": 0.01773045004208484,
+    "openPL": 240.1199999999993,
+    "netProfitPercent": 0.3542803450000002,
+    "netProfit": 3542.803450000002,
     "totalTrades": 13,
-    "sharpe": 0.6678964492571261,
-    "sortino": 2.399333473524143,
+    "sharpe": 0.6750703278536441,
+    "sortino": 2.430179791786355,
     "symbol": "NASDAQ:MNST",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:20:40.463Z"
+    "updated_at": "2026-08-05T17:59:12.661Z"
   },
   "ASHR|2h": {
-    "maxDDPercent": 0.06372039007795312,
-    "openPLPercent": -0.04321391170417918,
-    "openPL": -518.3400000000008,
-    "netProfitPercent": 0.19947484399999976,
-    "netProfit": 1994.7484399999976,
-    "totalTrades": 14,
-    "sharpe": 0.47121991825456105,
-    "sortino": 0.7042905209594925,
+    "maxDDPercent": 0.0636873162746363,
+    "openPLPercent": -0.03126743762157551,
+    "openPL": -371.69999999999993,
+    "netProfitPercent": 0.18877665799999982,
+    "netProfit": 1887.7665799999982,
+    "totalTrades": 13,
+    "sharpe": 0.5316049491844846,
+    "sortino": 0.9340551398402658,
     "symbol": "AMEX:ASHR",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:20:43.988Z"
+    "updated_at": "2026-08-05T17:59:16.339Z"
   },
   "EWY|2h": {
     "maxDDPercent": 0.271968207282243,
-    "openPLPercent": -0.18901407272227957,
-    "openPL": -3089.580000000001,
-    "netProfitPercent": 0.6345767040000001,
-    "netProfit": 6345.767040000001,
-    "totalTrades": 10,
-    "sharpe": 0.3584824634577443,
-    "sortino": 0.4805292392411157,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.4023852120000001,
+    "netProfit": 4023.852120000001,
+    "totalTrades": 11,
+    "sharpe": 0.4579313229875903,
+    "sortino": 0.6948458427521811,
     "symbol": "AMEX:EWY",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:20:51.514Z"
+    "updated_at": "2026-08-05T17:59:20.259Z"
   },
   "MU|2h": {
-    "maxDDPercent": 0.2154165635452927,
-    "openPLPercent": 0.0007395964467708427,
-    "openPL": 18.47999999999911,
-    "netProfitPercent": 1.498659922,
-    "netProfit": 14986.59922,
-    "totalTrades": 14,
-    "sharpe": 0.7284154061948949,
-    "sortino": 4.498360376062913,
+    "maxDDPercent": 0.21156305038417988,
+    "openPLPercent": 0.09054072219559417,
+    "openPL": 2255.119999999999,
+    "netProfitPercent": 1.4907245549999997,
+    "netProfit": 14907.245549999998,
+    "totalTrades": 13,
+    "sharpe": 0.8078562562794234,
+    "sortino": 4.966176935843944,
     "symbol": "NASDAQ:MU",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:20:55.984Z"
+    "updated_at": "2026-08-05T17:59:23.885Z"
   },
   "RY|2h": {
     "maxDDPercent": 0.08145381868738853,
-    "openPLPercent": 0.005220786596784507,
-    "openPL": 57.96000000000049,
+    "openPLPercent": 0.009825455520656385,
+    "openPL": 109.07999999999902,
     "netProfitPercent": 0.11017753599999994,
     "netProfit": 1101.7753599999994,
     "totalTrades": 11,
-    "sharpe": 0.265633557915134,
-    "sortino": 0.5460277646990351,
+    "sharpe": 0.2680785975453294,
+    "sortino": 0.553733324997537,
     "symbol": "TSX:RY",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:20:59.603Z"
+    "updated_at": "2026-08-05T17:59:27.847Z"
   },
   "BE|2h": {
     "maxDDPercent": 0.41816756907797237,
@@ -1245,20 +1245,20 @@
     "sortino": 2.2001332524239836,
     "symbol": "NYSE:BE",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:03.914Z"
+    "updated_at": "2026-08-05T17:59:31.858Z"
   },
   "TD|2h": {
     "maxDDPercent": 0.0790226104798337,
-    "openPLPercent": -0.0002798559443500957,
-    "openPL": -3.3999999999988404,
+    "openPLPercent": 0.010970353018527538,
+    "openPL": 133.28000000000054,
     "netProfitPercent": 0.21491076699999986,
     "netProfit": 2149.1076699999985,
     "totalTrades": 11,
-    "sharpe": 0.42072018777121084,
-    "sortino": 0.9370862436949083,
+    "sharpe": 0.4345739327896151,
+    "sortino": 0.9687508549651381,
     "symbol": "TSX:TD",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:07.695Z"
+    "updated_at": "2026-08-05T17:59:36.461Z"
   },
   "GOOGL|2h": {
     "maxDDPercent": 0.12800365404127703,
@@ -1271,7 +1271,7 @@
     "sortino": 1.4600052169649917,
     "symbol": "NASDAQ:GOOGL",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:11.136Z"
+    "updated_at": "2026-08-05T17:59:40.784Z"
   },
   "TQQQ|2h": {
     "maxDDPercent": 0.23312457050454055,
@@ -1297,7 +1297,7 @@
     "sortino": 0.49869659824438095,
     "symbol": "BSE:KARURVYSYA",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:15.227Z"
+    "updated_at": "2026-08-05T17:59:44.560Z"
   },
   "ICICIBANK|2h": {
     "maxDDPercent": 0.12911613798378696,
@@ -1310,20 +1310,20 @@
     "sortino": 0.7408192317503619,
     "symbol": "NSE:ICICIBANK",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:32.744Z"
+    "updated_at": "2026-08-05T18:00:04.036Z"
   },
   "KORU|3h": {
     "maxDDPercent": 0.6589140585674488,
-    "openPLPercent": -0.5398204145114845,
-    "openPL": -29673.18,
+    "openPLPercent": -0.47457299897090843,
+    "openPL": -26086.619999999995,
     "netProfitPercent": 4.496861401,
     "netProfit": 44968.614010000005,
     "totalTrades": 12,
-    "sharpe": 0.4375438194733278,
-    "sortino": 0.7200631520847174,
+    "sharpe": 0.46073601609262976,
+    "sortino": 0.8232567387235922,
     "symbol": "AMEX:KORU",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:23.925Z"
+    "updated_at": "2026-08-05T15:59:19.608Z"
   },
   "MEXX|3h": {
     "maxDDPercent": 0.3479833217807484,
@@ -1336,7 +1336,7 @@
     "sortino": 0.5805500852354141,
     "symbol": "AMEX:MEXX",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:32:36.739Z"
+    "updated_at": "2026-08-05T15:57:41.798Z"
   },
   "PILL|3h": {
     "maxDDPercent": 0.587752485,
@@ -1353,42 +1353,42 @@
   },
   "QTUM|3h": {
     "maxDDPercent": 0.15551178940004912,
-    "openPLPercent": -0.08939814725569256,
-    "openPL": -1184.8000000000002,
-    "netProfitPercent": 0.3253071079999999,
-    "netProfit": 3253.071079999999,
-    "totalTrades": 9,
-    "sharpe": 0.3324191586758406,
-    "sortino": 0.5158456153116139,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.239015988,
+    "netProfit": 2390.15988,
+    "totalTrades": 10,
+    "sharpe": 0.40322842344444987,
+    "sortino": 0.7460194365599826,
     "symbol": "NASDAQ:QTUM",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:32:40.571Z"
+    "updated_at": "2026-08-05T15:57:45.334Z"
   },
   "WQTM|3h": {
     "maxDDPercent": 0.20725231694840188,
-    "openPLPercent": -0.13911349256171834,
-    "openPL": -1869.3499999999997,
-    "netProfitPercent": 0.343758945,
-    "netProfit": 3437.58945,
-    "totalTrades": 5,
-    "sharpe": 0.2514606612893472,
-    "sortino": 0.40323347524923936,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.192058277,
+    "netProfit": 1920.58277,
+    "totalTrades": 6,
+    "sharpe": 0.29281045057651883,
+    "sortino": 0.5312612408593752,
     "symbol": "CBOE:WQTM",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:32:43.728Z"
+    "updated_at": "2026-08-05T15:57:48.926Z"
   },
   "WTAI|3h": {
     "maxDDPercent": 0.23694413681705553,
-    "openPLPercent": -0.07316643799132591,
-    "openPL": -1082.370000000001,
-    "netProfitPercent": 0.47932580799999996,
-    "netProfit": 4793.25808,
-    "totalTrades": 14,
-    "sharpe": 0.3080901976511755,
-    "sortino": 0.605956284896519,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.47627564299999986,
+    "netProfit": 4762.7564299999985,
+    "totalTrades": 15,
+    "sharpe": 0.397788665206204,
+    "sortino": 0.9505913752803697,
     "symbol": "CBOE:WTAI",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:32:48.105Z"
+    "updated_at": "2026-08-05T15:57:52.350Z"
   },
   "NUGT|3h": {
     "maxDDPercent": 0.4708472794003946,
@@ -1401,72 +1401,72 @@
     "sortino": 0.7840871474397672,
     "symbol": "AMEX:NUGT",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:48.077Z"
+    "updated_at": "2026-08-03T15:23:22.902Z"
   },
   "MNST|3h": {
     "maxDDPercent": 0.12015423677546715,
-    "openPLPercent": 0.018987309634831178,
-    "openPL": 260.82000000000005,
+    "openPLPercent": 0.00010046195573989887,
+    "openPL": 1.380000000000706,
     "netProfitPercent": 0.3736543249999994,
     "netProfit": 3736.543249999994,
     "totalTrades": 14,
-    "sharpe": 0.5015235751012505,
-    "sortino": 0.9477910053311032,
+    "sharpe": 0.44879016358089185,
+    "sortino": 0.861511564073298,
     "symbol": "NASDAQ:MNST",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:32:51.692Z"
+    "updated_at": "2026-08-05T15:57:56.794Z"
   },
   "EWY|3h": {
     "maxDDPercent": 0.26386976396926043,
-    "openPLPercent": -0.16955672876595948,
-    "openPL": -3325.9500000000016,
+    "openPLPercent": -0.12596888075414472,
+    "openPL": -2470.9500000000016,
     "netProfitPercent": 0.9615558899999996,
     "netProfit": 9615.558899999996,
     "totalTrades": 12,
-    "sharpe": 0.46253352945545756,
-    "sortino": 0.7419793593158052,
+    "sharpe": 0.5407739428904047,
+    "sortino": 1.0425949785302768,
     "symbol": "AMEX:EWY",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:32:55.542Z"
+    "updated_at": "2026-08-05T15:58:00.309Z"
   },
   "UDOW|3h": {
     "maxDDPercent": 0.21644300895457155,
-    "openPLPercent": -0.009774239501597276,
-    "openPL": -161.3300000000009,
-    "netProfitPercent": 0.6505631970000004,
-    "netProfit": 6505.631970000004,
-    "totalTrades": 13,
-    "sharpe": 0.6250762363392236,
-    "sortino": 1.4078534302670649,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.6854244000000004,
+    "netProfit": 6854.244000000004,
+    "totalTrades": 14,
+    "sharpe": 0.6417420798823247,
+    "sortino": 1.4472587426520407,
     "symbol": "AMEX:UDOW",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:32:59.082Z"
+    "updated_at": "2026-08-05T15:58:03.838Z"
   },
   "MU|3h": {
     "maxDDPercent": 0.2070035669552576,
-    "openPLPercent": 0.027043152215145888,
-    "openPL": 557.059999999998,
+    "openPLPercent": 0.09842501518435663,
+    "openPL": 2027.4499999999994,
     "netProfitPercent": 1.0598930019999997,
     "netProfit": 10598.930019999996,
     "totalTrades": 10,
-    "sharpe": 0.648113226897247,
-    "sortino": 4.26704547356271,
+    "sharpe": 0.6659787102463023,
+    "sortino": 4.046358707482816,
     "symbol": "NASDAQ:MU",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:03.152Z"
+    "updated_at": "2026-08-05T15:58:07.994Z"
   },
   "RY|3h": {
     "maxDDPercent": 0.07125947964908809,
-    "openPLPercent": 0.017503341068228314,
-    "openPL": 197.2799999999986,
+    "openPLPercent": 0.0161937845284522,
+    "openPL": 182.51999999999975,
     "netProfitPercent": 0.12709910200000035,
     "netProfit": 1270.9910200000036,
     "totalTrades": 11,
-    "sharpe": 0.4094740435496908,
-    "sortino": 1.147757724564519,
+    "sharpe": 0.38821884345033775,
+    "sortino": 1.086034190142262,
     "symbol": "TSX:RY",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:06.831Z"
+    "updated_at": "2026-08-05T15:58:12.161Z"
   },
   "BE|3h": {
     "maxDDPercent": 0.39232961929828564,
@@ -1479,59 +1479,59 @@
     "sortino": 1.0478642179278197,
     "symbol": "NYSE:BE",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:10.955Z"
+    "updated_at": "2026-08-05T15:58:17.489Z"
   },
   "TD|3h": {
     "maxDDPercent": 0.07351799302520313,
-    "openPLPercent": 0.0076230752505706805,
-    "openPL": 95.19999999999897,
+    "openPLPercent": 0.011658820971461238,
+    "openPL": 145.60000000000088,
     "netProfitPercent": 0.24883982999999998,
     "netProfit": 2488.3983,
     "totalTrades": 11,
-    "sharpe": 0.5263570170659171,
-    "sortino": 1.6624635158267962,
+    "sharpe": 0.529057803063594,
+    "sortino": 1.6420294690952006,
     "symbol": "TSX:TD",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:15.522Z"
+    "updated_at": "2026-08-05T15:58:21.398Z"
   },
   "JNJ|3h": {
     "maxDDPercent": 0.06797367079664261,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.214107789,
-    "netProfit": 2141.07789,
+    "openPLPercent": 0.024893291724830464,
+    "openPL": 301.95000000000164,
+    "netProfitPercent": 0.21297738900000004,
+    "netProfit": 2129.7738900000004,
     "totalTrades": 11,
-    "sharpe": 0.4808227966838697,
-    "sortino": 1.4382200668213516,
+    "sharpe": 0.523725090224563,
+    "sortino": 1.577698209043224,
     "symbol": "NYSE:JNJ",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:19.266Z"
+    "updated_at": "2026-08-05T15:58:25.405Z"
   },
   "GOOGL|3h": {
     "maxDDPercent": 0.14276723631727228,
-    "openPLPercent": 0.010428279146334382,
-    "openPL": 142.45000000000084,
-    "netProfitPercent": 0.3659971889999999,
-    "netProfit": 3659.971889999999,
-    "totalTrades": 12,
-    "sharpe": 0.472476980572651,
-    "sortino": 1.2485321516845505,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.384882063,
+    "netProfit": 3848.82063,
+    "totalTrades": 13,
+    "sharpe": 0.4737321575555227,
+    "sortino": 1.2589064679239772,
     "symbol": "NASDAQ:GOOGL",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:23.083Z"
+    "updated_at": "2026-08-05T15:58:29.943Z"
   },
   "TQQQ|3h": {
     "maxDDPercent": 0.2700262187134703,
-    "openPLPercent": -0.14705555896731257,
-    "openPL": -2481.4400000000014,
-    "netProfitPercent": 0.6874166590000005,
-    "netProfit": 6874.166590000005,
-    "totalTrades": 11,
-    "sharpe": 0.3726339620519685,
-    "sortino": 0.6542530214101038,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.5815043070000003,
+    "netProfit": 5815.043070000003,
+    "totalTrades": 12,
+    "sharpe": 0.5282218974997672,
+    "sortino": 1.6986555000001866,
     "symbol": "NASDAQ:TQQQ",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:26.411Z"
+    "updated_at": "2026-08-05T15:58:34.132Z"
   },
   "KARURVYSYA|3h": {
     "maxDDPercent": 0.1876418318826862,
@@ -1544,7 +1544,7 @@
     "sortino": 1.8516817378119081,
     "symbol": "BSE:KARURVYSYA",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:29.890Z"
+    "updated_at": "2026-08-05T15:58:37.961Z"
   },
   "CIPLA|3h": {
     "maxDDPercent": 0.18168510867511262,
@@ -1557,20 +1557,20 @@
     "sortino": 0.6669190135272375,
     "symbol": "BSE:CIPLA",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:34.077Z"
+    "updated_at": "2026-08-05T15:58:42.257Z"
   },
   "ICICIBANK|3h": {
-    "maxDDPercent": 0.12951759960868753,
+    "maxDDPercent": 0.13396496771521377,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.5728271699999993,
-    "netProfit": 5728.271699999993,
-    "totalTrades": 18,
-    "sharpe": 0.4490095299435614,
-    "sortino": 1.2561391549790575,
+    "netProfitPercent": 0.5220284799999995,
+    "netProfit": 5220.284799999995,
+    "totalTrades": 17,
+    "sharpe": 0.432110497210274,
+    "sortino": 1.1168903577046356,
     "symbol": "NSE:ICICIBANK",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:12.205Z"
+    "updated_at": "2026-08-05T15:59:07.491Z"
   },
   "DFEN|4h": {
     "maxDDPercent": 0.27015265369881286,
@@ -1583,72 +1583,72 @@
     "sortino": 0.8005561881025254,
     "symbol": "AMEX:DFEN",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:27.852Z"
+    "updated_at": "2026-08-05T16:01:22.996Z"
   },
   "EDC|4h": {
     "maxDDPercent": 0.32096543564729435,
-    "openPLPercent": -0.08321653343794452,
-    "openPL": -2338.3000000000015,
-    "netProfitPercent": 1.80989835,
-    "netProfit": 18098.983500000002,
-    "totalTrades": 14,
-    "sharpe": 0.45247159362120376,
-    "sortino": 1.2926770275408341,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 1.7276173250000004,
+    "netProfit": 17276.173250000003,
+    "totalTrades": 15,
+    "sharpe": 0.4784761174381538,
+    "sortino": 1.568846868995383,
     "symbol": "AMEX:EDC",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:31.461Z"
+    "updated_at": "2026-08-05T16:01:26.856Z"
   },
   "URTY|15m": {
-    "maxDDPercent": 0.07925186380240262,
-    "openPLPercent": 0.034390596779967114,
-    "openPL": 502.32000000000096,
-    "netProfitPercent": 0.46063182099999983,
-    "netProfit": 4606.3182099999985,
+    "maxDDPercent": 0.07939522163222706,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.5308288599999998,
+    "netProfit": 5308.288599999999,
     "totalTrades": 17,
-    "sharpe": 0.38774286953261794,
-    "sortino": 1.3969174667825632,
+    "sharpe": 0.39425773708929773,
+    "sortino": 1.4230535418333,
     "symbol": "AMEX:URTY",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:17:57.958Z"
+    "updated_at": "2026-08-05T18:09:19.050Z"
   },
   "DRN|45m": {
-    "maxDDPercent": 0.14077150338900563,
-    "openPLPercent": -0.01336645422109308,
-    "openPL": -173.44000000000017,
-    "netProfitPercent": 0.297576733,
-    "netProfit": 2975.7673299999997,
-    "totalTrades": 14,
-    "sharpe": 0.5002901998393288,
-    "sortino": 0.9470597580113981,
+    "maxDDPercent": 0.14077459792762897,
+    "openPLPercent": -0.019204625119387343,
+    "openPL": -247.70999999999856,
+    "netProfitPercent": 0.289845537,
+    "netProfit": 2898.4553699999997,
+    "totalTrades": 13,
+    "sharpe": 0.4461888457456915,
+    "sortino": 0.8891289219167945,
     "symbol": "AMEX:DRN",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:09.841Z"
+    "updated_at": "2026-08-05T18:10:56.625Z"
   },
   "DRN|2h": {
     "maxDDPercent": 0.1921579375124619,
-    "openPLPercent": -0.003392488332129437,
-    "openPL": -52.72000000000122,
+    "openPLPercent": -0.005936854581226401,
+    "openPL": -92.26000000000037,
     "netProfitPercent": 0.5540215570000004,
     "netProfit": 5540.215570000005,
     "totalTrades": 17,
-    "sharpe": 0.490016027510898,
-    "sortino": 1.197901520800684,
+    "sharpe": 0.464189491513878,
+    "sortino": 1.1445036269836124,
     "symbol": "AMEX:DRN",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:22.317Z"
+    "updated_at": "2026-08-05T17:59:52.336Z"
   },
   "EDC|2h": {
     "maxDDPercent": 0.3137765170400643,
-    "openPLPercent": -0.13968969744141665,
-    "openPL": -2984.099999999998,
-    "netProfitPercent": 1.1362348510000004,
-    "netProfit": 11362.348510000005,
-    "totalTrades": 12,
-    "sharpe": 0.5033136233679274,
-    "sortino": 1.0209093004764418,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.9315496010000004,
+    "netProfit": 9315.496010000004,
+    "totalTrades": 13,
+    "sharpe": 0.5437105314411328,
+    "sortino": 1.2938407593506311,
     "symbol": "AMEX:EDC",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:25.626Z"
+    "updated_at": "2026-08-05T17:59:56.176Z"
   },
   "HINDZINC|2h": {
     "maxDDPercent": 0.16561408995626958,
@@ -1661,7 +1661,7 @@
     "sortino": 0.14585022245229878,
     "symbol": "NSE:HINDZINC",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:29.131Z"
+    "updated_at": "2026-08-05T18:00:00.091Z"
   },
   "BHARTIARTL|2h": {
     "maxDDPercent": 0.11576108840892219,
@@ -1674,59 +1674,59 @@
     "sortino": 0.7819811888563303,
     "symbol": "NSE:BHARTIARTL",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:36.968Z"
+    "updated_at": "2026-08-05T18:00:08.201Z"
   },
   "SBIN|3h": {
     "maxDDPercent": 0.17403556593322236,
-    "openPLPercent": 0.013080663920229564,
-    "openPL": 169.19999999999754,
+    "openPLPercent": 0.03738657843867071,
+    "openPL": 483.5999999999981,
     "netProfitPercent": 0.29351232499999963,
     "netProfit": 2935.1232499999965,
     "totalTrades": 14,
-    "sharpe": 0.21653367784572472,
-    "sortino": 0.3470223041920805,
+    "sharpe": 0.2329619720308733,
+    "sortino": 0.3723412924788889,
     "symbol": "BSE:SBIN",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:55.683Z"
+    "updated_at": "2026-08-05T15:58:51.538Z"
   },
   "EDC|3h": {
     "maxDDPercent": 0.3384268212608642,
-    "openPLPercent": -0.13316474067421175,
-    "openPL": -4348.679999999999,
-    "netProfitPercent": 2.2656392210000007,
-    "netProfit": 22656.392210000005,
-    "totalTrades": 16,
-    "sharpe": 0.5386100596262361,
-    "sortino": 1.4977268147094775,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 2.0366170490000006,
+    "netProfit": 20366.170490000008,
+    "totalTrades": 17,
+    "sharpe": 0.5774635031011819,
+    "sortino": 2.125829991014821,
     "symbol": "AMEX:EDC",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:33:59.234Z"
+    "updated_at": "2026-08-05T15:58:55.599Z"
   },
   "AAPU|3h": {
     "maxDDPercent": 0.19636038360296074,
-    "openPLPercent": -0.07650888606224601,
-    "openPL": -1569.75,
+    "openPLPercent": -0.03531179356719047,
+    "openPL": -724.5,
     "netProfitPercent": 1.0517224610000002,
     "netProfit": 10517.224610000001,
     "totalTrades": 14,
-    "sharpe": 0.5190464863860339,
-    "sortino": 1.4444447759478378,
+    "sharpe": 0.5417751473551486,
+    "sortino": 1.6233652099393452,
     "symbol": "NASDAQ:AAPU",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:02.540Z"
+    "updated_at": "2026-08-05T15:58:59.333Z"
   },
   "LT|3h": {
     "maxDDPercent": 0.16464133066441017,
-    "openPLPercent": -0.006148017987850871,
-    "openPL": -91.5,
-    "netProfitPercent": 0.48828452000000017,
-    "netProfit": 4882.845200000002,
-    "totalTrades": 16,
-    "sharpe": 0.35357622886465034,
-    "sortino": 0.7341335416225665,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.4947660200000002,
+    "netProfit": 4947.660200000002,
+    "totalTrades": 17,
+    "sharpe": 0.3560686240192816,
+    "sortino": 0.7408802398965809,
     "symbol": "NSE:LT",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:06.126Z"
+    "updated_at": "2026-08-05T15:59:03.400Z"
   },
   "BHARTIARTL|3h": {
     "maxDDPercent": 0.10409279769585726,
@@ -1739,20 +1739,20 @@
     "sortino": 1.5921381402563752,
     "symbol": "NSE:BHARTIARTL",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:16.039Z"
+    "updated_at": "2026-08-05T15:59:11.538Z"
   },
   "LT|4h": {
     "maxDDPercent": 0.11483531488236642,
-    "openPLPercent": 0.014659318523017646,
-    "openPL": 283.60000000000036,
+    "openPLPercent": 0.03701012715966369,
+    "openPL": 716,
     "netProfitPercent": 0.9346056200000001,
     "netProfit": 9346.0562,
     "totalTrades": 14,
-    "sharpe": 0.41806446748306253,
-    "sortino": 1.7076299559292953,
+    "sharpe": 0.4241918650319862,
+    "sortino": 1.744251107914259,
     "symbol": "NSE:LT",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:35.199Z"
+    "updated_at": "2026-08-05T16:01:45.774Z"
   },
   "ULTRACEMCO|4h": {
     "maxDDPercent": 0.1309089123002125,
@@ -1765,7 +1765,7 @@
     "sortino": 1.9035578453752697,
     "symbol": "NSE:ULTRACEMCO",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:37:53.840Z"
+    "updated_at": "2026-08-05T16:01:49.950Z"
   },
   "BHARTIARTL|4h": {
     "maxDDPercent": 0.12134967611166979,
@@ -1778,7 +1778,7 @@
     "sortino": 0.541798153298151,
     "symbol": "NSE:BHARTIARTL",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:38:02.281Z"
+    "updated_at": "2026-08-05T16:01:57.910Z"
   },
   "KORU|1d": {
     "maxDDPercent": 0.8803449799999998,
@@ -1795,16 +1795,16 @@
   },
   "LT|1d": {
     "maxDDPercent": 0.44608822402891934,
-    "openPLPercent": 0.01416067351278976,
-    "openPL": 283.60000000000036,
+    "openPLPercent": 0.03774848087330411,
+    "openPL": 756,
     "netProfitPercent": 1.0027296,
     "netProfit": 10027.296,
     "totalTrades": 13,
-    "sharpe": 0.16714435333339098,
-    "sortino": 0.2862782217507501,
+    "sharpe": 0.17139873843797765,
+    "sortino": 0.2943339821239604,
     "symbol": "NSE:LT",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:17.839Z"
+    "updated_at": "2026-08-05T16:03:58.148Z"
   },
   "ULTRACEMCO|1d": {
     "maxDDPercent": 0.20680823651328062,
@@ -1817,7 +1817,7 @@
     "sortino": 0.4054374673678224,
     "symbol": "NSE:ULTRACEMCO",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:22.586Z"
+    "updated_at": "2026-08-05T16:04:03.172Z"
   },
   "BHARTIARTL|1d": {
     "maxDDPercent": 0.2593274847311434,
@@ -1830,202 +1830,202 @@
     "sortino": 0.5886159880675521,
     "symbol": "NSE:BHARTIARTL",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:27.136Z"
+    "updated_at": "2026-08-05T16:04:08.976Z"
   },
   "TATASTEEL|4h": {
     "maxDDPercent": 0.18621348293381534,
-    "openPLPercent": -0.06914853306714094,
-    "openPL": -1215,
-    "netProfitPercent": 0.7570871660000003,
-    "netProfit": 7570.8716600000025,
-    "totalTrades": 11,
-    "sharpe": 0.22913772436155974,
-    "sortino": 0.6889237420073646,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.6391485740000001,
+    "netProfit": 6391.485740000002,
+    "totalTrades": 12,
+    "sharpe": 0.22626039459155506,
+    "sortino": 0.6849494423463716,
     "symbol": "NSE:TATASTEEL",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:38:06.307Z"
+    "updated_at": "2026-08-05T16:02:01.891Z"
   },
   "SQQQ|15m": {
-    "maxDDPercent": 0.08811295083642463,
+    "maxDDPercent": 0.14470993638653992,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.26342835099999995,
-    "netProfit": 2634.2835099999993,
+    "netProfitPercent": 0.12568566300000011,
+    "netProfit": 1256.8566300000011,
     "totalTrades": 15,
-    "sharpe": 0.22928125967726642,
-    "sortino": 0.47872888676502884,
+    "sharpe": 0.10216637569496188,
+    "sortino": 0.14558988258279323,
     "symbol": "NASDAQ:SQQQ",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:08.512Z"
+    "updated_at": "2026-08-05T18:09:30.614Z"
   },
   "LABU|15m": {
-    "maxDDPercent": 0.0990108055599256,
-    "openPLPercent": 0.022139977960826708,
-    "openPL": 294,
-    "netProfitPercent": 0.3279146010000004,
-    "netProfit": 3279.146010000004,
-    "totalTrades": 12,
-    "sharpe": 0.27441769371708474,
-    "sortino": 1.0074953414804468,
-    "symbol": "AMEX:LABU",
-    "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:11.724Z"
-  },
-  "ABNB|15m": {
-    "maxDDPercent": 0.07440171162453618,
+    "maxDDPercent": 0.09966045147737486,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.07578606300000024,
-    "netProfit": 757.8606300000024,
+    "netProfitPercent": 0.20714903500000018,
+    "netProfit": 2071.490350000002,
+    "totalTrades": 11,
+    "sharpe": 0.24463044506658607,
+    "sortino": 0.6273009387513682,
+    "symbol": "AMEX:LABU",
+    "watchlist": "Swing 15m",
+    "updated_at": "2026-08-05T18:09:34.460Z"
+  },
+  "ABNB|15m": {
+    "maxDDPercent": 0.07498415709741317,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.07307958000000019,
+    "netProfit": 730.7958000000019,
     "totalTrades": 12,
-    "sharpe": 0.13735381244036954,
-    "sortino": 0.20737678561038028,
+    "sharpe": 0.1325982950418093,
+    "sortino": 0.19895041991943382,
     "symbol": "NASDAQ:ABNB",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:15.044Z"
+    "updated_at": "2026-08-05T18:09:37.769Z"
   },
   "CMC|15m": {
-    "maxDDPercent": 0.16268001657947007,
-    "openPLPercent": 0.023878923225077075,
-    "openPL": 278.80000000000047,
-    "netProfitPercent": 0.16755683399999943,
-    "netProfit": 1675.5683399999944,
-    "totalTrades": 18,
-    "sharpe": 2.6022843119517987,
+    "maxDDPercent": 0.16258838477734386,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.15412734099999953,
+    "netProfit": 1541.2734099999952,
+    "totalTrades": 17,
+    "sharpe": 1.3524083230851813,
     "sortino": 0,
     "symbol": "NYSE:CMC",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:18.560Z"
+    "updated_at": "2026-08-05T18:09:41.531Z"
   },
   "KRYS|15m": {
-    "maxDDPercent": 0.07439532615786151,
-    "openPLPercent": -0.02872210343710471,
-    "openPL": -354.2399999999998,
-    "netProfitPercent": 0.2333358550000001,
-    "netProfit": 2333.358550000001,
+    "maxDDPercent": 0.15837691589033923,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.06423168600000004,
+    "netProfit": 642.3168600000004,
     "totalTrades": 14,
-    "sharpe": 0.16972736056140109,
-    "sortino": 0.41916632622996636,
+    "sharpe": 0.059995861525618484,
+    "sortino": 0.08150944532154626,
     "symbol": "NASDAQ:KRYS",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:22.266Z"
+    "updated_at": "2026-08-05T18:09:46.026Z"
   },
   "CORT|15m": {
     "maxDDPercent": 0.06321307501743871,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.4425162010000001,
-    "netProfit": 4425.162010000001,
+    "openPLPercent": -0.010753902329767152,
+    "openPL": -154.97999999999888,
+    "netProfitPercent": 0.44115127000000004,
+    "netProfit": 4411.5127,
     "totalTrades": 12,
-    "sharpe": 0.23304750826972526,
-    "sortino": 2.3584641100954022,
+    "sharpe": 0.21603366419643014,
+    "sortino": 1.8722910585967831,
     "symbol": "NASDAQ:CORT",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:25.515Z"
+    "updated_at": "2026-08-05T18:09:49.565Z"
   },
   "NWSA|15m": {
-    "maxDDPercent": 0.08518619815517914,
-    "openPLPercent": -0.007471930038425093,
-    "openPL": -83.1600000000009,
-    "netProfitPercent": 0.11296545299999991,
-    "netProfit": 1129.654529999999,
-    "totalTrades": 17,
-    "sharpe": 1.3244452994599727,
-    "sortino": 0,
+    "maxDDPercent": 0.08524940903853306,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.11766579899999992,
+    "netProfit": 1176.6579899999992,
+    "totalTrades": 18,
+    "sharpe": 1.0779682947847091,
+    "sortino": 70.0920949207524,
     "symbol": "NASDAQ:NWSA",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:28.643Z"
+    "updated_at": "2026-08-05T18:09:53.377Z"
   },
   "HIG|15m": {
     "maxDDPercent": 0.08572861486691638,
-    "openPLPercent": 0.005506454620531443,
-    "openPL": 57.2699999999989,
-    "netProfitPercent": 0.04005215600000008,
-    "netProfit": 400.5215600000008,
-    "totalTrades": 15,
-    "sharpe": 0.5137223157452239,
-    "sortino": 2.0368420445649478,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.03824656400000006,
+    "netProfit": 382.4656400000006,
+    "totalTrades": 16,
+    "sharpe": 0.3552663956806299,
+    "sortino": 1.2603312594071496,
     "symbol": "NYSE:HIG",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:32.199Z"
+    "updated_at": "2026-08-05T18:09:57.114Z"
   },
   "SGHC|15m": {
-    "maxDDPercent": 0.08916716167450268,
-    "openPLPercent": -0.032536771372405106,
-    "openPL": -367.5,
-    "netProfitPercent": 0.129491294,
-    "netProfit": 1294.9129400000002,
+    "maxDDPercent": 0.10519864859538028,
+    "openPLPercent": -0.030383168072597156,
+    "openPL": -322.96000000000095,
+    "netProfitPercent": 0.06295696099999995,
+    "netProfit": 629.5696099999996,
     "totalTrades": 14,
-    "sharpe": 0.09801336222797273,
-    "sortino": 0.14212530909856388,
+    "sharpe": 0.03233015378717186,
+    "sortino": 0.04302863378863697,
     "symbol": "NYSE:SGHC",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:35.701Z"
+    "updated_at": "2026-08-05T18:10:01.116Z"
   },
   "FFIN|15m": {
     "maxDDPercent": 0.057425308794697455,
-    "openPLPercent": 0.005418840400276409,
-    "openPL": 58.20000000000083,
-    "netProfitPercent": 0.07403052500000024,
-    "netProfit": 740.3052500000024,
-    "totalTrades": 15,
-    "sharpe": 2.5153151171041754,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.09191014700000019,
+    "netProfit": 919.1014700000019,
+    "totalTrades": 16,
+    "sharpe": 1.8141715209734015,
     "sortino": 0,
     "symbol": "NASDAQ:FFIN",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:38.919Z"
+    "updated_at": "2026-08-05T18:10:04.853Z"
   },
   "SFNC|15m": {
-    "maxDDPercent": 0.05610567795819252,
+    "maxDDPercent": 0.056075365126249874,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.12218181099999997,
-    "netProfit": 1221.8181099999997,
-    "totalTrades": 14,
-    "sharpe": 1.42088330307693,
-    "sortino": 24.819032491190793,
+    "netProfitPercent": 0.12277738200000007,
+    "netProfit": 1227.7738200000008,
+    "totalTrades": 13,
+    "sharpe": 3.619749961864613,
+    "sortino": 0,
     "symbol": "NASDAQ:SFNC",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:42.366Z"
+    "updated_at": "2026-08-05T18:10:08.608Z"
   },
   "AUB|15m": {
     "maxDDPercent": 0.046455953913641886,
-    "openPLPercent": -0.0026848241235494594,
-    "openPL": -28.919999999999384,
-    "netProfitPercent": 0.0771655299999998,
-    "netProfit": 771.6552999999981,
-    "totalTrades": 12,
-    "sharpe": 3.7725084769088673,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.08432804999999988,
+    "netProfit": 843.2804999999988,
+    "totalTrades": 13,
+    "sharpe": 1.7685351157923168,
     "sortino": 0,
     "symbol": "NYSE:AUB",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:46.344Z"
+    "updated_at": "2026-08-05T18:10:12.346Z"
   },
   "OII|15m": {
-    "maxDDPercent": 0.10102469525857344,
+    "maxDDPercent": 0.10103431085460154,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.11559996299999992,
-    "netProfit": 1155.9996299999991,
-    "totalTrades": 14,
-    "sharpe": 0.10854901925720366,
-    "sortino": 0.1556036644874715,
+    "netProfitPercent": 0.08674062499999997,
+    "netProfit": 867.4062499999998,
+    "totalTrades": 13,
+    "sharpe": 0.08667616751868586,
+    "sortino": 0.1211948496285119,
     "symbol": "NYSE:OII",
     "watchlist": "Swing 15m",
-    "updated_at": "2026-07-31T19:18:49.731Z"
+    "updated_at": "2026-08-05T18:10:16.239Z"
   },
   "KRYS|30m": {
-    "maxDDPercent": 0.08428012994206391,
-    "openPLPercent": -0.003429266673060171,
-    "openPL": -49.139999999999645,
+    "maxDDPercent": 0.13335934639277688,
+    "openPLPercent": -0.06303318741910652,
+    "openPL": -903.2400000000009,
     "netProfitPercent": 0.4329594249999999,
     "netProfit": 4329.594249999999,
     "totalTrades": 13,
-    "sharpe": 2.093501531929806,
-    "sortino": 0,
+    "sharpe": 0.8406756255260885,
+    "sortino": 1.918065362447374,
     "symbol": "NASDAQ:KRYS",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:05.054Z"
+    "updated_at": "2026-08-05T17:55:56.550Z"
   },
   "CORT|30m": {
     "maxDDPercent": 0.06591000734562255,
@@ -2038,254 +2038,254 @@
     "sortino": 0,
     "symbol": "NASDAQ:CORT",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:08.823Z"
+    "updated_at": "2026-08-05T17:55:32.295Z"
   },
   "SBLK|30m": {
     "maxDDPercent": 0.15410647694449428,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.18631880300000006,
-    "netProfit": 1863.1880300000005,
+    "openPLPercent": -0.016372000981581005,
+    "openPL": -194.0400000000008,
+    "netProfitPercent": 0.18519416300000005,
+    "netProfit": 1851.9416300000005,
     "totalTrades": 16,
-    "sharpe": 0.5230435650461552,
-    "sortino": 0.815163568613006,
+    "sharpe": 0.4128477872001252,
+    "sortino": 0.6616394020370227,
     "symbol": "NASDAQ:SBLK",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:12.595Z"
+    "updated_at": "2026-08-05T17:56:25.470Z"
   },
   "LFST|30m": {
     "maxDDPercent": 0.07054446492082617,
-    "openPLPercent": -0.010597096995595173,
-    "openPL": -128.39999999999915,
+    "openPLPercent": -0.022960376823789673,
+    "openPL": -278.19999999999976,
     "netProfitPercent": 0.21165258799999997,
     "netProfit": 2116.5258799999997,
     "totalTrades": 11,
-    "sharpe": 0.6401089180692783,
-    "sortino": 5.3029665192807665,
+    "sharpe": 0.5109393125440503,
+    "sortino": 2.4620178495740572,
     "symbol": "NASDAQ:LFST",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:16.316Z"
+    "updated_at": "2026-08-05T17:56:00.378Z"
   },
   "NWSA|30m": {
     "maxDDPercent": 0.14243338666147784,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.19940665800000013,
-    "netProfit": 1994.0665800000013,
-    "totalTrades": 16,
-    "sharpe": 0.7792943785215486,
-    "sortino": 1.467826677231647,
+    "netProfitPercent": 0.21542739900000005,
+    "netProfit": 2154.2739900000006,
+    "totalTrades": 17,
+    "sharpe": 0.7565605978766395,
+    "sortino": 1.4476896492503128,
     "symbol": "NASDAQ:NWSA",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:19.759Z"
+    "updated_at": "2026-08-05T17:56:17.570Z"
   },
   "NTR|30m": {
     "maxDDPercent": 0.09768005439994784,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.23302836600000046,
-    "netProfit": 2330.2836600000046,
+    "openPLPercent": -0.03448423532481848,
+    "openPL": -424.80000000000075,
+    "netProfitPercent": 0.23186724600000047,
+    "netProfit": 2318.672460000005,
     "totalTrades": 14,
-    "sharpe": 0.7278567145131094,
-    "sortino": 2.322133086562412,
+    "sharpe": 0.4869449503646302,
+    "sortino": 1.2719608747015103,
     "symbol": "TSX:NTR",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:23.192Z"
+    "updated_at": "2026-08-05T17:56:09.748Z"
   },
   "MDLZ|30m": {
     "maxDDPercent": 0.07285556752110298,
-    "openPLPercent": -0.0033364075064563656,
-    "openPL": -38.059999999998574,
+    "openPLPercent": 0.0001516548866571908,
+    "openPL": 1.730000000000885,
     "netProfitPercent": 0.14074794299999976,
     "netProfit": 1407.4794299999976,
     "totalTrades": 14,
-    "sharpe": 1.0426441659541765,
-    "sortino": 12.053023603599554,
+    "sharpe": 0.8477297465047967,
+    "sortino": 10.621915686142534,
     "symbol": "NASDAQ:MDLZ",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:26.939Z"
+    "updated_at": "2026-08-05T17:56:05.891Z"
   },
   "FWONK|30m": {
     "maxDDPercent": 0.07769330618932814,
-    "openPLPercent": 0.010370818877435408,
-    "openPL": 130.53999999999917,
+    "openPLPercent": -0.023164726277636247,
+    "openPL": -291.58000000000004,
     "netProfitPercent": 0.258724133,
     "netProfit": 2587.2413300000003,
     "totalTrades": 16,
-    "sharpe": 1.5957370946136455,
-    "sortino": 52.23484510903845,
+    "sharpe": 0.9547222288178335,
+    "sortino": 3.0721151928089547,
     "symbol": "NASDAQ:FWONK",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:30.901Z"
+    "updated_at": "2026-08-05T17:55:52.720Z"
   },
   "NWS|30m": {
-    "maxDDPercent": 0.07700882412961092,
-    "openPLPercent": 0.006682954248201198,
-    "openPL": 89.76000000000099,
-    "netProfitPercent": 0.3431185770000002,
-    "netProfit": 3431.185770000002,
+    "maxDDPercent": 0.0769224153609712,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.33860803800000017,
+    "netProfit": 3386.0803800000017,
     "totalTrades": 18,
-    "sharpe": 2.042288153719209,
+    "sharpe": 2.0695097581943007,
     "sortino": 0,
     "symbol": "NASDAQ:NWS",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:34.271Z"
+    "updated_at": "2026-08-05T17:56:13.737Z"
   },
   "BIIB|30m": {
-    "maxDDPercent": 0.08084617591033544,
-    "openPLPercent": 0.01066464359806555,
-    "openPL": 121.8999999999991,
-    "netProfitPercent": 0.1430292899999998,
-    "netProfit": 1430.292899999998,
+    "maxDDPercent": 0.08028267000000014,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.1328380449999997,
+    "netProfit": 1328.3804499999972,
     "totalTrades": 15,
-    "sharpe": 1.2515004391377034,
-    "sortino": 6.197021254961494,
+    "sharpe": 0.8413458709699208,
+    "sortino": 4.242040694664775,
     "symbol": "NASDAQ:BIIB",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:37.546Z"
+    "updated_at": "2026-08-05T17:55:23.842Z"
   },
   "SGHC|30m": {
     "maxDDPercent": 0.06187869799999989,
-    "openPLPercent": 0.0006760870833200461,
-    "openPL": 11.369999999999758,
-    "netProfitPercent": 0.6817360190000004,
-    "netProfit": 6817.360190000003,
-    "totalTrades": 17,
-    "sharpe": 1.5706784858557126,
-    "sortino": 92.38483405286135,
+    "openPLPercent": -0.0035797427001916945,
+    "openPL": -60.8999999999987,
+    "netProfitPercent": 0.7012395890000003,
+    "netProfit": 7012.3958900000025,
+    "totalTrades": 18,
+    "sharpe": 1.2385157384299421,
+    "sortino": 85.18918807718457,
     "symbol": "NYSE:SGHC",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:40.897Z"
+    "updated_at": "2026-08-05T17:56:29.183Z"
   },
   "OII|30m": {
     "maxDDPercent": 0.08695371112340826,
-    "openPLPercent": 0.029045221284262603,
-    "openPL": 416.0100000000017,
-    "netProfitPercent": 0.43228380299999963,
-    "netProfit": 4322.838029999996,
-    "totalTrades": 15,
-    "sharpe": 1.7045740563377736,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.48013514099999965,
+    "netProfit": 4801.351409999997,
+    "totalTrades": 16,
+    "sharpe": 1.3961639203029332,
     "sortino": 0,
     "symbol": "NYSE:OII",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:44.252Z"
+    "updated_at": "2026-08-05T17:56:21.840Z"
   },
   "EXEL|30m": {
-    "maxDDPercent": 0.07693816479347154,
-    "openPLPercent": -0.03543816310992601,
-    "openPL": -455.4000000000001,
-    "netProfitPercent": 0.28505531900000036,
-    "netProfit": 2850.5531900000037,
+    "maxDDPercent": 0.07702376000000004,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.2920058770000005,
+    "netProfit": 2920.058770000005,
     "totalTrades": 14,
-    "sharpe": 1.7300898325506908,
+    "sharpe": 2.1344714995348513,
     "sortino": 0,
     "symbol": "NASDAQ:EXEL",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:51.755Z"
+    "updated_at": "2026-08-05T17:55:45.010Z"
   },
   "LABU|45m": {
-    "maxDDPercent": 0.17232670864523414,
-    "openPLPercent": 0.0009960107476824855,
-    "openPL": 14.639999999998821,
-    "netProfitPercent": 0.4698636569999999,
-    "netProfit": 4698.636569999999,
+    "maxDDPercent": 0.1726703648055814,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.5626067089999998,
+    "netProfit": 5626.067089999998,
     "totalTrades": 13,
-    "sharpe": 1.4718080441473296,
+    "sharpe": 1.774362657256884,
     "sortino": 0,
     "symbol": "AMEX:LABU",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:12.931Z"
+    "updated_at": "2026-08-05T18:11:00.262Z"
   },
   "ABNB|45m": {
-    "maxDDPercent": 0.06137298710237122,
+    "maxDDPercent": 0.06167228207739164,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.2695306689999995,
-    "netProfit": 2695.306689999995,
+    "netProfitPercent": 0.2236286189999996,
+    "netProfit": 2236.286189999996,
     "totalTrades": 13,
-    "sharpe": 1.8566475309405448,
+    "sharpe": 1.5653686611275608,
     "sortino": 0,
     "symbol": "NASDAQ:ABNB",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:16.301Z"
+    "updated_at": "2026-08-05T18:11:04.831Z"
   },
   "KRYS|45m": {
     "maxDDPercent": 0.10834535022181155,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.287603785,
-    "netProfit": 2876.03785,
+    "openPLPercent": 0.03622926790250069,
+    "openPL": 466.04999999999956,
+    "netProfitPercent": 0.28639088500000004,
+    "netProfit": 2863.9088500000003,
     "totalTrades": 14,
-    "sharpe": 0.701632018052632,
-    "sortino": 1.9743798808240005,
+    "sharpe": 0.7522057189888195,
+    "sortino": 2.11726476831728,
     "symbol": "NASDAQ:KRYS",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:19.684Z"
+    "updated_at": "2026-08-05T18:11:08.426Z"
   },
   "CI|45m": {
-    "maxDDPercent": 0.07315201954983651,
-    "openPLPercent": -0.009852899800565059,
-    "openPL": -116.22000000000071,
-    "netProfitPercent": 0.17955122200000007,
-    "netProfit": 1795.5122200000008,
-    "totalTrades": 18,
-    "sharpe": 0.6629725362672014,
-    "sortino": 3.045523059586171,
+    "maxDDPercent": 0.07464258606604009,
+    "openPLPercent": -0.045011586784690166,
+    "openPL": -533.9099999999999,
+    "netProfitPercent": 0.18616124900000014,
+    "netProfit": 1861.6124900000013,
+    "totalTrades": 17,
+    "sharpe": 0.391146688834614,
+    "sortino": 0.8368690849257828,
     "symbol": "NYSE:CI",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:23.132Z"
+    "updated_at": "2026-08-05T18:11:12.550Z"
   },
   "SBLK|45m": {
     "maxDDPercent": 0.15061673842582932,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.2766715549999997,
-    "netProfit": 2766.7155499999967,
+    "openPLPercent": -0.014695869394496873,
+    "openPL": -187.43999999999903,
+    "netProfitPercent": 0.2754604369999996,
+    "netProfit": 2754.6043699999964,
     "totalTrades": 13,
-    "sharpe": 0.5177329026380921,
-    "sortino": 0.9279247724818263,
+    "sharpe": 0.4379621133665363,
+    "sortino": 0.8021985512338029,
     "symbol": "NASDAQ:SBLK",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:26.599Z"
+    "updated_at": "2026-08-05T18:11:18.263Z"
   },
   "LFST|45m": {
-    "maxDDPercent": 0.07033391499847177,
-    "openPLPercent": -0.0377517784590303,
-    "openPL": -606.3199999999994,
+    "maxDDPercent": 0.08152389570327209,
+    "openPLPercent": -0.053195687828633584,
+    "openPL": -854.3599999999989,
     "netProfitPercent": 0.6060700310000003,
     "netProfit": 6060.700310000004,
     "totalTrades": 13,
-    "sharpe": 1.1156358775948652,
-    "sortino": 5.805466770022519,
+    "sharpe": 0.8619944576575002,
+    "sortino": 2.2917616385396347,
     "symbol": "NASDAQ:LFST",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:30.444Z"
+    "updated_at": "2026-08-05T18:11:23.078Z"
   },
   "NWSA|45m": {
-    "maxDDPercent": 0.1427200569476129,
+    "maxDDPercent": 0.14270613933260592,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.2763829110000002,
-    "netProfit": 2763.8291100000015,
-    "totalTrades": 19,
-    "sharpe": 0.47132747879339354,
-    "sortino": 0.9494623796574647,
+    "netProfitPercent": 0.26021616600000014,
+    "netProfit": 2602.161660000001,
+    "totalTrades": 18,
+    "sharpe": 0.43949456794107417,
+    "sortino": 0.878456267156424,
     "symbol": "NASDAQ:NWSA",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:33.763Z"
+    "updated_at": "2026-08-05T18:11:27.937Z"
   },
   "INGM|45m": {
     "maxDDPercent": 0.12100786499999977,
-    "openPLPercent": 0.017854315506085135,
-    "openPL": 212.15999999999983,
+    "openPLPercent": 0.05115948096935943,
+    "openPL": 607.9200000000008,
     "netProfitPercent": 0.18828414299999985,
     "netProfit": 1882.8414299999984,
     "totalTrades": 12,
-    "sharpe": 0.46589800287058203,
-    "sortino": 1.1425174497626618,
+    "sharpe": 0.5519540853032342,
+    "sortino": 1.2573351722693737,
     "symbol": "NYSE:INGM",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:37.199Z"
+    "updated_at": "2026-08-05T18:11:32.874Z"
   },
   "DAL|45m": {
     "maxDDPercent": 0.07313918026401774,
@@ -2298,59 +2298,59 @@
     "sortino": 11.968981898583754,
     "symbol": "NYSE:DAL",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:40.995Z"
+    "updated_at": "2026-08-05T18:11:36.739Z"
   },
   "MDLZ|45m": {
     "maxDDPercent": 0.07798687556537791,
-    "openPLPercent": 0.001987088409028024,
-    "openPL": 23.40000000000046,
+    "openPLPercent": 0.007948353636111986,
+    "openPL": 93.60000000000056,
     "netProfitPercent": 0.17760236000000013,
     "netProfit": 1776.0236000000014,
     "totalTrades": 13,
-    "sharpe": 0.7319227115751558,
-    "sortino": 1.6434093121540136,
+    "sharpe": 0.6831563349622839,
+    "sortino": 1.5607627745367791,
     "symbol": "NASDAQ:MDLZ",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:44.607Z"
+    "updated_at": "2026-08-05T18:11:41.405Z"
   },
   "MGA|45m": {
     "maxDDPercent": 0.23101712935354005,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.5462931879999998,
-    "netProfit": 5462.931879999998,
-    "totalTrades": 17,
-    "sharpe": 0.6490668836100795,
-    "sortino": 1.4096635236960628,
+    "netProfitPercent": 0.691567398,
+    "netProfit": 6915.67398,
+    "totalTrades": 18,
+    "sharpe": 0.7291779977242047,
+    "sortino": 1.614349405613409,
     "symbol": "TSX:MGA",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:04:47.910Z"
+    "updated_at": "2026-08-05T18:11:45.667Z"
   },
   "BIIB|45m": {
-    "maxDDPercent": 0.1152235349999999,
+    "maxDDPercent": 0.07298800287091436,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.11737272300000022,
-    "netProfit": 1173.7272300000022,
+    "netProfitPercent": 0.2555446780000002,
+    "netProfit": 2555.446780000002,
     "totalTrades": 13,
-    "sharpe": 0.38510225500601014,
-    "sortino": 0.6070185170587434,
+    "sharpe": 1.3851785750593335,
+    "sortino": 9.642018183414477,
     "symbol": "NASDAQ:BIIB",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:07.725Z"
+    "updated_at": "2026-08-05T18:11:52.867Z"
   },
   "PFG|45m": {
-    "maxDDPercent": 0.059866136724952786,
+    "maxDDPercent": 0.05967821164287094,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.21836262499999975,
-    "netProfit": 2183.6262499999975,
-    "totalTrades": 15,
-    "sharpe": 0.8490092824581452,
-    "sortino": 3.5016673597314973,
+    "netProfitPercent": 0.19059486399999975,
+    "netProfit": 1905.9486399999976,
+    "totalTrades": 14,
+    "sharpe": 0.8031304271746705,
+    "sortino": 3.0612367240152594,
     "symbol": "NASDAQ:PFG",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:11.223Z"
+    "updated_at": "2026-08-05T18:11:57.795Z"
   },
   "QRVO|45m": {
     "maxDDPercent": 0.1416862491575376,
@@ -2363,33 +2363,33 @@
     "sortino": 1.0682849185905676,
     "symbol": "NASDAQ:QRVO",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:15.153Z"
+    "updated_at": "2026-08-05T18:12:02.361Z"
   },
   "SFNC|45m": {
-    "maxDDPercent": 0.12985061488369765,
+    "maxDDPercent": 0.12982584634719144,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.1690743359999999,
-    "netProfit": 1690.743359999999,
-    "totalTrades": 12,
-    "sharpe": 0.3323051903307153,
-    "sortino": 0.576262324990652,
+    "netProfitPercent": 0.14554900999999995,
+    "netProfit": 1455.4900999999995,
+    "totalTrades": 11,
+    "sharpe": 0.30660312428243286,
+    "sortino": 0.5316515289822016,
     "symbol": "NASDAQ:SFNC",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:18.590Z"
+    "updated_at": "2026-08-05T18:12:07.247Z"
   },
   "OII|45m": {
     "maxDDPercent": 0.10490225128284343,
-    "openPLPercent": 0.0270948308872679,
-    "openPL": 457.5800000000015,
-    "netProfitPercent": 0.6888092119999997,
-    "netProfit": 6888.092119999997,
-    "totalTrades": 17,
-    "sharpe": 1.2972461839360767,
-    "sortino": 8.590332811035376,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.7312699639999997,
+    "netProfit": 7312.699639999996,
+    "totalTrades": 18,
+    "sharpe": 1.0935477544099574,
+    "sortino": 7.873235989301385,
     "symbol": "NYSE:OII",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:22.052Z"
+    "updated_at": "2026-08-05T18:12:11.822Z"
   },
   "BUSE|45m": {
     "maxDDPercent": 0.08549402790844148,
@@ -2402,150 +2402,150 @@
     "sortino": 2.0675162006010965,
     "symbol": "NASDAQ:BUSE",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:25.766Z"
+    "updated_at": "2026-08-05T18:12:18.219Z"
   },
   "EXEL|45m": {
     "maxDDPercent": 0.07134971744542025,
-    "openPLPercent": -0.027644773979650962,
-    "openPL": -344.0000000000003,
-    "netProfitPercent": 0.24435815700000002,
-    "netProfit": 2443.5815700000003,
-    "totalTrades": 12,
-    "sharpe": 0.8658738856446287,
-    "sortino": 3.928803396699792,
-    "symbol": "NASDAQ:EXEL",
-    "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:29.891Z"
-  },
-  "NVST|45m": {
-    "maxDDPercent": 0.1304357094999994,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.36096176399999974,
-    "netProfit": 3609.617639999997,
-    "totalTrades": 14,
-    "sharpe": 0.763577523074602,
-    "sortino": 1.551740275763113,
+    "netProfitPercent": 0.2728177070000001,
+    "netProfit": 2728.1770700000006,
+    "totalTrades": 13,
+    "sharpe": 1.187082943837361,
+    "sortino": 0,
+    "symbol": "NASDAQ:EXEL",
+    "watchlist": "Swing 45m",
+    "updated_at": "2026-08-05T18:12:22.575Z"
+  },
+  "NVST|45m": {
+    "maxDDPercent": 0.13040020675036376,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.32293816599999964,
+    "netProfit": 3229.3816599999964,
+    "totalTrades": 13,
+    "sharpe": 0.6972581446880262,
+    "sortino": 1.4033649128623917,
     "symbol": "NYSE:NVST",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:34.108Z"
+    "updated_at": "2026-08-05T18:12:26.661Z"
   },
   "FAST|45m": {
     "maxDDPercent": 0.04820108568317533,
-    "openPLPercent": 0.014235585689724363,
-    "openPL": 180.60000000000073,
-    "netProfitPercent": 0.2686517010000001,
-    "netProfit": 2686.517010000001,
-    "totalTrades": 16,
-    "sharpe": 1.05134611504045,
-    "sortino": 5.6175056568266015,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.31255194900000005,
+    "netProfit": 3125.5194900000006,
+    "totalTrades": 17,
+    "sharpe": 1.1387894750677339,
+    "sortino": 5.607018192463177,
     "symbol": "NASDAQ:FAST",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:38.634Z"
+    "updated_at": "2026-08-05T18:12:31.365Z"
   },
   "KMT|45m": {
-    "maxDDPercent": 0.13595273670555877,
-    "openPLPercent": -0.012410240633394432,
-    "openPL": -170.5500000000011,
-    "netProfitPercent": 0.3742682759999997,
-    "netProfit": 3742.682759999997,
+    "maxDDPercent": 0.1357878022153477,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.3478035929999995,
+    "netProfit": 3478.035929999995,
     "totalTrades": 14,
-    "sharpe": 0.7196326019226258,
-    "sortino": 1.5629004171574439,
+    "sharpe": 0.7067066135829312,
+    "sortino": 1.4285182488126111,
     "symbol": "NYSE:KMT",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:42.703Z"
+    "updated_at": "2026-08-05T18:12:36.912Z"
   },
   "NYT|1h": {
     "maxDDPercent": 0.17664516143788292,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.17801973499999993,
-    "netProfit": 1780.1973499999992,
+    "openPLPercent": -0.13701146189458252,
+    "openPL": -1612.5,
+    "netProfitPercent": 0.17690883499999993,
+    "netProfit": 1769.0883499999993,
     "totalTrades": 15,
-    "sharpe": 1.059149542253582,
-    "sortino": 4.941259760491728,
+    "sharpe": 0.03164745961368795,
+    "sortino": 0.035816263597866584,
     "symbol": "NYSE:NYT",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:30.699Z"
+    "updated_at": "2026-08-05T17:58:37.530Z"
   },
   "KRYS|1h": {
     "maxDDPercent": 0.10826712137171024,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.461776419,
-    "netProfit": 4617.76419,
+    "openPLPercent": 0.01675178625832773,
+    "openPL": 244.6400000000001,
+    "netProfitPercent": 0.46038157500000004,
+    "netProfit": 4603.815750000001,
     "totalTrades": 14,
-    "sharpe": 0.9444046078642024,
-    "sortino": 8.273590343033641,
+    "sharpe": 0.9298604277114224,
+    "sortino": 8.239818596552585,
     "symbol": "NASDAQ:KRYS",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:08.677Z"
+    "updated_at": "2026-08-05T17:58:14.243Z"
   },
   "CI|1h": {
     "maxDDPercent": 0.08326282082465356,
-    "openPLPercent": -0.008091837370186199,
-    "openPL": -102.4799999999999,
+    "openPLPercent": -0.04685969755767667,
+    "openPL": -593.4599999999998,
     "netProfitPercent": 0.2664614390000001,
     "netProfit": 2664.6143900000006,
     "totalTrades": 18,
-    "sharpe": 0.7724268548981886,
-    "sortino": 3.705441531973731,
+    "sharpe": 0.478936925357357,
+    "sortino": 1.094182855087608,
     "symbol": "NYSE:CI",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:17.672Z"
+    "updated_at": "2026-08-05T17:57:14.226Z"
   },
   "LFST|1h": {
-    "maxDDPercent": 0.10317478600996836,
-    "openPLPercent": -0.017525680666049023,
-    "openPL": -251.3999999999991,
-    "netProfitPercent": 0.4344663970000005,
-    "netProfit": 4344.663970000005,
-    "totalTrades": 12,
-    "sharpe": 0.6582114410044295,
-    "sortino": 2.51212895544199,
+    "maxDDPercent": 0.1031622835865836,
+    "openPLPercent": -0.029790210649180842,
+    "openPL": -427.3799999999998,
+    "netProfitPercent": 0.4346323530000005,
+    "netProfit": 4346.323530000005,
+    "totalTrades": 11,
+    "sharpe": 0.6491364324116403,
+    "sortino": 2.036737036760228,
     "symbol": "NASDAQ:LFST",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:12.282Z"
+    "updated_at": "2026-08-05T17:58:18.311Z"
   },
   "INGM|1h": {
     "maxDDPercent": 0.17728991247465611,
-    "openPLPercent": 0.0219783393382353,
-    "openPL": 291.2000000000003,
+    "openPLPercent": 0.05391561368910843,
+    "openPL": 714.3500000000001,
     "netProfitPercent": 0.324940868,
     "netProfit": 3249.40868,
     "totalTrades": 11,
-    "sharpe": 0.37576200421117784,
-    "sortino": 0.8963352006041979,
+    "sharpe": 0.4140719987837752,
+    "sortino": 0.9346012672132407,
     "symbol": "NYSE:INGM",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:01.909Z"
+    "updated_at": "2026-08-05T17:58:05.589Z"
   },
   "NTR|1h": {
     "maxDDPercent": 0.1047810642416331,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.1525513560000001,
-    "netProfit": 1525.5135600000012,
+    "openPLPercent": 0.009428012356073713,
+    "openPL": 108.5600000000002,
+    "netProfitPercent": 0.15146221600000012,
+    "netProfit": 1514.6221600000013,
     "totalTrades": 12,
-    "sharpe": 0.42289364796401374,
-    "sortino": 0.7354961058317557,
+    "sharpe": 0.3995537701814493,
+    "sortino": 0.7022650113821348,
     "symbol": "TSX:NTR",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:23.847Z"
+    "updated_at": "2026-08-05T17:58:30.073Z"
   },
   "MDLZ|1h": {
     "maxDDPercent": 0.07772661025829243,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.16349408100000004,
-    "netProfit": 1634.9408100000005,
+    "openPLPercent": 0.013016242154747185,
+    "openPL": 151.30000000000024,
+    "netProfitPercent": 0.16239386300000005,
+    "netProfit": 1623.9386300000006,
     "totalTrades": 13,
-    "sharpe": 0.545793666043088,
-    "sortino": 1.105543686486121,
+    "sharpe": 0.5538933142019835,
+    "sortino": 1.124480567668691,
     "symbol": "NASDAQ:MDLZ",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:16.184Z"
+    "updated_at": "2026-08-05T17:58:22.114Z"
   },
   "PFG|1h": {
     "maxDDPercent": 0.073175014498358,
@@ -2558,189 +2558,189 @@
     "sortino": 2.801443597377932,
     "symbol": "NASDAQ:PFG",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:42.154Z"
+    "updated_at": "2026-08-05T15:24:04.175Z"
   },
   "OII|1h": {
-    "maxDDPercent": 0.11172188800000003,
-    "openPLPercent": 0.02104073441278303,
-    "openPL": 344.39999999999907,
-    "netProfitPercent": 0.6368249949999999,
-    "netProfit": 6368.249949999999,
+    "maxDDPercent": 0.09628208033950134,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.775902664,
+    "netProfit": 7759.026639999999,
     "totalTrades": 16,
-    "sharpe": 1.0563213380599532,
-    "sortino": 3.5530993879531683,
+    "sharpe": 1.5041129352376625,
+    "sortino": 0,
     "symbol": "NYSE:OII",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:34.022Z"
+    "updated_at": "2026-08-05T17:58:41.641Z"
   },
   "FTI|1h": {
     "maxDDPercent": 0.08293311431479111,
-    "openPLPercent": -0.025090726765871856,
-    "openPL": -325.6500000000005,
+    "openPLPercent": -0.054298906129220025,
+    "openPL": -704.7399999999998,
     "netProfitPercent": 0.29788986600000045,
     "netProfit": 2978.8986600000044,
     "totalTrades": 13,
-    "sharpe": 0.9044686899418516,
-    "sortino": 7.426952384273301,
+    "sharpe": 0.5674674721789759,
+    "sortino": 1.2562459139414348,
     "symbol": "NYSE:FTI",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:54.846Z"
+    "updated_at": "2026-08-05T17:57:58.338Z"
   },
   "FTV|1h": {
     "maxDDPercent": 0.061917882609261767,
-    "openPLPercent": -0.034608030724162284,
-    "openPL": -439.0400000000018,
+    "openPLPercent": -0.006025505349296206,
+    "openPL": -76.4400000000015,
     "netProfitPercent": 0.26860728799999967,
     "netProfit": 2686.0728799999965,
     "totalTrades": 12,
-    "sharpe": 1.069921987672647,
-    "sortino": 24.128894176728995,
+    "sharpe": 0.8675700679828708,
+    "sortino": 7.8150520609269725,
     "symbol": "NYSE:FTV",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:58.456Z"
+    "updated_at": "2026-08-05T17:58:02.074Z"
   },
   "BUSE|1h": {
-    "maxDDPercent": 0.08724503699999986,
+    "maxDDPercent": 0.06699270724923703,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.21645661500000024,
-    "netProfit": 2164.5661500000024,
-    "totalTrades": 16,
-    "sharpe": 0.5131256646034072,
-    "sortino": 1.3582532771205904,
+    "netProfitPercent": 0.2596787280000003,
+    "netProfit": 2596.787280000003,
+    "totalTrades": 15,
+    "sharpe": 0.7501700507127435,
+    "sortino": 4.415817314865288,
     "symbol": "NASDAQ:BUSE",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:13.937Z"
+    "updated_at": "2026-08-05T17:57:10.108Z"
   },
   "EXEL|1h": {
-    "maxDDPercent": 0.07713496226578863,
-    "openPLPercent": -0.018167191733875994,
-    "openPL": -252.7199999999998,
-    "netProfitPercent": 0.3910790599999994,
-    "netProfit": 3910.7905999999944,
-    "totalTrades": 14,
-    "sharpe": 0.7192318679134344,
-    "sortino": 2.6140026118504216,
-    "symbol": "NASDAQ:EXEL",
-    "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:38.553Z"
-  },
-  "NVST|1h": {
-    "maxDDPercent": 0.14013778614272399,
+    "maxDDPercent": 0.07711131540500532,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.3358876499999996,
-    "netProfit": 3358.8764999999958,
-    "totalTrades": 15,
-    "sharpe": 0.5524743713559596,
-    "sortino": 1.2071116355338825,
+    "netProfitPercent": 0.3647390959999994,
+    "netProfit": 3647.390959999994,
+    "totalTrades": 14,
+    "sharpe": 0.7578231593109929,
+    "sortino": 2.661989749275195,
+    "symbol": "NASDAQ:EXEL",
+    "watchlist": "Swing 1H",
+    "updated_at": "2026-08-05T17:57:37.651Z"
+  },
+  "NVST|1h": {
+    "maxDDPercent": 0.1401308115133114,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.31595404599999954,
+    "netProfit": 3159.5404599999956,
+    "totalTrades": 14,
+    "sharpe": 0.5540921179447867,
+    "sortino": 1.2060979647744758,
     "symbol": "NYSE:NVST",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:27.249Z"
+    "updated_at": "2026-08-05T17:58:33.907Z"
   },
   "FAST|1h": {
     "maxDDPercent": 0.04444880099775611,
-    "openPLPercent": 0.003087217289831169,
-    "openPL": 42.4499999999996,
-    "netProfitPercent": 0.3750246909999999,
-    "netProfit": 3750.246909999999,
-    "totalTrades": 16,
-    "sharpe": 1.2600492681340876,
-    "sortino": 10.582350814161977,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.4172270659999999,
+    "netProfit": 4172.270659999999,
+    "totalTrades": 17,
+    "sharpe": 1.272017718036054,
+    "sortino": 10.75156058865017,
     "symbol": "NASDAQ:FAST",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:44.963Z"
+    "updated_at": "2026-08-05T17:57:44.989Z"
   },
   "KMT|1h": {
     "maxDDPercent": 0.10049719565531663,
-    "openPLPercent": -0.023199598943763024,
-    "openPL": -333.7400000000001,
-    "netProfitPercent": 0.43855935099999954,
-    "netProfit": 4385.593509999995,
-    "totalTrades": 14,
-    "sharpe": 0.6347181859175044,
-    "sortino": 2.7385429466218256,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.4908181509999996,
+    "netProfit": 4908.181509999996,
+    "totalTrades": 15,
+    "sharpe": 0.7171065180931765,
+    "sortino": 3.065859702817578,
     "symbol": "NYSE:KMT",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:05.230Z"
+    "updated_at": "2026-08-05T17:58:09.195Z"
   },
   "AVGX|2h": {
-    "maxDDPercent": 0.29758165150742016,
-    "openPLPercent": 0.06070828942390023,
-    "openPL": 1307.5199999999948,
-    "netProfitPercent": 1.1537750649999992,
-    "netProfit": 11537.75064999999,
+    "maxDDPercent": 0.2974992173508325,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 1.4746549669999993,
+    "netProfit": 14746.549669999993,
     "totalTrades": 18,
-    "sharpe": 0.4884982968313231,
-    "sortino": 1.2747484990058144,
+    "sharpe": 0.5412409717400201,
+    "sortino": 1.3761307861483842,
     "symbol": "NASDAQ:AVGX",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:40.406Z"
+    "updated_at": "2026-08-05T18:00:13.647Z"
   },
   "NVDL|2h": {
     "maxDDPercent": 0.18543118549304702,
-    "openPLPercent": 0.025178066055703007,
-    "openPL": 399.75999999999897,
-    "netProfitPercent": 0.5877311590000001,
-    "netProfit": 5877.31159,
-    "totalTrades": 14,
-    "sharpe": 0.7006367015863172,
-    "sortino": 2.6107785431392636,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.7732908089999999,
+    "netProfit": 7732.908089999999,
+    "totalTrades": 15,
+    "sharpe": 0.7786512237262855,
+    "sortino": 2.929668960871848,
     "symbol": "NASDAQ:NVDL",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:43.515Z"
+    "updated_at": "2026-08-05T18:00:17.603Z"
   },
   "INTW|2h": {
     "maxDDPercent": 0.43099913923813665,
-    "openPLPercent": 0.052675002345242125,
-    "openPL": 1386.7200000000003,
-    "netProfitPercent": 1.632595991,
-    "netProfit": 16325.959910000001,
-    "totalTrades": 13,
-    "sharpe": 0.5640227477677446,
-    "sortino": 1.570264975673658,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 2.0159152070000004,
+    "netProfit": 20159.152070000004,
+    "totalTrades": 14,
+    "sharpe": 0.5671937627632395,
+    "sortino": 1.4250585577083437,
     "symbol": "NASDAQ:INTW",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:46.992Z"
+    "updated_at": "2026-08-05T18:00:21.140Z"
   },
   "LABU|2h": {
-    "maxDDPercent": 0.204887497917664,
-    "openPLPercent": -0.18378861772371533,
-    "openPL": -4635.960000000002,
-    "netProfitPercent": 1.5224413010000004,
-    "netProfit": 15224.413010000004,
-    "totalTrades": 12,
-    "sharpe": 0.5621192190068122,
-    "sortino": 1.3302029885835636,
+    "maxDDPercent": 0.23875596060555485,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 1.3322518610000005,
+    "netProfit": 13322.518610000005,
+    "totalTrades": 13,
+    "sharpe": 0.6796361651137804,
+    "sortino": 3.4169214875734535,
     "symbol": "AMEX:LABU",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:50.240Z"
+    "updated_at": "2026-08-05T18:00:25.192Z"
   },
   "MULL|2h": {
     "maxDDPercent": 0.4327571922731444,
-    "openPLPercent": -0.03900726951734395,
-    "openPL": -1068.5599999999977,
+    "openPLPercent": 0.12967281488198157,
+    "openPL": 3552.240000000001,
     "netProfitPercent": 1.7393868199999998,
     "netProfit": 17393.868199999997,
     "totalTrades": 12,
-    "sharpe": 0.5188319470220611,
-    "sortino": 1.2961410075879858,
+    "sharpe": 0.5779395470175046,
+    "sortino": 1.568188726224525,
     "symbol": "NASDAQ:MULL",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:53.356Z"
+    "updated_at": "2026-08-05T18:00:29.106Z"
   },
   "CI|2h": {
     "maxDDPercent": 0.11965398000000023,
-    "openPLPercent": -0.014543644480051663,
-    "openPL": -189.63000000000108,
+    "openPLPercent": -0.05210648135710094,
+    "openPL": -679.4000000000005,
     "netProfitPercent": 0.30386850600000004,
     "netProfit": 3038.6850600000002,
     "totalTrades": 16,
-    "sharpe": 0.5727086526060198,
-    "sortino": 1.5451933404405367,
+    "sharpe": 0.3914055960106191,
+    "sortino": 0.7787472991302666,
     "symbol": "NYSE:CI",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:21:58.061Z"
+    "updated_at": "2026-08-05T18:00:33.017Z"
   },
   "NWSA|2h": {
     "maxDDPercent": 0.15100177559951758,
@@ -2753,33 +2753,33 @@
     "sortino": 0.6936127553624037,
     "symbol": "NASDAQ:NWSA",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:02.202Z"
+    "updated_at": "2026-08-05T18:00:37.087Z"
   },
   "NTR|2h": {
     "maxDDPercent": 0.10093402332469216,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.6745538150000003,
-    "netProfit": 6745.538150000003,
+    "openPLPercent": -0.0038386783481375677,
+    "openPL": -64.22000000000163,
+    "netProfitPercent": 0.6729716370000003,
+    "netProfit": 6729.716370000003,
     "totalTrades": 16,
-    "sharpe": 0.6910861228065354,
-    "sortino": 3.593313652771659,
+    "sharpe": 0.6587329695599774,
+    "sortino": 3.4160592723765815,
     "symbol": "TSX:NTR",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:05.937Z"
+    "updated_at": "2026-08-05T18:00:41.234Z"
   },
   "MGA|2h": {
     "maxDDPercent": 0.26786513263780065,
-    "openPLPercent": -0.18386021487149426,
-    "openPL": -2983.56,
-    "netProfitPercent": 0.622732793,
-    "netProfit": 6227.3279299999995,
-    "totalTrades": 13,
-    "sharpe": 0.18153067631059439,
-    "sortino": 0.28183585614919937,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.44732432800000005,
+    "netProfit": 4473.243280000001,
+    "totalTrades": 14,
+    "sharpe": 0.24411303956306887,
+    "sortino": 0.44849157842041154,
     "symbol": "TSX:MGA",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:09.498Z"
+    "updated_at": "2026-08-05T18:00:45.067Z"
   },
   "BIIB|2h": {
     "maxDDPercent": 0.07699074071353529,
@@ -2792,20 +2792,20 @@
     "sortino": 50.83679397668293,
     "symbol": "NASDAQ:BIIB",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:12.898Z"
+    "updated_at": "2026-08-05T18:00:48.920Z"
   },
   "PFG|2h": {
     "maxDDPercent": 0.19188511248851356,
-    "openPLPercent": 0.04095511130257811,
-    "openPL": 536.940000000001,
+    "openPLPercent": 0.05495462917883089,
+    "openPL": 720.4800000000008,
     "netProfitPercent": 0.31104514899999974,
     "netProfit": 3110.4514899999976,
     "totalTrades": 15,
-    "sharpe": 0.38001548115184697,
-    "sortino": 0.7237822264312581,
+    "sharpe": 0.41660891948139733,
+    "sortino": 0.7277252881849582,
     "symbol": "NASDAQ:PFG",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:16.780Z"
+    "updated_at": "2026-08-03T15:18:37.681Z"
   },
   "QRVO|2h": {
     "maxDDPercent": 0.12758523263234417,
@@ -2818,20 +2818,20 @@
     "sortino": 1.1194271419332578,
     "symbol": "NASDAQ:QRVO",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:21.360Z"
+    "updated_at": "2026-08-03T15:18:42.822Z"
   },
   "OII|2h": {
-    "maxDDPercent": 0.23661244600000017,
+    "maxDDPercent": 0.09476198149877156,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.8832046749999998,
-    "netProfit": 8832.046749999998,
-    "totalTrades": 14,
-    "sharpe": 0.6100791472115465,
-    "sortino": 1.302210769062612,
+    "netProfitPercent": 1.1630068949999997,
+    "netProfit": 11630.068949999997,
+    "totalTrades": 13,
+    "sharpe": 1.077086079065524,
+    "sortino": 65.93927484565592,
     "symbol": "NYSE:OII",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:25.504Z"
+    "updated_at": "2026-08-03T15:18:47.577Z"
   },
   "SSL|2h": {
     "maxDDPercent": 0.2584623962052026,
@@ -2844,59 +2844,59 @@
     "sortino": 0.85784317926888,
     "symbol": "NYSE:SSL",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:30.033Z"
+    "updated_at": "2026-08-03T15:18:52.415Z"
   },
   "FTI|2h": {
     "maxDDPercent": 0.10191583059992321,
-    "openPLPercent": 0.025646235058210676,
-    "openPL": 343.98000000000013,
+    "openPLPercent": -0.004477914057782791,
+    "openPL": -60.05999999999969,
     "netProfitPercent": 0.3412495020000002,
     "netProfit": 3412.495020000002,
     "totalTrades": 11,
-    "sharpe": 0.6138784864941416,
-    "sortino": 1.5722285334398256,
+    "sharpe": 0.5472270332492428,
+    "sortino": 1.348290783140483,
     "symbol": "NYSE:FTI",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:34.050Z"
+    "updated_at": "2026-08-03T15:18:57.145Z"
   },
   "ARQT|2h": {
     "maxDDPercent": 0.2165178297387118,
-    "openPLPercent": 0.016152060617608974,
-    "openPL": 419.84999999999934,
+    "openPLPercent": -0.008614432329391537,
+    "openPL": -223.92000000000186,
     "netProfitPercent": 1.5993587440000006,
     "netProfit": 15993.587440000007,
     "totalTrades": 17,
-    "sharpe": 0.783745186983795,
-    "sortino": 2.599574224568965,
+    "sharpe": 0.721594158977822,
+    "sortino": 2.432846868066658,
     "symbol": "NASDAQ:ARQT",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:37.939Z"
+    "updated_at": "2026-08-03T15:19:01.683Z"
   },
   "BANC|2h": {
     "maxDDPercent": 0.23045008269923792,
-    "openPLPercent": -0.07600388390013856,
-    "openPL": -1114.59,
+    "openPLPercent": -0.061185516598853566,
+    "openPL": -897.2799999999983,
     "netProfitPercent": 0.46649084600000024,
     "netProfit": 4664.908460000002,
     "totalTrades": 17,
-    "sharpe": 0.29364998019283356,
-    "sortino": 0.4481019541574122,
+    "sharpe": 0.2920176637844578,
+    "sortino": 0.438845435985557,
     "symbol": "NYSE:BANC",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:41.657Z"
+    "updated_at": "2026-08-03T15:19:06.539Z"
   },
   "FTV|2h": {
     "maxDDPercent": 0.1926916513329375,
-    "openPLPercent": -0.003655613035164146,
-    "openPL": -57.039999999999225,
+    "openPLPercent": 0.0019072763661726964,
+    "openPL": 29.760000000001128,
     "netProfitPercent": 0.560340207,
     "netProfit": 5603.40207,
     "totalTrades": 18,
-    "sharpe": 0.5876317309938212,
-    "sortino": 1.3826074031118936,
+    "sharpe": 0.571698191221765,
+    "sortino": 1.3603428501405754,
     "symbol": "NYSE:FTV",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:45.352Z"
+    "updated_at": "2026-08-03T15:19:11.040Z"
   },
   "VTRS|2h": {
     "maxDDPercent": 0.09518048249404211,
@@ -2909,20 +2909,20 @@
     "sortino": 2.345963637608668,
     "symbol": "NASDAQ:VTRS",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:48.932Z"
+    "updated_at": "2026-08-03T15:19:15.620Z"
   },
   "EXEL|2h": {
     "maxDDPercent": 0.07842738598501638,
-    "openPLPercent": 0.00035564278295211344,
-    "openPL": 8.23999999999836,
+    "openPLPercent": 0.009780176531185014,
+    "openPL": 226.59999999999883,
     "netProfitPercent": 1.3169315939999997,
     "netProfit": 13169.315939999997,
     "totalTrades": 17,
-    "sharpe": 1.0241815188263248,
-    "sortino": 8.808060290754378,
+    "sharpe": 0.9769152453670389,
+    "sortino": 8.604932730129235,
     "symbol": "NASDAQ:EXEL",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:52.411Z"
+    "updated_at": "2026-08-03T15:19:20.699Z"
   },
   "CSCO|2h": {
     "maxDDPercent": 0.10330515427666251,
@@ -2935,72 +2935,72 @@
     "sortino": 1.268225443329832,
     "symbol": "NASDAQ:CSCO",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:22:57.328Z"
+    "updated_at": "2026-08-03T15:19:25.377Z"
   },
   "SPXL|3h": {
     "maxDDPercent": 0.20272867794733226,
-    "openPLPercent": 0.02179333712898509,
-    "openPL": 318.5299999999995,
-    "netProfitPercent": 0.46159350500000007,
-    "netProfit": 4615.935050000001,
-    "totalTrades": 12,
-    "sharpe": 0.673216197249715,
-    "sortino": 2.2425432116945925,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.5313676870000001,
+    "netProfit": 5313.676870000001,
+    "totalTrades": 13,
+    "sharpe": 0.6741417966931434,
+    "sortino": 2.2974394173750787,
     "symbol": "AMEX:SPXL",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:19.604Z"
+    "updated_at": "2026-08-05T15:59:15.723Z"
   },
   "AVGX|3h": {
     "maxDDPercent": 0.33276903192785606,
-    "openPLPercent": 0.10085395597885097,
-    "openPL": 1865.2800000000032,
-    "netProfitPercent": 0.8494862020000005,
-    "netProfit": 8494.862020000004,
-    "totalTrades": 14,
-    "sharpe": 0.46306225741088947,
-    "sortino": 1.5543270747000613,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 1.2224119540000002,
+    "netProfit": 12224.119540000003,
+    "totalTrades": 15,
+    "sharpe": 0.5328425995472377,
+    "sortino": 1.622529610414631,
     "symbol": "NASDAQ:AVGX",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:32.976Z"
+    "updated_at": "2026-08-05T15:59:28.261Z"
   },
   "NVDL|3h": {
     "maxDDPercent": 0.20271645551658368,
-    "openPLPercent": 0.02650960748278297,
-    "openPL": 547.4699999999995,
-    "netProfitPercent": 1.0651758059999996,
-    "netProfit": 10651.758059999996,
-    "totalTrades": 13,
-    "sharpe": 1.2117218428848848,
-    "sortino": 133.71395842302078,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 1.3719863099999996,
+    "netProfit": 13719.863099999995,
+    "totalTrades": 14,
+    "sharpe": 1.2115555089927494,
+    "sortino": 148.20149073784273,
     "symbol": "NASDAQ:NVDL",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:36.829Z"
+    "updated_at": "2026-08-05T15:59:32.250Z"
   },
   "LABU|3h": {
-    "maxDDPercent": 0.18684996019841418,
-    "openPLPercent": -0.16996788217614303,
-    "openPL": -5128.369999999999,
-    "netProfitPercent": 2.017258281,
-    "netProfit": 20172.582810000004,
-    "totalTrades": 13,
-    "sharpe": 0.7135180249630498,
-    "sortino": 1.483823258943132,
+    "maxDDPercent": 0.2215685247902441,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 1.8539868010000005,
+    "netProfit": 18539.868010000006,
+    "totalTrades": 14,
+    "sharpe": 0.9139778342618199,
+    "sortino": 4.8382843186937325,
     "symbol": "AMEX:LABU",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:40.716Z"
+    "updated_at": "2026-08-05T15:59:36.186Z"
   },
   "MULL|3h": {
     "maxDDPercent": 0.5503824000000002,
-    "openPLPercent": 0.058263469375433266,
-    "openPL": 1216.8599999999994,
+    "openPLPercent": -0.027418103235498047,
+    "openPL": -572.6400000000006,
     "netProfitPercent": 1.0885470999999998,
     "netProfit": 10885.470999999998,
     "totalTrades": 10,
-    "sharpe": 0.32637260549492053,
-    "sortino": 0.7504629074828082,
+    "sharpe": 0.28897018285493997,
+    "sortino": 0.6580794341862786,
     "symbol": "NASDAQ:MULL",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:44.387Z"
+    "updated_at": "2026-08-03T15:23:18.597Z"
   },
   "GRMN|3h": {
     "maxDDPercent": 0.2335879582693398,
@@ -3013,7 +3013,7 @@
     "sortino": 0.4869342730558792,
     "symbol": "NYSE:GRMN",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:51.797Z"
+    "updated_at": "2026-08-03T15:23:28.027Z"
   },
   "ABNB|3h": {
     "maxDDPercent": 0.18843518182690117,
@@ -3026,7 +3026,7 @@
     "sortino": 0.554458669584385,
     "symbol": "NASDAQ:ABNB",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:55.929Z"
+    "updated_at": "2026-08-03T15:23:35.248Z"
   },
   "NYT|3h": {
     "maxDDPercent": 0.08534706461857963,
@@ -3039,7 +3039,7 @@
     "sortino": 1.9120936792173915,
     "symbol": "NYSE:NYT",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:34:59.858Z"
+    "updated_at": "2026-08-03T15:23:40.078Z"
   },
   "ALV|3h": {
     "maxDDPercent": 0.14397646431342825,
@@ -3052,20 +3052,20 @@
     "sortino": 3.079951480721683,
     "symbol": "XETR:ALV",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:35:03.528Z"
+    "updated_at": "2026-08-03T15:23:47.179Z"
   },
   "CI|3h": {
     "maxDDPercent": 0.13743547148956317,
-    "openPLPercent": -0.013851194505367414,
-    "openPL": -197.40000000000214,
+    "openPLPercent": -0.013224592849172235,
+    "openPL": -188.47000000000224,
     "netProfitPercent": 0.42514784500000025,
     "netProfit": 4251.478450000002,
     "totalTrades": 14,
-    "sharpe": 0.5345690495506676,
-    "sortino": 1.5100525819885218,
+    "sharpe": 0.5093162941308008,
+    "sortino": 1.4066990860419148,
     "symbol": "NYSE:CI",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:35:08.372Z"
+    "updated_at": "2026-08-03T15:23:53.443Z"
   },
   "DAL|3h": {
     "maxDDPercent": 0.1739698846672901,
@@ -3078,7 +3078,7 @@
     "sortino": 1.6664390482829317,
     "symbol": "NYSE:DAL",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:35:13.007Z"
+    "updated_at": "2026-08-03T15:24:00.338Z"
   },
   "NTR|3h": {
     "maxDDPercent": 0.09857583505825744,
@@ -3091,20 +3091,20 @@
     "sortino": 3.8503561580362557,
     "symbol": "TSX:NTR",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:35:16.630Z"
+    "updated_at": "2026-08-03T15:24:05.171Z"
   },
   "GILD|3h": {
     "maxDDPercent": 0.10024154899999994,
-    "openPLPercent": 0.014981413496379159,
-    "openPL": 191.76000000000192,
+    "openPLPercent": 0.015348605003643224,
+    "openPL": 196.46000000000032,
     "netProfitPercent": 0.2799860309999999,
     "netProfit": 2799.860309999999,
     "totalTrades": 16,
-    "sharpe": 0.5392183973051018,
-    "sortino": 1.242977674642733,
+    "sharpe": 0.5160381999994782,
+    "sortino": 1.2007283534377602,
     "symbol": "NASDAQ:GILD",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:35:20.999Z"
+    "updated_at": "2026-08-03T15:24:11.648Z"
   },
   "BUD|3h": {
     "maxDDPercent": 0.16087815755509652,
@@ -3117,7 +3117,7 @@
     "sortino": 0.4662741792852363,
     "symbol": "NYSE:BUD",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:35:39.484Z"
+    "updated_at": "2026-08-03T15:24:18.059Z"
   },
   "BTI|3h": {
     "maxDDPercent": 0.12145650853295595,
@@ -3130,72 +3130,72 @@
     "sortino": 0.9326116639682552,
     "symbol": "NYSE:BTI",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:35:44.654Z"
+    "updated_at": "2026-08-03T15:24:26.934Z"
   },
   "FTI|3h": {
     "maxDDPercent": 0.23136756782321918,
-    "openPLPercent": -0.023763126732289117,
-    "openPL": -369.92999999999915,
+    "openPLPercent": -0.04672072374483959,
+    "openPL": -727.3199999999979,
     "netProfitPercent": 0.556739583,
     "netProfit": 5567.39583,
     "totalTrades": 15,
-    "sharpe": 0.5742617074223049,
-    "sortino": 1.4499684505926675,
+    "sharpe": 0.48228419140880097,
+    "sortino": 1.062910559968796,
     "symbol": "NYSE:FTI",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:35:49.220Z"
+    "updated_at": "2026-08-03T15:24:33.203Z"
   },
   "ARQT|3h": {
     "maxDDPercent": 0.22814120500000007,
-    "openPLPercent": 0.0017893195717740816,
-    "openPL": 43.900000000000624,
+    "openPLPercent": -0.008230870030160547,
+    "openPL": -201.93999999999727,
     "netProfitPercent": 1.4534465890000006,
     "netProfit": 14534.465890000005,
     "totalTrades": 16,
-    "sharpe": 0.553202013391099,
-    "sortino": 2.0544202212921445,
+    "sharpe": 0.5258007249456251,
+    "sortino": 1.9676385150407734,
     "symbol": "NASDAQ:ARQT",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:35:53.021Z"
+    "updated_at": "2026-08-03T15:24:41.568Z"
   },
   "ABEV|3h": {
     "maxDDPercent": 0.11446073273169599,
-    "openPLPercent": 0.02187317802027929,
-    "openPL": 294.5599999999993,
+    "openPLPercent": 0.015623698585913759,
+    "openPL": 210.39999999999924,
     "netProfitPercent": 0.34667216500000025,
     "netProfit": 3466.7216500000027,
     "totalTrades": 12,
-    "sharpe": 0.5342479881496065,
-    "sortino": 1.6449168180192115,
+    "sharpe": 0.5034543280629491,
+    "sortino": 1.5538258070244615,
     "symbol": "NYSE:ABEV",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:35:56.657Z"
+    "updated_at": "2026-08-03T15:24:52.284Z"
   },
   "BANC|3h": {
     "maxDDPercent": 0.24460723376254717,
-    "openPLPercent": -0.012887212880443278,
-    "openPL": -208.52000000000126,
+    "openPLPercent": 0.0074349305079479296,
+    "openPL": 120.29999999999886,
     "netProfitPercent": 0.6180379880000001,
     "netProfit": 6180.37988,
     "totalTrades": 14,
-    "sharpe": 0.3130852216805131,
-    "sortino": 0.5875385110320259,
+    "sharpe": 0.3194536138828966,
+    "sortino": 0.6001430637126753,
     "symbol": "NYSE:BANC",
     "watchlist": "Swing 3H",
-    "updated_at": "2026-07-31T17:36:00.620Z"
+    "updated_at": "2026-08-03T15:24:59.527Z"
   },
   "NUGT|4h": {
-    "maxDDPercent": 0.4311301323794358,
-    "openPLPercent": -0.027316328027310776,
-    "openPL": -575.9400000000004,
-    "netProfitPercent": 1.1084092980000002,
-    "netProfit": 11084.092980000001,
+    "maxDDPercent": 0.43326796732654027,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 1.0088608499999998,
+    "netProfit": 10088.608499999998,
     "totalTrades": 14,
-    "sharpe": 0.41494601511961476,
-    "sortino": 1.3268979451537477,
+    "sharpe": 0.4128786752479262,
+    "sortino": 1.3171997865185077,
     "symbol": "AMEX:NUGT",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:38:12.337Z"
+    "updated_at": "2026-08-05T16:02:05.975Z"
   },
   "GRMN|4h": {
     "maxDDPercent": 0.21899306050092943,
@@ -3208,7 +3208,7 @@
     "sortino": 0.4599596738045001,
     "symbol": "NYSE:GRMN",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:38:16.476Z"
+    "updated_at": "2026-08-03T15:29:01.652Z"
   },
   "ABNB|4h": {
     "maxDDPercent": 0.2566897214483856,
@@ -3221,7 +3221,7 @@
     "sortino": 0.4302870774004386,
     "symbol": "NASDAQ:ABNB",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:38:21.722Z"
+    "updated_at": "2026-08-03T15:29:06.755Z"
   },
   "ECL|4h": {
     "maxDDPercent": 0.1703674347030435,
@@ -3234,7 +3234,7 @@
     "sortino": 0.27064130074925896,
     "symbol": "NYSE:ECL",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:38:41.784Z"
+    "updated_at": "2026-08-03T15:29:12.270Z"
   },
   "ALV|4h": {
     "maxDDPercent": 0.13131140195834834,
@@ -3247,7 +3247,7 @@
     "sortino": 7.180713853235764,
     "symbol": "XETR:ALV",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:00.661Z"
+    "updated_at": "2026-08-03T15:29:17.390Z"
   },
   "RPM|4h": {
     "maxDDPercent": 0.23499025016535274,
@@ -3260,20 +3260,20 @@
     "sortino": 0.3803416055423607,
     "symbol": "NYSE:RPM",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:04.803Z"
+    "updated_at": "2026-08-03T15:29:22.798Z"
   },
   "CI|4h": {
     "maxDDPercent": 0.17418002799043442,
-    "openPLPercent": -0.02334616658816747,
-    "openPL": -384.48000000000025,
+    "openPLPercent": -0.020034421046868277,
+    "openPL": -329.93999999999767,
     "netProfitPercent": 0.6468656579999997,
     "netProfit": 6468.656579999997,
     "totalTrades": 17,
-    "sharpe": 0.4595931859162931,
-    "sortino": 0.841344149919622,
+    "sharpe": 0.4400382934524049,
+    "sortino": 0.8142981541401864,
     "symbol": "NYSE:CI",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:09.857Z"
+    "updated_at": "2026-08-03T15:29:28.100Z"
   },
   "NTR|4h": {
     "maxDDPercent": 0.2025042454090063,
@@ -3286,7 +3286,7 @@
     "sortino": 0.3449204525403581,
     "symbol": "TSX:NTR",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:13.372Z"
+    "updated_at": "2026-08-03T15:29:33.512Z"
   },
   "SYK|4h": {
     "maxDDPercent": 0.18738137304203095,
@@ -3299,7 +3299,7 @@
     "sortino": 0.5876997183400859,
     "symbol": "NYSE:SYK",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:17.383Z"
+    "updated_at": "2026-08-03T15:29:38.889Z"
   },
   "FWONK|4h": {
     "maxDDPercent": 0.16461906787764932,
@@ -3312,20 +3312,20 @@
     "sortino": 1.9933942244968503,
     "symbol": "NASDAQ:FWONK",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:21.229Z"
+    "updated_at": "2026-08-03T15:29:43.884Z"
   },
   "GILD|4h": {
     "maxDDPercent": 0.11524354942537661,
-    "openPLPercent": 0.0007241571972997213,
-    "openPL": 10.099999999999426,
+    "openPLPercent": -0.0017379772735194956,
+    "openPL": -24.24000000000092,
     "netProfitPercent": 0.3947247969999999,
     "netProfit": 3947.247969999999,
     "totalTrades": 15,
-    "sharpe": 0.5444918692622516,
-    "sortino": 4.245763124178844,
+    "sharpe": 0.5185649672225019,
+    "sortino": 3.990013373393662,
     "symbol": "NASDAQ:GILD",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:26.253Z"
+    "updated_at": "2026-08-03T15:29:48.783Z"
   },
   "NWS|4h": {
     "maxDDPercent": 0.23579719559939735,
@@ -3338,7 +3338,7 @@
     "sortino": 0.4913337889182762,
     "symbol": "NASDAQ:NWS",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:30.029Z"
+    "updated_at": "2026-08-03T15:29:53.481Z"
   },
   "MGA|4h": {
     "maxDDPercent": 0.2916424479999999,
@@ -3351,7 +3351,7 @@
     "sortino": 0.3937982604749811,
     "symbol": "TSX:MGA",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:34.417Z"
+    "updated_at": "2026-08-03T15:29:58.479Z"
   },
   "BTI|4h": {
     "maxDDPercent": 0.12413756174389193,
@@ -3364,7 +3364,7 @@
     "sortino": 0.6865845714544715,
     "symbol": "NYSE:BTI",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:38.660Z"
+    "updated_at": "2026-08-03T15:30:11.529Z"
   },
   "HIG|4h": {
     "maxDDPercent": 0.12539174613160586,
@@ -3377,7 +3377,7 @@
     "sortino": 0.675619907039794,
     "symbol": "NYSE:HIG",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:39:42.906Z"
+    "updated_at": "2026-08-03T15:30:18.606Z"
   },
   "OII|4h": {
     "maxDDPercent": 0.3725547482211786,
@@ -3390,7 +3390,7 @@
     "sortino": 0.42839434095646006,
     "symbol": "NYSE:OII",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:40:00.932Z"
+    "updated_at": "2026-08-03T15:30:24.717Z"
   },
   "TPC|4h": {
     "maxDDPercent": 0.3108005189081214,
@@ -3403,7 +3403,7 @@
     "sortino": 0.8104536537633025,
     "symbol": "NYSE:TPC",
     "watchlist": "Swing 4H",
-    "updated_at": "2026-07-31T17:40:18.527Z"
+    "updated_at": "2026-08-03T15:30:30.655Z"
   },
   "SPXL|1d": {
     "maxDDPercent": 0.6954762021173639,
@@ -3416,20 +3416,20 @@
     "sortino": 0.2979388733323407,
     "symbol": "AMEX:SPXL",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:32.280Z"
+    "updated_at": "2026-08-05T16:04:13.889Z"
   },
   "AMZU|1d": {
     "maxDDPercent": 0.45281815244886925,
-    "openPLPercent": 0.2862101288566204,
-    "openPL": 9244.520000000002,
-    "netProfitPercent": 2.2299765340000004,
-    "netProfit": 22299.765340000005,
-    "totalTrades": 6,
-    "sharpe": 0.3883375613957772,
-    "sortino": 2.8220187736193605,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 3.3013619100000002,
+    "netProfit": 33013.6191,
+    "totalTrades": 7,
+    "sharpe": 0.3833861533060999,
+    "sortino": 2.85507788582891,
     "symbol": "NASDAQ:AMZU",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:37.044Z"
+    "updated_at": "2026-08-05T16:04:18.662Z"
   },
   "MULL|1d": {
     "maxDDPercent": 0.057340019999999825,
@@ -3442,20 +3442,20 @@
     "sortino": 0,
     "symbol": "NASDAQ:MULL",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:41.778Z"
+    "updated_at": "2026-08-05T16:04:23.489Z"
   },
   "MVLL|1d": {
     "maxDDPercent": 0.3076057775136342,
-    "openPLPercent": -0.0393029475998466,
-    "openPL": -855.2900000000005,
+    "openPLPercent": 0.1753176426644841,
+    "openPL": 3815.1699999999987,
     "netProfitPercent": 1.176147216,
     "netProfit": 11761.47216,
     "totalTrades": 2,
-    "sharpe": 0.4316025398122818,
-    "sortino": 6.573141496122251,
+    "sharpe": 0.5118067670866984,
+    "sortino": 64.14076024511108,
     "symbol": "NASDAQ:MVLL",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:47.018Z"
+    "updated_at": "2026-08-05T16:04:27.921Z"
   },
   "ABNB|1d": {
     "maxDDPercent": 0.3236903946105466,
@@ -3468,7 +3468,7 @@
     "sortino": 0.8384986101226458,
     "symbol": "NASDAQ:ABNB",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:52.018Z"
+    "updated_at": "2026-08-05T16:04:32.682Z"
   },
   "ECL|1d": {
     "maxDDPercent": 0.30188445695735217,
@@ -3481,7 +3481,7 @@
     "sortino": 0.469518762911914,
     "symbol": "NYSE:ECL",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:42:57.330Z"
+    "updated_at": "2026-08-05T16:04:38.183Z"
   },
   "NYT|1d": {
     "maxDDPercent": 0.32458474898494477,
@@ -3494,7 +3494,7 @@
     "sortino": 0.8189912384514478,
     "symbol": "NYSE:NYT",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:02.415Z"
+    "updated_at": "2026-08-03T15:35:50.641Z"
   },
   "ALV|1d": {
     "maxDDPercent": 0.4063054655439098,
@@ -3507,7 +3507,7 @@
     "sortino": 0.1541289223646677,
     "symbol": "XETR:ALV",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:07.193Z"
+    "updated_at": "2026-08-03T15:35:57.274Z"
   },
   "RPM|1d": {
     "maxDDPercent": 0.3873107046224131,
@@ -3520,20 +3520,20 @@
     "sortino": 0.3966475561453008,
     "symbol": "NYSE:RPM",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:12.131Z"
+    "updated_at": "2026-08-03T15:36:07.090Z"
   },
   "CMC|1d": {
     "maxDDPercent": 0.444835667813972,
-    "openPLPercent": 0.06053510801408776,
-    "openPL": 2612.0800000000027,
+    "openPLPercent": 0.0553925624303666,
+    "openPL": 2390.1799999999976,
     "netProfitPercent": 3.314983628,
     "netProfit": 33149.836279999996,
     "totalTrades": 15,
-    "sharpe": 0.3063687608902088,
-    "sortino": 1.1799434662387063,
+    "sharpe": 0.30325698747231344,
+    "sortino": 1.1678204721578485,
     "symbol": "NYSE:CMC",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:17.279Z"
+    "updated_at": "2026-08-03T15:36:14.466Z"
   },
   "KRYS|1d": {
     "maxDDPercent": 0.3511309590907245,
@@ -3546,7 +3546,7 @@
     "sortino": 23.44129121689361,
     "symbol": "NASDAQ:KRYS",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:22.253Z"
+    "updated_at": "2026-08-03T15:36:20.622Z"
   },
   "CI|1d": {
     "maxDDPercent": 0.41592731699999996,
@@ -3559,7 +3559,7 @@
     "sortino": 0.18030160493473205,
     "symbol": "NYSE:CI",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:27.389Z"
+    "updated_at": "2026-08-03T15:36:27.404Z"
   },
   "LFST|1d": {
     "maxDDPercent": 0.4520721817397477,
@@ -3572,7 +3572,7 @@
     "sortino": 0.5762392283864248,
     "symbol": "NASDAQ:LFST",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:33.267Z"
+    "updated_at": "2026-08-03T15:36:34.227Z"
   },
   "NWSA|1d": {
     "maxDDPercent": 0.3675746354964003,
@@ -3585,7 +3585,7 @@
     "sortino": 0.33123297315964195,
     "symbol": "NASDAQ:NWSA",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:38.882Z"
+    "updated_at": "2026-08-03T15:36:44.382Z"
   },
   "INGM|1d": {
     "maxDDPercent": 0.23641939499999998,
@@ -3598,7 +3598,7 @@
     "sortino": 29.796929548852063,
     "symbol": "NYSE:INGM",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:43.929Z"
+    "updated_at": "2026-08-03T15:36:51.054Z"
   },
   "MDLZ|1d": {
     "maxDDPercent": 0.2631150682886697,
@@ -3611,7 +3611,7 @@
     "sortino": 0.20611752967139854,
     "symbol": "NASDAQ:MDLZ",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:51.083Z"
+    "updated_at": "2026-08-03T15:36:55.828Z"
   },
   "SYK|1d": {
     "maxDDPercent": 0.30674931596797766,
@@ -3624,7 +3624,7 @@
     "sortino": 0.4853460693893922,
     "symbol": "NYSE:SYK",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:43:56.434Z"
+    "updated_at": "2026-08-03T15:37:02.884Z"
   },
   "GILD|1d": {
     "maxDDPercent": 0.18007195753749192,
@@ -3637,7 +3637,7 @@
     "sortino": 0.1858977517202266,
     "symbol": "NASDAQ:GILD",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:44:01.879Z"
+    "updated_at": "2026-08-03T15:37:08.757Z"
   },
   "NWS|1d": {
     "maxDDPercent": 0.39426001593260973,
@@ -3650,7 +3650,7 @@
     "sortino": 0.30290210974591764,
     "symbol": "NASDAQ:NWS",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:44:06.954Z"
+    "updated_at": "2026-08-03T15:37:17.564Z"
   },
   "MGA|1d": {
     "maxDDPercent": 0.422747299957694,
@@ -3663,7 +3663,7 @@
     "sortino": 1.1314833049148874,
     "symbol": "TSX:MGA",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:44:13.833Z"
+    "updated_at": "2026-08-03T15:37:25.074Z"
   },
   "BTI|1d": {
     "maxDDPercent": 0.2816926846191306,
@@ -3676,7 +3676,7 @@
     "sortino": 0.1915109786306938,
     "symbol": "NYSE:BTI",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:44:19.435Z"
+    "updated_at": "2026-08-03T15:37:32.836Z"
   },
   "DHT|1d": {
     "maxDDPercent": 0.29177826430933085,
@@ -3689,7 +3689,7 @@
     "sortino": 11.567568742588367,
     "symbol": "NYSE:DHT",
     "watchlist": "Swing 1D",
-    "updated_at": "2026-07-31T17:44:26.778Z"
+    "updated_at": "2026-08-03T15:37:40.927Z"
   },
   "BUSE|30m": {
     "maxDDPercent": 0.06284933057140976,
@@ -3702,20 +3702,20 @@
     "sortino": 0,
     "symbol": "NASDAQ:BUSE",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:47.620Z"
+    "updated_at": "2026-08-05T17:55:28.491Z"
   },
   "CURB|30m": {
-    "maxDDPercent": 0.07232954356484522,
-    "openPLPercent": 0.0018664445083306674,
-    "openPL": 22.98000000000087,
-    "netProfitPercent": 0.23121795999999986,
-    "netProfit": 2312.1795999999986,
-    "totalTrades": 17,
-    "sharpe": 1.1335879021397008,
-    "sortino": 2.6488723693503715,
+    "maxDDPercent": 0.07226435363488948,
+    "openPLPercent": -0.010581850548826372,
+    "openPL": -133.96000000000134,
+    "netProfitPercent": 0.26594114499999993,
+    "netProfit": 2659.4114499999996,
+    "totalTrades": 16,
+    "sharpe": 1.5596712629533833,
+    "sortino": 6.780492536136722,
     "symbol": "NYSE:CURB",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:55.443Z"
+    "updated_at": "2026-08-05T17:55:36.222Z"
   },
   "FIVE|45m": {
     "maxDDPercent": 0.1409058141252864,
@@ -3728,241 +3728,241 @@
     "sortino": 2.253378789068168,
     "symbol": "NASDAQ:FIVE",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:46.405Z"
+    "updated_at": "2026-08-05T18:12:41.563Z"
   },
   "CURB|45m": {
     "maxDDPercent": 0.066279486,
-    "openPLPercent": -0.005864493773898493,
-    "openPL": -70.30000000000047,
+    "openPLPercent": -0.017284823754648036,
+    "openPL": -207.19999999999953,
     "netProfitPercent": 0.1987394429999999,
     "netProfit": 1987.394429999999,
     "totalTrades": 16,
-    "sharpe": 0.6696634733154947,
-    "sortino": 1.866364397752813,
+    "sharpe": 0.54565428862939,
+    "sortino": 1.403466788738028,
     "symbol": "NYSE:CURB",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:50.158Z"
+    "updated_at": "2026-08-05T18:12:46.506Z"
   },
   "BNL|45m": {
-    "maxDDPercent": 0.057535595000000106,
-    "openPLPercent": -0.03870872253275376,
-    "openPL": -431.3399999999984,
+    "maxDDPercent": 0.0587436524389766,
+    "openPLPercent": -0.046790763501131004,
+    "openPL": -521.399999999999,
     "netProfitPercent": 0.11432248800000025,
     "netProfit": 1143.2248800000025,
     "totalTrades": 15,
-    "sharpe": 0.30469799804703585,
-    "sortino": 0.4825719753653457,
+    "sharpe": 0.18713729296111686,
+    "sortino": 0.25311497402082633,
     "symbol": "NYSE:BNL",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:53.836Z"
+    "updated_at": "2026-08-05T18:12:51.171Z"
   },
   "PPL|45m": {
-    "maxDDPercent": 0.06827503060748337,
-    "openPLPercent": -0.028011655610396823,
-    "openPL": -317.6800000000005,
-    "netProfitPercent": 0.13409933499999988,
-    "netProfit": 1340.9933499999988,
-    "totalTrades": 14,
-    "sharpe": 0.3326352122131178,
-    "sortino": 0.6048850878814673,
+    "maxDDPercent": 0.06834890216987254,
+    "openPLPercent": -0.045841456972204285,
+    "openPL": -516.4200000000003,
+    "netProfitPercent": 0.12653487499999988,
+    "netProfit": 1265.3487499999987,
+    "totalTrades": 13,
+    "sharpe": 0.19711804080734627,
+    "sortino": 0.2945299795880182,
     "symbol": "TSX:PPL",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:05:57.289Z"
+    "updated_at": "2026-08-05T15:21:21.650Z"
   },
   "COGT|1h": {
     "maxDDPercent": 0.13153680533206466,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 1.5232904639999998,
-    "netProfit": 15232.904639999999,
-    "totalTrades": 10,
-    "sharpe": 0.3897576603195394,
-    "sortino": 21.471821777467532,
+    "netProfitPercent": 1.721962026,
+    "netProfit": 17219.62026,
+    "totalTrades": 11,
+    "sharpe": 0.39363283553746836,
+    "sortino": 21.708793562951787,
     "symbol": "NASDAQ:COGT",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:21.100Z"
+    "updated_at": "2026-08-05T17:57:18.501Z"
   },
   "APA|1h": {
-    "maxDDPercent": 0.14600459455510428,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.46440343900000064,
-    "netProfit": 4644.034390000006,
-    "totalTrades": 14,
-    "sharpe": 0.7749755065926218,
-    "sortino": 5.3386845960389175,
+    "maxDDPercent": 0.1459590879006722,
+    "openPLPercent": -0.009614807476024181,
+    "openPL": -131.7599999999998,
+    "netProfitPercent": 0.3703862540000006,
+    "netProfit": 3703.8625400000055,
+    "totalTrades": 13,
+    "sharpe": 0.6762273704459156,
+    "sortino": 3.631575963756731,
     "symbol": "NASDAQ:APA",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:03.088Z"
+    "updated_at": "2026-08-05T17:56:59.319Z"
   },
   "FRO|1h": {
     "maxDDPercent": 0.1384395468030793,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.25336286600000013,
-    "netProfit": 2533.628660000001,
+    "openPLPercent": -0.003218402513153634,
+    "openPL": -40.30000000000079,
+    "netProfitPercent": 0.2521740160000001,
+    "netProfit": 2521.740160000001,
     "totalTrades": 14,
-    "sharpe": 0.9966639209591777,
-    "sortino": 12.730818655635838,
+    "sharpe": 0.8445125663606681,
+    "sortino": 9.34644923613394,
     "symbol": "NYSE:FRO",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:51.608Z"
+    "updated_at": "2026-08-05T17:57:54.471Z"
   },
   "CURB|1h": {
-    "maxDDPercent": 0.059898327490826284,
-    "openPLPercent": -0.004323444928994891,
-    "openPL": -50.540000000000205,
-    "netProfitPercent": 0.1689752229999998,
-    "netProfit": 1689.7522299999982,
-    "totalTrades": 11,
-    "sharpe": 0.446097746728439,
-    "sortino": 1.0588768627770129,
+    "maxDDPercent": 0.060018735290597786,
+    "openPLPercent": -0.018503656332102474,
+    "openPL": -221.40000000000052,
+    "netProfitPercent": 0.19652027699999985,
+    "netProfit": 1965.2027699999985,
+    "totalTrades": 10,
+    "sharpe": 0.48848401719018103,
+    "sortino": 1.2307023985721341,
     "symbol": "NYSE:CURB",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:24.577Z"
+    "updated_at": "2026-08-05T17:57:21.648Z"
   },
   "BNL|1h": {
     "maxDDPercent": 0.0579764343952781,
-    "openPLPercent": -0.031239421925195722,
-    "openPL": -359.1600000000002,
+    "openPLPercent": -0.04236579137800507,
+    "openPL": -487.07999999999925,
     "netProfitPercent": 0.14970117199999997,
     "netProfit": 1497.0117199999997,
     "totalTrades": 14,
-    "sharpe": 0.4765202326695806,
-    "sortino": 1.0335539011673096,
+    "sharpe": 0.28544943688355623,
+    "sortino": 0.47604365235349666,
     "symbol": "NYSE:BNL",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:10.640Z"
+    "updated_at": "2026-08-05T17:57:06.362Z"
   },
   "TRNO|1h": {
     "maxDDPercent": 0.07051233681654331,
-    "openPLPercent": -0.012507968691939158,
-    "openPL": -148.80000000000123,
+    "openPLPercent": -0.03583011864878375,
+    "openPL": -426.25,
     "netProfitPercent": 0.18964160899999996,
     "netProfit": 1896.4160899999995,
     "totalTrades": 14,
-    "sharpe": 0.5330836258790447,
-    "sortino": 1.346989089430198,
+    "sharpe": 0.37590754613863697,
+    "sortino": 0.7413571540520353,
     "symbol": "NYSE:TRNO",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:36:07.336Z"
+    "updated_at": "2026-08-05T15:24:30.545Z"
   },
   "PPL|1h": {
     "maxDDPercent": 0.06934852358673836,
-    "openPLPercent": -0.02532109194303753,
-    "openPL": -306.18000000000006,
+    "openPLPercent": -0.04595309278551264,
+    "openPL": -555.6600000000011,
     "netProfitPercent": 0.2091895590000001,
     "netProfit": 2091.895590000001,
     "totalTrades": 14,
-    "sharpe": 0.5381742788263519,
-    "sortino": 1.2980003310359576,
+    "sharpe": 0.3673011706248545,
+    "sortino": 0.6393824681388249,
     "symbol": "TSX:PPL",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:49.185Z"
+    "updated_at": "2026-08-05T15:24:11.781Z"
   },
   "SHO|1h": {
-    "maxDDPercent": 0.08164971590380932,
-    "openPLPercent": 0.009755658210749744,
-    "openPL": 119.52000000000099,
-    "netProfitPercent": 0.22513517199999988,
-    "netProfit": 2251.3517199999987,
+    "maxDDPercent": 0.0816590036662083,
+    "openPLPercent": 0.009948261520492713,
+    "openPL": 122.64000000000101,
+    "netProfitPercent": 0.23277820700000001,
+    "netProfit": 2327.78207,
     "totalTrades": 14,
-    "sharpe": 0.6365529745044918,
-    "sortino": 1.5300020006109625,
+    "sharpe": 0.6411493236831772,
+    "sortino": 1.4983810233625334,
     "symbol": "NYSE:SHO",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:52.586Z"
+    "updated_at": "2026-08-05T15:24:15.529Z"
   },
   "APLE|1h": {
     "maxDDPercent": 0.04667078856186472,
-    "openPLPercent": -0.005718386633664083,
-    "openPL": -67.89999999999856,
+    "openPLPercent": -0.0040028706435649595,
+    "openPL": -47.53000000000019,
     "netProfitPercent": 0.1873978509999999,
     "netProfit": 1873.978509999999,
     "totalTrades": 12,
-    "sharpe": 1.2105322433746066,
-    "sortino": 30.88598540642177,
+    "sharpe": 1.0561067780946454,
+    "sortino": 8.273941014648054,
     "symbol": "NYSE:APLE",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:07.090Z"
+    "updated_at": "2026-08-05T17:57:02.790Z"
   },
   "FR|1h": {
     "maxDDPercent": 0.060505708145530565,
-    "openPLPercent": -0.0008517517483381187,
-    "openPL": -10.500000000000398,
+    "openPLPercent": -0.024416883452358457,
+    "openPL": -300.9999999999998,
     "netProfitPercent": 0.2327535599999999,
     "netProfit": 2327.535599999999,
     "totalTrades": 16,
-    "sharpe": 0.7267861464603586,
-    "sortino": 1.7618783760736485,
+    "sharpe": 0.5384577661606716,
+    "sortino": 1.161698903638609,
     "symbol": "NYSE:FR",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:48.078Z"
+    "updated_at": "2026-08-05T17:57:50.178Z"
   },
   "EOG|1h": {
     "maxDDPercent": 0.1265737502372877,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.30813127099999954,
-    "netProfit": 3081.3127099999956,
+    "openPLPercent": -0.050526740871872915,
+    "openPL": -660.3300000000003,
+    "netProfitPercent": 0.30689212999999954,
+    "netProfit": 3068.9212999999954,
     "totalTrades": 13,
-    "sharpe": 0.6594778783920281,
-    "sortino": 1.6472759898384268,
+    "sharpe": 0.43890464926927186,
+    "sortino": 0.9606841785730765,
     "symbol": "NYSE:EOG",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:34.718Z"
+    "updated_at": "2026-08-05T17:57:33.059Z"
   },
   "TEX|1h": {
     "maxDDPercent": 0.20234775646157407,
-    "openPLPercent": -0.02963058232886604,
-    "openPL": -453.4399999999996,
+    "openPLPercent": -0.00028490944546980933,
+    "openPL": -4.359999999999133,
     "netProfitPercent": 0.5303107950000006,
     "netProfit": 5303.107950000005,
     "totalTrades": 14,
-    "sharpe": 0.3770344437495801,
-    "sortino": 0.8374936051652271,
+    "sharpe": 0.3878873226104231,
+    "sortino": 0.9028176928771646,
     "symbol": "NYSE:TEX",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:36:03.791Z"
+    "updated_at": "2026-08-05T15:24:26.809Z"
   },
   "SHO|30m": {
     "maxDDPercent": 0.039894951155120026,
-    "openPLPercent": 0.01634974519464517,
-    "openPL": 210.99999999999926,
-    "netProfitPercent": 0.29053999,
-    "netProfit": 2905.3999000000003,
-    "totalTrades": 15,
-    "sharpe": 1.2351994320141226,
+    "openPLPercent": 0.013271503289360559,
+    "openPL": 174.72000000000014,
+    "netProfitPercent": 0.3165049669999999,
+    "netProfit": 3165.0496699999994,
+    "totalTrades": 16,
+    "sharpe": 1.1450122363748054,
     "sortino": 0,
     "symbol": "NYSE:SHO",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:19:58.930Z"
+    "updated_at": "2026-08-05T17:56:33.057Z"
   },
   "APLE|30m": {
     "maxDDPercent": 0.036358880286840124,
-    "openPLPercent": -0.005687784850988547,
-    "openPL": -64.39999999999863,
+    "openPLPercent": -0.009100455761581878,
+    "openPL": -103.04000000000009,
     "netProfitPercent": 0.13225098500000018,
     "netProfit": 1322.5098500000017,
     "totalTrades": 10,
-    "sharpe": 0.6792934069346499,
-    "sortino": 2.5438942230614745,
+    "sharpe": 0.5689977536710522,
+    "sortino": 2.0617470550678427,
     "symbol": "NYSE:APLE",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:20:02.526Z"
+    "updated_at": "2026-08-05T17:55:19.392Z"
   },
   "TEX|30m": {
     "maxDDPercent": 0.1284229002191754,
-    "openPLPercent": -0.06798186968047566,
-    "openPL": -940.8000000000009,
-    "netProfitPercent": 0.38389839000000003,
-    "netProfit": 3838.9839,
-    "totalTrades": 15,
-    "sharpe": 0.4575863875577917,
-    "sortino": 1.4992100926180079,
+    "openPLPercent": 0,
+    "openPL": 0,
+    "netProfitPercent": 0.31833247,
+    "netProfit": 3183.3246999999997,
+    "totalTrades": 16,
+    "sharpe": 0.45579021289469795,
+    "sortino": 1.7220753535543925,
     "symbol": "NYSE:TEX",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:20:06.131Z"
+    "updated_at": "2026-08-05T17:56:41.668Z"
   },
   "AME|1h": {
     "maxDDPercent": 0.09624666063859395,
@@ -3975,20 +3975,20 @@
     "sortino": 1.2013432152949022,
     "symbol": "NYSE:AME",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:36:25.172Z"
+    "updated_at": "2026-08-03T15:14:45.792Z"
   },
   "AKR|1h": {
     "maxDDPercent": 0.08283596274411952,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.29604408899999934,
-    "netProfit": 2960.4408899999935,
+    "openPLPercent": -0.013044322570740436,
+    "openPL": -168.89999999999839,
+    "netProfitPercent": 0.2948161859999993,
+    "netProfit": 2948.1618599999933,
     "totalTrades": 16,
-    "sharpe": 0.7919728579313122,
-    "sortino": 3.309016519919238,
+    "sharpe": 0.6694249284059259,
+    "sortino": 2.4663961975695137,
     "symbol": "NYSE:AKR",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T17:26:23.819Z"
+    "updated_at": "2026-08-05T17:56:54.725Z"
   },
   "CVE|1h": {
     "maxDDPercent": 0.10206205035924927,
@@ -4001,111 +4001,111 @@
     "sortino": 3.302385455441269,
     "symbol": "TSX:CVE",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:34:28.016Z"
+    "updated_at": "2026-08-05T17:57:25.343Z"
   },
   "OVV|1h": {
     "maxDDPercent": 0.09130289564424515,
-    "openPLPercent": 0.05156794547312373,
-    "openPL": 664.4700000000001,
+    "openPLPercent": -0.0012851824416977601,
+    "openPL": -16.559999999999647,
     "netProfitPercent": 0.2885330100000002,
     "netProfit": 2885.330100000002,
     "totalTrades": 11,
-    "sharpe": 0.7127748118852654,
-    "sortino": 2.0722307904705612,
+    "sharpe": 0.5846656582377275,
+    "sortino": 1.600010268564531,
     "symbol": "NYSE:OVV",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:37.620Z"
+    "updated_at": "2026-08-05T17:58:46.344Z"
   },
   "CVE|30m": {
-    "maxDDPercent": 0.08767660178538542,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.315212917,
-    "netProfit": 3152.1291699999997,
-    "totalTrades": 13,
-    "sharpe": 1.3265489646457032,
-    "sortino": 4.4608224242800745,
+    "maxDDPercent": 0.08771352267891942,
+    "openPLPercent": -0.023399362109877614,
+    "openPL": -300.9600000000006,
+    "netProfitPercent": 0.28618890799999996,
+    "netProfit": 2861.8890799999995,
+    "totalTrades": 12,
+    "sharpe": 0.8819062407343362,
+    "sortino": 2.5105251733984253,
     "symbol": "TSX:CVE",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:20:09.569Z"
+    "updated_at": "2026-08-05T17:55:40.347Z"
   },
   "VLO|30m": {
-    "maxDDPercent": 0.07712499577358307,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 0.24779470800000014,
-    "netProfit": 2477.9470800000013,
-    "totalTrades": 16,
-    "sharpe": 1.357121518453135,
-    "sortino": 0,
+    "maxDDPercent": 0.07729540523513499,
+    "openPLPercent": -0.026817231656388323,
+    "openPL": -333.63999999999896,
+    "netProfitPercent": 0.24412543500000014,
+    "netProfit": 2441.2543500000015,
+    "totalTrades": 15,
+    "sharpe": 0.7695708360125891,
+    "sortino": 3.043717358476762,
     "symbol": "NYSE:VLO",
     "watchlist": "Swing 30m",
-    "updated_at": "2026-07-31T19:20:12.900Z"
+    "updated_at": "2026-08-05T17:56:48.658Z"
   },
   "SHO|45m": {
     "maxDDPercent": 0.06303752790245146,
-    "openPLPercent": 0.013883769173898889,
-    "openPL": 163.02999999999994,
-    "netProfitPercent": 0.17424885100000023,
-    "netProfit": 1742.4885100000024,
-    "totalTrades": 13,
-    "sharpe": 0.5926404125509442,
-    "sortino": 1.7045744794515993,
+    "openPLPercent": 0.009126138882373663,
+    "openPL": 109.2300000000012,
+    "netProfitPercent": 0.19689171300000022,
+    "netProfit": 1968.917130000002,
+    "totalTrades": 14,
+    "sharpe": 0.5623068759962868,
+    "sortino": 1.2774582732322697,
     "symbol": "NYSE:SHO",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:06:01.252Z"
+    "updated_at": "2026-08-05T15:21:25.327Z"
   },
   "KIM|45m": {
     "maxDDPercent": 0.035550418157479224,
-    "openPLPercent": -0.004820741161508907,
-    "openPL": -53.170000000001046,
+    "openPLPercent": -0.028182794482666963,
+    "openPL": -310.84000000000066,
     "netProfitPercent": 0.1029424360000002,
     "netProfit": 1029.424360000002,
     "totalTrades": 12,
-    "sharpe": 0.7437802751742075,
-    "sortino": 3.7171742910471037,
+    "sharpe": 0.3254010645447914,
+    "sortino": 0.5709943808005492,
     "symbol": "NYSE:KIM",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:06:04.842Z"
+    "updated_at": "2026-08-05T15:21:29.158Z"
   },
   "TEX|45m": {
     "maxDDPercent": 0.12871999587221583,
-    "openPLPercent": -0.03774504482197589,
-    "openPL": -598.899999999998,
+    "openPLPercent": -0.00028486826280730947,
+    "openPL": -4.519999999999101,
     "netProfitPercent": 0.5866983410000004,
     "netProfit": 5866.983410000004,
     "totalTrades": 15,
-    "sharpe": 0.7691952472733002,
-    "sortino": 3.3064001753486387,
+    "sharpe": 0.7973797954094987,
+    "sortino": 6.590479316260406,
     "symbol": "NYSE:TEX",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:06:08.684Z"
+    "updated_at": "2026-08-05T15:21:32.937Z"
   },
   "AME|45m": {
-    "maxDDPercent": 0.09614105949640145,
+    "maxDDPercent": 0.09563698537828483,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.23384847800000017,
-    "netProfit": 2338.4847800000016,
-    "totalTrades": 16,
-    "sharpe": 0.5646979814400722,
-    "sortino": 1.1119983853237594,
+    "netProfitPercent": 0.2127774710000001,
+    "netProfit": 2127.774710000001,
+    "totalTrades": 15,
+    "sharpe": 0.5185371474788953,
+    "sortino": 1.022247353956835,
     "symbol": "NYSE:AME",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:06:12.578Z"
+    "updated_at": "2026-08-05T15:21:51.390Z"
   },
   "CVE|45m": {
-    "maxDDPercent": 0.12154292587023173,
+    "maxDDPercent": 0.12160760162965165,
     "openPLPercent": 0,
     "openPL": 0,
-    "netProfitPercent": 0.3403995980000006,
-    "netProfit": 3403.9959800000056,
-    "totalTrades": 13,
-    "sharpe": 0.5964363961336906,
-    "sortino": 2.8405789425799477,
+    "netProfitPercent": 0.2870294170000004,
+    "netProfit": 2870.294170000004,
+    "totalTrades": 12,
+    "sharpe": 0.5476901870698261,
+    "sortino": 2.6050831611444645,
     "symbol": "TSX:CVE",
     "watchlist": "Swing 45m",
-    "updated_at": "2026-07-31T19:06:16.208Z"
+    "updated_at": "2026-08-05T15:21:55.410Z"
   },
   "DD|2h": {
     "maxDDPercent": 0.14353372475350276,
@@ -4118,20 +4118,20 @@
     "sortino": 1.8431218084316476,
     "symbol": "NYSE:DD",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:23:01.722Z"
+    "updated_at": "2026-08-03T15:19:30.624Z"
   },
   "COGT|2h": {
     "maxDDPercent": 0.13010126136019678,
-    "openPLPercent": 0,
-    "openPL": 0,
-    "netProfitPercent": 2.2064165639999995,
-    "netProfit": 22064.165639999996,
+    "openPLPercent": 0.027651437352481094,
+    "openPL": 885.7799999999995,
+    "netProfitPercent": 2.20337778,
+    "netProfit": 22033.777799999996,
     "totalTrades": 11,
-    "sharpe": 0.36144415187187634,
-    "sortino": 8.794952372479163,
+    "sharpe": 0.35502233942970657,
+    "sortino": 8.658430366571299,
     "symbol": "NASDAQ:COGT",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:23:05.860Z"
+    "updated_at": "2026-08-03T15:19:35.303Z"
   },
   "FRO|2h": {
     "maxDDPercent": 0.18088755882637425,
@@ -4144,7 +4144,7 @@
     "sortino": 1.393046926369342,
     "symbol": "NYSE:FRO",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:23:09.530Z"
+    "updated_at": "2026-08-03T15:19:40.001Z"
   },
   "FIVE|2h": {
     "maxDDPercent": 0.09881151365079927,
@@ -4157,33 +4157,33 @@
     "sortino": 2.487160978952281,
     "symbol": "NASDAQ:FIVE",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:23:13.096Z"
+    "updated_at": "2026-08-03T15:19:45.130Z"
   },
   "ADM|2h": {
     "maxDDPercent": 0.12946018399228673,
-    "openPLPercent": -0.043400101300067905,
-    "openPL": -531.3000000000012,
+    "openPLPercent": -0.06166196210684958,
+    "openPL": -754.8599999999999,
     "netProfitPercent": 0.22419069099999975,
     "netProfit": 2241.9069099999974,
     "totalTrades": 12,
-    "sharpe": 0.22618754643631844,
-    "sortino": 0.4985590320217375,
+    "sharpe": 0.1866170109300733,
+    "sortino": 0.4056296930045849,
     "symbol": "NYSE:ADM",
     "watchlist": "Swing 2H",
-    "updated_at": "2026-07-31T19:23:16.702Z"
+    "updated_at": "2026-08-03T15:19:50.118Z"
   },
   "MUR|1h": {
     "maxDDPercent": 0.18805772579209296,
-    "openPLPercent": 0.06942651028174313,
-    "openPL": 974.5500000000006,
-    "netProfitPercent": 0.4037145120000004,
-    "netProfit": 4037.145120000004,
-    "totalTrades": 12,
-    "sharpe": 0.6539416835708611,
-    "sortino": 2.1509294677719177,
+    "openPLPercent": -0.002551858204478449,
+    "openPL": -38.300000000000544,
+    "netProfitPercent": 0.5008670910000005,
+    "netProfit": 5008.670910000005,
+    "totalTrades": 13,
+    "sharpe": 0.5988167710301382,
+    "sortino": 2.011442860345182,
     "symbol": "NYSE:MUR",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:35:20.457Z"
+    "updated_at": "2026-08-05T17:58:26.013Z"
   },
   "VLO|1h": {
     "maxDDPercent": 0.08964908384759564,
@@ -4196,6 +4196,19 @@
     "sortino": 0,
     "symbol": "NYSE:VLO",
     "watchlist": "Swing 1H",
-    "updated_at": "2026-07-31T18:36:21.447Z"
+    "updated_at": "2026-08-03T15:14:41.021Z"
+  },
+  "AMDL|3h": {
+    "maxDDPercent": 0.40291208652286337,
+    "openPLPercent": -0.13601854274163994,
+    "openPL": -3942.400000000002,
+    "netProfitPercent": 1.8984283469999994,
+    "netProfit": 18984.283469999995,
+    "totalTrades": 11,
+    "sharpe": 0.40966095752374093,
+    "sortino": 1.079882335714474,
+    "symbol": "NASDAQ:AMDL",
+    "watchlist": "Swing 3H",
+    "updated_at": "2026-08-05T15:59:23.527Z"
   }
 }

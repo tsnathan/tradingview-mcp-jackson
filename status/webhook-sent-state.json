@@ -6,7 +6,15 @@
       "side": "buy",
       "price": "170.35",
       "source": "manual",
-      "at": "2026-07-28T18:48:55.039Z"
+      "at": "2026-07-28T18:48:55.039Z",
+      "exit": {
+        "symbol": "TD",
+        "tag": "30m",
+        "side": "sell",
+        "price": "170.12",
+        "source": "auto-exit",
+        "at": "2026-08-04T14:32:01.598Z"
+      }
     },
     "UDOW|30m|2026-07-29T14:00:00.000Z": {
       "symbol": "UDOW",

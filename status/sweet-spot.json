@@ -2,9 +2,671 @@
   "available": true,
   "ruleType": "flip-only",
   "quick": false,
-  "generatedAt": "2026-07-31T23:56:53.824Z",
-  "durationMs": 68290,
-  "tradeCount": 4402,
+  "generatedAt": "2026-08-05T18:05:20.374Z",
+  "durationMs": 83594,
+  "tradeCount": 3018,
+  "membershipFilter": {
+    "applied": true,
+    "pairs": 215,
+    "totalRows": 4514,
+    "excludedRows": 1496,
+    "excludedPairs": [
+      {
+        "pair": "NWSA|1d",
+        "ticker": "NWSA",
+        "timeframe": "1d",
+        "trades": 18
+      },
+      {
+        "pair": "FTV|2h",
+        "ticker": "FTV",
+        "timeframe": "2h",
+        "trades": 18
+      },
+      {
+        "pair": "GRMN|3h",
+        "ticker": "GRMN",
+        "timeframe": "3h",
+        "trades": 18
+      },
+      {
+        "pair": "GRMN|4h",
+        "ticker": "GRMN",
+        "timeframe": "4h",
+        "trades": 18
+      },
+      {
+        "pair": "FWONK|4h",
+        "ticker": "FWONK",
+        "timeframe": "4h",
+        "trades": 18
+      },
+      {
+        "pair": "NYT|1d",
+        "ticker": "NYT",
+        "timeframe": "1d",
+        "trades": 17
+      },
+      {
+        "pair": "DHT|1d",
+        "ticker": "DHT",
+        "timeframe": "1d",
+        "trades": 17
+      },
+      {
+        "pair": "URTY|1h",
+        "ticker": "URTY",
+        "timeframe": "1h",
+        "trades": 17
+      },
+      {
+        "pair": "YINN|2h",
+        "ticker": "YINN",
+        "timeframe": "2h",
+        "trades": 17
+      },
+      {
+        "pair": "ARQT|2h",
+        "ticker": "ARQT",
+        "timeframe": "2h",
+        "trades": 17
+      },
+      {
+        "pair": "BANC|2h",
+        "ticker": "BANC",
+        "timeframe": "2h",
+        "trades": 17
+      },
+      {
+        "pair": "EXEL|2h",
+        "ticker": "EXEL",
+        "timeframe": "2h",
+        "trades": 17
+      },
+      {
+        "pair": "WTAI|30m",
+        "ticker": "WTAI",
+        "timeframe": "30m",
+        "trades": 17
+      },
+      {
+        "pair": "CI|4h",
+        "ticker": "CI",
+        "timeframe": "4h",
+        "trades": 17
+      },
+      {
+        "pair": "SYK|4h",
+        "ticker": "SYK",
+        "timeframe": "4h",
+        "trades": 17
+      },
+      {
+        "pair": "NWS|1d",
+        "ticker": "NWS",
+        "timeframe": "1d",
+        "trades": 16
+      },
+      {
+        "pair": "PILL|1h",
+        "ticker": "PILL",
+        "timeframe": "1h",
+        "trades": 16
+      },
+      {
+        "pair": "UDOW|1h",
+        "ticker": "UDOW",
+        "timeframe": "1h",
+        "trades": 16
+      },
+      {
+        "pair": "AME|1h",
+        "ticker": "AME",
+        "timeframe": "1h",
+        "trades": 16
+      },
+      {
+        "pair": "DD|2h",
+        "ticker": "DD",
+        "timeframe": "2h",
+        "trades": 16
+      },
+      {
+        "pair": "NUGT|3h",
+        "ticker": "NUGT",
+        "timeframe": "3h",
+        "trades": 16
+      },
+      {
+        "pair": "NTR|3h",
+        "ticker": "NTR",
+        "timeframe": "3h",
+        "trades": 16
+      },
+      {
+        "pair": "GILD|3h",
+        "ticker": "GILD",
+        "timeframe": "3h",
+        "trades": 16
+      },
+      {
+        "pair": "ARQT|3h",
+        "ticker": "ARQT",
+        "timeframe": "3h",
+        "trades": 16
+      },
+      {
+        "pair": "AME|45m",
+        "ticker": "AME",
+        "timeframe": "45m",
+        "trades": 16
+      },
+      {
+        "pair": "FAS|4h",
+        "ticker": "FAS",
+        "timeframe": "4h",
+        "trades": 16
+      },
+      {
+        "pair": "JNUG|4h",
+        "ticker": "JNUG",
+        "timeframe": "4h",
+        "trades": 16
+      },
+      {
+        "pair": "MEXX|4h",
+        "ticker": "MEXX",
+        "timeframe": "4h",
+        "trades": 16
+      },
+      {
+        "pair": "ECL|4h",
+        "ticker": "ECL",
+        "timeframe": "4h",
+        "trades": 16
+      },
+      {
+        "pair": "CMC|1d",
+        "ticker": "CMC",
+        "timeframe": "1d",
+        "trades": 15
+      },
+      {
+        "pair": "KRYS|1d",
+        "ticker": "KRYS",
+        "timeframe": "1d",
+        "trades": 15
+      },
+      {
+        "pair": "PFG|1h",
+        "ticker": "PFG",
+        "timeframe": "1h",
+        "trades": 15
+      },
+      {
+        "pair": "SHO|1h",
+        "ticker": "SHO",
+        "timeframe": "1h",
+        "trades": 15
+      },
+      {
+        "pair": "PFG|2h",
+        "ticker": "PFG",
+        "timeframe": "2h",
+        "trades": 15
+      },
+      {
+        "pair": "CSCO|2h",
+        "ticker": "CSCO",
+        "timeframe": "2h",
+        "trades": 15
+      },
+      {
+        "pair": "KORU|30m",
+        "ticker": "KORU",
+        "timeframe": "30m",
+        "trades": 15
+      },
+      {
+        "pair": "ABNB|3h",
+        "ticker": "ABNB",
+        "timeframe": "3h",
+        "trades": 15
+      },
+      {
+        "pair": "ALV|3h",
+        "ticker": "ALV",
+        "timeframe": "3h",
+        "trades": 15
+      },
+      {
+        "pair": "FTI|3h",
+        "ticker": "FTI",
+        "timeframe": "3h",
+        "trades": 15
+      },
+      {
+        "pair": "EWO|45m",
+        "ticker": "EWO",
+        "timeframe": "45m",
+        "trades": 15
+      },
+      {
+        "pair": "TEX|45m",
+        "ticker": "TEX",
+        "timeframe": "45m",
+        "trades": 15
+      },
+      {
+        "pair": "ALV|4h",
+        "ticker": "ALV",
+        "timeframe": "4h",
+        "trades": 15
+      },
+      {
+        "pair": "GILD|4h",
+        "ticker": "GILD",
+        "timeframe": "4h",
+        "trades": 15
+      },
+      {
+        "pair": "MGA|4h",
+        "ticker": "MGA",
+        "timeframe": "4h",
+        "trades": 15
+      },
+      {
+        "pair": "CI|1d",
+        "ticker": "CI",
+        "timeframe": "1d",
+        "trades": 14
+      },
+      {
+        "pair": "MGA|1d",
+        "ticker": "MGA",
+        "timeframe": "1d",
+        "trades": 14
+      },
+      {
+        "pair": "SPXL|1h",
+        "ticker": "SPXL",
+        "timeframe": "1h",
+        "trades": 14
+      },
+      {
+        "pair": "BE|1h",
+        "ticker": "BE",
+        "timeframe": "1h",
+        "trades": 14
+      },
+      {
+        "pair": "TRNO|1h",
+        "ticker": "TRNO",
+        "timeframe": "1h",
+        "trades": 14
+      },
+      {
+        "pair": "PPL|1h",
+        "ticker": "PPL",
+        "timeframe": "1h",
+        "trades": 14
+      },
+      {
+        "pair": "TEX|1h",
+        "ticker": "TEX",
+        "timeframe": "1h",
+        "trades": 14
+      },
+      {
+        "pair": "VLO|1h",
+        "ticker": "VLO",
+        "timeframe": "1h",
+        "trades": 14
+      },
+      {
+        "pair": "QRVO|2h",
+        "ticker": "QRVO",
+        "timeframe": "2h",
+        "trades": 14
+      },
+      {
+        "pair": "OII|2h",
+        "ticker": "OII",
+        "timeframe": "2h",
+        "trades": 14
+      },
+      {
+        "pair": "SSL|2h",
+        "ticker": "SSL",
+        "timeframe": "2h",
+        "trades": 14
+      },
+      {
+        "pair": "NYT|3h",
+        "ticker": "NYT",
+        "timeframe": "3h",
+        "trades": 14
+      },
+      {
+        "pair": "CI|3h",
+        "ticker": "CI",
+        "timeframe": "3h",
+        "trades": 14
+      },
+      {
+        "pair": "BTI|3h",
+        "ticker": "BTI",
+        "timeframe": "3h",
+        "trades": 14
+      },
+      {
+        "pair": "BANC|3h",
+        "ticker": "BANC",
+        "timeframe": "3h",
+        "trades": 14
+      },
+      {
+        "pair": "PPL|45m",
+        "ticker": "PPL",
+        "timeframe": "45m",
+        "trades": 14
+      },
+      {
+        "pair": "SHO|45m",
+        "ticker": "SHO",
+        "timeframe": "45m",
+        "trades": 14
+      },
+      {
+        "pair": "RPM|4h",
+        "ticker": "RPM",
+        "timeframe": "4h",
+        "trades": 14
+      },
+      {
+        "pair": "BTI|4h",
+        "ticker": "BTI",
+        "timeframe": "4h",
+        "trades": 14
+      },
+      {
+        "pair": "RY|15m",
+        "ticker": "RY",
+        "timeframe": "15m",
+        "trades": 13
+      },
+      {
+        "pair": "RPM|1d",
+        "ticker": "RPM",
+        "timeframe": "1d",
+        "trades": 13
+      },
+      {
+        "pair": "MDLZ|1d",
+        "ticker": "MDLZ",
+        "timeframe": "1d",
+        "trades": 13
+      },
+      {
+        "pair": "EDC|1h",
+        "ticker": "EDC",
+        "timeframe": "1h",
+        "trades": 13
+      },
+      {
+        "pair": "TQQQ|1h",
+        "ticker": "TQQQ",
+        "timeframe": "1h",
+        "trades": 13
+      },
+      {
+        "pair": "UPRO|1h",
+        "ticker": "UPRO",
+        "timeframe": "1h",
+        "trades": 13
+      },
+      {
+        "pair": "FRO|2h",
+        "ticker": "FRO",
+        "timeframe": "2h",
+        "trades": 13
+      },
+      {
+        "pair": "ADM|2h",
+        "ticker": "ADM",
+        "timeframe": "2h",
+        "trades": 13
+      },
+      {
+        "pair": "EWY|30m",
+        "ticker": "EWY",
+        "timeframe": "30m",
+        "trades": 13
+      },
+      {
+        "pair": "DAL|3h",
+        "ticker": "DAL",
+        "timeframe": "3h",
+        "trades": 13
+      },
+      {
+        "pair": "CVE|45m",
+        "ticker": "CVE",
+        "timeframe": "45m",
+        "trades": 13
+      },
+      {
+        "pair": "ABNB|4h",
+        "ticker": "ABNB",
+        "timeframe": "4h",
+        "trades": 13
+      },
+      {
+        "pair": "NWS|4h",
+        "ticker": "NWS",
+        "timeframe": "4h",
+        "trades": 13
+      },
+      {
+        "pair": "GOOGL|1d",
+        "ticker": "GOOGL",
+        "timeframe": "1d",
+        "trades": 12
+      },
+      {
+        "pair": "SYK|1d",
+        "ticker": "SYK",
+        "timeframe": "1d",
+        "trades": 12
+      },
+      {
+        "pair": "GILD|1d",
+        "ticker": "GILD",
+        "timeframe": "1d",
+        "trades": 12
+      },
+      {
+        "pair": "BTI|1d",
+        "ticker": "BTI",
+        "timeframe": "1d",
+        "trades": 12
+      },
+      {
+        "pair": "ASHR|1h",
+        "ticker": "ASHR",
+        "timeframe": "1h",
+        "trades": 12
+      },
+      {
+        "pair": "TD|1h",
+        "ticker": "TD",
+        "timeframe": "1h",
+        "trades": 12
+      },
+      {
+        "pair": "SOXL|2h",
+        "ticker": "SOXL",
+        "timeframe": "2h",
+        "trades": 12
+      },
+      {
+        "pair": "TQQQ|2h",
+        "ticker": "TQQQ",
+        "timeframe": "2h",
+        "trades": 12
+      },
+      {
+        "pair": "FIVE|2h",
+        "ticker": "FIVE",
+        "timeframe": "2h",
+        "trades": 12
+      },
+      {
+        "pair": "PILL|3h",
+        "ticker": "PILL",
+        "timeframe": "3h",
+        "trades": 12
+      },
+      {
+        "pair": "BUD|3h",
+        "ticker": "BUD",
+        "timeframe": "3h",
+        "trades": 12
+      },
+      {
+        "pair": "ABEV|3h",
+        "ticker": "ABEV",
+        "timeframe": "3h",
+        "trades": 12
+      },
+      {
+        "pair": "WQTM|45m",
+        "ticker": "WQTM",
+        "timeframe": "45m",
+        "trades": 12
+      },
+      {
+        "pair": "KIM|45m",
+        "ticker": "KIM",
+        "timeframe": "45m",
+        "trades": 12
+      },
+      {
+        "pair": "NTR|4h",
+        "ticker": "NTR",
+        "timeframe": "4h",
+        "trades": 12
+      },
+      {
+        "pair": "HIG|4h",
+        "ticker": "HIG",
+        "timeframe": "4h",
+        "trades": 12
+      },
+      {
+        "pair": "TPC|4h",
+        "ticker": "TPC",
+        "timeframe": "4h",
+        "trades": 12
+      },
+      {
+        "pair": "FAS|15m",
+        "ticker": "FAS",
+        "timeframe": "15m",
+        "trades": 11
+      },
+      {
+        "pair": "WTAI|15m",
+        "ticker": "WTAI",
+        "timeframe": "15m",
+        "trades": 11
+      },
+      {
+        "pair": "ALV|1d",
+        "ticker": "ALV",
+        "timeframe": "1d",
+        "trades": 11
+      },
+      {
+        "pair": "JNUG|2h",
+        "ticker": "JNUG",
+        "timeframe": "2h",
+        "trades": 11
+      },
+      {
+        "pair": "FTI|2h",
+        "ticker": "FTI",
+        "timeframe": "2h",
+        "trades": 11
+      },
+      {
+        "pair": "VTRS|2h",
+        "ticker": "VTRS",
+        "timeframe": "2h",
+        "trades": 11
+      },
+      {
+        "pair": "COGT|2h",
+        "ticker": "COGT",
+        "timeframe": "2h",
+        "trades": 11
+      },
+      {
+        "pair": "MU|30m",
+        "ticker": "MU",
+        "timeframe": "30m",
+        "trades": 11
+      },
+      {
+        "pair": "OII|4h",
+        "ticker": "OII",
+        "timeframe": "4h",
+        "trades": 11
+      },
+      {
+        "pair": "MULL|3h",
+        "ticker": "MULL",
+        "timeframe": "3h",
+        "trades": 10
+      },
+      {
+        "pair": "SBIN|45m",
+        "ticker": "SBIN",
+        "timeframe": "45m",
+        "trades": 10
+      },
+      {
+        "pair": "LFST|1d",
+        "ticker": "LFST",
+        "timeframe": "1d",
+        "trades": 9
+      },
+      {
+        "pair": "KORU|1d",
+        "ticker": "KORU",
+        "timeframe": "1d",
+        "trades": 8
+      },
+      {
+        "pair": "LABU|1h",
+        "ticker": "LABU",
+        "timeframe": "1h",
+        "trades": 8
+      },
+      {
+        "pair": "INGM|1d",
+        "ticker": "INGM",
+        "timeframe": "1d",
+        "trades": 3
+      },
+      {
+        "pair": "WQTM|1d",
+        "ticker": "WQTM",
+        "timeframe": "1d",
+        "trades": 1
+      }
+    ]
+  },
   "capital": 100000,
   "timeframes": [
     "15m",
@@ -32,25 +694,25 @@
   ],
   "universe": [
     "DUSL",
-    "KRYS",
-    "KORU",
+    "CORT",
+    "PLTR",
     "LFST",
     "COGT",
-    "SOXL",
     "MULL",
-    "PILL",
-    "BE",
+    "KORU",
+    "SOXL",
     "LABU",
-    "CORT",
-    "EDC",
-    "PLTR",
-    "TEX",
-    "JNUG",
-    "SGHC",
+    "MUR",
+    "BE",
+    "AMDL",
+    "KRYS",
+    "MGA",
     "INTW",
-    "OII",
     "MU",
-    "MGA"
+    "URTY",
+    "SGHC",
+    "EDC",
+    "OII"
   ],
   "grid": {
     "viable": 1785,
@@ -62,75 +724,12 @@
           "30m"
         ],
         "slots": 3,
-        "cagr": 476.24523126838244,
-        "expectedPct": 181.9999832002819,
-        "dd": 9.85213005477684,
-        "cdd": 48.33931633266182,
-        "fill": 47.867298578199055,
-        "n": 101
-      },
-      {
-        "timeframes": [
-          "30m"
-        ],
-        "slots": 3,
-        "cagr": 393.33489926473976,
-        "expectedPct": 166.6161159902039,
-        "dd": 10.144117685412665,
-        "cdd": 38.774678238439506,
-        "fill": 68.18181818181817,
-        "n": 75
-      },
-      {
-        "timeframes": [
-          "15m",
-          "30m"
-        ],
-        "slots": 5,
-        "cagr": 364.413292718983,
-        "expectedPct": 157.61971821798966,
-        "dd": 6.603160802126451,
-        "cdd": 55.187705348873074,
-        "fill": 72.03791469194313,
-        "n": 152
-      },
-      {
-        "timeframes": [
-          "30m"
-        ],
-        "slots": 5,
-        "cagr": 310.7013812305368,
-        "expectedPct": 145.2015218425743,
-        "dd": 6.619420075497892,
-        "cdd": 46.93785523306085,
-        "fill": 91.81818181818183,
-        "n": 101
-      },
-      {
-        "timeframes": [
-          "15m",
-          "45m"
-        ],
-        "slots": 3,
-        "cagr": 292.97508900626354,
-        "expectedPct": 140.32897049832096,
-        "dd": 4.502613538646704,
-        "cdd": 65.0677848524214,
-        "fill": 53.403141361256544,
-        "n": 102
-      },
-      {
-        "timeframes": [
-          "30m",
-          "45m"
-        ],
-        "slots": 3,
-        "cagr": 288.3563372284715,
-        "expectedPct": 141.01383532256588,
-        "dd": 10.061190080971985,
-        "cdd": 28.660261351569073,
-        "fill": 49.5,
-        "n": 99
+        "cagr": 484.96141325368524,
+        "expectedPct": 182.57789545096463,
+        "dd": 4.112065371574604,
+        "cdd": 117.93621195958332,
+        "fill": 53.535353535353536,
+        "n": 106
       },
       {
         "timeframes": [
@@ -138,13 +737,26 @@
           "30m",
           "45m"
         ],
+        "slots": 3,
+        "cagr": 316.4936056934806,
+        "expectedPct": 147.05185886809932,
+        "dd": 4.061082130853469,
+        "cdd": 77.93331813926328,
+        "fill": 40.57971014492754,
+        "n": 112
+      },
+      {
+        "timeframes": [
+          "15m",
+          "30m"
+        ],
         "slots": 5,
-        "cagr": 261.30483830612377,
-        "expectedPct": 130.95620541039946,
-        "dd": 6.06589301757587,
-        "cdd": 43.07771956231265,
-        "fill": 55.81395348837209,
-        "n": 168
+        "cagr": 315.15573376448475,
+        "expectedPct": 145.74680220819752,
+        "dd": 3.26941266804241,
+        "cdd": 96.39521399211654,
+        "fill": 77.77777777777779,
+        "n": 154
       },
       {
         "timeframes": [
@@ -153,150 +765,105 @@
           "1h"
         ],
         "slots": 5,
-        "cagr": 255.15152065014112,
-        "expectedPct": 131.13484581836246,
-        "dd": 6.309423046052827,
-        "cdd": 40.43975475852167,
-        "fill": 53.55029585798816,
+        "cagr": 261.40341639865306,
+        "expectedPct": 132.99296316307917,
+        "dd": 2.957733451733752,
+        "cdd": 88.37963956671778,
+        "fill": 64.64285714285715,
         "n": 181
-      },
-      {
-        "timeframes": [
-          "15m",
-          "30m",
-          "1h"
-        ],
-        "slots": 3,
-        "cagr": 237.64143199248724,
-        "expectedPct": 125.81122786315346,
-        "dd": 5.0078254139906475,
-        "cdd": 47.45401693289363,
-        "fill": 32.24852071005917,
-        "n": 109
-      },
-      {
-        "timeframes": [
-          "15m",
-          "30m"
-        ],
-        "slots": 8,
-        "cagr": 232.71693863033823,
-        "expectedPct": 122.28991255009947,
-        "dd": 4.091536040228381,
-        "cdd": 56.87764603372489,
-        "fill": 90.99526066350711,
-        "n": 192
-      },
-      {
-        "timeframes": [
-          "15m",
-          "30m",
-          "45m"
-        ],
-        "slots": 3,
-        "cagr": 232.2454831908758,
-        "expectedPct": 124.46911651713683,
-        "dd": 11.374880951087816,
-        "cdd": 20.417399020660998,
-        "fill": 34.55149501661129,
-        "n": 104
-      },
-      {
-        "timeframes": [
-          "15m",
-          "30m",
-          "45m",
-          "1h"
-        ],
-        "slots": 5,
-        "cagr": 223.28922541578265,
-        "expectedPct": 121.4981877271689,
-        "dd": 7.575748059675489,
-        "cdd": 29.47421477811755,
-        "fill": 42.28971962616823,
-        "n": 181
-      },
-      {
-        "timeframes": [
-          "30m",
-          "45m"
-        ],
-        "slots": 5,
-        "cagr": 217.74869889967428,
-        "expectedPct": 118.41655535200296,
-        "dd": 6.074062804747074,
-        "cdd": 35.84893767142097,
-        "fill": 70,
-        "n": 140
-      },
-      {
-        "timeframes": [
-          "15m",
-          "30m",
-          "45m"
-        ],
-        "slots": 8,
-        "cagr": 213.17988568367082,
-        "expectedPct": 116.21348679485888,
-        "dd": 4.124398449591907,
-        "cdd": 51.687509897295236,
-        "fill": 78.40531561461795,
-        "n": 236
-      },
-      {
-        "timeframes": [
-          "15m",
-          "45m"
-        ],
-        "slots": 5,
-        "cagr": 210.57204934959097,
-        "expectedPct": 115.04443026942947,
-        "dd": 4.273253401877598,
-        "cdd": 49.27675228833119,
-        "fill": 79.58115183246073,
-        "n": 152
-      },
-      {
-        "timeframes": [
-          "15m",
-          "30m",
-          "45m",
-          "2h"
-        ],
-        "slots": 3,
-        "cagr": 201.46149219730827,
-        "expectedPct": 114.53224756487133,
-        "dd": 8.579538289466665,
-        "cdd": 23.481623998886757,
-        "fill": 32.42009132420091,
-        "n": 142
       },
       {
         "timeframes": [
           "15m"
         ],
         "slots": 3,
-        "cagr": 200.91483700296175,
-        "expectedPct": 111.8030530569789,
-        "dd": 2.638290622550517,
-        "cdd": 76.15341361018491,
-        "fill": 77.22772277227723,
-        "n": 78
+        "cagr": 254.09616439259986,
+        "expectedPct": 129.5781397599428,
+        "dd": 4.006777910230286,
+        "cdd": 63.41658312127309,
+        "fill": 71.2,
+        "n": 89
+      },
+      {
+        "timeframes": [
+          "30m"
+        ],
+        "slots": 3,
+        "cagr": 253.92269359511198,
+        "expectedPct": 130.5723396356918,
+        "dd": 4.481578067784513,
+        "cdd": 56.65921462362023,
+        "fill": 86.3013698630137,
+        "n": 63
       },
       {
         "timeframes": [
           "15m",
           "30m",
-          "3h",
-          "4h"
+          "1h"
         ],
         "slots": 3,
-        "cagr": 195.62726388932597,
-        "expectedPct": 115.99736819732755,
-        "dd": 21.073633333333326,
-        "cdd": 9.283034434308561,
-        "fill": 38.46153846153847,
-        "n": 155
+        "cagr": 243.83411249047637,
+        "expectedPct": 127.59994340883729,
+        "dd": 4.006770530122459,
+        "cdd": 60.85552208626833,
+        "fill": 42.142857142857146,
+        "n": 118
+      },
+      {
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m"
+        ],
+        "slots": 5,
+        "cagr": 243.24642703658355,
+        "expectedPct": 125.82706002062837,
+        "dd": 3.9996129864691565,
+        "cdd": 60.81749105713365,
+        "fill": 62.31884057971014,
+        "n": 172
+      },
+      {
+        "timeframes": [
+          "30m",
+          "45m"
+        ],
+        "slots": 3,
+        "cagr": 241.49330696694577,
+        "expectedPct": 126.62579342450165,
+        "dd": 5.166981420315237,
+        "cdd": 46.73779278893019,
+        "fill": 60.264900662251655,
+        "n": 91
+      },
+      {
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m",
+          "1h"
+        ],
+        "slots": 5,
+        "cagr": 241.1276057732262,
+        "expectedPct": 127.39412944844494,
+        "dd": 3.9918915657063936,
+        "cdd": 60.40434761422608,
+        "fill": 51.117318435754186,
+        "n": 183
+      },
+      {
+        "timeframes": [
+          "15m",
+          "45m"
+        ],
+        "slots": 3,
+        "cagr": 240.14010706953545,
+        "expectedPct": 125.71954531695464,
+        "dd": 5.437095567118385,
+        "cdd": 44.166982924084905,
+        "fill": 52.70935960591133,
+        "n": 107
       },
       {
         "timeframes": [
@@ -305,12 +872,26 @@
           "1h"
         ],
         "slots": 5,
-        "cagr": 193.4866726156625,
-        "expectedPct": 110.9300817070269,
-        "dd": 4.126302284421904,
-        "cdd": 46.89105627237634,
-        "fill": 51.257861635220124,
-        "n": 163
+        "cagr": 211.8552763457464,
+        "expectedPct": 117.78443045992043,
+        "dd": 4.097342715673647,
+        "cdd": 51.70552991218728,
+        "fill": 62.10526315789474,
+        "n": 177
+      },
+      {
+        "timeframes": [
+          "30m",
+          "45m",
+          "3h"
+        ],
+        "slots": 3,
+        "cagr": 208.76389969714407,
+        "expectedPct": 117.76285943006768,
+        "dd": 5.8895916985983385,
+        "cdd": 35.44624319998748,
+        "fill": 52.21238938053098,
+        "n": 118
       },
       {
         "timeframes": [
@@ -319,128 +900,214 @@
           "45m",
           "1h"
         ],
-        "slots": 8,
-        "cagr": 187.65777860189777,
-        "expectedPct": 107.83218907612621,
-        "dd": 3.7884852803715208,
-        "cdd": 49.533722507559794,
-        "fill": 61.21495327102804,
-        "n": 262
+        "slots": 3,
+        "cagr": 208.67543743263334,
+        "expectedPct": 116.60295867787772,
+        "dd": 4.625639919950899,
+        "cdd": 45.112771647570966,
+        "fill": 31.28491620111732,
+        "n": 112
+      },
+      {
+        "timeframes": [
+          "30m",
+          "45m",
+          "1h"
+        ],
+        "slots": 5,
+        "cagr": 204.16957237212347,
+        "expectedPct": 115.26196695639905,
+        "dd": 2.751881565557626,
+        "cdd": 74.19271778534977,
+        "fill": 61.80257510729614,
+        "n": 144
+      },
+      {
+        "timeframes": [
+          "15m",
+          "30m",
+          "3h"
+        ],
+        "slots": 3,
+        "cagr": 202.5917628440795,
+        "expectedPct": 115.85096586320924,
+        "dd": 7.999004509686618,
+        "cdd": 25.327121968583135,
+        "fill": 44.68864468864469,
+        "n": 122
+      },
+      {
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m",
+          "3h"
+        ],
+        "slots": 3,
+        "cagr": 200.77328856322944,
+        "expectedPct": 115.87078941448081,
+        "dd": 8.36857566827282,
+        "cdd": 23.991333354898945,
+        "fill": 36.75213675213676,
+        "n": 129
+      },
+      {
+        "timeframes": [
+          "15m",
+          "45m"
+        ],
+        "slots": 5,
+        "cagr": 195.79487264767064,
+        "expectedPct": 110.2163978378356,
+        "dd": 4.299570485217608,
+        "cdd": 45.53823999881726,
+        "fill": 79.80295566502463,
+        "n": 162
+      },
+      {
+        "timeframes": [
+          "30m",
+          "45m",
+          "2h",
+          "3h"
+        ],
+        "slots": 3,
+        "cagr": 193.1369322817285,
+        "expectedPct": 112.38848172669321,
+        "dd": 11.19058208304273,
+        "cdd": 17.258881696099795,
+        "fill": 39.49843260188088,
+        "n": 126
+      },
+      {
+        "timeframes": [
+          "15m",
+          "30m",
+          "1h",
+          "3h"
+        ],
+        "slots": 5,
+        "cagr": 193.00142126856105,
+        "expectedPct": 112.80197086180921,
+        "dd": 3.8083917334181407,
+        "cdd": 50.67793304323154,
+        "fill": 54.3661971830986,
+        "n": 193
       }
     ],
     "bySlots": [
       {
         "slots": 3,
         "combos": 255,
-        "cagr": 92.6353162276554,
-        "expected": 67.42390140153907,
-        "dd": 35.64787233361901,
-        "fill": 36.40306144966148
+        "cagr": 90.22942774453362,
+        "expected": 64.11059719622949,
+        "dd": 23.324200544432856,
+        "fill": 44.92315728961411
       },
       {
         "slots": 5,
         "combos": 255,
-        "cagr": 87.50318366105165,
-        "expected": 63.05014505801229,
-        "dd": 20.669798677253443,
-        "fill": 54.215345673230345
+        "cagr": 86.2447742891271,
+        "expected": 61.01086552532779,
+        "dd": 15.085936367245143,
+        "fill": 62.972181985284664
       },
       {
         "slots": 8,
         "combos": 255,
-        "cagr": 73.95422138607387,
-        "expected": 55.44596027783902,
-        "dd": 15.735278039488124,
-        "fill": 71.68085873734316
+        "cagr": 68.39474479131938,
+        "expected": 50.798221382927956,
+        "dd": 9.897701458452644,
+        "fill": 79.03145172181124
       },
       {
         "slots": 10,
         "combos": 255,
-        "cagr": 67.38515024926781,
-        "expected": 51.29613497450987,
-        "dd": 13.503286183171234,
-        "fill": 78.93153607055784
+        "cagr": 58.0608927270445,
+        "expected": 44.70853613823303,
+        "dd": 8.11484259791271,
+        "fill": 85.537308616998
       },
       {
         "slots": 15,
         "combos": 255,
-        "cagr": 50.97119913257253,
-        "expected": 40.927137478694476,
-        "dd": 9.293734706769186,
-        "fill": 89.95877127339983
+        "cagr": 40.971976708042114,
+        "expected": 33.70144083142654,
+        "dd": 5.6836566852807975,
+        "fill": 94.53000371326438
       },
       {
         "slots": 20,
         "combos": 255,
-        "cagr": 39.89528970006658,
-        "expected": 33.36363181512543,
-        "dd": 7.042741983314724,
-        "fill": 95.2249322616677
+        "cagr": 31.69713625019968,
+        "expected": 27.119209383215946,
+        "dd": 4.340890523344482,
+        "fill": 98.39569620016663
       },
       {
         "slots": 30,
         "combos": 255,
-        "cagr": 27.4196664881121,
-        "expected": 24.14705843573343,
-        "dd": 4.768046980679474,
-        "fill": 99.16850965435033
+        "cagr": 20.986704135834117,
+        "expected": 18.860792490919902,
+        "dd": 2.9183867807485884,
+        "fill": 99.9661678753106
       }
     ],
     "byTimeframe": [
       {
-        "timeframe": "30m",
-        "withCagr": 68.28860697562611,
-        "withoutCagr": 57.31522496655004,
-        "delta": 10.973382009076069,
+        "timeframe": "3h",
+        "withCagr": 62.18434130374059,
+        "withoutCagr": 51.08230892756367,
+        "delta": 11.102032376176915,
         "combosWith": 896
       },
       {
         "timeframe": "15m",
-        "withCagr": 67.57466167271318,
-        "withoutCagr": 58.034791886021324,
-        "delta": 9.539869786691852,
+        "withCagr": 61.882423210595995,
+        "withoutCagr": 51.38660432852825,
+        "delta": 10.495818882067745,
+        "combosWith": 896
+      },
+      {
+        "timeframe": "30m",
+        "withCagr": 61.084102352513476,
+        "withoutCagr": 52.19121117761933,
+        "delta": 8.892891174894146,
         "combosWith": 896
       },
       {
         "timeframe": "2h",
-        "withCagr": 66.07633861795738,
-        "withoutCagr": 59.54491276010598,
-        "delta": 6.531425857851396,
+        "withCagr": 59.246985078383396,
+        "withoutCagr": 54.042793942096914,
+        "delta": 5.204191136286482,
         "combosWith": 896
       },
       {
         "timeframe": "45m",
-        "withCagr": 64.30234449852254,
-        "withoutCagr": 61.332875337174144,
-        "delta": 2.9694691613483997,
-        "combosWith": 896
-      },
-      {
-        "timeframe": "3h",
-        "withCagr": 62.58166924436281,
-        "withoutCagr": 63.06709921538238,
-        "delta": -0.4854299710195704,
+        "withCagr": 59.02109570903706,
+        "withoutCagr": 54.270461967894754,
+        "delta": 4.750633741142309,
         "combosWith": 896
       },
       {
         "timeframe": "1h",
-        "withCagr": 61.73053516182148,
-        "withoutCagr": 63.9249351410933,
-        "delta": -2.1943999792718216,
+        "withCagr": 58.632189259900564,
+        "withoutCagr": 54.66243067253627,
+        "delta": 3.9697585873642964,
         "combosWith": 896
       },
       {
         "timeframe": "4h",
-        "withCagr": 61.2041157466157,
-        "withoutCagr": 64.4554995910645,
-        "delta": -3.251383844448796,
+        "withCagr": 53.48146522029989,
+        "withoutCagr": 59.85371159433853,
+        "delta": -6.372246374038639,
         "combosWith": 896
       },
       {
         "timeframe": "1d",
-        "withCagr": 34.855652603401175,
-        "withoutCagr": 91.01143094800506,
-        "delta": -56.15577834460388,
+        "withCagr": 27.71254946398445,
+        "withoutCagr": 85.82553219912872,
+        "delta": -58.11298273514427,
         "combosWith": 896
       }
     ],
@@ -448,117 +1115,119 @@
       {
         "count": 1,
         "combos": 56,
-        "cagr": 68.08883261623916,
-        "expected": 47.74697776175723,
-        "dd": 7.517070681749163,
-        "fill": 92.99728689046637
+        "cagr": 53.438317983503325,
+        "expected": 39.5534475904362,
+        "dd": 5.427277229587442,
+        "fill": 96.34449194361032
       },
       {
         "count": 2,
         "combos": 196,
-        "cagr": 71.4370909269957,
-        "expected": 51.30473413577474,
-        "dd": 10.916439397383414,
-        "fill": 86.11848005704273
+        "cagr": 61.28647756455831,
+        "expected": 44.47895388083474,
+        "dd": 7.599436683925291,
+        "fill": 90.75078546764665
       },
       {
         "count": 3,
         "combos": 392,
-        "cagr": 67.5197651389232,
-        "expected": 50.495513610168,
-        "dd": 13.332560425145637,
-        "fill": 79.95188908638376
+        "cagr": 60.33085627872475,
+        "expected": 44.83260188543748,
+        "dd": 9.007049737260047,
+        "fill": 85.33163228902878
       },
       {
         "count": 4,
         "combos": 490,
-        "cagr": 63.70291449016545,
-        "expected": 48.80114982976727,
-        "dd": 15.522533407644756,
-        "fill": 74.53429325437844
+        "cagr": 58.26057681552333,
+        "expected": 44.03625956809252,
+        "dd": 10.15936246620351,
+        "fill": 80.4486453638997
       },
       {
         "count": 5,
         "combos": 392,
-        "cagr": 59.108702767792664,
-        "expected": 46.38137777701432,
-        "dd": 17.361910709099288,
-        "fill": 69.77873551180015
+        "cagr": 54.831566152609604,
+        "expected": 42.21192563967375,
+        "dd": 11.042386377659742,
+        "fill": 75.92592692767182
       },
       {
         "count": 6,
         "combos": 196,
-        "cagr": 53.674252502731306,
-        "expected": 43.32223907488572,
-        "dd": 18.940132246171416,
-        "fill": 65.55393663137988
+        "cagr": 49.80783895526515,
+        "expected": 39.41794154627498,
+        "dd": 11.687184828780309,
+        "fill": 71.83758952771791
       },
       {
         "count": 7,
         "combos": 56,
-        "cagr": 47.55542085421988,
-        "expected": 39.80935819470414,
-        "dd": 20.299635881633385,
-        "fill": 61.82769868039162
+        "cagr": 43.22432017349771,
+        "expected": 35.720001980253585,
+        "dd": 12.137090180026382,
+        "fill": 68.15355711488432
       },
       {
         "count": 8,
         "combos": 7,
-        "cagr": 41.30540274829867,
-        "expected": 36.20225776542187,
-        "dd": 21.513693791318463,
-        "fill": 58.49535080304311
+        "cagr": 35.7709196269482,
+        "expected": 31.519627704353947,
+        "dd": 12.426122460634579,
+        "fill": 64.82285714285715
       }
     ]
   },
   "walkForward": [
     {
       "q": 0.5,
-      "splitAt": "2026-01-27",
-      "combos": 1736,
-      "rho": 0.47484913992788663,
+      "splitAt": "2026-02-20",
+      "combos": 1757,
+      "rho": 0.3927596711073048,
       "winner": {
-        "label": "15m+1h @3",
+        "label": "15m+45m+1h @3",
         "timeframes": [
           "15m",
+          "45m",
           "1h"
         ],
         "slots": 3,
-        "inSampleCagr": 171.27593011133885,
-        "oosCagr": 205.5638362796896
+        "inSampleCagr": 163.21725306752182,
+        "oosCagr": 176.99174438425334
       }
     },
     {
       "q": 0.6,
-      "splitAt": "2026-03-06",
+      "splitAt": "2026-03-30",
       "combos": 1764,
-      "rho": 0.12955279535414255,
+      "rho": 0.2963697815454549,
       "winner": {
-        "label": "15m+30m+45m @3",
+        "label": "15m+30m+3h @3",
         "timeframes": [
           "15m",
           "30m",
-          "45m"
+          "3h"
         ],
         "slots": 3,
-        "inSampleCagr": 226.67648215719086,
-        "oosCagr": 384.01902010918326
+        "inSampleCagr": 128.89916509082872,
+        "oosCagr": 151.94984696672745
       }
     },
     {
       "q": 0.7,
-      "splitAt": "2026-04-23",
-      "combos": 1764,
-      "rho": 0.24069473053485393,
+      "splitAt": "2026-05-07",
+      "combos": 1778,
+      "rho": 0.2169663336732505,
       "winner": {
-        "label": "15m+1h @3",
+        "label": "15m+30m+1h @3",
         "timeframes": [
           "15m",
+          "30m",
           "1h"
         ],
         "slots": 3,
-        "inSampleCagr": 270.5271001108941,
-        "oosCagr": 81.25830830646885
+        "inSampleCagr": 335.96159831728414,
+        "oosCagr": 213.9103165066851
       }
     }
   ],
@@ -566,7 +1235,7 @@
     "windows": [
       {
         "q": 0.5,
-        "splitAt": "2026-01-27",
+        "splitAt": "2026-02-20",
         "universeSize": 20,
         "scored": [
           {
@@ -576,15 +1245,15 @@
               "2h"
             ],
             "slots": 5,
-            "cagr": 173.36388748254294,
-            "expectedPct": 102.46767177379704,
-            "dd": 4.5355932832032515,
-            "cdd": 38.2229791468659,
-            "fill": 63.6986301369863,
-            "n": 93,
-            "rank": 4,
-            "rankCdd": 8,
-            "rankOverall": 6
+            "cagr": 116.60970678253815,
+            "expectedPct": 78.93778144078182,
+            "dd": 3.8515399999999893,
+            "cdd": 30.27612507790091,
+            "fill": 61.53846153846154,
+            "n": 72,
+            "rank": 5,
+            "rankCdd": 5,
+            "rankOverall": 5
           },
           {
             "label": "15m+30m @ 3",
@@ -593,15 +1262,15 @@
               "30m"
             ],
             "slots": 3,
-            "cagr": 237.20898230599352,
-            "expectedPct": 123.89942790227272,
-            "dd": 4.257188636898247,
-            "cdd": 55.71963155450449,
-            "fill": 57.333333333333336,
-            "n": 86,
-            "rank": 1,
-            "rankCdd": 2,
-            "rankOverall": 1.5
+            "cagr": 125.63821575782032,
+            "expectedPct": 84.10264319021057,
+            "dd": 8.468355142749889,
+            "cdd": 14.836200612746435,
+            "fill": 71.5909090909091,
+            "n": 63,
+            "rank": 4,
+            "rankCdd": 10,
+            "rankOverall": 7
           },
           {
             "label": "15m+30m @ 5",
@@ -610,15 +1279,15 @@
               "30m"
             ],
             "slots": 5,
-            "cagr": 184.71950035672396,
-            "expectedPct": 106.47940696605967,
-            "dd": 5.123521811359674,
-            "cdd": 36.05322806417473,
-            "fill": 80,
-            "n": 120,
-            "rank": 3,
-            "rankCdd": 10,
-            "rankOverall": 6.5
+            "cagr": 109.75194300276958,
+            "expectedPct": 75.51672402810976,
+            "dd": 4.897139127917019,
+            "cdd": 22.41144066688017,
+            "fill": 92.04545454545455,
+            "n": 81,
+            "rank": 7,
+            "rankCdd": 7,
+            "rankOverall": 7
           },
           {
             "label": "30m+2h @ 5",
@@ -627,15 +1296,15 @@
               "2h"
             ],
             "slots": 5,
-            "cagr": 152.94111646065906,
-            "expectedPct": 94.50574718850602,
-            "dd": 6.069679238190662,
-            "cdd": 25.197561594086803,
-            "fill": 70.75471698113208,
-            "n": 75,
-            "rank": 10,
+            "cagr": 86.6274442056328,
+            "expectedPct": 63.16409658715598,
+            "dd": 6.6034309695152436,
+            "cdd": 13.118550736056548,
+            "fill": 72.54901960784314,
+            "n": 37,
+            "rank": 11,
             "rankCdd": 11,
-            "rankOverall": 10.5
+            "rankOverall": 11
           },
           {
             "label": "15m+30m+45m @ 5",
@@ -645,15 +1314,15 @@
               "45m"
             ],
             "slots": 5,
-            "cagr": 169.90963326200816,
-            "expectedPct": 101.55417827364772,
-            "dd": 3.8843154009041583,
-            "cdd": 43.742491462577426,
-            "fill": 61.76470588235294,
-            "n": 126,
-            "rank": 5,
-            "rankCdd": 6,
-            "rankOverall": 5.5
+            "cagr": 171.67568018269236,
+            "expectedPct": 101.52050392283468,
+            "dd": 7.881211307380063,
+            "cdd": 21.782905379269952,
+            "fill": 76.22950819672131,
+            "n": 93,
+            "rank": 1,
+            "rankCdd": 9,
+            "rankOverall": 5
           },
           {
             "label": "15m+30m+45m+2h @ 8",
@@ -664,103 +1333,103 @@
               "2h"
             ],
             "slots": 8,
-            "cagr": 161.23140479580815,
-            "expectedPct": 97.96955297549164,
-            "dd": 2.9923330198040095,
-            "cdd": 53.881504407677326,
-            "fill": 63.921568627450974,
+            "cagr": 146.93628134558642,
+            "expectedPct": 91.38424804309965,
+            "dd": 4.751177203150472,
+            "cdd": 30.926289435837926,
+            "fill": 73.4567901234568,
+            "n": 119,
+            "rank": 2,
+            "rankCdd": 4,
+            "rankOverall": 3
+          },
+          {
+            "label": "fast5 @ 10",
+            "timeframes": [
+              "15m",
+              "30m",
+              "45m",
+              "1h",
+              "2h"
+            ],
+            "slots": 10,
+            "cagr": 129.69895364199715,
+            "expectedPct": 84.22913445253106,
+            "dd": 3.8202824788374765,
+            "cdd": 33.950095146227234,
+            "fill": 77.09497206703911,
+            "n": 138,
+            "rank": 3,
+            "rankCdd": 2,
+            "rankOverall": 2.5
+          },
+          {
+            "label": "fast5 @ 15",
+            "timeframes": [
+              "15m",
+              "30m",
+              "45m",
+              "1h",
+              "2h"
+            ],
+            "slots": 15,
+            "cagr": 103.41320467808836,
+            "expectedPct": 70.8605526909789,
+            "dd": 1.673572836741252,
+            "cdd": 61.79187568522713,
+            "fill": 91.62011173184358,
+            "n": 164,
+            "rank": 9,
+            "rankCdd": 1,
+            "rankOverall": 5
+          },
+          {
+            "label": "all 8 TF @ 10",
+            "timeframes": [
+              "15m",
+              "30m",
+              "45m",
+              "1h",
+              "2h",
+              "3h",
+              "4h",
+              "1d"
+            ],
+            "slots": 10,
+            "cagr": 113.56731372167998,
+            "expectedPct": 77.62480514552362,
+            "dd": 5.13209391057307,
+            "cdd": 22.128845594136568,
+            "fill": 53.36134453781513,
+            "n": 127,
+            "rank": 6,
+            "rankCdd": 8,
+            "rankOverall": 7
+          },
+          {
+            "label": "all 8 TF @ 15",
+            "timeframes": [
+              "15m",
+              "30m",
+              "45m",
+              "1h",
+              "2h",
+              "3h",
+              "4h",
+              "1d"
+            ],
+            "slots": 15,
+            "cagr": 108.45168692270929,
+            "expectedPct": 74.62626229382204,
+            "dd": 3.35502661484623,
+            "cdd": 32.32513460334499,
+            "fill": 68.4873949579832,
             "n": 163,
             "rank": 8,
             "rankCdd": 3,
             "rankOverall": 5.5
           },
           {
-            "label": "fast5 @ 10",
-            "timeframes": [
-              "15m",
-              "30m",
-              "45m",
-              "1h",
-              "2h"
-            ],
-            "slots": 10,
-            "cagr": 161.54177705201582,
-            "expectedPct": 97.81307066509392,
-            "dd": 3.734664405004367,
-            "cdd": 43.254696950963904,
-            "fill": 59.94152046783626,
-            "n": 205,
-            "rank": 7,
-            "rankCdd": 7,
-            "rankOverall": 7
-          },
-          {
-            "label": "fast5 @ 15",
-            "timeframes": [
-              "15m",
-              "30m",
-              "45m",
-              "1h",
-              "2h"
-            ],
-            "slots": 15,
-            "cagr": 145.44404575832326,
-            "expectedPct": 90.6846047133065,
-            "dd": 2.261901806703467,
-            "cdd": 64.30166213549995,
-            "fill": 80.7017543859649,
-            "n": 276,
-            "rank": 11,
-            "rankCdd": 1,
-            "rankOverall": 6
-          },
-          {
-            "label": "all 8 TF @ 10",
-            "timeframes": [
-              "15m",
-              "30m",
-              "45m",
-              "1h",
-              "2h",
-              "3h",
-              "4h",
-              "1d"
-            ],
-            "slots": 10,
-            "cagr": 156.4435177443348,
-            "expectedPct": 96.82332354133813,
-            "dd": 4.249743562202286,
-            "cdd": 36.812460670747676,
-            "fill": 41.204819277108435,
-            "n": 171,
-            "rank": 9,
-            "rankCdd": 9,
-            "rankOverall": 9
-          },
-          {
-            "label": "all 8 TF @ 15",
-            "timeframes": [
-              "15m",
-              "30m",
-              "45m",
-              "1h",
-              "2h",
-              "3h",
-              "4h",
-              "1d"
-            ],
-            "slots": 15,
-            "cagr": 169.11956491781436,
-            "expectedPct": 102.01929648118944,
-            "dd": 3.8493197355854,
-            "cdd": 43.9349226707183,
-            "fill": 59.27710843373494,
-            "n": 246,
-            "rank": 6,
-            "rankCdd": 5,
-            "rankOverall": 5.5
-          },
-          {
             "label": "all-but-1d @ 15",
             "timeframes": [
               "15m",
@@ -772,21 +1441,21 @@
               "4h"
             ],
             "slots": 15,
-            "cagr": 187.29863638787242,
-            "expectedPct": 108.27190253660736,
-            "dd": 3.8492814062756358,
-            "cdd": 48.65807838380225,
-            "fill": 63.56968215158925,
-            "n": 260,
-            "rank": 2,
-            "rankCdd": 4,
-            "rankOverall": 3
+            "cagr": 100.85036986369226,
+            "expectedPct": 70.50861653566463,
+            "dd": 3.35502661484623,
+            "cdd": 30.0594843025752,
+            "fill": 69.95708154506438,
+            "n": 163,
+            "rank": 10,
+            "rankCdd": 6,
+            "rankOverall": 8
           }
         ]
       },
       {
         "q": 0.6,
-        "splitAt": "2026-03-06",
+        "splitAt": "2026-03-30",
         "universeSize": 20,
         "scored": [
           {
@@ -796,14 +1465,14 @@
               "2h"
             ],
             "slots": 5,
-            "cagr": 157.8333100382753,
-            "expectedPct": 93.82121095028431,
-            "dd": 4.3651551672531435,
-            "cdd": 36.157548584371376,
-            "fill": 76.92307692307693,
-            "n": 70,
-            "rank": 10,
-            "rankCdd": 8,
+            "cagr": 178.9072702030379,
+            "expectedPct": 103.24030945312506,
+            "dd": 9.658792173614547,
+            "cdd": 18.522737314067978,
+            "fill": 69.47368421052632,
+            "n": 66,
+            "rank": 8,
+            "rankCdd": 10,
             "rankOverall": 9
           },
           {
@@ -813,15 +1482,15 @@
               "30m"
             ],
             "slots": 3,
-            "cagr": 399.1065250237766,
-            "expectedPct": 165.19997922876976,
-            "dd": 5.003613921303266,
-            "cdd": 79.76365309172841,
-            "fill": 63.96396396396396,
-            "n": 71,
-            "rank": 1,
+            "cagr": 311.2253089191804,
+            "expectedPct": 143.51093286993145,
+            "dd": 2.5526894769115938,
+            "cdd": 121.92055153363997,
+            "fill": 70.83333333333334,
+            "n": 68,
+            "rank": 2,
             "rankCdd": 1,
-            "rankOverall": 1
+            "rankOverall": 1.5
           },
           {
             "label": "15m+30m @ 5",
@@ -830,15 +1499,15 @@
               "30m"
             ],
             "slots": 5,
-            "cagr": 278.7352209297858,
-            "expectedPct": 137.35165347430987,
-            "dd": 6.689493065968579,
-            "cdd": 41.66761489712785,
-            "fill": 87.38738738738738,
-            "n": 97,
-            "rank": 3,
+            "cagr": 186.4755250893312,
+            "expectedPct": 106.16100420807787,
+            "dd": 2.5411102219529966,
+            "cdd": 73.38348548533779,
+            "fill": 92.70833333333334,
+            "n": 89,
+            "rank": 7,
             "rankCdd": 5,
-            "rankOverall": 4
+            "rankOverall": 6
           },
           {
             "label": "30m+2h @ 5",
@@ -847,15 +1516,15 @@
               "2h"
             ],
             "slots": 5,
-            "cagr": 168.6290054619918,
-            "expectedPct": 100.93476115679049,
-            "dd": 8.035608622707603,
-            "cdd": 20.98521884023418,
-            "fill": 64.8936170212766,
-            "n": 61,
-            "rank": 7,
+            "cagr": 140.72322307184928,
+            "expectedPct": 92.15812432498615,
+            "dd": 14.54417835309668,
+            "cdd": 9.675570503567645,
+            "fill": 68.62745098039215,
+            "n": 35,
+            "rank": 11,
             "rankCdd": 11,
-            "rankOverall": 9
+            "rankOverall": 11
           },
           {
             "label": "15m+30m+45m @ 5",
@@ -865,14 +1534,14 @@
               "45m"
             ],
             "slots": 5,
-            "cagr": 359.567695646164,
-            "expectedPct": 157.0157929614489,
-            "dd": 7.44658121438074,
-            "cdd": 48.28627866862871,
-            "fill": 70.3225806451613,
-            "n": 109,
-            "rank": 2,
-            "rankCdd": 4,
+            "cagr": 261.19007447357336,
+            "expectedPct": 130.31010406912893,
+            "dd": 2.388218686514001,
+            "cdd": 109.36606264262313,
+            "fill": 75.3731343283582,
+            "n": 101,
+            "rank": 4,
+            "rankCdd": 2,
             "rankOverall": 3
           },
           {
@@ -884,15 +1553,15 @@
               "2h"
             ],
             "slots": 8,
-            "cagr": 245.84303702008765,
-            "expectedPct": 125.3846500070882,
-            "dd": 3.802859018758441,
-            "cdd": 64.64689745462891,
-            "fill": 67.70833333333334,
-            "n": 130,
-            "rank": 4,
-            "rankCdd": 2,
-            "rankOverall": 3
+            "cagr": 195.5576565402649,
+            "expectedPct": 110.55221040926071,
+            "dd": 8.48304593679826,
+            "cdd": 23.052764065789543,
+            "fill": 75.47169811320755,
+            "n": 120,
+            "rank": 6,
+            "rankCdd": 9,
+            "rankOverall": 7.5
           },
           {
             "label": "fast5 @ 10",
@@ -904,15 +1573,15 @@
               "2h"
             ],
             "slots": 10,
-            "cagr": 205.0011133287906,
-            "expectedPct": 112.80893796233796,
-            "dd": 4.071055651566817,
-            "cdd": 50.355762945636066,
-            "fill": 62.903225806451616,
-            "n": 156,
+            "cagr": 214.47370843093262,
+            "expectedPct": 116.60439163036777,
+            "dd": 6.203646402804919,
+            "cdd": 34.572200687318414,
+            "fill": 76.66666666666667,
+            "n": 138,
             "rank": 5,
-            "rankCdd": 3,
-            "rankOverall": 4
+            "rankCdd": 8,
+            "rankOverall": 6.5
           },
           {
             "label": "fast5 @ 15",
@@ -924,14 +1593,14 @@
               "2h"
             ],
             "slots": 15,
-            "cagr": 148.84682380444852,
-            "expectedPct": 92.42146511689786,
-            "dd": 3.7084453154049686,
-            "cdd": 40.13725729920712,
-            "fill": 81.04838709677419,
-            "n": 201,
-            "rank": 11,
-            "rankCdd": 6,
+            "cagr": 143.1541107746071,
+            "expectedPct": 89.84879865343117,
+            "dd": 3.8221008209282488,
+            "cdd": 37.45429999929729,
+            "fill": 91.11111111111111,
+            "n": 164,
+            "rank": 10,
+            "rankCdd": 7,
             "rankOverall": 8.5
           },
           {
@@ -947,15 +1616,15 @@
               "1d"
             ],
             "slots": 10,
-            "cagr": 174.96797477412628,
-            "expectedPct": 104.51231000930386,
-            "dd": 4.454536237124005,
-            "cdd": 39.27860622525575,
-            "fill": 45.89041095890411,
-            "n": 134,
-            "rank": 6,
-            "rankCdd": 7,
-            "rankOverall": 6.5
+            "cagr": 484.4061436284658,
+            "expectedPct": 190.24886818023646,
+            "dd": 6.560517019665417,
+            "cdd": 73.83658058906619,
+            "fill": 63.33333333333333,
+            "n": 133,
+            "rank": 1,
+            "rankCdd": 4,
+            "rankOverall": 2.5
           },
           {
             "label": "all 8 TF @ 15",
@@ -970,15 +1639,15 @@
               "1d"
             ],
             "slots": 15,
-            "cagr": 158.923667855783,
-            "expectedPct": 98.60022444225004,
-            "dd": 4.56761580506036,
-            "cdd": 34.7935716659258,
-            "fill": 64.72602739726028,
-            "n": 189,
-            "rank": 9,
-            "rankCdd": 10,
-            "rankOverall": 9.5
+            "cagr": 306.5793946717811,
+            "expectedPct": 147.10237200976405,
+            "dd": 3.257861104000613,
+            "cdd": 94.10450135375795,
+            "fill": 77.14285714285715,
+            "n": 162,
+            "rank": 3,
+            "rankCdd": 3,
+            "rankOverall": 3
           },
           {
             "label": "all-but-1d @ 15",
@@ -992,21 +1661,21 @@
               "4h"
             ],
             "slots": 15,
-            "cagr": 162.7174935789094,
-            "expectedPct": 98.63930629697826,
-            "dd": 4.567639016607236,
-            "cdd": 35.62398275942856,
-            "fill": 67.95774647887323,
-            "n": 193,
-            "rank": 8,
-            "rankCdd": 9,
-            "rankOverall": 8.5
+            "cagr": 151.52355530628344,
+            "expectedPct": 93.57507156250001,
+            "dd": 3.235817512300975,
+            "cdd": 46.826977952330736,
+            "fill": 77.5609756097561,
+            "n": 159,
+            "rank": 9,
+            "rankCdd": 6,
+            "rankOverall": 7.5
           }
         ]
       },
       {
         "q": 0.7,
-        "splitAt": "2026-04-23",
+        "splitAt": "2026-05-07",
         "universeSize": 20,
         "scored": [
           {
@@ -1016,15 +1685,15 @@
               "2h"
             ],
             "slots": 5,
-            "cagr": 30.373537444494914,
-            "expectedPct": 31.65710909497916,
-            "dd": 16.518675460042086,
-            "cdd": 1.8387392813647256,
-            "fill": 61.904761904761905,
-            "n": 39,
-            "rank": 11,
-            "rankCdd": 11,
-            "rankOverall": 11
+            "cagr": 183.00570740782786,
+            "expectedPct": 106.98120385553356,
+            "dd": 9.594419973808154,
+            "cdd": 19.074181441652115,
+            "fill": 68.29268292682927,
+            "n": 56,
+            "rank": 3,
+            "rankCdd": 10,
+            "rankOverall": 6.5
           },
           {
             "label": "15m+30m @ 3",
@@ -1033,12 +1702,12 @@
               "30m"
             ],
             "slots": 3,
-            "cagr": 582.844668281693,
-            "expectedPct": 203.0010683146425,
-            "dd": 11.540169862547724,
-            "cdd": 50.505726971424174,
-            "fill": 67.08860759493672,
-            "n": 53,
+            "cagr": 333.51687927295484,
+            "expectedPct": 149.2939399142084,
+            "dd": 2.9727377336174583,
+            "cdd": 112.19182758753008,
+            "fill": 66.26506024096386,
+            "n": 55,
             "rank": 1,
             "rankCdd": 2,
             "rankOverall": 1.5
@@ -1050,15 +1719,15 @@
               "30m"
             ],
             "slots": 5,
-            "cagr": 363.4317467263137,
-            "expectedPct": 158.15112054675055,
-            "dd": 6.712915019278327,
-            "cdd": 54.13918479268705,
-            "fill": 91.13924050632912,
-            "n": 72,
-            "rank": 3,
+            "cagr": 216.85839692354358,
+            "expectedPct": 116.46559257801981,
+            "dd": 1.5465616389048773,
+            "cdd": 140.21969216636032,
+            "fill": 87.95180722891565,
+            "n": 73,
+            "rank": 2,
             "rankCdd": 1,
-            "rankOverall": 2
+            "rankOverall": 1.5
           },
           {
             "label": "30m+2h @ 5",
@@ -1067,15 +1736,15 @@
               "2h"
             ],
             "slots": 5,
-            "cagr": 166.84983894976278,
-            "expectedPct": 102.09697772735971,
-            "dd": 10.206748117556652,
-            "cdd": 16.347012488998722,
-            "fill": 61.25000000000001,
-            "n": 49,
-            "rank": 6,
-            "rankCdd": 10,
-            "rankOverall": 8
+            "cagr": 99.59704085679255,
+            "expectedPct": 69.48207527360775,
+            "dd": 7.028308637467371,
+            "cdd": 14.170840524254784,
+            "fill": 60.46511627906976,
+            "n": 26,
+            "rank": 11,
+            "rankCdd": 11,
+            "rankOverall": 11
           },
           {
             "label": "15m+30m+45m @ 5",
@@ -1085,15 +1754,15 @@
               "45m"
             ],
             "slots": 5,
-            "cagr": 415.14223301416433,
-            "expectedPct": 169.20857211206393,
-            "dd": 8.235846467665846,
-            "cdd": 50.40674745990274,
-            "fill": 68.42105263157895,
-            "n": 78,
-            "rank": 2,
-            "rankCdd": 3,
-            "rankOverall": 2.5
+            "cagr": 143.9923883939145,
+            "expectedPct": 90.50161375674115,
+            "dd": 2.9308144469228146,
+            "cdd": 49.130503142257325,
+            "fill": 67.5925925925926,
+            "n": 73,
+            "rank": 5,
+            "rankCdd": 4,
+            "rankOverall": 4.5
           },
           {
             "label": "15m+30m+45m+2h @ 8",
@@ -1104,12 +1773,12 @@
               "2h"
             ],
             "slots": 8,
-            "cagr": 185.95785516336952,
-            "expectedPct": 107.03714206880014,
-            "dd": 5.840490457121769,
-            "cdd": 31.839424536104925,
-            "fill": 63.013698630136986,
-            "n": 92,
+            "cagr": 152.64333607943544,
+            "expectedPct": 91.87771826821545,
+            "dd": 3.534294435100439,
+            "cdd": 43.18919628299094,
+            "fill": 64.34108527131784,
+            "n": 83,
             "rank": 4,
             "rankCdd": 5,
             "rankOverall": 4.5
@@ -1124,15 +1793,15 @@
               "2h"
             ],
             "slots": 10,
-            "cagr": 151.21197175900642,
-            "expectedPct": 93.69121585083504,
-            "dd": 5.603896419610205,
-            "cdd": 26.98336308106216,
-            "fill": 59.56284153005464,
-            "n": 109,
-            "rank": 9,
-            "rankCdd": 8,
-            "rankOverall": 8.5
+            "cagr": 134.2112765933071,
+            "expectedPct": 85.0230012670108,
+            "dd": 2.29888628365223,
+            "cdd": 58.38099846334559,
+            "fill": 66.66666666666666,
+            "n": 98,
+            "rank": 6,
+            "rankCdd": 3,
+            "rankOverall": 4.5
           },
           {
             "label": "fast5 @ 15",
@@ -1144,15 +1813,15 @@
               "2h"
             ],
             "slots": 15,
-            "cagr": 137.48622696678189,
-            "expectedPct": 87.9845426994438,
-            "dd": 5.388493057226445,
-            "cdd": 25.51478224183674,
-            "fill": 79.78142076502732,
-            "n": 146,
-            "rank": 10,
-            "rankCdd": 9,
-            "rankOverall": 9.5
+            "cagr": 108.30146557317005,
+            "expectedPct": 73.42729587986861,
+            "dd": 2.753839157347814,
+            "cdd": 39.327447750243245,
+            "fill": 84.35374149659864,
+            "n": 124,
+            "rank": 9,
+            "rankCdd": 6,
+            "rankOverall": 7.5
           },
           {
             "label": "all 8 TF @ 10",
@@ -1167,15 +1836,15 @@
               "1d"
             ],
             "slots": 10,
-            "cagr": 173.0016200604764,
-            "expectedPct": 102.25808435853409,
-            "dd": 4.795246212986741,
-            "cdd": 36.07773456802786,
-            "fill": 48.529411764705884,
-            "n": 99,
-            "rank": 5,
-            "rankCdd": 4,
-            "rankOverall": 4.5
+            "cagr": 118.15225914680471,
+            "expectedPct": 80.49580212525287,
+            "dd": 4.456609101791163,
+            "cdd": 26.511694530112127,
+            "fill": 52.121212121212125,
+            "n": 86,
+            "rank": 7,
+            "rankCdd": 9,
+            "rankOverall": 8
           },
           {
             "label": "all 8 TF @ 15",
@@ -1190,15 +1859,15 @@
               "1d"
             ],
             "slots": 15,
-            "cagr": 153.76744059393098,
-            "expectedPct": 95.48573866747691,
-            "dd": 4.916777360778955,
-            "cdd": 31.274029574845326,
-            "fill": 69.6078431372549,
-            "n": 142,
-            "rank": 7,
-            "rankCdd": 6,
-            "rankOverall": 6.5
+            "cagr": 115.52327920720695,
+            "expectedPct": 77.80752608165184,
+            "dd": 3.237838835716622,
+            "cdd": 35.679131997821784,
+            "fill": 71.51515151515152,
+            "n": 118,
+            "rank": 8,
+            "rankCdd": 7,
+            "rankOverall": 7.5
           },
           {
             "label": "all-but-1d @ 15",
@@ -1212,15 +1881,15 @@
               "4h"
             ],
             "slots": 15,
-            "cagr": 153.76744059393098,
-            "expectedPct": 95.48573866747691,
-            "dd": 4.916777360778955,
-            "cdd": 31.274029574845326,
-            "fill": 69.6078431372549,
-            "n": 142,
-            "rank": 8,
-            "rankCdd": 7,
-            "rankOverall": 7.5
+            "cagr": 99.9317776704425,
+            "expectedPct": 69.59501952135147,
+            "dd": 3.0379037515825025,
+            "cdd": 32.89497819619404,
+            "fill": 72.5609756097561,
+            "n": 119,
+            "rank": 10,
+            "rankCdd": 8,
+            "rankOverall": 9
           }
         ]
       }
@@ -1235,97 +1904,15 @@
         "slots": 3,
         "windows": 3,
         "scoredWindows": 3,
-        "cagr": 406.386725203821,
-        "expected": 164.03349181522833,
-        "dd": 6.93365747358308,
-        "cdd": 61.99633720588569,
-        "fill": 62.79530163074467,
-        "rank": 1,
-        "rankCdd": 1.6666666666666667,
-        "rankOverall": 1.3333333333333333,
-        "worstRank": 1
-      },
-      {
-        "label": "15m+30m+45m @ 5",
-        "timeframes": [
-          "15m",
-          "30m",
-          "45m"
-        ],
-        "slots": 5,
-        "windows": 3,
-        "scoredWindows": 3,
-        "cagr": 314.8731873074455,
-        "expected": 142.59284778238688,
-        "dd": 6.522247694316914,
-        "cdd": 47.478505863702956,
-        "fill": 66.83611305303106,
-        "rank": 3,
+        "cagr": 256.7934679833185,
+        "expected": 125.63583865811681,
+        "dd": 4.6645941177596475,
+        "cdd": 82.98285991130548,
+        "fill": 69.5631008884021,
+        "rank": 2.3333333333333335,
         "rankCdd": 4.333333333333333,
-        "rankOverall": 3.6666666666666665,
-        "worstRank": 5
-      },
-      {
-        "label": "15m+30m @ 5",
-        "timeframes": [
-          "15m",
-          "30m"
-        ],
-        "slots": 5,
-        "windows": 3,
-        "scoredWindows": 3,
-        "cagr": 275.62882267094113,
-        "expected": 133.99406032904002,
-        "dd": 6.175309965535527,
-        "cdd": 43.95334258466321,
-        "fill": 86.17554263123884,
-        "rank": 3,
-        "rankCdd": 5.333333333333333,
-        "rankOverall": 4.166666666666667,
-        "worstRank": 3
-      },
-      {
-        "label": "15m+30m+45m+2h @ 8",
-        "timeframes": [
-          "15m",
-          "30m",
-          "45m",
-          "2h"
-        ],
-        "slots": 8,
-        "windows": 3,
-        "scoredWindows": 3,
-        "cagr": 197.67743232642178,
-        "expected": 110.13044835045999,
-        "dd": 4.211894165228073,
-        "cdd": 50.122608799470385,
-        "fill": 64.88120019697377,
-        "rank": 5.333333333333333,
-        "rankCdd": 3.3333333333333335,
-        "rankOverall": 4.333333333333333,
-        "worstRank": 8
-      },
-      {
-        "label": "fast5 @ 10",
-        "timeframes": [
-          "15m",
-          "30m",
-          "45m",
-          "1h",
-          "2h"
-        ],
-        "slots": 10,
-        "windows": 3,
-        "scoredWindows": 3,
-        "cagr": 172.58495404660425,
-        "expected": 101.43774149275565,
-        "dd": 4.46987215872713,
-        "cdd": 40.19794099255404,
-        "fill": 60.80252926811417,
-        "rank": 7,
-        "rankCdd": 6,
-        "rankOverall": 6.5,
-        "worstRank": 9
+        "rankOverall": 3.3333333333333335,
+        "worstRank": 4
       },
       {
         "label": "all 8 TF @ 10",
@@ -1342,58 +1929,35 @@
         "slots": 10,
         "windows": 3,
         "scoredWindows": 3,
-        "cagr": 168.13770419297916,
-        "expected": 101.19790596972537,
-        "dd": 4.499842004104344,
-        "cdd": 37.38960048801042,
-        "fill": 45.20821400023948,
-        "rank": 6.666666666666667,
-        "rankCdd": 6.666666666666667,
-        "rankOverall": 6.666666666666667,
-        "worstRank": 9
+        "cagr": 238.70857216565017,
+        "expected": 116.12315848367098,
+        "dd": 5.383073344009883,
+        "cdd": 40.82570690443829,
+        "fill": 56.27196333078686,
+        "rank": 4.666666666666667,
+        "rankCdd": 7,
+        "rankOverall": 5.833333333333333,
+        "worstRank": 7
       },
       {
-        "label": "all-but-1d @ 15",
+        "label": "15m+30m+45m @ 5",
         "timeframes": [
           "15m",
           "30m",
-          "45m",
-          "1h",
-          "2h",
-          "3h",
-          "4h"
-        ],
-        "slots": 15,
-        "windows": 3,
-        "scoredWindows": 3,
-        "cagr": 167.92785685357094,
-        "expected": 100.79898250035417,
-        "dd": 4.444565927887275,
-        "cdd": 38.518696906025376,
-        "fill": 67.04509058923912,
-        "rank": 6,
-        "rankCdd": 6.666666666666667,
-        "rankOverall": 6.333333333333333,
-        "worstRank": 8
-      },
-      {
-        "label": "30m+2h @ 5",
-        "timeframes": [
-          "30m",
-          "2h"
+          "45m"
         ],
         "slots": 5,
         "windows": 3,
         "scoredWindows": 3,
-        "cagr": 162.80665362413788,
-        "expected": 99.17916202421874,
-        "dd": 8.104011992818306,
-        "cdd": 20.843264307773236,
-        "fill": 65.63277800080289,
-        "rank": 7.666666666666667,
-        "rankCdd": 10.666666666666666,
-        "rankOverall": 9.166666666666666,
-        "worstRank": 10
+        "cagr": 192.28604768339338,
+        "expected": 107.44407391623491,
+        "dd": 4.400081480272293,
+        "cdd": 60.09315705471681,
+        "fill": 73.06507837255737,
+        "rank": 3.3333333333333335,
+        "rankCdd": 5,
+        "rankOverall": 4.166666666666667,
+        "worstRank": 5
       },
       {
         "label": "all 8 TF @ 15",
@@ -1410,15 +1974,96 @@
         "slots": 15,
         "windows": 3,
         "scoredWindows": 3,
-        "cagr": 160.6035577891761,
-        "expected": 98.70175319697212,
-        "dd": 4.444570967141572,
-        "cdd": 36.66750797049648,
-        "fill": 64.5369929894167,
-        "rank": 7.333333333333333,
-        "rankCdd": 7,
-        "rankOverall": 7.166666666666667,
-        "worstRank": 9
+        "cagr": 176.8514536005658,
+        "expected": 99.84538679507932,
+        "dd": 3.283575518187822,
+        "cdd": 54.03625598497491,
+        "fill": 72.38180120533063,
+        "rank": 6.333333333333333,
+        "rankCdd": 4.333333333333333,
+        "rankOverall": 5.333333333333333,
+        "worstRank": 8
+      },
+      {
+        "label": "15m+30m @ 5",
+        "timeframes": [
+          "15m",
+          "30m"
+        ],
+        "slots": 5,
+        "windows": 3,
+        "scoredWindows": 3,
+        "cagr": 171.02862167188144,
+        "expected": 99.38110693806915,
+        "dd": 2.994936996258298,
+        "cdd": 78.67153943952609,
+        "fill": 90.90186503590117,
+        "rank": 5.333333333333333,
+        "rankCdd": 4.333333333333333,
+        "rankOverall": 4.833333333333333,
+        "worstRank": 7
+      },
+      {
+        "label": "15m+30m+45m+2h @ 8",
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m",
+          "2h"
+        ],
+        "slots": 8,
+        "windows": 3,
+        "scoredWindows": 3,
+        "cagr": 165.04575798842893,
+        "expected": 97.9380589068586,
+        "dd": 5.589505858349724,
+        "cdd": 32.389416594872806,
+        "fill": 71.08985783599407,
+        "rank": 4,
+        "rankCdd": 6,
+        "rankOverall": 5,
+        "worstRank": 6
+      },
+      {
+        "label": "15m+2h @ 5",
+        "timeframes": [
+          "15m",
+          "2h"
+        ],
+        "slots": 5,
+        "windows": 3,
+        "scoredWindows": 3,
+        "cagr": 159.50756146446798,
+        "expected": 96.38643158314682,
+        "dd": 7.701584049140897,
+        "cdd": 22.624347944540336,
+        "fill": 66.43494289193904,
+        "rank": 5.333333333333333,
+        "rankCdd": 8.333333333333334,
+        "rankOverall": 6.833333333333333,
+        "worstRank": 8
+      },
+      {
+        "label": "fast5 @ 10",
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m",
+          "1h",
+          "2h"
+        ],
+        "slots": 10,
+        "windows": 3,
+        "scoredWindows": 3,
+        "cagr": 159.46131288874562,
+        "expected": 95.28550911663655,
+        "dd": 4.107605055098209,
+        "cdd": 42.30109809896375,
+        "fill": 73.47610180012414,
+        "rank": 4.666666666666667,
+        "rankCdd": 4.333333333333333,
+        "rankOverall": 4.5,
+        "worstRank": 6
       },
       {
         "label": "fast5 @ 15",
@@ -1432,33 +2077,57 @@
         "slots": 15,
         "windows": 3,
         "scoredWindows": 3,
-        "cagr": 143.92569884318456,
-        "expected": 90.36353750988273,
-        "dd": 3.7862800597782935,
-        "cdd": 43.31790055884793,
-        "fill": 80.51052074925546,
-        "rank": 10.666666666666666,
-        "rankCdd": 5.333333333333333,
-        "rankOverall": 8,
-        "worstRank": 11
+        "cagr": 118.28959367528849,
+        "expected": 78.04554907475956,
+        "dd": 2.7498376050057716,
+        "cdd": 46.191207811589216,
+        "fill": 89.0283214465178,
+        "rank": 9.333333333333334,
+        "rankCdd": 4.666666666666667,
+        "rankOverall": 7,
+        "worstRank": 10
       },
       {
-        "label": "15m+2h @ 5",
+        "label": "all-but-1d @ 15",
         "timeframes": [
           "15m",
+          "30m",
+          "45m",
+          "1h",
+          "2h",
+          "3h",
+          "4h"
+        ],
+        "slots": 15,
+        "windows": 3,
+        "scoredWindows": 3,
+        "cagr": 117.43523428013941,
+        "expected": 77.89290253983872,
+        "dd": 3.209582626243236,
+        "cdd": 36.59381348369999,
+        "fill": 73.3596775881922,
+        "rank": 9.666666666666666,
+        "rankCdd": 6.666666666666667,
+        "rankOverall": 8.166666666666666,
+        "worstRank": 10
+      },
+      {
+        "label": "30m+2h @ 5",
+        "timeframes": [
+          "30m",
           "2h"
         ],
         "slots": 5,
         "windows": 3,
         "scoredWindows": 3,
-        "cagr": 120.52357832177104,
-        "expected": 75.98199727302017,
-        "dd": 8.473141303499494,
-        "cdd": 25.406422337534,
-        "fill": 67.50882298827504,
-        "rank": 8.333333333333334,
-        "rankCdd": 9,
-        "rankOverall": 8.666666666666666,
+        "cagr": 108.98256937809155,
+        "expected": 74.93476539524995,
+        "dd": 9.391972653359765,
+        "cdd": 12.321653921292992,
+        "fill": 67.2138622891017,
+        "rank": 11,
+        "rankCdd": 11,
+        "rankOverall": 11,
         "worstRank": 11
       }
     ]
@@ -1472,15 +2141,15 @@
     "slots": 3,
     "windows": 3,
     "scoredWindows": 3,
-    "cagr": 406.386725203821,
-    "expected": 164.03349181522833,
-    "dd": 6.93365747358308,
-    "cdd": 61.99633720588569,
-    "fill": 62.79530163074467,
-    "rank": 1,
-    "rankCdd": 1.6666666666666667,
-    "rankOverall": 1.3333333333333333,
-    "worstRank": 1
+    "cagr": 256.7934679833185,
+    "expected": 125.63583865811681,
+    "dd": 4.6645941177596475,
+    "cdd": 82.98285991130548,
+    "fill": 69.5631008884021,
+    "rank": 2.3333333333333335,
+    "rankCdd": 4.333333333333333,
+    "rankOverall": 3.3333333333333335,
+    "worstRank": 4
   },
   "bestAllRound": {
     "label": "15m+30m @ 3",
@@ -1491,14 +2160,471 @@
     "slots": 3,
     "windows": 3,
     "scoredWindows": 3,
-    "cagr": 406.386725203821,
-    "expected": 164.03349181522833,
-    "dd": 6.93365747358308,
-    "cdd": 61.99633720588569,
-    "fill": 62.79530163074467,
-    "rank": 1,
-    "rankCdd": 1.6666666666666667,
-    "rankOverall": 1.3333333333333333,
-    "worstRank": 1
+    "cagr": 256.7934679833185,
+    "expected": 125.63583865811681,
+    "dd": 4.6645941177596475,
+    "cdd": 82.98285991130548,
+    "fill": 69.5631008884021,
+    "rank": 2.3333333333333335,
+    "rankCdd": 4.333333333333333,
+    "rankOverall": 3.3333333333333335,
+    "worstRank": 4
+  },
+  "matchedWindow": {
+    "available": true,
+    "spans": [
+      {
+        "timeframe": "1d",
+        "firstMs": 1478179800000,
+        "lastMs": 1785936600000,
+        "years": 9.752224503764545,
+        "trades": 300
+      },
+      {
+        "timeframe": "4h",
+        "firstMs": 1663572600000,
+        "lastMs": 1785931200000,
+        "years": 3.877310061601643,
+        "trades": 378
+      },
+      {
+        "timeframe": "3h",
+        "firstMs": 1704177000000,
+        "lastMs": 1785938400000,
+        "years": 2.5908624229979464,
+        "trades": 383
+      },
+      {
+        "timeframe": "2h",
+        "firstMs": 1725375600000,
+        "lastMs": 1785938400000,
+        "years": 1.9191193246634726,
+        "trades": 416
+      },
+      {
+        "timeframe": "15m",
+        "firstMs": 1726830000000,
+        "lastMs": 1785943800000,
+        "years": 1.8732032854209446,
+        "trades": 345
+      },
+      {
+        "timeframe": "1h",
+        "firstMs": 1752681600000,
+        "lastMs": 1785934800000,
+        "years": 1.0537303216974674,
+        "trades": 408
+      },
+      {
+        "timeframe": "45m",
+        "firstMs": 1760018400000,
+        "lastMs": 1785938400000,
+        "years": 0.8213552361396304,
+        "trades": 434
+      },
+      {
+        "timeframe": "30m",
+        "firstMs": 1768230000000,
+        "lastMs": 1785933000000,
+        "years": 0.5609742185717546,
+        "trades": 354
+      }
+    ],
+    "binding": {
+      "timeframe": "30m",
+      "firstMs": 1768230000000,
+      "lastMs": 1785933000000,
+      "years": 0.5609742185717546,
+      "trades": 354
+    },
+    "commonStartAt": "2026-01-12",
+    "endAt": "2026-08-05",
+    "commonYears": 0.5613164499201461,
+    "windows": [
+      {
+        "startMs": 1768230000000,
+        "startAt": "2026-01-12",
+        "years": 0.5613164499201461,
+        "universeSize": 20,
+        "lookahead": false
+      },
+      {
+        "startMs": 1769410920000,
+        "startAt": "2026-01-26",
+        "years": 0.523895353258803,
+        "universeSize": 20,
+        "lookahead": false
+      },
+      {
+        "startMs": 1770591840000,
+        "startAt": "2026-02-08",
+        "years": 0.4864742565974599,
+        "universeSize": 20,
+        "lookahead": false
+      },
+      {
+        "startMs": 1771772760000,
+        "startAt": "2026-02-22",
+        "years": 0.44905315993611683,
+        "universeSize": 20,
+        "lookahead": false
+      },
+      {
+        "startMs": 1772953680000,
+        "startAt": "2026-03-08",
+        "years": 0.41163206327477375,
+        "universeSize": 20,
+        "lookahead": false
+      },
+      {
+        "startMs": 1774134600000,
+        "startAt": "2026-03-21",
+        "years": 0.3742109666134307,
+        "universeSize": 20,
+        "lookahead": false
+      }
+    ],
+    "anyLookahead": false,
+    "configs": [
+      {
+        "label": "15m+30m+45m @ 5",
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m"
+        ],
+        "slots": 5,
+        "ranks": [
+          8,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "avgRank": 2.1666666666666665,
+        "worstRank": 8,
+        "bestRank": 1,
+        "ret": 66.82546757050112,
+        "dd": 5.469242465362535,
+        "cagr": 223.6974960998435,
+        "retDd": 14.853158419020794,
+        "fill": 81.11706499716782,
+        "trades": 101.33333333333333,
+        "scoredWindows": 6
+      },
+      {
+        "label": "15m+30m+45m+2h @ 8",
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m",
+          "2h"
+        ],
+        "slots": 8,
+        "ranks": [
+          2,
+          2,
+          2,
+          2,
+          3,
+          2
+        ],
+        "avgRank": 2.1666666666666665,
+        "worstRank": 3,
+        "bestRank": 2,
+        "ret": 62.820199632567686,
+        "dd": 4.040457100025168,
+        "cagr": 193.0139904658444,
+        "retDd": 18.38266131018038,
+        "fill": 77.12468985106891,
+        "trades": 127.66666666666667,
+        "scoredWindows": 6
+      },
+      {
+        "label": "15m+30m @ 3",
+        "timeframes": [
+          "15m",
+          "30m"
+        ],
+        "slots": 3,
+        "ranks": [
+          1,
+          3,
+          7,
+          4,
+          5,
+          3
+        ],
+        "avgRank": 3.8333333333333335,
+        "worstRank": 7,
+        "bestRank": 1,
+        "ret": 58.23092218785501,
+        "dd": 6.004465104570353,
+        "cagr": 181.97903522445927,
+        "retDd": 17.316563604980885,
+        "fill": 73.52125480484463,
+        "trades": 66.83333333333333,
+        "scoredWindows": 6
+      },
+      {
+        "label": "15m+2h @ 5",
+        "timeframes": [
+          "15m",
+          "2h"
+        ],
+        "slots": 5,
+        "ranks": [
+          4,
+          9,
+          5,
+          5,
+          2,
+          4
+        ],
+        "avgRank": 4.833333333333333,
+        "worstRank": 9,
+        "bestRank": 2,
+        "ret": 55.382924249622135,
+        "dd": 4.37662472150984,
+        "cagr": 169.38813100412594,
+        "retDd": 18.250000991340396,
+        "fill": 67.99411538871738,
+        "trades": 73.16666666666667,
+        "scoredWindows": 6
+      },
+      {
+        "label": "fast5 @ 10",
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m",
+          "1h",
+          "2h"
+        ],
+        "slots": 10,
+        "ranks": [
+          7,
+          4,
+          3,
+          3,
+          6,
+          7
+        ],
+        "avgRank": 5,
+        "worstRank": 7,
+        "bestRank": 3,
+        "ret": 53.81377788077324,
+        "dd": 3.3486620384208154,
+        "cagr": 153.9044644639946,
+        "retDd": 18.405637345830147,
+        "fill": 78.66259356796958,
+        "trades": 149.33333333333334,
+        "scoredWindows": 6
+      },
+      {
+        "label": "all 8 TF @ 10",
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m",
+          "1h",
+          "2h",
+          "3h",
+          "4h",
+          "1d"
+        ],
+        "slots": 10,
+        "ranks": [
+          3,
+          8,
+          4,
+          6,
+          4,
+          6
+        ],
+        "avgRank": 5.166666666666667,
+        "worstRank": 8,
+        "bestRank": 3,
+        "ret": 54.65868415339563,
+        "dd": 2.8856403092947,
+        "cagr": 161.27898733985165,
+        "retDd": 23.252603780566528,
+        "fill": 54.591224204703394,
+        "trades": 133.33333333333334,
+        "scoredWindows": 6
+      },
+      {
+        "label": "all 8 TF @ 15",
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m",
+          "1h",
+          "2h",
+          "3h",
+          "4h",
+          "1d"
+        ],
+        "slots": 15,
+        "ranks": [
+          5,
+          7,
+          8,
+          8,
+          7,
+          5
+        ],
+        "avgRank": 6.666666666666667,
+        "worstRank": 8,
+        "bestRank": 5,
+        "ret": 50.213892350277725,
+        "dd": 3.1169065383624193,
+        "cagr": 142.32878847574008,
+        "retDd": 18.085377270142327,
+        "fill": 71.44030276935545,
+        "trades": 175.16666666666666,
+        "scoredWindows": 6
+      },
+      {
+        "label": "all-but-1d @ 15",
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m",
+          "1h",
+          "2h",
+          "3h",
+          "4h"
+        ],
+        "slots": 15,
+        "ranks": [
+          6,
+          5,
+          6,
+          10,
+          9,
+          8
+        ],
+        "avgRank": 7.333333333333333,
+        "worstRank": 10,
+        "bestRank": 5,
+        "ret": 48.11234012852676,
+        "dd": 3.205494283966201,
+        "cagr": 132.05558747533937,
+        "retDd": 16.235208365252937,
+        "fill": 74.74189255985488,
+        "trades": 179,
+        "scoredWindows": 6
+      },
+      {
+        "label": "15m+30m @ 5",
+        "timeframes": [
+          "15m",
+          "30m"
+        ],
+        "slots": 5,
+        "ranks": [
+          10,
+          6,
+          9,
+          7,
+          8,
+          9
+        ],
+        "avgRank": 8.166666666666666,
+        "worstRank": 10,
+        "bestRank": 6,
+        "ret": 46.19652553472046,
+        "dd": 4.140146211794628,
+        "cagr": 131.84315679300812,
+        "retDd": 11.674510967460861,
+        "fill": 94.06576194020704,
+        "trades": 86,
+        "scoredWindows": 6
+      },
+      {
+        "label": "fast5 @ 15",
+        "timeframes": [
+          "15m",
+          "30m",
+          "45m",
+          "1h",
+          "2h"
+        ],
+        "slots": 15,
+        "ranks": [
+          11,
+          10,
+          10,
+          9,
+          10,
+          10
+        ],
+        "avgRank": 10,
+        "worstRank": 11,
+        "bestRank": 9,
+        "ret": 41.71565888519168,
+        "dd": 2.0914076808292337,
+        "cagr": 111.41721122869279,
+        "retDd": 21.106222477147767,
+        "fill": 94.10138303506581,
+        "trades": 179.16666666666666,
+        "scoredWindows": 6
+      },
+      {
+        "label": "30m+2h @ 5",
+        "timeframes": [
+          "30m",
+          "2h"
+        ],
+        "slots": 5,
+        "ranks": [
+          9,
+          11,
+          11,
+          11,
+          11,
+          11
+        ],
+        "avgRank": 10.666666666666666,
+        "worstRank": 11,
+        "bestRank": 9,
+        "ret": 38.21836553526055,
+        "dd": 7.4886483177322996,
+        "cagr": 99.264039719339,
+        "retDd": 5.859574399611785,
+        "fill": 72.35446186537617,
+        "trades": 46.833333333333336,
+        "scoredWindows": 6
+      }
+    ],
+    "best": {
+      "label": "15m+30m+45m @ 5",
+      "timeframes": [
+        "15m",
+        "30m",
+        "45m"
+      ],
+      "slots": 5,
+      "ranks": [
+        8,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "avgRank": 2.1666666666666665,
+      "worstRank": 8,
+      "bestRank": 1,
+      "ret": 66.82546757050112,
+      "dd": 5.469242465362535,
+      "cagr": 223.6974960998435,
+      "retDd": 14.853158419020794,
+      "fill": 81.11706499716782,
+      "trades": 101.33333333333333,
+      "scoredWindows": 6
+    }
   }
 }
