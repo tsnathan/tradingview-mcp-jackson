@@ -1,0 +1,8 @@
+{
+  "_comment": "Brokerage accounts the automated pipeline never touches, used as the picklist for the Manual Ledger tab. Copy to accounts.json and edit. Names are free-form labels — nothing matches them against the executor's account IDs.",
+  "accounts": [
+    "Fidelity IRA",
+    "Schwab Taxable",
+    "IBKR Margin"
+  ]
+}
