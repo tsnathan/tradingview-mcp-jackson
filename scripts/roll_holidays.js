@@ -19,6 +19,7 @@ import {
   syncMarketHolidayCalendar,
   MARKET_HOLIDAY_CALENDAR_PATH,
 } from '../src/core/morning.js';
+import { readJsonFile } from '../src/json_file.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -47,7 +48,7 @@ let marketHours = { timezone: 'America/New_York', holidays: [] };
 const rulesPath = join(ROOT, 'rules.json');
 if (existsSync(rulesPath)) {
   try {
-    const rules = JSON.parse(readFileSync(rulesPath, 'utf8'));
+    const rules = readJsonFile(rulesPath);
     if (rules.market_hours) marketHours = rules.market_hours;
   } catch (error) {
     console.error(`Could not read rules.json (${error.message}) — using defaults.`);
@@ -68,7 +69,7 @@ for (const date of built.holidays) {
 
 if (dryRun) {
   const existing = existsSync(MARKET_HOLIDAY_CALENDAR_PATH)
-    ? JSON.parse(readFileSync(MARKET_HOLIDAY_CALENDAR_PATH, 'utf8')).holidays ?? []
+    ? readJsonFile(MARKET_HOLIDAY_CALENDAR_PATH).holidays ?? []
     : [];
   const added = built.holidays.filter((d) => !existing.includes(d));
   const removed = existing.filter((d) => !built.holidays.includes(d));

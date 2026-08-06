@@ -22,6 +22,7 @@ import * as chart from "../src/core/chart.js";
 import * as tradeLog from "../src/core/trade_log.js";
 import { disconnect } from "../src/connection.js";
 import { finishProcess } from "../src/exit.js";
+import { readJsonFile } from '../src/json_file.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "..");
@@ -33,9 +34,9 @@ function arg(name) {
 
 const tfFilter = arg("tf") ? new Set(arg("tf").split(",").map((s) => s.trim())) : null;
 
-const rules = JSON.parse(readFileSync(join(PROJECT_ROOT, "rules.json"), "utf8"));
+const rules = readJsonFile(join(PROJECT_ROOT, "rules.json"));
 const studyFilter = String(rules.strategy || "Swing Profile").split("—")[0].trim();
-const baseline = JSON.parse(readFileSync(join(PROJECT_ROOT, "swing-signal-baseline.json"), "utf8"));
+const baseline = readJsonFile(join(PROJECT_ROOT, "swing-signal-baseline.json"));
 
 const targets = [];
 const seen = new Set();

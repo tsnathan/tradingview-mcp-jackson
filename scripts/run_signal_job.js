@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { runSignalJob } from '../src/core/morning.js';
 import { runRegression } from '../src/core/regression.js';
+import { readJsonFile } from '../src/json_file.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STATUS_FILE = join(ROOT, 'status', 'latest-signal-status.json');
@@ -19,7 +20,7 @@ function etDateString(isoOrDate) {
 function regressionRanToday() {
   if (!existsSync(REGRESSION_FILE)) return false;
   try {
-    const reg = JSON.parse(readFileSync(REGRESSION_FILE, 'utf8'));
+    const reg = readJsonFile(REGRESSION_FILE);
     return reg.checkedAt && etDateString(reg.checkedAt) === etDateString(new Date());
   } catch {
     return false;
@@ -40,7 +41,7 @@ function etMinutesNow(timezone) {
 function readSyncState() {
   if (!existsSync(SYNC_STATE_FILE)) return {};
   try {
-    return JSON.parse(readFileSync(SYNC_STATE_FILE, 'utf8'));
+    return readJsonFile(SYNC_STATE_FILE);
   } catch {
     return {};
   }
@@ -58,7 +59,7 @@ const force = process.argv.includes('--force') || all;
 let prevHadConnectionError = false;
 if (existsSync(STATUS_FILE)) {
   try {
-    const prev = JSON.parse(readFileSync(STATUS_FILE, 'utf8'));
+    const prev = readJsonFile(STATUS_FILE);
     prevHadConnectionError = !!(prev.connectionError || prev.watchdogError);
   } catch {}
 }
@@ -69,7 +70,7 @@ if (existsSync(STATUS_FILE)) {
 let marketHours = { timezone: 'America/New_York', open: '09:30', close: '16:00' };
 if (existsSync(RULES_FILE)) {
   try {
-    const rules = JSON.parse(readFileSync(RULES_FILE, 'utf8'));
+    const rules = readJsonFile(RULES_FILE);
     if (rules.market_hours) marketHours = { ...marketHours, ...rules.market_hours };
   } catch {}
 }

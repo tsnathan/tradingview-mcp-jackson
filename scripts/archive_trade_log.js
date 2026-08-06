@@ -26,6 +26,7 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync, rea
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { TRADE_LOG_DIR, timeframeLabel, readPerfSnapshots, PERF_SNAPSHOT_PATH } from "../src/core/trade_log.js";
+import { readJsonFile } from '../src/json_file.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "..");
@@ -83,7 +84,7 @@ function readParts(filePath) {
 function watchlistTickers() {
   const baselinePath = join(PROJECT_ROOT, "swing-signal-baseline.json");
   if (!existsSync(baselinePath)) return null;
-  const b = JSON.parse(readFileSync(baselinePath, "utf8"));
+  const b = readJsonFile(baselinePath);
   const set = new Set();
   for (const w of Object.values(b.watchlists || {})) {
     for (const s of w.symbols || []) set.add(String(s).split(":").pop().toUpperCase());
@@ -207,7 +208,7 @@ if (!totalMoved) {
 // status/strategy-perf.json forever. Park it alongside the archived rows so --restore is complete.
 if (!dryRun) {
   const snaps = readPerfSnapshots();
-  const archivedSnaps = existsSync(ARCHIVE_PERF_PATH) ? JSON.parse(readFileSync(ARCHIVE_PERF_PATH, "utf8")) : {};
+  const archivedSnaps = existsSync(ARCHIVE_PERF_PATH) ? readJsonFile(ARCHIVE_PERF_PATH) : {};
   let movedSnaps = 0;
   for (const key of Object.keys(snaps)) {
     const [ticker, tf] = key.split("|");

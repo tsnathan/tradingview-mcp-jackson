@@ -20,6 +20,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runSweetSpotAnalysis } from "../src/core/sweet_spot.js";
 import { buildWatchlistMembership } from "../src/core/universe.js";
+import { readJsonFile } from '../src/json_file.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_FILE = join(ROOT, "status", "sweet-spot.json");
@@ -30,8 +31,8 @@ const OUT_FILE = join(ROOT, "status", "sweet-spot.json");
  */
 function loadMembership() {
   try {
-    const rules = JSON.parse(readFileSync(join(ROOT, "rules.json"), "utf8"));
-    const baseline = JSON.parse(readFileSync(join(ROOT, "swing-signal-baseline.json"), "utf8"));
+    const rules = readJsonFile(join(ROOT, "rules.json"));
+    const baseline = readJsonFile(join(ROOT, "swing-signal-baseline.json"));
     return buildWatchlistMembership(rules, baseline);
   } catch {
     // Unreadable config means membership is UNKNOWN, and the established convention for unknown is
@@ -87,7 +88,7 @@ if (!result.available) {
 // grid measured under one says nothing about another — there, dropping the stale grid is correct.
 if (result.quick && existsSync(OUT_FILE)) {
   try {
-    const prev = JSON.parse(readFileSync(OUT_FILE, "utf8"));
+    const prev = readJsonFile(OUT_FILE);
     // Membership state is part of that identity for exactly the same reason as the rule variant: a
     // grid swept over all logged history and one swept over current watchlist members are measuring
     // different universes, and carrying one into the other would relabel it as the current run's.

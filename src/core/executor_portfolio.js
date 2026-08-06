@@ -23,6 +23,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readSentState, bareTicker, timeframeTag } from "./trade_webhook.js";
+import { readJsonFile } from '../json_file.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../");
@@ -44,7 +45,7 @@ export function loadPortfolioConfig() {
   let local = {};
   if (existsSync(LOCAL_CONFIG_PATH)) {
     try {
-      local = JSON.parse(readFileSync(LOCAL_CONFIG_PATH, "utf8")) || {};
+      local = readJsonFile(LOCAL_CONFIG_PATH) || {};
     } catch (err) {
       console.error(`[portfolio] ${LOCAL_CONFIG_PATH} is not valid JSON: ${err?.message || err}`);
     }

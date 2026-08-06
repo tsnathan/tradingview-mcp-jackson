@@ -35,6 +35,7 @@ import {
   listManualPositions,
   markManualPositionExitAlerted,
 } from "./manual_ledger.js";
+import { readJsonFile } from "../json_file.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../");
@@ -81,7 +82,7 @@ export async function ensureTradingViewConnection({
 function parseJsonFile(filePath, fallback = {}) {
   if (!filePath || !existsSync(filePath)) return fallback;
   try {
-    return JSON.parse(readFileSync(filePath, "utf8"));
+    return readJsonFile(filePath);
   } catch {
     return fallback;
   }
@@ -102,7 +103,7 @@ function loadRules(rulesPath) {
   for (const p of candidates) {
     if (existsSync(p)) {
       try {
-        return { rules: JSON.parse(readFileSync(p, "utf8")), path: p };
+        return { rules: readJsonFile(p), path: p };
       } catch (e) {
         throw new Error(`Failed to parse rules.json at ${p}: ${e.message}`);
       }
@@ -4177,7 +4178,7 @@ export function saveSession({ brief, date } = {}) {
   const filePath = join(SESSIONS_DIR, `${dateStr}.json`);
 
   const existing = existsSync(filePath)
-    ? JSON.parse(readFileSync(filePath, "utf8"))
+    ? readJsonFile(filePath)
     : {};
   const record = {
     ...existing,
@@ -4195,7 +4196,7 @@ export function getSession({ date } = {}) {
   const filePath = join(SESSIONS_DIR, `${dateStr}.json`);
 
   if (existsSync(filePath)) {
-    return { success: true, ...JSON.parse(readFileSync(filePath, "utf8")) };
+    return { success: true, ...readJsonFile(filePath) };
   }
 
   const yesterday = new Date();
@@ -4207,7 +4208,7 @@ export function getSession({ date } = {}) {
     return {
       success: true,
       note: "No session for today — returning yesterday",
-      ...JSON.parse(readFileSync(yesterdayPath, "utf8")),
+      ...readJsonFile(yesterdayPath),
     };
   }
 

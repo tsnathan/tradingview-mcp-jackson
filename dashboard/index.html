@@ -215,6 +215,7 @@
       </div>
       <div id="watchdog-error" class="error hidden"></div>
       <div id="strategy-mismatch-banner" class="error hidden"></div>
+      <div id="status-file-error" class="error hidden" style="white-space:pre-wrap;"></div>
       <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <select id="cron-watchlist-top" class="control-select" style="min-width:160px;">
           <option value="">All Watchlists</option>
@@ -2579,6 +2580,24 @@
         watchdogEl.className = 'error';
       } else {
         watchdogEl.className = 'error hidden';
+      }
+
+      // A status file that fails to parse yields the same empty shape as a quiet market, so
+      // without this banner "the file is corrupt" renders as "no open trades" — which is exactly
+      // how a BOM'd status file hid 86 open positions on 2026-08-06. Say so on screen instead.
+      const fileErrEl = document.getElementById('status-file-error');
+      const fileErr = data.statusFileError;
+      if (fileErr) {
+        const when = fileErr.modifiedAt ? new Date(fileErr.modifiedAt).toLocaleString() : 'unknown';
+        const size = fileErr.size == null ? 'unknown' : `${fileErr.size.toLocaleString()} bytes`;
+        fileErrEl.textContent =
+          `⚠ STATUS FILE UNREADABLE — every card below is empty because the file could not be parsed, NOT because there is no activity.\n` +
+          `  ${fileErr.message}\n` +
+          `  ${fileErr.path}  (${size}, last written ${when})\n` +
+          `  A UTF-8 BOM is the usual cause on this machine — anything that rewrites this file through PowerShell adds one. The next scheduled scan overwrites the file and clears this by itself.`;
+        fileErrEl.className = 'error';
+      } else {
+        fileErrEl.className = 'error hidden';
       }
 
       const mismatchEl = document.getElementById('strategy-mismatch-banner');

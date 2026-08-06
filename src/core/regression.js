@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
+import { readJsonFile } from '../json_file.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const STATUS_FILE = join(ROOT, 'status', 'latest-signal-status.json');
@@ -79,7 +80,7 @@ export async function runRegression() {
   const now = new Date();
   let status;
   try {
-    status = JSON.parse(readFileSync(STATUS_FILE, 'utf8'));
+    status = readJsonFile(STATUS_FILE);
   } catch {
     const result = {
       passed: false,

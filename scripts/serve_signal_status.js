@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, openSync, readFileSync, renameSync, statSync, watch, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
+import { readJsonFile, parseJsonText } from '../src/json_file.js';
 import { computeExcursionLevels, createDashboardStatus, ensureTradingViewConnection, exportMetricsScan, runBrief, runSignalJob, syncWatchlistSymbolsFromTradingView } from '../src/core/morning.js';
 import * as chart from '../src/core/chart.js';
 import * as data from '../src/core/data.js';
@@ -80,7 +81,7 @@ const PAPER_RUN_FILE = join(ROOT, 'status', 'paper-run.json');
 
 function readPaperConfig() {
   try {
-    return existsSync(PAPER_RUN_FILE) ? JSON.parse(readFileSync(PAPER_RUN_FILE, 'utf8')) : {};
+    return existsSync(PAPER_RUN_FILE) ? readJsonFile(PAPER_RUN_FILE) : {};
   } catch { return {}; }
 }
 
@@ -138,7 +139,7 @@ function etDateString(isoOrDate) {
 function regressionRanToday() {
   if (!existsSync(REGRESSION_FILE)) return false;
   try {
-    const reg = JSON.parse(readFileSync(REGRESSION_FILE, 'utf8'));
+    const reg = readJsonFile(REGRESSION_FILE);
     return reg.checkedAt && etDateString(reg.checkedAt) === etDateString(new Date());
   } catch {
     return false;
@@ -226,14 +227,29 @@ function getStatus() {
     status = defaultStatus();
   } else {
     try {
-      status = JSON.parse(readFileSync(STATUS_FILE, 'utf8'));
-    } catch {
-      status = defaultStatus();
+      status = readJsonFile(STATUS_FILE);
+    } catch (err) {
+      // An unreadable status file must NOT render as a quiet market. Falling back to
+      // defaultStatus() silently is what hid a corrupt file on 2026-08-06: the dashboard showed
+      // "No open trades" and an empty Current Signal for hours while all 86 open trades sat
+      // intact on disk, because a UTF-8 BOM made JSON.parse throw and this catch swallowed it.
+      // The empty shape is still returned (every card expects those keys), but the failure is
+      // now named, so "the file is broken" and "nothing is happening" look different on screen.
+      status = {
+        ...defaultStatus(),
+        statusFileError: {
+          message: err?.message || 'status file could not be parsed',
+          path: STATUS_FILE,
+          size: (() => { try { return statSync(STATUS_FILE).size; } catch { return null; } })(),
+          modifiedAt: (() => { try { return statSync(STATUS_FILE).mtime.toISOString(); } catch { return null; } })(),
+        },
+      };
+      console.error('[server] status file unreadable:', err?.message);
     }
   }
   if (existsSync(REGRESSION_FILE)) {
     try {
-      status.regressionResult = JSON.parse(readFileSync(REGRESSION_FILE, 'utf8'));
+      status.regressionResult = readJsonFile(REGRESSION_FILE);
     } catch {}
   }
   return status;
@@ -257,7 +273,7 @@ function loadRulesFile() {
   const rulesPath = join(ROOT, 'rules.json');
   if (!existsSync(rulesPath)) return null;
   try {
-    return JSON.parse(readFileSync(rulesPath, 'utf8'));
+    return readJsonFile(rulesPath);
   } catch {
     return null;
   }
@@ -273,7 +289,7 @@ function loadAccountsFile() {
   const accountsPath = join(ROOT, 'accounts.json');
   if (!existsSync(accountsPath)) return null;
   try {
-    return JSON.parse(readFileSync(accountsPath, 'utf8'));
+    return readJsonFile(accountsPath);
   } catch {
     return null;
   }
@@ -299,7 +315,7 @@ function loadBaselineFile() {
   const baselinePath = baselineFilePath();
   if (!existsSync(baselinePath)) return {};
   try {
-    return JSON.parse(readFileSync(baselinePath, 'utf8'));
+    return readJsonFile(baselinePath);
   } catch {
     return {};
   }
@@ -310,7 +326,7 @@ function loadBaselineFile() {
 // one derived field after a side action like archiving completes.
 function patchStatusFile(patch) {
   try {
-    const current = existsSync(STATUS_FILE) ? JSON.parse(readFileSync(STATUS_FILE, 'utf8')) : {};
+    const current = existsSync(STATUS_FILE) ? readJsonFile(STATUS_FILE) : {};
     writeFileSync(STATUS_FILE, JSON.stringify({ ...current, ...patch }, null, 2), 'utf8');
   } catch {}
 }
@@ -318,7 +334,7 @@ function patchStatusFile(patch) {
 function patchBaselineFile(patch) {
   const baselinePath = baselineFilePath();
   try {
-    const current = existsSync(baselinePath) ? JSON.parse(readFileSync(baselinePath, 'utf8')) : {};
+    const current = existsSync(baselinePath) ? readJsonFile(baselinePath) : {};
     writeFileSync(baselinePath, JSON.stringify({ ...current, ...patch }, null, 2), 'utf8');
   } catch {}
 }
@@ -808,7 +824,7 @@ const server = http.createServer(async (req, res) => {
   if (req.url.startsWith('/api/paper-run') && req.method === 'GET') {
     try {
       let openTrades = [];
-      try { openTrades = JSON.parse(readFileSync(STATUS_FILE, 'utf8'))?.openTrades || []; } catch {}
+      try { openTrades = readJsonFile(STATUS_FILE)?.openTrades || []; } catch {}
       sendJson(res, 200, replayPaperRun(readPaperConfig(), { openTrades }));
     } catch (err) {
       sendJson(res, 500, { available: false, error: String(err?.message || err) });
@@ -950,7 +966,7 @@ const server = http.createServer(async (req, res) => {
       let result = null;
       if (existsSync(SWEET_SPOT_FILE)) {
         try {
-          result = JSON.parse(readFileSync(SWEET_SPOT_FILE, 'utf8'));
+          result = readJsonFile(SWEET_SPOT_FILE);
         } catch (err) {
           // A torn/half-written file must not take the tab down — report it and offer a re-run.
           result = null;
@@ -1615,7 +1631,7 @@ const server = http.createServer(async (req, res) => {
       // could resolve against a different scan than the rows were built from.
       let crossTfExits = [];
       try {
-        crossTfExits = JSON.parse(readFileSync(STATUS_FILE, 'utf8'))?.crossTfExits || [];
+        crossTfExits = readJsonFile(STATUS_FILE)?.crossTfExits || [];
       } catch { /* the ledger is still fully usable without the last scan's cross-TF read */ }
       const crossByKey = {};
       for (const x of crossTfExits) {
@@ -1662,7 +1678,7 @@ const server = http.createServer(async (req, res) => {
         // open", which the last scan already established.
         let openTrades = [];
         try {
-          openTrades = JSON.parse(readFileSync(STATUS_FILE, 'utf8'))?.openTrades || [];
+          openTrades = readJsonFile(STATUS_FILE)?.openTrades || [];
         } catch { /* reconcile against the ledger alone if the status file isn't readable */ }
         sendJson(res, 200, await getExecutorPortfolio({ openTrades }));
       } catch (err) {

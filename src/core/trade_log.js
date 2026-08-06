@@ -25,6 +25,7 @@ import { join, resolve, dirname } from "node:path";
 
 import { fileURLToPath } from "node:url";
 import { evaluate, KNOWN_PATHS } from "../connection.js";
+import { readJsonFile } from '../json_file.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../");
@@ -370,7 +371,7 @@ export const PERF_SNAPSHOT_PATH = join(PROJECT_ROOT, "status", "strategy-perf.js
 export function readPerfSnapshots() {
   if (!existsSync(PERF_SNAPSHOT_PATH)) return {};
   try {
-    return JSON.parse(readFileSync(PERF_SNAPSHOT_PATH, "utf8"));
+    return readJsonFile(PERF_SNAPSHOT_PATH);
   } catch {
     return {};
   }

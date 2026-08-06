@@ -17,6 +17,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runSweetSpotAnalysis } from "../src/core/sweet_spot.js";
 import { buildWatchlistMembership } from "../src/core/universe.js";
+import { readJsonFile } from '../src/json_file.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const RULE = process.env.SWEEP_RULE || "flip-only";
@@ -31,8 +32,8 @@ const QUICK = process.argv.includes("--quick");
 const membership = process.argv.includes("--no-membership") ? null : (() => {
   try {
     return buildWatchlistMembership(
-      JSON.parse(readFileSync(join(ROOT, "rules.json"), "utf8")),
-      JSON.parse(readFileSync(join(ROOT, "swing-signal-baseline.json"), "utf8")),
+      readJsonFile(join(ROOT, "rules.json")),
+      readJsonFile(join(ROOT, "swing-signal-baseline.json")),
     );
   } catch {
     return null;  // unknown membership gates nothing, per the established convention

@@ -20,6 +20,7 @@
 import { existsSync, readFileSync, writeFileSync, appendFileSync, mkdirSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readJsonFile } from '../json_file.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../");
@@ -50,7 +51,7 @@ export function loadWebhookCredentials() {
   let local = {};
   if (existsSync(LOCAL_CONFIG_PATH)) {
     try {
-      local = JSON.parse(readFileSync(LOCAL_CONFIG_PATH, "utf8")) || {};
+      local = readJsonFile(LOCAL_CONFIG_PATH) || {};
     } catch (err) {
       console.error(`[webhook] ${LOCAL_CONFIG_PATH} is not valid JSON: ${err?.message || err}`);
     }
@@ -359,7 +360,7 @@ export async function sendTradeWebhook({ url, payload, timeoutMs = 10000 }) {
 export function readSentState() {
   if (!existsSync(WEBHOOK_STATE_PATH)) return { sent: {} };
   try {
-    const parsed = JSON.parse(readFileSync(WEBHOOK_STATE_PATH, "utf8"));
+    const parsed = readJsonFile(WEBHOOK_STATE_PATH);
     return { sent: parsed?.sent && typeof parsed.sent === "object" ? parsed.sent : {} };
   } catch {
     return { sent: {} };
