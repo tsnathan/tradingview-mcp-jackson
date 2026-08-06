@@ -232,13 +232,21 @@ try {
   Remove-Item $stderrFile -ErrorAction SilentlyContinue
 }
 
-if ($LASTEXITCODE -ne 0) {
-  throw 'Signal scan failed.'
-}
+$exitCode = $LASTEXITCODE
 
+# Log BEFORE throwing. This block used to sit after the `throw` below, so a failing scan --
+# precisely the run whose stderr you need -- captured the error into $stderrOutput and then
+# discarded it. Found 2026-08-06: the scan had been exiting 1 with `signal-scan.log` showing
+# nothing newer than the previous day, which reads identically to "no scans have run".
 if ($output -or $stderrOutput) {
   $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
   $combined = @($output) + @($stderrOutput) | Where-Object { $_ }
-  Add-Content -Path '.\signal-scan.log' -Value ("[$timestamp] " + ($combined -join "`n"))
-  $output
+  $prefix = if ($exitCode -ne 0) { "[$timestamp] EXIT $exitCode " } else { "[$timestamp] " }
+  Add-Content -Path '.\signal-scan.log' -Value ($prefix + ($combined -join "`n"))
 }
+
+if ($exitCode -ne 0) {
+  throw "Signal scan failed (exit $exitCode). See signal-scan.log."
+}
+
+$output
