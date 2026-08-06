@@ -225,14 +225,35 @@ if (-not (Test-CdpReady)) {
 }
 
 $stderrFile = [System.IO.Path]::GetTempFileName()
+$previousErrorAction = $ErrorActionPreference
 try {
+  # $ErrorActionPreference MUST be relaxed across this call. Under 'Stop', redirecting a native
+  # exe's stderr -- `2>$file` exactly as much as `2>&1` -- makes PowerShell raise the child's FIRST
+  # stderr line as a terminating NativeCommandError, thrown *during* the invocation. Execution then
+  # never reaches the logging block below, so the run dies having written nothing at all: the task
+  # reports LastTaskResult 1, signal-scan.log gains no entry, and no status file is written.
+  #
+  # Found 2026-08-06 with the scan dead all day and every symptom pointing at a quiet market. The
+  # scan emits stderr routinely -- `[trade-log] <sym>: report_unavailable` (a symbol whose strategy
+  # report isn't ready), `[manual-ledger-exit] chart not ready for <sym>`, `[orphans]`, `[cross-tf]`,
+  # `[edge]` -- so one ordinary hiccup was enough to kill the whole run. Skip ticks survived because
+  # they return before scanning and emit no stderr, which is why the log's last entry was a "No
+  # watchlists are due" line with no real scan after it.
+  #
+  # A temp file was previously believed to avoid this. It does not: it only stops stderr being
+  # merged into the captured stdout, and has no bearing on the terminating error.
+  #
+  # Relaxing this loses nothing -- the exit code is still checked explicitly below, which is the
+  # real success signal. A native command's stderr is not by itself a failure.
+  $ErrorActionPreference = 'Continue'
   $output = & $node '.\scripts\run_signal_job.js' --notify 2>$stderrFile
+  $exitCode = $LASTEXITCODE
+  $ErrorActionPreference = $previousErrorAction
   $stderrOutput = Get-Content $stderrFile -ErrorAction SilentlyContinue
 } finally {
+  $ErrorActionPreference = $previousErrorAction
   Remove-Item $stderrFile -ErrorAction SilentlyContinue
 }
-
-$exitCode = $LASTEXITCODE
 
 # Log BEFORE throwing. This block used to sit after the `throw` below, so a failing scan --
 # precisely the run whose stderr you need -- captured the error into $stderrOutput and then
