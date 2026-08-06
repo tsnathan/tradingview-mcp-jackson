@@ -127,6 +127,41 @@ These tools can return large payloads. Follow these rules to avoid context bloat
 - OHLCV capped at 500 bars, trades at 20 per request
 - Pine labels capped at 50 per study by default (pass `max_labels` to override)
 
+## Git Hygiene: check for uncommitted work before building on top of it
+
+Before starting a new code change, run `git status`. If the working tree already carries
+uncommitted changes that look like a **completed** prior feature — not the scratch/in-progress
+state of the task at hand — surface it to the user and ask whether to commit before proceeding.
+Don't silently build a new feature on top of an unrelated, already-finished one that just never
+got committed.
+
+**Why this rule exists (2026-08-05):** three separate finished feature builds — `accounts.js`
+equity/alloc sizing, `sim_templates.js` plus the capacity-sweep expectancy pivot, and their
+dashboard/server wiring — had accumulated uncommitted across earlier sessions, undetected because
+nothing ever checked. A fourth feature (the Current Signal today-only-entries/exits fix) was then
+built on top of that same uncommitted pile in a later session, without ever checking `git status`
+first. When the user eventually asked to commit "one commit per feature build," separating four
+entangled features required hand-splitting interleaved diff hunks inside `dashboard/index.html`
+and `scripts/serve_signal_status.js` (built back-to-back with no commit between them, so their
+hunks for two different features were interleaved within single 3-line-context blocks), plus
+reconstructing `CLAUDE.md`'s own uncommitted section boundaries by string-slicing the file to work
+out which paragraphs belonged to which feature. All of that forensic reconstruction — and its real
+risk of a wrong split — is avoided entirely by noticing the pile at the *start* of a session
+instead of untangling it at the end.
+
+- **This is a detect-and-ask rule, not an auto-commit rule.** Per this project's standing
+  instruction, commits happen only when the user asks for one. The fix is to flag pending
+  uncommitted work early and let the user decide — commit now, commit later, or explicitly proceed
+  on top of it — never to commit unprompted.
+- **A `git status` (and `git diff --stat` if anything is listed) costs nothing and catches this
+  before it compounds.** The four-feature pile above was avoidable at any of three earlier session
+  starts, not only the first one — the cost of the check is the same regardless of how large the
+  pile has already grown, but the cost of skipping it compounds with every additional feature.
+- **"Looks like a completed feature" is the bar, not "any diff exists."** Mid-task state you are
+  actively iterating on inside the current conversation is not what this is about. This is about
+  uncommitted work from a *previous*, already-finished task still sitting untouched when a new,
+  unrelated task begins.
+
 ## Architecture
 
 ```
