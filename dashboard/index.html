@@ -172,6 +172,10 @@
     .edge-table th { cursor:pointer; user-select:none; white-space:nowrap; }
     .edge-table th:hover { color:#e5eefc; }
     .edge-table td, .edge-table th { padding:7px 8px; font-size:13px; }
+    /* The column the Capacity Sweep is currently ranked by — tinted so the ★ in the bars above and
+       the winning column in the table below are visibly the same claim. */
+    .ps-pivot-col { background:rgba(56,189,248,.10); }
+    th.ps-pivot-col { color:#7dd3fc; }
     .filter-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:12px 0; }
     .chip {
       background:#1e293b; border:1px solid #334155; color:#98a7c6; border-radius:999px;
@@ -189,6 +193,7 @@
       <button type="button" class="tabbtn" data-pane="pane-sweet">Sweet Spot</button>
       <button type="button" class="tabbtn" data-pane="pane-paper">Paper Run</button>
       <button type="button" class="tabbtn" data-pane="pane-symbol">Symbol Lookup</button>
+      <button type="button" class="tabbtn" data-pane="pane-templates">Sim Templates</button>
       <button type="button" class="tabbtn" data-pane="pane-webhook">Webhook Orders</button>
       <button type="button" class="tabbtn" data-pane="pane-manual-ledger">Manual Ledger</button>
       <button type="button" class="tabbtn" data-pane="pane-book">Portfolio Analytics</button>
@@ -560,7 +565,24 @@
         <h2>Capacity Sweep</h2>
         <p class="muted" style="margin:0 0 4px;">Same selection at different slot counts. Shows where
         adding capacity stops helping — and where it starts hurting by diluting into weaker signals.</p>
+        <div class="filter-row" style="margin-top:10px;">
+          <span class="control-label">Pivot on:</span>
+          <select id="ps-sweep-pivot" class="control-select" style="max-width:280px;"
+            title="Which metric the bars and the ★ are ranked by. Expectancy is the default: this project walk-forward tested every candidate and per-trade expectancy was the only one that beat random out-of-sample.">
+            <option value="expectancyPct">Expectancy (% per trade)</option>
+            <option value="winLossRatio">Avg win / avg loss</option>
+            <option value="expectancyUsd">Expectancy ($ per trade)</option>
+            <option value="cagrDd">CAGR / DD</option>
+          </select>
+          <span id="ps-sweep-pivot-note" class="toggle-meta"></span>
+        </div>
         <div id="ps-sweep"></div>
+        <div class="filter-row" style="margin-top:12px;border-top:1px solid rgba(148,163,184,.18);padding-top:12px;">
+          <button type="button" class="btn" id="ps-save-template"
+            title="Save this exact selection — timeframes, slot count, universe, exit rule — plus its KPIs as a reusable Sim Template, then tag positions and webhook sends to it.">💾 Save as Sim Template</button>
+          <span id="ps-save-template-note" class="toggle-meta"></span>
+        </div>
+        <div id="ps-save-template-form" style="display:none;"></div>
       </div>
 
       <div class="card" id="ps-universe-card" style="display:none;">
@@ -701,6 +723,35 @@
       </div>
     </div><!-- /pane-paper -->
 
+    <div id="pane-templates" class="tabpane hidden">
+      <div class="card">
+        <h1>Sim Templates <button type="button" class="btn" id="tpl-refresh" style="padding:3px 10px;font-size:12px;margin-left:10px;font-weight:400;">Refresh</button></h1>
+        <p class="muted" style="margin:0 0 6px;">A Portfolio Sim configuration you decided to trade — its
+        timeframes, slot count and universe — frozen together with the KPIs that justified it and tied to a
+        brokerage account. The short code rides along on every webhook payload and manual-ledger position
+        opened under it, so a fill can be attributed back to the configuration that called for it.</p>
+        <p class="muted" style="margin:0;font-size:12px;">
+          <strong>KPIs are stored exactly as measured and are never recomputed.</strong> The trade log grows,
+          so re-measuring would silently restate the numbers the decision was made on. Drift is reported below;
+          to refresh a template, re-run the sim and save it again.
+        </p>
+        <div id="tpl-status" class="action-message"></div>
+      </div>
+
+      <div class="card">
+        <div class="filter-row" style="margin:0;">
+          <span class="control-label">Show:</span>
+          <button type="button" class="chip active" data-tpl-status="active">Active</button>
+          <button type="button" class="chip" data-tpl-status="archived">Archived</button>
+          <button type="button" class="chip" data-tpl-status="all">All</button>
+          <span id="tpl-count" class="toggle-meta"></span>
+        </div>
+        <div id="tpl-collisions"></div>
+      </div>
+
+      <div id="tpl-list"><div class="card"><div class="muted">Loading…</div></div></div>
+    </div><!-- /pane-templates -->
+
     <div id="pane-webhook" class="tabpane hidden">
       <div class="card">
         <h1>Webhook Orders <button type="button" class="btn" id="wl-refresh" style="padding:3px 10px;font-size:12px;margin-left:10px;font-weight:400;">Refresh</button></h1>
@@ -833,7 +884,7 @@
           </div>
           <div class="control-group" style="min-width:90px;">
             <label class="control-label" for="ml-qty">Qty</label>
-            <input id="ml-qty" class="control-input" type="number" step="any" min="0" />
+            <input id="ml-qty" class="control-input" type="number" step="any" min="0" title="Auto-filled from the account's equity and allocation % once an entry price is set, rounded down to whole shares. Type your own to override." />
           </div>
           <div class="control-group" style="min-width:110px;">
             <label class="control-label" for="ml-entry">Entry price</label>
@@ -851,6 +902,10 @@
             <label class="control-label" for="ml-entered">Entry date/time (ET)</label>
             <input id="ml-entered" class="control-input" type="datetime-local" title="Eastern time, matching the Open Trades table. Defaults to now. Carried over when you use the Ledger button on an open trade." />
           </div>
+          <div class="control-group" style="min-width:180px;">
+            <label class="control-label" for="ml-template">Sim template</label>
+            <select id="ml-template" class="control-input" title="Which saved Sim Template this position is being opened under. Optional — a hand-entered holding need not belong to a simulated configuration. Recorded on the position so the book can be attributed back to the config that called for it."></select>
+          </div>
           <div class="control-group" style="min-width:200px;">
             <label class="control-label" for="ml-notes">Notes</label>
             <input id="ml-notes" class="control-input" type="text" placeholder="optional" autocomplete="off" />
@@ -863,6 +918,8 @@
         <div id="ml-suggest-note" class="muted" style="font-size:12px;">Stop and target are suggested from the
         strategy's own historical excursion on that symbol once you fill in symbol, timeframe and entry price —
         they pre-fill only if you haven't typed your own. At least one of the two is required.</div>
+        <div id="ml-qty-note" class="muted" style="font-size:12px;margin-top:4px;"></div>
+        <div id="ml-accounts-warn"></div>
         <div id="ml-add-status" class="action-message"></div>
       </div>
 
@@ -1662,6 +1719,8 @@
       set('ml-entered', isoToEtInput(p.entryTimeRaw, true));
       set('ml-side', p.side || 'LONG');
       set('ml-qty', '');
+      const qtyEl = document.getElementById('ml-qty');
+      if (qtyEl) delete qtyEl.dataset.touched; // a carried-over row sizes fresh from the account
       set('ml-notes', '');
       const stopEl = document.getElementById('ml-stop');
       if (stopEl) stopEl.dataset.source = p.levelsSource;
@@ -1676,10 +1735,13 @@
         if (tries < 20) setTimeout(() => applyTf(tries + 1), 100);
       };
       applyTf();
+      // Size against the currently selected account right away. loadManualLedgerTab also calls this
+      // when it finishes, which covers the first-ever visit where the account list is still loading.
+      mlAutoQty();
       const note = document.getElementById('ml-suggest-note');
       if (note) {
         note.textContent = p.levelsSource === 'strategy_excursion'
-          ? `Carried from the open ${p.symbol} position — stop/target are the avg excursion levels already computed for it. Pick an account, set qty, adjust anything, then Add entry.`
+          ? `Carried from the open ${p.symbol} position — stop/target are the avg excursion levels already computed for it. Pick an account (Qty sizes itself if that account has an equity and alloc %), adjust anything, then Add entry.`
           : `Carried from the open ${p.symbol} position. No excursion levels were available, so enter stop and/or target by hand.`;
       }
       document.getElementById('ml-account')?.focus();
@@ -3375,6 +3437,103 @@
     let mlSuggestBusy = false;
     let mlData = null;
     let mlAccounts = [];
+    let mlAccountDetails = new Map(); // name -> { equity, allocPct, notional, sizing }
+    let mlTemplates = [];             // every template, active AND archived — see the fetch comment
+    let mlTemplateById = new Map();   // String(id) -> template
+
+    /**
+     * How a position's template is shown on a row. An id that resolves to nothing renders as the raw
+     * id rather than an em dash: the position genuinely claims that attribution, and hiding a broken
+     * pointer would make it look unattributed instead of showing that something is wrong.
+     */
+    function mlTemplateLabel(templateId) {
+      if (templateId == null || templateId === '') return '<span class="muted">—</span>';
+      const t = mlTemplateById.get(String(templateId));
+      if (!t) return `<span style="color:#fca5a5;" title="No template with this id — it may have been created on another machine">#${escapeHtml(String(templateId))}?</span>`;
+      const archived = t.status === 'archived' ? ' <span class="muted" title="Archived — retired from new entries; this position keeps its attribution">(archived)</span>' : '';
+      return `<span title="${escapeHtml(t.name)}">${escapeHtml(t.short_desc)}</span>${archived}`;
+    }
+
+    /**
+     * Shares for one position in the selected account: floor(equity * alloc% / entry price).
+     *
+     * MIRROR of allocationQty() in src/core/accounts.js — same arguments, same arithmetic, same
+     * float-dust guard. It lives here as well because the form re-sizes on every keystroke of the
+     * entry price, which a round trip cannot keep up with. tests/accounts.test.js extracts this
+     * function out of the served HTML and cross-checks it against the module over a table of
+     * inputs, so the two cannot drift apart silently; change both together or that test fails.
+     */
+    function mlAllocQty(equity, allocPct, entryPrice) {
+      const pos = (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : null; };
+      const e = pos(equity);
+      const a = pos(allocPct);
+      const p = pos(entryPrice);
+      if (e == null || a == null || p == null) return null;
+      if (a > 100) return null;
+      const shares = (e * a) / 100 / p;
+      if (!Number.isFinite(shares)) return null;
+      return Math.floor(Number(shares.toFixed(10)));
+    }
+
+    const mlMoney = (v) => (Number.isFinite(Number(v))
+      ? Number(v).toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
+      : '—');
+
+    /**
+     * Auto-fill Qty from the selected account's equity and allocation %.
+     *
+     * Runs on account change and on every entry-price keystroke. Three things it deliberately does
+     * NOT do:
+     *
+     *  - It never overwrites a Qty the user typed (dataset.touched, the same convention the
+     *    stop/target rescale already uses) — an explicit share count outranks a derived one.
+     *  - It never writes 0. The server rejects a non-positive qty, so a 0 would be an unsubmittable
+     *    form with no explanation; the field is left empty and the note says the allocation cannot
+     *    afford one share at this price.
+     *  - It never invents inputs. An account with no equity/alloc_pct configured leaves Qty alone
+     *    and says so, rather than falling back to some default size.
+     */
+    function mlAutoQty() {
+      const qtyEl = document.getElementById('ml-qty');
+      const note = document.getElementById('ml-qty-note');
+      if (!qtyEl || !note) return;
+      const account = document.getElementById('ml-account')?.value || '';
+      const entry = document.getElementById('ml-entry')?.value || '';
+      const detail = mlAccountDetails.get(account);
+
+      if (qtyEl.dataset.touched === '1') {
+        // textContent, not innerHTML, everywhere in this function — an account name is free-form
+        // text from accounts.json and must never be parsed as markup.
+        const would = mlAllocQty(detail?.equity, detail?.allocPct, entry);
+        note.textContent = detail?.sizing && would != null
+          ? `Qty typed by hand — ${account} would size ${would}. Clear the field to go back to auto.`
+          : '';
+        return;
+      }
+      if (!account) { qtyEl.value = ''; note.textContent = ''; return; }
+      if (!detail || !detail.sizing) {
+        qtyEl.value = '';
+        note.textContent = account
+          ? `No equity / alloc_pct set for "${account}" in accounts.json — enter Qty by hand.`
+          : '';
+        return;
+      }
+      if (!(Number(entry) > 0)) {
+        qtyEl.value = '';
+        note.textContent = `${account}: ${mlMoney(detail.equity)} × ${detail.allocPct}% = ${mlMoney(detail.notional)} per position. Enter an entry price to size it.`;
+        return;
+      }
+      const qty = mlAllocQty(detail.equity, detail.allocPct, entry);
+      if (qty == null) { qtyEl.value = ''; note.textContent = ''; return; }
+      if (qty < 1) {
+        qtyEl.value = '';
+        note.textContent = `${account}: ${mlMoney(detail.notional)} does not cover one share at ${entry} — enter Qty by hand or use a larger allocation.`;
+        return;
+      }
+      qtyEl.value = String(qty);
+      const used = qty * Number(entry);
+      note.textContent = `${account}: ${mlMoney(detail.equity)} × ${detail.allocPct}% = ${mlMoney(detail.notional)} ÷ ${entry} → ${qty} shares (${mlMoney(used)} deployed, rounded down). Type your own Qty to override.`;
+    }
 
     /**
      * Accounts offered by an open row's inline account picker.
@@ -3465,13 +3624,27 @@
     async function loadManualLedgerTab() {
       const status = document.getElementById('ml-status');
       try {
-        const [accountsResp, rulesResp, ledgerResp] = await Promise.all([
+        const [accountsResp, rulesResp, ledgerResp, tplResp] = await Promise.all([
           fetch('/api/accounts').then((r) => r.json()),
           fetch('/api/ntfy-config').then((r) => r.json()),
           fetch('/api/manual-ledger').then((r) => r.json()),
+          // `all`, not `active`: an archived template must still RESOLVE for rows already opened
+          // under it, or an existing position would render as attributed to nothing. The picker
+          // below offers only active ones — archiving retires a config from new entries, it does not
+          // invalidate the positions held under it.
+          fetch('/api/sim-templates?status=all').then((r) => r.json()).catch(() => null),
         ]);
         if (!ledgerResp?.success) throw new Error(ledgerResp?.error || 'could not read the manual ledger');
         mlData = ledgerResp;
+        mlTemplates = tplResp?.success ? (tplResp.templates || []) : [];
+        mlTemplateById = new Map(mlTemplates.map((t) => [String(t.id), t]));
+
+        const tplSel = document.getElementById('ml-template');
+        const keepTpl = tplSel.value;
+        const activeTemplates = mlTemplates.filter((t) => t.status === 'active');
+        tplSel.innerHTML = '<option value="">— none —</option>' + activeTemplates.map((t) =>
+          `<option value="${t.id}">${escapeHtml(t.short_desc)} · ${escapeHtml(t.name)}${t.account ? ` (${escapeHtml(t.account)})` : ''}</option>`).join('');
+        if (keepTpl) tplSel.value = keepTpl;
 
         // Filter vocabularies come from the data itself, so a filter can never offer a value that
         // matches nothing — same rule the Webhook Orders tab follows.
@@ -3496,10 +3669,28 @@
         const keepAcc = accSel.value;
         const accounts = accountsResp?.accounts || [];
         mlAccounts = accounts;
+        // The option LABEL carries the sizing while the VALUE stays the bare name — the server
+        // validates on the name, so it must not pick up the decoration.
+        mlAccountDetails = new Map((accountsResp?.details || []).map((d) => [d.name, d]));
         accSel.innerHTML = accounts.length
-          ? accounts.map((a) => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('')
+          ? accounts.map((a) => {
+              const d = mlAccountDetails.get(a);
+              const label = d?.sizing ? `${a} — ${mlMoney(d.equity)} @ ${d.allocPct}%` : a;
+              return `<option value="${escapeHtml(a)}">${escapeHtml(label)}</option>`;
+            }).join('')
           : '<option value="">(add accounts to accounts.json)</option>';
         if (keepAcc) accSel.value = keepAcc;
+
+        // A dropped or ignored account entry is surfaced, never silent: the alternative is a
+        // picklist that quietly stops offering an account, or an auto-qty that quietly stops.
+        const accWarn = document.getElementById('ml-accounts-warn');
+        if (accWarn) {
+          const warnings = accountsResp?.warnings || [];
+          accWarn.innerHTML = warnings.length
+            ? `<div class="warn-box" style="font-size:12px;">accounts.json: ${warnings.map(escapeHtml).join('<br>')}</div>`
+            : '';
+        }
+        mlAutoQty();
 
         const tfSel = document.getElementById('ml-timeframe');
         const keepTf = tfSel.value;
@@ -3544,6 +3735,7 @@
         <table>
           <thead><tr>
             <th>Account</th><th>Symbol</th><th>TF</th><th>Side</th><th>Entered</th><th>Qty</th><th>Entry</th><th>Stop</th><th>Target</th>
+            <th title="The Sim Template this position was opened under.">Template</th>
             <th>TV alert</th><th>Exit fired</th><th>Edit</th><th>Close</th>
           </tr></thead>
           <tbody>${rows.map((r) => {
@@ -3567,6 +3759,13 @@
               <td>${edit(r.entry_price ?? '—')}<input type="number" step="any" min="0" class="ml-edit ml-f-entry hidden" value="${r.entry_price ?? ''}" style="${cellInput}width:80px;" /></td>
               <td>${edit(r.stop_price ?? '<span class="muted">—</span>')}<input type="number" step="any" min="0" class="ml-edit ml-f-stop hidden" value="${r.stop_price ?? ''}" style="${cellInput}width:80px;" placeholder="none" /></td>
               <td>${edit(r.target_price ?? '<span class="muted">—</span>')}<input type="number" step="any" min="0" class="ml-edit ml-f-target hidden" value="${r.target_price ?? ''}" style="${cellInput}width:80px;" placeholder="none" /></td>
+              <td style="font-size:11px;">${edit(mlTemplateLabel(r.template_id))}<select class="ml-edit ml-f-template hidden" style="${cellInput}width:130px;">
+                <option value="">— none —</option>${
+                  // The row's OWN template is always offered even when archived, so opening the
+                  // editor cannot silently detach a position from a retired configuration.
+                  mlTemplates.filter((t) => t.status === 'active' || String(t.id) === String(r.template_id))
+                    .map((t) => `<option value="${t.id}"${String(t.id) === String(r.template_id) ? ' selected' : ''}>${escapeHtml(t.short_desc)}</option>`).join('')
+                }</select></td>
               <td style="font-size:11px;">${mlAlertBadge(r.tv_alert_status)}</td>
               <td style="font-size:11px;">${r.exit_alert_fired_at
                 ? `<span style="color:#fcd34d;">${escapeHtml(r.exit_alert_level || 'hit')}</span><br><span class="muted">${fmtEt(r.exit_alert_fired_at, true)}</span>`
@@ -3755,6 +3954,9 @@
             entry_price: val('.ml-f-entry'),
             stop_price: val('.ml-f-stop'),
             target_price: val('.ml-f-target'),
+            // '' is the deliberate detach signal, exactly like a cleared stop/target — the server's
+            // partial validator reads it as "set to null" rather than "leave alone".
+            template_id: val('.ml-f-template'),
             entered_at: etWallClockToIso(val('.ml-f-entered')),
           };
           if (!body.entered_at) delete body.entered_at; // blank input: leave the stored value alone
@@ -3817,7 +4019,8 @@
       el.innerHTML = `
         <table>
           <thead><tr>
-            <th>Account</th><th>Symbol</th><th>TF</th><th>Entered</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Closed</th>
+            <th>Account</th><th>Symbol</th><th>TF</th><th>Entered</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&amp;L</th>
+            <th title="The Sim Template this position was opened under.">Template</th><th>Closed</th>
           </tr></thead>
           <tbody>${rows.map((r) => {
             const entry = Number(r.entry_price);
@@ -3833,11 +4036,387 @@
               <td>${r.entry_price ?? '—'}</td>
               <td>${r.exit_price ?? '—'}</td>
               <td style="color:${pct == null ? '' : pct >= 0 ? '#86efac' : '#fca5a5'};">${pct == null ? '—' : pct.toFixed(2) + '%'}</td>
+              <td style="font-size:11px;">${mlTemplateLabel(r.template_id)}</td>
               <td style="font-size:12px;">${fmtEt(r.closed_at, false)}</td>
             </tr>`;
           }).join('')}</tbody>
         </table>`;
     }
+
+    /* ===================== Sim Templates tab ===================== */
+
+    let tplData = null;
+    let tplStatusFilter = 'active';
+
+    /** Format one stored KPI by its declared kind. Nulls render as an em dash, never as 0. */
+    function tplKpi(value, kind) {
+      if (value == null || !Number.isFinite(Number(value))) return '<span class="muted">—</span>';
+      const v = Number(value);
+      switch (kind) {
+        case 'pct0': return n0(v) + '%';
+        case 'pct1': return n1(v) + '%';
+        case 'pct2': return n2(v) + '%';
+        case 'usd': return usd(v);
+        case 'mult': return n2(v) + '×';
+        case 'num2': return n2(v);
+        case 'int': return String(Math.round(v));
+        default: return String(v);
+      }
+    }
+
+    async function loadSimTemplates() {
+      const st = document.getElementById('tpl-status');
+      try {
+        const resp = await (await fetch(`/api/sim-templates?status=${encodeURIComponent(tplStatusFilter)}`)).json();
+        if (!resp?.success) throw new Error(resp?.error || 'could not read sim templates');
+        tplData = resp;
+        st.textContent = '';
+        st.className = 'action-message';
+        renderSimTemplates();
+      } catch (err) {
+        st.textContent = err?.message || 'Could not load sim templates';
+        st.className = 'action-message action-message-error';
+      }
+    }
+
+    function renderSimTemplates() {
+      const list = document.getElementById('tpl-list');
+      const templates = tplData?.templates || [];
+      const kpiFields = tplData?.kpiFields || [];
+      const accounts = tplData?.accounts || [];
+      document.getElementById('tpl-count').textContent =
+        `${templates.length} template${templates.length === 1 ? '' : 's'}`;
+
+      // A timeframe claimed by two active templates is legal but silently disables template stamping
+      // on the AUTOMATIC dispatch path for it — there is no basis to pick between them, and a wrong
+      // template id on a real order is worse than none. Surfaced so the stop is visible.
+      const collisions = tplData?.collisions || [];
+      document.getElementById('tpl-collisions').innerHTML = collisions.length
+        ? `<div class="warn-box"><h3>${collisions.length} timeframe${collisions.length === 1 ? '' : 's'} claimed by more than one active template</h3>
+            <p style="font-size:13px;margin:0 0 6px;">Automatic webhook sends on ${collisions.length === 1 ? 'this timeframe' : 'these timeframes'}
+            go out with <strong>no template attribution</strong> — there is no basis to choose between them, and stamping the
+            wrong id on a real order is worse than stamping none. Manual sends and manual-ledger entries are unaffected
+            (you pick the template explicitly there). Archive one to resolve it.</p>
+            <ul style="margin:0;padding-left:18px;font-size:13px;">${collisions.map((c) =>
+              `<li><strong>${escapeHtml(String(c.timeframe))}</strong>: ${c.templates.map((t) => escapeHtml(t.short_desc)).join(', ')}</li>`).join('')}</ul>
+          </div>`
+        : '';
+
+      if (!templates.length) {
+        list.innerHTML = `<div class="card"><p class="muted" style="margin:0;">No ${tplStatusFilter === 'all' ? '' : tplStatusFilter + ' '}templates yet.
+          Run a simulation in <strong>Portfolio Sim</strong>, then use <strong>Save as Sim Template</strong> under the Capacity Sweep.</p></div>`;
+        return;
+      }
+
+      list.innerHTML = templates.map((t) => {
+        const stale = t.staleness?.stale;
+        const archived = t.status === 'archived';
+        return `
+        <div class="card" data-tpl-id="${t.id}" style="${archived ? 'opacity:.72;' : ''}">
+          <h2 style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+            <span style="font-family:monospace;background:#0b3a5c;color:#7dd3fc;padding:2px 8px;border-radius:6px;font-size:14px;"
+              title="Sent as the &quot;template&quot; field on every webhook payload placed under this configuration.">${escapeHtml(t.short_desc)}</span>
+            <span>${escapeHtml(t.name)}</span>
+            ${archived ? '<span class="muted" style="font-size:13px;font-weight:400;">archived</span>' : ''}
+          </h2>
+          <div class="filter-row" style="margin:2px 0 10px;">
+            <span class="toggle-meta">${escapeHtml(t.account || 'no account')}</span>
+            <span class="toggle-meta">·&nbsp; ${t.timeframes.map((x) => escapeHtml(String(x))).join(' + ')} @ ${t.max_positions} slot${t.max_positions === 1 ? '' : 's'}</span>
+            <span class="toggle-meta">·&nbsp; ${t.tickers ? `${t.tickers.length} symbols (${escapeHtml(t.universe || 'custom')})` : 'all symbols'}</span>
+            <span class="toggle-meta">·&nbsp; ${escapeHtml(t.rule_type || 'all variants pooled')}</span>
+            <span class="toggle-meta">·&nbsp; created ${fmtEt(t.created_at, false)}</span>
+          </div>
+
+          <div class="edge-table-wrap"><table class="edge-table">
+            <thead><tr>${kpiFields.map((f) => `<th class="num">${escapeHtml(f.label)}</th>`).join('')}</tr></thead>
+            <tbody><tr>${kpiFields.map((f) => {
+              const v = t.kpis ? t.kpis[f.key] : null;
+              const strong = f.key === 'expectancyPct' || f.key === 'winLossRatio';
+              return `<td class="num ${f.key === 'maxDrawdownPct' || f.key === 'avgLossUsd' ? 'neg' : ''}">${strong ? '<strong>' : ''}${tplKpi(v, f.kind)}${strong ? '</strong>' : ''}</td>`;
+            }).join('')}</tr></tbody>
+          </table></div>
+          ${t.kpis ? '' : '<p class="muted" style="font-size:12px;margin:6px 0 0;">No KPI snapshot was stored with this template.</p>'}
+
+          ${stale ? `<div class="warn-box" style="margin:10px 0 0;padding:10px 14px;">
+            <p style="margin:0;font-size:13px;">The trade log has gained <strong>${t.staleness.newTrades}</strong> matching trades since these
+            KPIs were measured (${t.kpis?.signalsTaken ?? '?'} then, ${t.currentTrades ?? '?'} now). They are shown exactly as measured and are
+            never recomputed — re-run the sim and save again to refresh them.</p></div>` : ''}
+
+          <div class="filter-row" style="margin:10px 0 0;">
+            <span class="toggle-meta">${t.usage.total} position${t.usage.total === 1 ? '' : 's'} recorded${t.usage.open ? ` · <strong>${t.usage.open} still open</strong>` : ''}</span>
+            <button type="button" class="chip tpl-edit" data-id="${t.id}">Edit</button>
+            <button type="button" class="chip tpl-sim" data-id="${t.id}" title="Load this configuration into the Portfolio Sim tab.">→ Sim</button>
+            ${archived
+              ? `<button type="button" class="chip tpl-unarchive" data-id="${t.id}">Restore</button>`
+              : `<button type="button" class="chip tpl-archive" data-id="${t.id}" title="Retires it from the pickers and from automatic attribution. Never deleted — the id is stamped on positions and on records at the executor.">Archive</button>`}
+          </div>
+
+          <div class="tpl-editor hidden" data-id="${t.id}" style="margin-top:10px;border-top:1px solid rgba(148,163,184,.18);padding-top:10px;">
+            <div class="controls" style="margin:0 0 8px;">
+              <div class="control-group" style="min-width:200px;">
+                <label class="control-label">Name</label>
+                <input class="control-input tpl-f-name" type="text" value="${escapeHtml(t.name)}" maxlength="80" />
+              </div>
+              <div class="control-group" style="min-width:130px;">
+                <label class="control-label">Short code</label>
+                <input class="control-input tpl-f-desc" type="text" value="${escapeHtml(t.short_desc)}" maxlength="${tplData?.shortDescMax || 10}"
+                  title="Goes out with real orders. Letters, digits, dash and underscore only." />
+              </div>
+              <div class="control-group" style="min-width:170px;">
+                <label class="control-label">Account</label>
+                <select class="control-input tpl-f-account">
+                  <option value="">— none —</option>
+                  ${accounts.map((a) => `<option value="${escapeHtml(a)}"${a === t.account ? ' selected' : ''}>${escapeHtml(a)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="control-group" style="min-width:110px;">
+                <label class="control-label">Max positions</label>
+                <input class="control-input tpl-f-slots" type="number" min="1" step="1" value="${t.max_positions}" />
+              </div>
+            </div>
+            <div class="control-group" style="margin-bottom:8px;">
+              <label class="control-label">Notes</label>
+              <textarea class="control-input tpl-f-notes" rows="3" style="width:100%;resize:vertical;"
+                placeholder="Why this configuration, what you are watching for, when to revisit.">${escapeHtml(t.notes || '')}</textarea>
+            </div>
+            <button type="button" class="btn tpl-save" data-id="${t.id}">Save</button>
+            <button type="button" class="btn tpl-cancel" data-id="${t.id}">Cancel</button>
+            <p class="muted" style="font-size:12px;margin:8px 0 0;">The KPI snapshot is not editable — it is the measurement
+            that justified this template, and hand-editing it would turn a record of a decision into an assertion about one.</p>
+          </div>
+
+          ${t.notes ? `<p class="tpl-notes" style="margin:10px 0 0;white-space:pre-wrap;font-size:13px;color:#c7d3ea;border-left:3px solid #334155;padding-left:10px;">${escapeHtml(t.notes)}</p>` : ''}
+        </div>`;
+      }).join('');
+
+      wireSimTemplateButtons();
+    }
+
+    function wireSimTemplateButtons() {
+      const list = document.getElementById('tpl-list');
+      const msg = document.getElementById('tpl-status');
+      const setMsg = (text, isError) => {
+        msg.textContent = text;
+        msg.className = 'action-message' + (isError ? ' action-message-error' : '');
+      };
+
+      list.querySelectorAll('.tpl-edit').forEach((b) => b.addEventListener('click', () => {
+        list.querySelector(`.tpl-editor[data-id="${b.dataset.id}"]`)?.classList.remove('hidden');
+      }));
+      list.querySelectorAll('.tpl-cancel').forEach((b) => b.addEventListener('click', () => renderSimTemplates()));
+
+      list.querySelectorAll('.tpl-save').forEach((b) => b.addEventListener('click', async () => {
+        const editor = list.querySelector(`.tpl-editor[data-id="${b.dataset.id}"]`);
+        const body = {
+          name: editor.querySelector('.tpl-f-name').value,
+          short_desc: editor.querySelector('.tpl-f-desc').value,
+          account: editor.querySelector('.tpl-f-account').value,
+          max_positions: editor.querySelector('.tpl-f-slots').value,
+          notes: editor.querySelector('.tpl-f-notes').value,
+        };
+        b.disabled = true;
+        try {
+          const resp = await (await fetch(`/api/sim-templates/${b.dataset.id}/update`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+          })).json();
+          if (!resp?.success) throw new Error(resp?.error || 'save failed');
+          await loadSimTemplates();
+          setMsg('Saved.', false);
+        } catch (err) {
+          setMsg(err?.message || 'Save failed', true);
+          b.disabled = false;
+        }
+      }));
+
+      // Archive is confirm-gated even though it is reversible: it changes what the automatic
+      // dispatch attributes, which is a live-money path.
+      list.querySelectorAll('.tpl-archive').forEach((b) => b.addEventListener('click', async () => {
+        if (!confirm('Archive this template?\n\nIt stops appearing in the pickers and stops being attached to automatic '
+          + 'webhook sends. Positions already opened under it keep their attribution, and nothing is deleted — you can restore it.')) return;
+        await tplSetStatus(b.dataset.id, 'archived', setMsg);
+      }));
+      list.querySelectorAll('.tpl-unarchive').forEach((b) => b.addEventListener('click', async () => {
+        await tplSetStatus(b.dataset.id, 'active', setMsg);
+      }));
+
+      list.querySelectorAll('.tpl-sim').forEach((b) => b.addEventListener('click', () => {
+        const t = (tplData?.templates || []).find((x) => String(x.id) === b.dataset.id);
+        if (t) applyTemplateToSim(t);
+      }));
+    }
+
+    async function tplSetStatus(id, status, setMsg) {
+      try {
+        const url = status === 'archived' ? `/api/sim-templates/${id}/archive` : `/api/sim-templates/${id}/update`;
+        const init = status === 'archived'
+          ? { method: 'POST' }
+          : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'active' }) };
+        const resp = await (await fetch(url, init)).json();
+        if (!resp?.success) throw new Error(resp?.error || 'failed');
+        await loadSimTemplates();
+      } catch (err) {
+        setMsg(err?.message || 'Failed', true);
+      }
+    }
+
+    /**
+     * Load a template's configuration into the Portfolio Sim tab by driving that tab's OWN controls —
+     * never by re-deriving the universe rule, which must not exist in two places. Same approach the
+     * Sweet Spot tab's "→ Sim" button already takes.
+     */
+    function applyTemplateToSim(t) {
+      document.getElementById('ps-max').value = t.max_positions;
+      if (t.capital != null) document.getElementById('ps-capital').value = t.capital;
+      if (t.commission != null) document.getElementById('ps-commission').value = t.commission;
+      if (t.priority) document.getElementById('ps-priority').value = t.priority;
+      psTfSelected = new Set(t.timeframes.map(String));
+      renderPsTfChips();
+      // The stored ticker list is applied verbatim rather than re-running the picker: re-deriving a
+      // Top-20 against a grown trade log would produce a different universe than the one measured.
+      psTickers = t.tickers && t.tickers.length ? [...t.tickers] : null;
+      psTop20 = null;
+      document.getElementById('ps-sym-note').textContent = psTickers
+        ? `${psTickers.length} symbols from template "${t.short_desc}" (as saved${t.universe ? `, picked by ${t.universe}` : ''})`
+        : 'all logged symbols';
+      ['ps-sym-all', 'ps-sym-top20', 'ps-sym-blend'].forEach((id) => document.getElementById(id).classList.remove('active'));
+      if (!psTickers) document.getElementById('ps-sym-all').classList.add('active');
+      document.querySelector('.tabbtn[data-pane="pane-portfolio"]')?.click();
+      runPortfolioSim();
+    }
+
+    document.getElementById('tpl-refresh').addEventListener('click', () => loadSimTemplates());
+    document.querySelectorAll('[data-tpl-status]').forEach((chip) => chip.addEventListener('click', () => {
+      tplStatusFilter = chip.dataset.tplStatus;
+      document.querySelectorAll('[data-tpl-status]').forEach((c) => c.classList.toggle('active', c === chip));
+      loadSimTemplates();
+    }));
+
+    /* =============== Save the current Portfolio Sim run as a template =============== */
+
+    document.getElementById('ps-save-template').addEventListener('click', async () => {
+      const note = document.getElementById('ps-save-template-note');
+      const form = document.getElementById('ps-save-template-form');
+      if (!psSweepLast) {
+        note.textContent = 'Run a simulation first — a template stores the KPIs that justified it.';
+        return;
+      }
+      note.textContent = '';
+      const slots = Number(document.getElementById('ps-max').value) || 5;
+      // The KPI snapshot comes from the SWEEP ROW MATCHING THE CHOSEN SLOT COUNT, not from the
+      // headline metrics: the sweep row is what the ★ and the pivot ranked, so the template records
+      // the numbers actually being compared when the decision was made. Falls back to the closest
+      // available row rather than refusing, and says which one it used.
+      const exact = psSweepLast.find((x) => x.maxPositions === slots);
+      const row = exact || psSweepLast.reduce((a, b) =>
+        (Math.abs(b.maxPositions - slots) < Math.abs(a.maxPositions - slots) ? b : a), psSweepLast[0]);
+      const timeframes = psTfSelected.size ? [...psTfSelected] : [...psAllTimeframes];
+
+      let suggested = '';
+      try {
+        const s = await (await fetch('/api/sim-templates/suggest-desc', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ timeframes, max_positions: slots }),
+        })).json();
+        suggested = s?.short_desc || '';
+      } catch {}
+
+      const accounts = (tplData?.accounts) || await fetch('/api/accounts').then((r) => r.json()).then((r) => r?.accounts || []).catch(() => []);
+      const universe = document.getElementById('ps-sym-top20').classList.contains('active') ? 'top20'
+        : document.getElementById('ps-sym-blend').classList.contains('active') ? 'blend'
+        : psTickers ? 'custom' : 'all';
+
+      form.style.display = '';
+      form.innerHTML = `
+        <div class="card" style="margin-top:10px;background:#0d1b2f;">
+          <h2 style="font-size:15px;">Save as Sim Template</h2>
+          ${exact ? '' : `<div class="warn-box" style="padding:10px 14px;margin:0 0 10px;"><p style="margin:0;font-size:13px;">
+            The sweep has no row at ${slots} slots, so the KPIs below are from its <strong>${row.maxPositions}-slot</strong> row.
+            Set Max positions to a swept value and re-run for an exact match.</p></div>`}
+          <div class="controls" style="margin:0 0 10px;">
+            <div class="control-group" style="min-width:220px;">
+              <label class="control-label" for="pst-name">Name</label>
+              <input id="pst-name" class="control-input" type="text" maxlength="80"
+                value="${escapeHtml(timeframes.join('+') + ' @ ' + slots)}" />
+            </div>
+            <div class="control-group" style="min-width:140px;">
+              <label class="control-label" for="pst-desc">Short code (max ${tplData?.shortDescMax || 10})</label>
+              <input id="pst-desc" class="control-input" type="text" maxlength="${tplData?.shortDescMax || 10}"
+                value="${escapeHtml(suggested)}" placeholder="e.g. 15m30m3"
+                title="Sent with every real order placed under this template, and shown on the fill. Letters, digits, dash and underscore only." />
+            </div>
+            <div class="control-group" style="min-width:180px;">
+              <label class="control-label" for="pst-account">Account</label>
+              <select id="pst-account" class="control-input">
+                <option value="">— none —</option>
+                ${accounts.map((a) => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="control-group" style="margin-bottom:10px;">
+            <label class="control-label" for="pst-notes">Notes</label>
+            <textarea id="pst-notes" class="control-input" rows="3" style="width:100%;resize:vertical;"
+              placeholder="Why this configuration, what you are watching for, when to revisit."></textarea>
+          </div>
+          <p class="muted" style="font-size:12px;margin:0 0 10px;">
+            Storing: <strong>${timeframes.map(escapeHtml).join(' + ')} @ ${row.maxPositions} slots</strong>,
+            ${psTickers ? `${psTickers.length} symbols (${escapeHtml(universe)})` : 'all symbols'},
+            ${escapeHtml(selectedRule || 'all variants pooled')} —
+            expectancy <strong>${row.expectancyPct == null ? '—' : n2(row.expectancyPct) + '%'}</strong>/trade,
+            W/L <strong>${row.winLossRatio == null ? '—' : n2(row.winLossRatio) + '×'}</strong>,
+            CAGR ${n1(row.cagr)}%, maxDD ${n1(row.maxDrawdownPct)}%, ${row.signalsTaken} trades.
+            KPIs are frozen as measured and never recomputed.
+          </p>
+          <button type="button" class="btn btn-primary" id="pst-save">Save template</button>
+          <button type="button" class="btn" id="pst-cancel">Cancel</button>
+          <div id="pst-status" class="action-message"></div>
+        </div>`;
+
+      document.getElementById('pst-cancel').addEventListener('click', () => {
+        form.style.display = 'none';
+        form.innerHTML = '';
+      });
+      document.getElementById('pst-save').addEventListener('click', async () => {
+        const stEl = document.getElementById('pst-status');
+        const body = {
+          name: document.getElementById('pst-name').value,
+          short_desc: document.getElementById('pst-desc').value,
+          account: document.getElementById('pst-account').value,
+          timeframes,
+          max_positions: row.maxPositions,
+          capital: Number(document.getElementById('ps-capital').value) || null,
+          commission: Number(document.getElementById('ps-commission').value) || 0,
+          priority: document.getElementById('ps-priority').value,
+          universe,
+          tickers: psTickers,
+          rule_type: selectedRule,
+          notes: document.getElementById('pst-notes').value,
+          // Copied verbatim off the sweep row. The server keeps only recognised, finite keys.
+          kpis: {
+            expectancyPct: row.expectancyPct, expectancyUsd: row.expectancyUsd,
+            winLossRatio: row.winLossRatio, avgWinUsd: row.avgWinUsd, avgLossUsd: row.avgLossUsd,
+            winRate: row.winRate, cagr: row.cagr, maxDrawdownPct: row.maxDrawdownPct,
+            cagrDd: row.cagrDd, fillRate: row.fillRate, timeInMarketPct: row.timeInMarketPct,
+            avgCapitalDeployedPct: row.avgCapitalDeployedPct, signalsTaken: row.signalsTaken,
+          },
+        };
+        stEl.textContent = 'Saving…';
+        stEl.className = 'action-message';
+        try {
+          const resp = await (await fetch('/api/sim-templates', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+          })).json();
+          if (!resp?.success) throw new Error(resp?.error || 'save failed');
+          form.style.display = 'none';
+          form.innerHTML = '';
+          note.textContent = `Saved as "${resp.template.short_desc}".`;
+          tplData = null;
+          if (!document.getElementById('pane-templates').classList.contains('hidden')) loadSimTemplates();
+        } catch (err) {
+          stEl.textContent = err?.message || 'Save failed';
+          stEl.className = 'action-message action-message-error';
+        }
+      });
+    });
 
     /**
      * Record the entry price the add form's current stop/target were derived from.
@@ -4298,6 +4877,23 @@
       if (moved.length && note) {
         note.textContent = `Rescaled to the new entry price, keeping the same % distance — ${moved.join(', ')}. Type over either to set your own.`;
       }
+      mlAutoQty(); // the entry price is the other half of the sizing, so it re-sizes as you type
+    });
+    // Picking the account is the trigger the whole feature is named for.
+    document.getElementById('ml-account').addEventListener('change', mlAutoQty);
+    // A hand-typed Qty is never overwritten again; clearing the field hands it back to auto-sizing.
+    document.getElementById('ml-qty').addEventListener('input', (e) => {
+      const note = document.getElementById('ml-qty-note');
+      if (e.target.value === '') {
+        // Clearing releases the field back to auto-sizing but deliberately does NOT refill on the
+        // spot — refilling mid-edit would leave the next keystroke appending to a number the user
+        // had just deleted. It re-sizes on the next account or entry-price change.
+        delete e.target.dataset.touched;
+        if (note) note.textContent = 'Qty cleared — it will auto-size again when you change the account or entry price.';
+        return;
+      }
+      e.target.dataset.touched = '1';
+      mlAutoQty();
     });
     document.getElementById('ml-filter-period').addEventListener('change', renderManualLedger);
     document.getElementById('ml-filter-symbol').addEventListener('input', renderManualLedger);
@@ -4337,6 +4933,10 @@
         target_price: target,
         notes: document.getElementById('ml-notes').value.trim(),
         levels_source: document.getElementById('ml-stop').dataset.source || 'manual',
+        // Omitted entirely when nothing is picked, rather than sent as '' — on the CREATE path the
+        // validator treats blank as "no template", and there is no stored value to distinguish it
+        // from, unlike the partial update path where '' means detach.
+        ...(document.getElementById('ml-template').value ? { template_id: document.getElementById('ml-template').value } : {}),
         ...(enteredRaw ? { entered_at: etWallClockToIso(enteredRaw) } : {}),
       };
       msg.textContent = 'Saving… (creating the TradingView alert can take a few seconds)';
@@ -4352,7 +4952,13 @@
           const el = document.getElementById(id);
           el.value = '';
           delete el.dataset.source;
+          // The next entry is a fresh decision: a Qty or level typed for the position just saved
+          // must not keep suppressing auto-sizing and level suggestions for the following one.
+          delete el.dataset.touched;
+          delete el.dataset.basisEntry;
+          delete el.dataset.basisLevel;
         });
+        document.getElementById('ml-qty-note').textContent = '';
         msg.textContent = resp.row?.tv_alert_status === 'created'
           ? 'Saved, TradingView alert created.'
           : `Saved. TradingView alert: ${resp.row?.tv_alert_status || 'unknown'} — the entry is still tracked and will notify via ntfy on a scheduled scan.`;
@@ -4397,6 +5003,7 @@
         // Always reloaded on view (not once): the ledger changes whenever an order is sent from
         // anywhere — a scheduled scan, the Signals tab, or this tab — so a cached view could offer
         // Close on a position that has already been closed.
+        if (btn.dataset.pane === 'pane-templates') loadSimTemplates();
         if (btn.dataset.pane === 'pane-webhook') loadWebhookLedger();
         if (btn.dataset.pane === 'pane-manual-ledger') loadManualLedgerTab();
         if (btn.dataset.pane === 'pane-book') loadPortfolioAnalytics();
@@ -5434,35 +6041,122 @@
         </p>`;
     }
 
+    /**
+     * How each pivot metric is read and rendered. `fmt` is the bar label, `note` explains what the ★
+     * is actually claiming — the metrics answer materially different questions and the old card had
+     * only one of them, so naming the question is part of the control.
+     */
+    const PS_PIVOTS = {
+      expectancyPct: {
+        label: 'expectancy (% per trade)',
+        fmt: (v) => (v == null ? '—' : n2(v) + '%'),
+        note: 'Mean return per trade, each trade scored against the equity that funded it. Size-neutral, '
+            + 'so it stays comparable across slot counts even though position size is equity ÷ slots. '
+            + 'This is the only ranking metric this project measured as beating random out-of-sample '
+            + '(rho +0.381, vs −0.145 for CAGR/DD). It says nothing about drawdown — read maxDD beside it.',
+      },
+      winLossRatio: {
+        label: 'avg win / avg loss',
+        fmt: (v) => (v == null ? '—' : n2(v) + '×'),
+        note: 'How many times larger the average winner is than the average loser. Pairs with win% — a high '
+            + 'ratio on a low win rate and the reverse can produce the same expectancy, so neither is '
+            + 'conclusive alone. Blank when no position closed at a loss.',
+      },
+      expectancyUsd: {
+        label: 'expectancy ($ per trade)',
+        fmt: (v) => (v == null ? '—' : usd(v)),
+        note: 'Mean dollar P&L per trade, gross of commission. Rises with slot count purely because the '
+            + 'account compounds and position size tracks equity, so prefer the % form for comparing slot '
+            + 'counts and use this one to size the result in money.',
+      },
+      cagrDd: {
+        label: 'CAGR / DD',
+        fmt: (v) => (v == null ? '—' : n2(v)),
+        note: 'Compounded annual return over max realized drawdown. Legitimate here — this is a whole-portfolio '
+            + 'equity path, not the per-symbol ranking where this project measured the ratio as worse than '
+            + 'random. Still reads high at low slot counts, which is leverage rather than edge.',
+      },
+    };
+
+    let psSweepLast = null;
+
+    // Wired here rather than beside the other Portfolio Sim listeners: PS_PIVOTS is a `const` in this
+    // same script scope, so a top-level read of it above this point is a temporal-dead-zone throw
+    // that would take the whole dashboard's JS down at load.
+    document.getElementById('ps-sweep-pivot').addEventListener('change', (e) => {
+      try { localStorage.setItem('psSweepPivot', e.target.value); } catch {}
+      renderPsSweepBody();
+    });
+    try {
+      const savedPivot = localStorage.getItem('psSweepPivot');
+      if (savedPivot && PS_PIVOTS[savedPivot]) document.getElementById('ps-sweep-pivot').value = savedPivot;
+    } catch {}
+
     function renderPsSweep(r) {
-      const s = r.sweep || [];
-      if (!s.length) { document.getElementById('ps-sweep').innerHTML = ''; return; }
-      const best = s.reduce((a, b) => ((b.cagrDd ?? -Infinity) > (a.cagrDd ?? -Infinity) ? b : a), s[0]);
-      const maxRatio = Math.max(...s.map((x) => Math.abs(x.cagrDd ?? 0)), 0.01);
+      // Cached so the pivot selector can re-render without re-running the simulation, which is the
+      // whole point of it being a view control rather than a query parameter.
+      psSweepLast = r?.sweep?.length ? r.sweep : null;
+      renderPsSweepBody();
+    }
+
+    function renderPsSweepBody() {
+      const s = psSweepLast || [];
+      const noteEl = document.getElementById('ps-sweep-pivot-note');
+      if (!s.length) {
+        document.getElementById('ps-sweep').innerHTML = '';
+        if (noteEl) noteEl.textContent = '';
+        return;
+      }
+      const pivotKey = document.getElementById('ps-sweep-pivot')?.value || 'expectancyPct';
+      const pivot = PS_PIVOTS[pivotKey] || PS_PIVOTS.expectancyPct;
+      const val = (x) => x[pivotKey];
+      // Only rows that actually scored can win. Reducing over a null-as--Infinity default would let a
+      // slot count that never traded sit at the top the moment every row is unscored.
+      const scored = s.filter((x) => val(x) != null && Number.isFinite(val(x)));
+      const best = scored.length ? scored.reduce((a, b) => (val(b) > val(a) ? b : a)) : null;
+      // Guarded against 0: a zero denominator yields NaN, which the browser renders as a FULL-width
+      // bar — i.e. an unscored row would display as the best performer. Same bug class already fixed
+      // once in the Sweet Spot matched-window card.
+      const maxAbs = Math.max(...scored.map((x) => Math.abs(val(x))), 0);
+      if (noteEl) noteEl.textContent = pivot.note;
       document.getElementById('ps-sweep').innerHTML = `
         ${s.map((x) => {
-          const w = (Math.abs(x.cagrDd ?? 0) / maxRatio) * 100;
-          const isBest = x.maxPositions === best.maxPositions;
+          const v = val(x);
+          const w = maxAbs > 0 && v != null && Number.isFinite(v) ? (Math.abs(v) / maxAbs) * 100 : 0;
+          const isBest = best && x.maxPositions === best.maxPositions;
           return `<div class="bar-row">
             <span class="tf-label">${x.maxPositions} slot${x.maxPositions > 1 ? 's' : ''}</span>
-            <div class="bar-track"><div class="bar-fill ${(x.cagrDd ?? 0) >= 0 ? 'bar-pos' : 'bar-neg'}" style="width:${w}%"></div></div>
-            <span class="bar-val ${cls(x.cagrDd)}">${n2(x.cagrDd)}${isBest ? ' ★' : ''}</span>
+            <div class="bar-track"><div class="bar-fill ${(v ?? 0) >= 0 ? 'bar-pos' : 'bar-neg'}" style="width:${w.toFixed(1)}%"></div></div>
+            <span class="bar-val ${cls(v)}">${pivot.fmt(v)}${isBest ? ' ★' : ''}</span>
           </div>`;
         }).join('')}
         <div class="edge-table-wrap"><table class="edge-table">
-          <thead><tr><th class="num">slots</th><th class="num">CAGR</th><th class="num">maxDD</th>
-            <th class="num">CAGR/DD</th><th class="num">final equity</th><th class="num">fill%</th>
+          <thead><tr><th class="num">slots</th>
+            <th class="num ${pivotKey === 'expectancyPct' ? 'ps-pivot-col' : ''}" title="Mean per-trade return against the equity that funded that trade. Size-neutral, so it is comparable across slot counts.">exp %/trd</th>
+            <th class="num ${pivotKey === 'expectancyUsd' ? 'ps-pivot-col' : ''}" title="Mean per-trade P&amp;L in dollars, gross of commission.">exp $/trd</th>
+            <th class="num" title="Average winning position, in dollars.">avg win</th>
+            <th class="num" title="Average losing position, in dollars (negative).">avg loss</th>
+            <th class="num ${pivotKey === 'winLossRatio' ? 'ps-pivot-col' : ''}" title="Average win divided by average loss, as a positive multiple. Blank when nothing closed at a loss.">W/L</th>
+            <th class="num">win%</th>
+            <th class="num">CAGR</th><th class="num">maxDD</th>
+            <th class="num ${pivotKey === 'cagrDd' ? 'ps-pivot-col' : ''}">CAGR/DD</th><th class="num">final equity</th><th class="num">fill%</th>
             <th class="num" title="Share of the CALENDAR holding at least one position — time-weighted. Different question from fill%: you can take most signals and still sit in cash most of the year if the positions are short.">in mkt%</th>
             <th class="num" title="Time-weighted average share of capital actually at work. Position size is equity/slots, so this falls as slots rise even when in-market time does not.">deployed%</th>
             <th class="num" title="Share of time every slot was occupied — i.e. the cap was genuinely binding, not just occasionally tight.">full%</th>
             <th class="num" title="Time-weighted average number of concurrent open positions.">avg open</th>
-            <th class="num">taken</th><th class="num">skipped</th><th class="num">win%</th></tr></thead>
+            <th class="num">taken</th><th class="num">skipped</th></tr></thead>
           <tbody>${s.map((x) => `
-            <tr style="${x.maxPositions === best.maxPositions ? 'background:rgba(34,197,94,.12);' : ''}">
+            <tr style="${best && x.maxPositions === best.maxPositions ? 'background:rgba(34,197,94,.12);' : ''}">
               <td class="num"><strong>${x.maxPositions}</strong></td>
+              <td class="num ${cls(x.expectancyPct)} ${pivotKey === 'expectancyPct' ? 'ps-pivot-col' : ''}"><strong>${x.expectancyPct == null ? '—' : n2(x.expectancyPct) + '%'}</strong></td>
+              <td class="num ${cls(x.expectancyUsd)} ${pivotKey === 'expectancyUsd' ? 'ps-pivot-col' : ''}">${x.expectancyUsd == null ? '—' : usd(x.expectancyUsd)}</td>
+              <td class="num pos">${x.avgWinUsd == null ? '—' : usd(x.avgWinUsd)}</td>
+              <td class="num neg">${x.avgLossUsd == null ? '—' : usd(x.avgLossUsd)}</td>
+              <td class="num ${pivotKey === 'winLossRatio' ? 'ps-pivot-col' : ''}"><strong>${x.winLossRatio == null ? '—' : n2(x.winLossRatio) + '×'}</strong></td>
+              <td class="num">${n0(x.winRate)}%</td>
               <td class="num ${cls(x.cagr)}">${n1(x.cagr)}%</td>
               <td class="num neg">${n1(x.maxDrawdownPct)}%</td>
-              <td class="num ${cls(x.cagrDd)}"><strong>${n2(x.cagrDd)}</strong></td>
+              <td class="num ${cls(x.cagrDd)} ${pivotKey === 'cagrDd' ? 'ps-pivot-col' : ''}">${n2(x.cagrDd)}</td>
               <td class="num">${usd(x.finalEquity)}</td>
               <td class="num ${x.fillRate < 50 ? 'neg' : ''}">${n0(x.fillRate)}%</td>
               <td class="num ${x.timeInMarketPct != null && x.timeInMarketPct < 50 ? 'neg' : ''}">${x.timeInMarketPct == null ? '—' : n0(x.timeInMarketPct) + '%'}</td>
@@ -5471,12 +6165,13 @@
               <td class="num dim">${x.avgPositionsOpen == null ? '—' : n1(x.avgPositionsOpen)}</td>
               <td class="num">${x.signalsTaken}</td>
               <td class="num dim">${x.signalsSkipped}</td>
-              <td class="num">${n0(x.winRate)}%</td>
             </tr>`).join('')}</tbody>
         </table></div>
         <p class="muted" style="font-size:12px;margin-top:8px;">
-          ★ best CAGR/DD. More slots cut drawdown through diversification but dilute into weaker signals,
-          so the ratio usually peaks in the middle rather than at either extreme.
+          ★ best ${escapeHtml(pivot.label)}${best ? ` — ${best.maxPositions} slot${best.maxPositions > 1 ? 's' : ''}` : ''}.
+          More slots cut drawdown through diversification but dilute into weaker signals, so the peak is
+          usually in the middle rather than at either extreme. Switching the pivot moves the ★ only —
+          every column is shown for every metric, so the ranking never hides the trade-off it costs.
         </p>
         <p class="muted" style="font-size:12px;margin-top:4px;">
           <strong>fill%</strong> is what share of <em>signals</em> you took; <strong>in mkt%</strong> is what share of the

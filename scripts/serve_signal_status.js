@@ -8,6 +8,7 @@ import * as chart from '../src/core/chart.js';
 import * as data from '../src/core/data.js';
 import * as alerts from '../src/core/alerts.js';
 import { buildPortfolioAnalytics } from '../src/core/portfolio_analytics.js';
+import { normalizeAccounts } from '../src/core/accounts.js';
 import {
   validateManualPositionInput,
   createManualPosition,
@@ -20,6 +21,21 @@ import {
   updateManualPosition,
   closeManualPosition,
 } from '../src/core/manual_ledger.js';
+import {
+  validateTemplateInput,
+  validateTemplateUpdate,
+  createTemplate,
+  updateTemplate,
+  archiveTemplate,
+  listTemplates,
+  getTemplateById,
+  findTimeframeCollisions,
+  templateStamp,
+  templateStaleness,
+  suggestShortDesc,
+  TEMPLATE_KPI_FIELDS,
+  SHORT_DESC_MAX,
+} from '../src/core/sim_templates.js';
 import { runRegression } from '../src/core/regression.js';
 import { buildEdgeAnalysis } from '../src/core/edge_analysis.js';
 import { readPerfSnapshots, listRuleTypes, findWatchlistOrphans, readAllTradeLogs, summarizeMembershipFilter, timeframeLabel } from '../src/core/trade_log.js';
@@ -261,6 +277,14 @@ function loadAccountsFile() {
   } catch {
     return null;
   }
+}
+
+// Every account read goes through normalizeAccounts, so the two entry shapes (a bare name string,
+// or an object carrying equity/alloc_pct for auto-sizing) are resolved in exactly one place. The
+// "is this a known account" checks below compare against .names for that reason — comparing against
+// the raw array would reject every object-form account outright.
+function loadNormalizedAccounts() {
+  return normalizeAccounts(loadAccountsFile() || {});
 }
 
 // baseline.watchlists is the ground truth for symbol membership (see the "Watchlist Symbols panel"
@@ -1078,14 +1102,134 @@ const server = http.createServer(async (req, res) => {
 
   if (req.url === '/api/accounts') {
     try {
-      const cfg = loadAccountsFile() || {};
-      const accounts = Array.isArray(cfg.accounts)
-        ? cfg.accounts.filter((a) => typeof a === 'string' && a.trim())
-        : [];
-      sendJson(res, 200, { success: true, accounts });
+      // `accounts` stays a plain string list — it is what the picklist and the save-time validation
+      // have always consumed. `details` carries the optional equity/alloc_pct sizing alongside it,
+      // and `warnings` surfaces anything the config dropped (a typo'd equity, a duplicate name)
+      // rather than letting an account quietly stop offering an auto-qty.
+      const { accounts, names, warnings } = loadNormalizedAccounts();
+      sendJson(res, 200, { success: true, accounts: names, details: accounts, warnings });
     } catch (err) {
       sendJson(res, 500, { success: false, error: err?.message || 'Failed to read accounts' });
     }
+    return;
+  }
+
+  /**
+   * Sim Templates — a saved Portfolio Sim configuration plus the KPIs that justified it.
+   *
+   * GET returns every template with two derived fields the stored row cannot carry:
+   *   - `usage`: how many manual-ledger positions were opened under it, so an archived template that
+   *     is still attributing live positions is visible before anyone reaches for a delete;
+   *   - `staleness`: how many trades the log has gained since the KPIs were measured. REPORTED, never
+   *     repaired — the snapshot is the evidence for a decision, and silently recomputing it would
+   *     leave the template agreeing with today's data and disagreeing with its own history.
+   *
+   * `collisions` names any timeframe claimed by more than one active template. That is legal (two
+   * accounts can both trade 15m) but it disables template stamping on the AUTOMATIC dispatch path
+   * for that timeframe, because there is no basis to pick between them — so it has to be visible
+   * rather than a silent stop.
+   */
+  if (req.url.split('?')[0] === '/api/sim-templates' && req.method === 'GET') {
+    try {
+      const status = new URL(req.url, 'http://localhost').searchParams.get('status') || 'active';
+      const templates = listTemplates({ status });
+      // One pass over the ledger rather than a query per template — the ledger is small and this
+      // keeps the endpoint a single read regardless of how many templates exist.
+      const usage = {};
+      for (const row of listManualPositions({ status: 'all' })) {
+        if (row.template_id == null) continue;
+        const u = usage[row.template_id] || (usage[row.template_id] = { total: 0, open: 0 });
+        u.total += 1;
+        if (row.status === 'open') u.open += 1;
+      }
+      const membership = resolveMembership(new URL(req.url, 'http://localhost').searchParams);
+      const rows = templates.map((t) => {
+        let currentTrades = null;
+        try {
+          // Counted under the template's OWN selection (its timeframes, tickers and exit-rule
+          // variant), not the whole log — a template covering 15m must not read as stale because a
+          // 1d backfill landed. Wrapped because a template can name a variant no longer present.
+          const logRows = readAllTradeLogs({ ruleType: t.rule_type || null, membership });
+          const tfs = new Set(t.timeframes.map((x) => timeframeLabel(String(x))));
+          const tickerSet = t.tickers && t.tickers.length ? new Set(t.tickers) : null;
+          currentTrades = logRows.filter((r) => {
+            if (tfs.size && !tfs.has(timeframeLabel(String(r.timeframe)))) return false;
+            if (tickerSet && !tickerSet.has(bareTicker(String(r.ticker)).toUpperCase())) return false;
+            return true;
+          }).length;
+        } catch { currentTrades = null; }
+        return {
+          ...t,
+          usage: usage[t.id] || { total: 0, open: 0 },
+          currentTrades,
+          staleness: templateStaleness(t, currentTrades),
+        };
+      });
+      sendJson(res, 200, {
+        success: true,
+        templates: rows,
+        collisions: findTimeframeCollisions(templates.filter((t) => t.status === 'active')),
+        kpiFields: TEMPLATE_KPI_FIELDS,
+        shortDescMax: SHORT_DESC_MAX,
+        accounts: loadNormalizedAccounts().names,
+      });
+    } catch (err) {
+      sendJson(res, 500, { success: false, error: err?.message || 'could not read sim templates' });
+    }
+    return;
+  }
+
+  if (req.url === '/api/sim-templates' && req.method === 'POST') {
+    readJsonBody(req).then((body) => {
+      // Accounts are validated against accounts.json exactly as the manual ledger's own save does:
+      // a template naming an account that does not exist would attribute positions to nothing.
+      const parsed = validateTemplateInput(body, { knownAccounts: loadNormalizedAccounts().names });
+      if (!parsed.ok) { sendJson(res, 400, { success: false, error: parsed.error }); return; }
+      const created = createTemplate(parsed.value);
+      if (!created.ok) { sendJson(res, created.status || 400, { success: false, error: created.error }); return; }
+      console.log(`[sim-template] created #${created.value.id} "${created.value.name}" (${created.value.short_desc}) → ${created.value.account || 'no account'}`);
+      sendJson(res, 200, { success: true, template: created.value });
+    }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+    return;
+  }
+
+  if (req.method === 'POST' && /^\/api\/sim-templates\/\d+\/update$/.test(req.url)) {
+    readJsonBody(req).then((body) => {
+      const id = Number(req.url.split('/')[3]);
+      const existing = getTemplateById(id);
+      if (!existing) { sendJson(res, 404, { success: false, error: 'not found' }); return; }
+      const parsed = validateTemplateUpdate(body, existing, { knownAccounts: loadNormalizedAccounts().names });
+      if (!parsed.ok) { sendJson(res, 400, { success: false, error: parsed.error }); return; }
+      const updated = updateTemplate(id, parsed.value);
+      if (!updated.ok) { sendJson(res, updated.status || 400, { success: false, error: updated.error }); return; }
+      sendJson(res, 200, { success: true, template: updated.value });
+    }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
+    return;
+  }
+
+  /**
+   * Archive, never delete — see archiveTemplate(). The id is stamped on ledger rows and on records
+   * at the executor; removing the row would strand every one of them pointing at nothing, destroying
+   * the attribution precisely for the configurations that stopped being used.
+   */
+  if (req.method === 'POST' && /^\/api\/sim-templates\/\d+\/archive$/.test(req.url)) {
+    try {
+      const id = Number(req.url.split('/')[3]);
+      const result = archiveTemplate(id);
+      if (!result.ok) { sendJson(res, result.status || 400, { success: false, error: result.error }); return; }
+      sendJson(res, 200, { success: true, template: result.value });
+    } catch (err) {
+      sendJson(res, 500, { success: false, error: err?.message || 'could not archive the template' });
+    }
+    return;
+  }
+
+  /** A short_desc suggestion for the save form. Suggestion only — nothing here is ever persisted. */
+  if (req.method === 'POST' && req.url === '/api/sim-templates/suggest-desc') {
+    readJsonBody(req).then((body) => {
+      const tfs = Array.isArray(body?.timeframes) ? body.timeframes : [];
+      sendJson(res, 200, { success: true, short_desc: suggestShortDesc(tfs, body?.max_positions) });
+    }).catch((err) => sendJson(res, 400, { success: false, error: err?.message || 'Invalid body' }));
     return;
   }
 
@@ -1160,10 +1304,18 @@ const server = http.createServer(async (req, res) => {
     readJsonBody(req).then(async (body) => {
       const parsed = validateManualPositionInput(body);
       if (!parsed.ok) { sendJson(res, 400, { success: false, error: parsed.error }); return; }
-      const cfg = loadAccountsFile() || {};
-      const knownAccounts = Array.isArray(cfg.accounts) ? cfg.accounts : [];
+      const knownAccounts = loadNormalizedAccounts().names;
       if (!knownAccounts.includes(parsed.value.account)) {
         sendJson(res, 400, { success: false, error: `Unknown account "${parsed.value.account}" — add it to accounts.json first` });
+        return;
+      }
+      // Existence is checked HERE rather than in manual_ledger.js, which holds no reference to the
+      // templates module (that one imports it, for the shared database connection). Refused rather
+      // than stored-and-ignored: the id is the position's whole attribution, so a dangling one is a
+      // record that looks attributed and is not. An ARCHIVED template is still accepted — archiving
+      // retires a configuration from the pickers, it does not invalidate positions held under it.
+      if (parsed.value.template_id != null && !getTemplateById(parsed.value.template_id)) {
+        sendJson(res, 400, { success: false, error: `Unknown template_id ${parsed.value.template_id}` });
         return;
       }
       const row = createManualPosition(parsed.value);
@@ -1301,12 +1453,16 @@ const server = http.createServer(async (req, res) => {
           return;
         }
         if (parsed.value.account) {
-          const cfg = loadAccountsFile() || {};
-          const knownAccounts = Array.isArray(cfg.accounts) ? cfg.accounts : [];
+          const knownAccounts = loadNormalizedAccounts().names;
           if (!knownAccounts.includes(parsed.value.account)) {
             sendJson(res, 400, { success: false, error: `Unknown account "${parsed.value.account}" — add it to accounts.json first` });
             return;
           }
+        }
+        // Same existence check as the create path. `null` is a deliberate detach and is not checked.
+        if (parsed.value.template_id != null && !getTemplateById(parsed.value.template_id)) {
+          sendJson(res, 400, { success: false, error: `Unknown template_id ${parsed.value.template_id}` });
+          return;
         }
 
         const result = updateManualPosition(existing.id, parsed.value);
@@ -1676,14 +1832,30 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 409, { success: false, error: 'Already sent for this entry', alreadySent: true });
         return;
       }
+      // Sim Template attribution. Refused rather than dropped when the id doesn't resolve: the user
+      // picked it to attribute this order, and sending an unattributed one instead is silent data
+      // loss on the money path. Absent is fine and leaves the payload exactly as it was before
+      // templates existed.
+      let template = null;
+      if (body?.templateId != null && body.templateId !== '') {
+        template = getTemplateById(body.templateId);
+        if (!template) {
+          sendJson(res, 400, { success: false, error: `Unknown template_id ${body.templateId}` });
+          return;
+        }
+      }
       const payload = buildWebhookPayload({
-        symbol, side, timeframe, tag, price, group: settings.group, secret: creds.secret, ...check.spec,
+        symbol, side, timeframe, tag, price, group: settings.group, secret: creds.secret,
+        template: templateStamp(template), ...check.spec,
       });
       const result = await sendTradeWebhook({ url: creds.url, payload });
       if (result.success) {
         recordSent(key, {
           symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price,
           order_type: payload.order_type || 'market', time_in_force: payload.time_in_force || null, source: 'manual',
+          // Stored on the ledger record too, so the close can route under the same template without
+          // the user re-picking it — the same rule `tag` already follows.
+          template_id: payload.template_id ?? null, template: payload.template ?? null,
         });
         console.log(`[webhook] manual send ${payload.side} ${payload.symbol} (${payload.tag}) @ ${payload.price} [${payload.order_type || 'market'}${payload.time_in_force ? '/' + payload.time_in_force : ''}]`);
       } else {
@@ -1745,15 +1917,23 @@ const server = http.createServer(async (req, res) => {
       // rather than re-derived or taken from the request — same rule as closeAction above. If the
       // entry was routed to a non-default group, a close under the timeframe's default tag would
       // ask the executor to flatten a position it never filed there.
+      // Template read from the LEDGER, never from the request — the same rule as `closeAction` and
+      // `tag` above. The entry is the only record of what actually went out, and a close attributed
+      // to a different template than its entry would split one position across two configurations.
       const payload = buildWebhookPayload({
         symbol, timeframe, tag: entryRecord.tag, price, action: closeAction,
-        group: settings.group, secret: creds.secret, ...check.spec,
+        group: settings.group, secret: creds.secret,
+        template: entryRecord.template_id
+          ? { template_id: entryRecord.template_id, template: entryRecord.template }
+          : null,
+        ...check.spec,
       });
       const result = await sendTradeWebhook({ url: creds.url, payload });
       if (result.success) {
         recordExitSent(key, {
           symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price,
           order_type: payload.order_type || 'market', time_in_force: payload.time_in_force || null, source: 'manual-exit',
+          template_id: payload.template_id ?? null, template: payload.template ?? null,
         });
         console.log(`[webhook] manual EXIT ${payload.side} ${payload.symbol} (${payload.tag}) @ ${payload.price} [${payload.order_type || 'market'}${payload.time_in_force ? '/' + payload.time_in_force : ''}]`);
       } else {
