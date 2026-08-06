@@ -1941,7 +1941,23 @@ export function createDashboardStatus(result = {}) {
     tradeLogOrphans: Array.isArray(result.trade_log_orphans) ? result.trade_log_orphans : [],
     webhookExitPending: Array.isArray(result.webhook_exit_pending) ? result.webhook_exit_pending : [],
     crossTfExits: Array.isArray(result.cross_tf_exits) ? result.cross_tf_exits : [],
-    openTrades: Array.isArray(result.open_trades) ? result.open_trades : [],
+    // Ranked HERE, at the single chokepoint every status write funnels through, rather than at each
+    // producer. Both writers — writeLatestStatus() and the dashboard server's own writeStatus() —
+    // call this function, and writeLatestStatus() overwrites the WHOLE file on every path, so a
+    // producer that forgets to rank silently erases a previous write's ranks. That is exactly how
+    // this broke: runBrief() ranked, but the five skip/error paths (schedule disabled, outside
+    // hours, connection error, strategy mismatch, nothing due) did not, and a skipped tick — far
+    // more frequent than a real scan — blanked the Edge/Org/New columns and the NEW badge.
+    //
+    // Third instance of this bug class here: buildWatchlistSyncFromBaseline (2026-07-28) and
+    // trade_log_orphans (2026-07-29) were both "a value derivable from the baseline alone is
+    // computed on one write path only". Ranking at the chokepoint makes a sixth path physically
+    // unable to reintroduce it, instead of relying on remembering a call at each new site.
+    openTrades: rankOpenTradesForStatus(
+      Array.isArray(result.open_trades) ? result.open_trades : [],
+      result.generated_at || new Date().toISOString(),
+      marketHours.timezone || DEFAULT_MARKET_HOURS.timezone,
+    ),
     priorSignals,
     isPartialScan: Boolean(result.is_partial_scan),
     scanProgress: result.scan_progress || null,
@@ -2478,21 +2494,9 @@ export async function runBrief({
   ])
     .then((result) => result ?? enrichOpenTradesFromBaseline(openTrades, displayBaseline.excursion_alerts))
     .catch(() => enrichOpenTradesFromBaseline(openTrades, displayBaseline.excursion_alerts));
-  // Rank each open position against its timeframe peers so a weak one is visible before it eats a
-  // portfolio slot. Purely additive fields (edge/edgeRank*) — nothing downstream gates on them, and
-  // a failure here must never cost a scan its open-trades data, hence the swallow.
-  try {
-    openTrades = attachOpenTradeRanks(openTrades, {
-      // Same default every other trade-log consumer uses: the most-traded variant, never a pool of
-      // all of them (pooling would average two exit regimes into one meaningless expectancy).
-      ruleType: tradeLog.listRuleTypes()[0]?.rule_type ?? null,
-      // "New" = entered on the current ET trading day, the same calendar test the notify/webhook
-      // gates already use for "is this a fresh signal".
-      isNew: (row) => isSameTradingDay(row.entryTimeRaw, generatedAt, timezone),
-    });
-  } catch (err) {
-    console.error(`[edge] could not rank open trades: ${err?.message || err}`);
-  }
+  // NOTE: edge/org/new ranking is NOT applied here. It happens in createDashboardStatus(), the one
+  // function every status write funnels through — see the comment there. Ranking at the producer is
+  // what let five skip paths blank the columns by overwriting the file without it.
   const watchlistSummaryLines = buildWatchlistSummaryLines(
     watchlistSummaries,
     results,
@@ -2599,6 +2603,29 @@ function enrichOpenTradesFromBaseline(openTrades, excursionAlerts = {}) {
       alertsSkipReason: stored.skip_reason || null,
     };
   });
+}
+
+// Rank open trades against their timeframe peers (edge score, org/new rank pair).
+//
+// Called from EXACTLY ONE place — createDashboardStatus() — and it must stay that way. Ranking is a
+// property of every status write, not of one producer: a value derivable from the baseline alone has
+// to be recomputed on every write, because writeLatestStatus() replaces the whole file and the last
+// write wins. Adding a call at a producer instead re-opens the bug for whichever producer is added
+// next. See the comment at the call site for the three times that has happened here.
+//
+// Deliberately swallows: the edge/edgeRank* fields are purely additive, nothing downstream gates on
+// them, and an unrankable trade log must cost a log line rather than the whole status write. Returns
+// the input untouched on failure, so the rows themselves always survive.
+function rankOpenTradesForStatus(openTrades, generatedAt, timezone) {
+  try {
+    return attachOpenTradeRanks(openTrades, {
+      ruleType: tradeLog.listRuleTypes()[0]?.rule_type ?? null,
+      isNew: (row) => isSameTradingDay(row.entryTimeRaw, generatedAt, timezone),
+    });
+  } catch (err) {
+    console.error(`[edge] could not rank open trades: ${err?.message || err}`);
+    return openTrades;
+  }
 }
 
 // Parse numeric entry price from strings like "159.53 USD" or "159.53".

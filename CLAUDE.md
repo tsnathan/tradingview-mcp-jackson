@@ -210,6 +210,26 @@ Verified 2026-08-06: the API went from serving an empty default to all 86 open t
 
 **Found alongside it: `run_signal_job.ps1` threw before logging, so failing scans left no trace.** The `if ($LASTEXITCODE -ne 0) { throw }` sat *above* the `Add-Content .\signal-scan.log` block, so the one run whose stderr you actually need — a failure — captured it into `$stderrOutput` and discarded it. Live symptom: the scan exited 1 while `signal-scan.log` showed nothing newer than the previous day, which is indistinguishable from "no scans have run." Now logs first (prefixing `EXIT <n>` on failure), then throws.
 
+### Anything derived for the status file is computed at the WRITE CHOKEPOINT, never at a producer (2026-08-06)
+
+`createDashboardStatus()` is the one function both status writers funnel through — `writeLatestStatus()` in `morning.js` and `writeStatus()` in `serve_signal_status.js`. **Any field derivable from the baseline alone must be computed there, not in whichever producer happened to need it first.** `writeLatestStatus()` replaces the *whole* file on every path, so a producer that omits the field silently erases a previous write's value.
+
+**This has now bitten three times, identically**, which is why it is stated as a rule rather than another incident note:
+
+| date | field | symptom |
+|---|---|---|
+| 2026-07-28 | `watchlist_sync` | Watchlist Symbols panel blank except for ~15 min a day |
+| 2026-07-29 | `trade_log_orphans` | "No orphaned symbols detected" for the entire life of the feature |
+| 2026-08-06 | `edge` / `edgeRank*` / `isNewEntry` | Edge/Org/New columns and the NEW badge blank on every skipped tick |
+
+The 2026-08-06 instance: `runBrief()` ranked open trades, but the five skip/error paths in `runSignalJob()` (schedule disabled, outside hours, connection error, strategy mismatch, nothing due) did not — and a skipped tick fires far more often than a real 15-minute scan, so it overwrote the ranked rows within minutes of every scan. `rankOpenTradesForStatus()` now has **exactly one call site, inside `createDashboardStatus()`**, and must keep exactly one. Adding a call at a producer instead re-opens this for whichever producer is added next.
+
+- **The first two fixes patched the instance, not the class**, each adding the computation to one more path. That is why there was a third. Prefer moving the derivation to the chokepoint over adding a call at a new site.
+- **Diagnostic**: if a dashboard field is populated right after a scan and empty a few minutes later, this is the shape. Check whether the last write was a skip (`skipped: true` in `status/latest-signal-status.json`), not whether the producing code is correct — it usually is.
+- **Guarded by tests now**: `tests/dashboard_status.test.js` asserts the ranking fields survive a skipped write and a connection-error write, and `tests/edge_ranking.test.js` covers `attachOpenTradeRanks` (which had **zero** coverage — the direct reason a whole feature could blank without a red test). Both assert field *presence*, never scores, which come from the live trade log and would make the suite fail whenever real trading moves.
+
+**Known remaining gap in this family (not yet fixed):** `buildOutsideHoursResult()` builds its own `watchlist_summary_lines` as bare `… | NO SIGNAL | <reason>` strings instead of calling `buildWatchlistSummaryLines()`. So on a tick where *nothing* is due, the Current Signal log loses today's OPEN/EXIT restatement that the "shows TODAY's entries until the ET rollover" section promises — the `skipped_due_schedule` branch that restates them is only reached when *some* watchlist is due. Same class, different field.
+
 ### Never launch the MCP server from a shell — it leaks a process that cannot exit (2026-08-06)
 
 Ten `node server.js` processes from a single 2026-08-02 session were still resident four days later, holding 52 MB. Each had an equally orphaned `bash.exe` parent.
