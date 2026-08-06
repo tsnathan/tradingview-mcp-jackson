@@ -1,8 +1,9 @@
 {
   "_comment": "Brokerage accounts the automated pipeline never touches, used as the picklist for the Manual Ledger tab. Copy to accounts.json and edit. Names are free-form labels — nothing matches them against the executor's account IDs.",
+  "_sizing": "equity + alloc_pct are optional and per account. With both set, picking the account in the Add-entry form auto-fills Qty as floor(equity * alloc_pct / 100 / entry price); typing your own Qty stops it being overwritten. Leave either out (or use the plain-string form) and Qty stays entirely manual — a missing equity is never treated as 0 and a missing alloc_pct is never treated as 100%. alloc_pct is a share of the account, so values above 100 are ignored as typos.",
   "accounts": [
-    "Fidelity IRA",
-    "Schwab Taxable",
+    { "name": "Fidelity IRA", "equity": 50000, "alloc_pct": 10 },
+    { "name": "Schwab Taxable", "equity": 25000, "alloc_pct": 20 },
     "IBKR Margin"
   ]
 }

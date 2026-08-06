@@ -1,7 +1,8 @@
 {
+  "_sizing": "Fill in equity and alloc_pct per account to have the Manual Ledger's Add-entry form auto-fill Qty as floor(equity * alloc_pct / 100 / entry price). Left null, that account simply offers no auto-qty — nothing is guessed. alloc_pct is a share of the account (0-100).",
   "accounts": [
-    "Fidelity IRA",
-    "Schwab Taxable",
-    "IBKR Margin"
+    { "name": "Fidelity IRA", "equity": 30000, "alloc_pct": 10 },
+    { "name": "Schwab Uma", "equity": null, "alloc_pct": null },
+    { "name": "Schwab SN", "equity": null, "alloc_pct": null }
   ]
 }
