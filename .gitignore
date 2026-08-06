@@ -20,6 +20,9 @@ trade-log/*.pre-*
 # Stray stderr redirect artifacts from launching the dashboard server by hand.
 *.err
 
+# VS Code workspace files — machine-local editor config, not project source.
+*.code-workspace
+
 # Manual ledger SQLite file (data/manual-ledger.db) — local runtime state in a binary format, not
 # diff-friendly, unlike the tracked status/*.json and trade-log/*.csv. accounts.json (the picklist
 # config half of that feature) IS tracked, same as rules.json.
