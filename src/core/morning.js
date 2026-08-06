@@ -30,6 +30,7 @@ import {
   bareTicker,
   timeframeTag,
 } from "./trade_webhook.js";
+import { resolveTemplateForTimeframe, templateStamp, listTemplates } from "./sim_templates.js";
 import {
   listManualPositions,
   markManualPositionExitAlerted,
@@ -661,6 +662,21 @@ export function updateBaselineEntry(signalMap, entry) {
     last_seen_at: (hasSignal || hasTradeState) ? scannedAt : previous.last_seen_at || null,
     signal_type: nextSignalType,
     entry_time: nextEntryTime,
+    // Exit side of the record, added so the Current Signal log can restate TODAY's exits on a tick
+    // where this watchlist wasn't due — EXIT rows are otherwise built only from a fresh scan's
+    // results, so a 2H exit shown at 12:01 vanished at 12:16. Three rules here:
+    //   - Nulled whenever the record is OPEN. A symbol that exits today and re-enters tomorrow would
+    //     otherwise carry a stale exit and re-render as one.
+    //   - Never carried forward from `previous`, and never substituted with the scan timestamp. The
+    //     DOM-scrape fallback supplies no exitTime; null means the row simply doesn't render, which
+    //     is the same "a DOM-sourced EXIT is never treated as recent rather than guessed at" rule
+    //     the rest of this file already follows.
+    //   - nextSignalType can be 'EXIT' with no real trade read at all (the syntheticOpen === false
+    //     path), which the `|| null` covers.
+    exit_time: nextSignalType === 'EXIT'
+      ? (normalizeTradeDisplay(entry.trade?.exitTime, '') || null)
+      : null,
+    exit_price: nextSignalType === 'EXIT' ? (entry.trade?.exitPrice ?? null) : null,
     entry_price: entryPrice ?? previous.entry_price ?? previous.last_price ?? entry.quote?.last ?? null,
     net_pnl: hasTradeState ? (hasMeaningfulTradeValue(normalizeTradeDisplay(entry.trade?.netPnl)) ? normalizeTradeDisplay(entry.trade?.netPnl) : hasMeaningfulTradeValue(previous.net_pnl) ? previous.net_pnl : normalizeTradeDisplay(entry.trade?.netPnl)) : syntheticOpen ? (hasMeaningfulTradeValue(previous.net_pnl) ? previous.net_pnl : 'In progress') : previous.net_pnl ?? '—',
     favorable_excursion: hasTradeState ? (hasMeaningfulTradeValue(normalizeTradeDisplay(entry.trade?.favorableExcursion)) ? normalizeTradeDisplay(entry.trade?.favorableExcursion) : hasMeaningfulTradeValue(previous.favorable_excursion) ? previous.favorable_excursion : normalizeTradeDisplay(entry.trade?.favorableExcursion)) : syntheticOpen ? (hasMeaningfulTradeValue(previous.favorable_excursion) ? previous.favorable_excursion : 'In progress') : previous.favorable_excursion ?? '—',
@@ -1042,6 +1058,9 @@ export function buildPriorSignalsByWatchlist(
             entryPrice: normalizeTradeDisplay(tradeBackedEntry.trade.entryPrice),
             entryTime: formatEntryTimeDisplay(tradeBackedEntry.trade.entryTime, timezone),
             entryTimeRaw: tradeBackedEntry.trade.entryTime || null,
+            // Only meaningful on an EXIT — an open position has not exited, and a non-null value
+            // here would let it be rendered as one of today's closes.
+            exitTime: liveSignal === 'EXIT' ? (tradeBackedEntry.trade.exitTime || null) : null,
             netPnl: fillTradeMetric(tradeBackedEntry.trade.netPnl, liveSignal),
             favorableExcursion: fillTradeMetric(tradeBackedEntry.trade.favorableExcursion, liveSignal),
             adverseExcursion: fillTradeMetric(tradeBackedEntry.trade.adverseExcursion, liveSignal),
@@ -1127,6 +1146,10 @@ export function buildPriorSignalsByWatchlist(
           entryPrice: normalizeTradeDisplay(latest.entry_price ?? latest.last_price ?? 'n/a'),
           entryTime: formatEntryTimeDisplay(latest.entry_time, timezone),
           entryTimeRaw: latest.entry_time || null,
+          // A stale OPEN that `keepOpenVisible` just relabelled to EXIT carries exit_time: null (it
+          // never actually exited), so it is excluded from today's-exit rendering without a special
+          // case. Records written before exit_time existed are null too and simply don't restate.
+          exitTime: resolvedSignal === 'EXIT' ? (latest.exit_time || null) : null,
           netPnl: fillTradeMetric(latest.net_pnl, resolvedSignal),
           favorableExcursion: fillTradeMetric(latest.favorable_excursion, resolvedSignal),
           adverseExcursion: fillTradeMetric(latest.adverse_excursion, resolvedSignal),
@@ -1169,6 +1192,7 @@ export function buildWatchlistSummaryLines(
   priorSignalsByWatchlist = [],
   timezone = DEFAULT_MARKET_HOURS.timezone,
   marketHours = DEFAULT_MARKET_HOURS,
+  openTrades = [],
 ) {
   return watchlistSummaries.map((summary) => {
     const watchlistName = summary.watchlist_name || summary.watchlistName || 'Watchlist';
@@ -1192,10 +1216,74 @@ export function buildWatchlistSummaryLines(
         || isSameTradingDay(row.entryTime, scanTimestamp, timezone))
       .sort((a, b) => parseEntryTimestamp(b.entryTime) - parseEntryTimestamp(a.entryTime));
 
+    // Positions that ENTERED TODAY (ET), restated on every tick until the date rolls over — whether
+    // or not this watchlist was due. The log answers "what happened today"; the Open Trades table
+    // remains the full holdings view, so a position entered on an earlier day is deliberately absent
+    // here even while it is still held.
+    //
+    // Sourced from the open-trades list the Open Trades table renders, NOT from priorSection.trades,
+    // for a reason that is easy to undo by accident: buildPriorSignalsByWatchlist's `keepOpenVisible`
+    // relabels an OPEN as EXIT off `isSameOrPreviousTradingDay(entryTime, baselineUpdatedAt)`, so a
+    // stale baselineUpdatedAt can hide a genuinely same-day entry before it ever reaches this
+    // function. Reading the same list the table reads removes that dependency entirely.
+    //
+    // entryTimeRaw (ISO) is preferred over entryTime (ET display string) so a row restated from the
+    // baseline prints in the same format as one read from a fresh scan — the two paths formatted it
+    // differently before, so which format you saw depended on whether the watchlist was due.
+    const todaysOpenRows = (Array.isArray(openTrades) ? openTrades : [])
+      .filter((row) => row.watchlistName === watchlistName
+        && String(row.timeframe || '') === timeframe
+        && String(row.signal || 'OPEN').toUpperCase() === 'OPEN')
+      .filter((row) => isSameTradingDay(row.entryTimeRaw || row.entryTime, scanTimestamp, timezone))
+      .sort((a, b) => parseEntryTimestamp(b.entryTimeRaw || b.entryTime)
+        - parseEntryTimestamp(a.entryTimeRaw || a.entryTime))
+      .map((row) => ({
+        symbol: row.symbol || 'n/a',
+        entryPrice: row.entryPrice,
+        entryTime: row.entryTimeRaw || row.entryTime,
+      }));
+
+    // Degrade to the old baseline-reconstructed rows when no open-trades list was supplied, so a
+    // caller that predates this parameter keeps its previous behaviour instead of rendering nothing.
+    const openRowsToShow = todaysOpenRows.length > 0 ? todaysOpenRows : fallbackOpenTrades;
+
+    // Positions that EXITED TODAY, restated from the baseline's exit_time (see updateBaselineEntry).
+    // Without this an exit was visible only on the tick that scanned it — a 2H exit shown at 12:01
+    // was gone by 12:16, because the block is rewritten on every tick while EXIT rows came only from
+    // a fresh scan's results. Keyed on exitTime, never entryTime: a closed trade's entry can be days
+    // old, so it cannot tell a fresh close from an ancient one.
+    const restatedExits = (Array.isArray(priorSection?.trades) ? priorSection.trades : [])
+      .filter((row) => String(row.signal || '').toUpperCase() === 'EXIT')
+      .filter((row) => row.exitTime && isSameTradingDay(row.exitTime, scanTimestamp, timezone))
+      .map((row) => ({
+        symbol: row.symbol || 'n/a',
+        exitTime: row.exitTime,
+        netPnl: row.netPnl,
+      }));
+
+    // Merge fresh-scan exits over restated ones, deduped by bare ticker so an exchange-prefix change
+    // between scans (BATS:X vs AMEX:X — see updateBaselineEntry's altKey match) can't list one close
+    // twice. A fresh read wins: it carries this scan's real netPnl rather than the stored one.
+    const mergeExitRows = (fresh = [], restated = []) => {
+      const byTicker = new Map();
+      for (const row of restated) byTicker.set(normalizeSymbolForMatch(row.symbol), row);
+      for (const row of fresh) byTicker.set(normalizeSymbolForMatch(row.symbol), row);
+      return Array.from(byTicker.values())
+        .sort((a, b) => parseEntryTimestamp(b.exitTime) - parseEntryTimestamp(a.exitTime));
+    };
+
     if (summary.skipped_due_schedule) {
-      const openDetails = fallbackOpenTrades
+      const openDetails = openRowsToShow
         .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${normalizeTradeDisplay(row.entryTime)}`);
-      const suffix = openDetails.length > 0 ? `\n${openDetails.join('\n')}` : '';
+      // A skipped watchlist has no fresh results, so its exits are entirely restated.
+      const skippedExits = mergeExitRows([], restatedExits);
+      const exitDetails = skippedExits
+        .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${formatPnlPercentOrUsd(row.netPnl)} | AT: ${normalizeTradeDisplay(row.exitTime)}`);
+      const exitGroup = exitDetails.length > 0
+        ? [buildExitSummary(skippedExits), ...exitDetails].filter(Boolean)
+        : [];
+      const groups = [openDetails, exitGroup].filter((g) => g.length > 0);
+      const suffix = groups.length > 0 ? `\n${groups.map((g) => g.join('\n')).join('\n\n')}` : '';
       const nextDueEt = getNextScheduledRunLabel(scanTimestamp, marketHours, timeframe);
       return `${prefix} | WAITING FOR NEXT ${timeframe || 'WATCHLIST'} BAR (next: ${nextDueEt})${suffix}`;
     }
@@ -1210,19 +1298,22 @@ export function buildWatchlistSummaryLines(
           || new Date(b.scanned_at || 0).getTime() - new Date(a.scanned_at || 0).getTime(),
       );
 
-    const rowsToShow = recentOpenTrades.length > 0
-      ? recentOpenTrades.map((entry) => ({
-          symbol: entry.state?.symbol || entry.symbol || 'n/a',
-          entryPrice: normalizeTradeDisplay(entry.trade?.entryPrice),
-          entryTime: normalizeTradeDisplay(entry.trade?.entryTime),
-        }))
-      : fallbackOpenTrades;
+    // todaysOpenRows already covers this watchlist's fresh OPEN reads — buildOpenTrades merges the
+    // current scan's results with the baseline — so the fresh-results path below is only the degrade
+    // route for a caller that supplied no open-trades list.
+    const rowsToShow = todaysOpenRows.length > 0
+      ? todaysOpenRows
+      : recentOpenTrades.length > 0
+        ? recentOpenTrades.map((entry) => ({
+            symbol: entry.state?.symbol || entry.symbol || 'n/a',
+            entryPrice: normalizeTradeDisplay(entry.trade?.entryPrice),
+            entryTime: normalizeTradeDisplay(entry.trade?.entryTime),
+          }))
+        : fallbackOpenTrades;
 
-    // Same recency test as OPEN above, but keyed on exitTime — entryTime on an EXIT trade is when
-    // the now-closed position originally opened (possibly days earlier), not when it closed, so it
-    // can't tell a fresh exit apart from an old one already shown on a prior scan. No fallback-from-
-    // baseline path here (unlike OPEN's fallbackOpenTrades) — this is new, not preserving a
-    // previously-relied-on read path.
+    // Keyed on exitTime — entryTime on an EXIT trade is when the now-closed position originally
+    // opened (possibly days earlier), not when it closed, so it can't tell a fresh exit apart from
+    // an old one already shown on a prior scan.
     const recentExits = results
       .filter((entry) => entry.watchlist_name === watchlistName && !entry.error)
       .filter((entry) => String(entry.trade?.signal || '').toUpperCase() === 'EXIT')
@@ -1238,12 +1329,15 @@ export function buildWatchlistSummaryLines(
         netPnl: normalizeTradeDisplay(entry.trade?.netPnl),
       }));
 
-    const exitSummary = buildExitSummary(recentExits);
+    // Union with today's restated exits, so an earlier close on this watchlist stays visible on a
+    // later scan of it rather than only on the tick that first read it.
+    const exitsToShow = mergeExitRows(recentExits, restatedExits);
+    const exitSummary = buildExitSummary(exitsToShow);
 
-    if (rowsToShow.length > 0 || recentExits.length > 0) {
+    if (rowsToShow.length > 0 || exitsToShow.length > 0) {
       const openDetails = rowsToShow
         .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${normalizeTradeDisplay(row.entryTime)}`);
-      const exitDetails = recentExits
+      const exitDetails = exitsToShow
         .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${formatPnlPercentOrUsd(row.netPnl)} | AT: ${normalizeTradeDisplay(row.exitTime)}`);
       const exitGroup = exitDetails.length > 0
         ? [exitSummary, ...exitDetails].filter(Boolean)
@@ -2228,7 +2322,7 @@ export async function runBrief({
         const pPrior = buildPriorSignalsByWatchlist(watchlistSummaries, results, pBase.signals, timezone, pBase.last_updated, pBase.watchlists);
         let pTrades = buildOpenTrades(pPrior, pBase.signals, pGenAt, timezone, results);
         pTrades = enrichOpenTradesFromBaseline(pTrades, pBase.excursion_alerts);
-        const pSumLines = buildWatchlistSummaryLines(watchlistSummaries, results, pPrior, timezone, rules.market_hours || DEFAULT_MARKET_HOURS);
+        const pSumLines = buildWatchlistSummaryLines(watchlistSummaries, results, pPrior, timezone, rules.market_hours || DEFAULT_MARKET_HOURS, pTrades);
         const pNoSig = watchlistSummaries.map(
           (t) => `${formatTimestamp(pGenAt, timezone)} ET | WATCHLIST: ${t.watchlist_name} | SYMBOLS: ${t.symbol_count} | SCAN: ${formatDuration(t.scan_duration_ms)} | NO SIGNAL`,
         );
@@ -2404,6 +2498,7 @@ export async function runBrief({
     priorSignalsByWatchlist,
     timezone,
     rules.market_hours || DEFAULT_MARKET_HOURS,
+    openTrades,
   );
 
   return {
@@ -3829,6 +3924,17 @@ async function dispatchTradeWebhooks(events, rules) {
     return out;
   }
 
+  // Active templates, read ONCE per dispatch rather than per event: it is a small SQLite query, but
+  // reading it per event would let the set change mid-batch and attribute two signals from the same
+  // scan to different configurations. Failure is non-fatal — an unreadable templates table must cost
+  // the attribution, never the order.
+  let activeTemplates = [];
+  try {
+    activeTemplates = listTemplates({ status: "active" });
+  } catch (err) {
+    console.error(`[webhook] could not read sim templates, sending without attribution: ${err?.message || err}`);
+  }
+
   for (const ev of events) {
     if (!settings.enabledTimeframes.includes(String(ev.timeframe))) continue;
     const key = sentKey({ symbol: ev.symbol, timeframe: ev.timeframe, entryTime: ev.entry_time });
@@ -3843,6 +3949,14 @@ async function dispatchTradeWebhooks(events, rules) {
       continue;
     }
 
+    // Exactly-one-match resolution: a timeframe claimed by two active templates attaches NOTHING
+    // rather than picking one, because a wrong template id on a real order is worse than no id and
+    // there is no basis to choose. The collision is surfaced in the Templates tab so this is a
+    // visible stop rather than a silent one.
+    const resolved = resolveTemplateForTimeframe(ev.timeframe, activeTemplates);
+    if (resolved.ambiguous) {
+      console.error(`[webhook] ${resolved.candidates.length} active templates claim timeframe ${ev.timeframe} (${resolved.candidates.map((t) => t.short_desc).join(", ")}) — sending ${ev.symbol} without template attribution`);
+    }
     const payload = buildWebhookPayload({
       symbol: ev.symbol,
       side: ev.side,
@@ -3850,10 +3964,14 @@ async function dispatchTradeWebhooks(events, rules) {
       price: ev.entry_price,
       group: settings.group,
       secret: creds.secret,
+      template: templateStamp(resolved.template),
     });
     const res = await sendTradeWebhook({ url: creds.url, payload });
     if (res.success) {
-      recordSent(key, { symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price, source: "auto" });
+      recordSent(key, {
+        symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price, source: "auto",
+        template_id: payload.template_id ?? null, template: payload.template ?? null,
+      });
       out.sent.push({ symbol: payload.symbol, tag: payload.tag, side: payload.side });
       console.log(`[webhook] sent ${payload.side} ${payload.symbol} (${payload.tag}) @ ${payload.price}`);
     } else {
@@ -3931,6 +4049,9 @@ async function dispatchExitWebhooks(events, rules) {
       continue;
     }
 
+    // Template read off the ENTRY record, never re-resolved from the current template set — the same
+    // rule the manual close follows. Re-resolving would let a template edited or archived since the
+    // entry attribute the close to a different configuration than the position was opened under.
     const payload = buildWebhookPayload({
       symbol: ev.symbol,
       action: exitOrderAction(ev.side),
@@ -3938,10 +4059,16 @@ async function dispatchExitWebhooks(events, rules) {
       price: ev.exit_price,
       group: settings.group,
       secret: creds.secret,
+      template: entryRecord.template_id
+        ? { template_id: entryRecord.template_id, template: entryRecord.template }
+        : null,
     });
     const res = await sendTradeWebhook({ url: creds.url, payload });
     if (res.success) {
-      recordExitSent(key, { symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price, source: "auto-exit" });
+      recordExitSent(key, {
+        symbol: payload.symbol, tag: payload.tag, side: payload.side, price: payload.price, source: "auto-exit",
+        template_id: payload.template_id ?? null, template: payload.template ?? null,
+      });
       out.sent.push({ symbol: payload.symbol, tag: payload.tag, side: payload.side });
       console.log(`[webhook] sent EXIT ${payload.side} ${payload.symbol} (${payload.tag}) @ ${payload.price}`);
     } else {

@@ -126,6 +126,131 @@ describe('signal detection', () => {
     assert.equal(lines[0].includes('OPEN: BATS:NYT'), true);
     assert.equal(lines[0].includes('WAITING FOR NEXT 60 BAR'), true);
   });
+
+  // The log answers "what happened today": entries made today and exits made today, restated on
+  // every tick until the ET date rolls over. A position entered earlier and still held belongs to
+  // the Open Trades table, not here.
+  const SCAN_AT = '2026-08-05T19:10:25.712Z';
+  const summary = (over = {}) => ({
+    watchlist_name: 'Swing 30m', timeframe: '30', symbol_count: 23, scanned_at: SCAN_AT,
+    scan_duration_ms: 0, ...over,
+  });
+  const openTrade = (over = {}) => ({
+    watchlistName: 'Swing 30m', timeframe: '30', symbol: 'BATS:SGHC', signal: 'OPEN',
+    entryPrice: '13.26', entryTimeRaw: '2026-08-05T14:00:00.000Z', ...over,
+  });
+
+  it("shows today's entries on a watchlist not due this tick", () => {
+    const lines = buildWatchlistSummaryLines(
+      [summary({ skipped_due_schedule: true })], [], [], 'America/New_York', undefined,
+      [openTrade(), openTrade({ symbol: 'TSX_DLY:CVE' }), openTrade({ symbol: 'BATS:SHO', entryTimeRaw: '2026-08-05T13:30:00.000Z' })],
+    );
+
+    assert.equal(lines[0].includes('WAITING FOR NEXT 30 BAR'), true);
+    for (const s of ['BATS:SGHC', 'TSX_DLY:CVE', 'BATS:SHO']) {
+      assert.equal(lines[0].includes(`OPEN: ${s}`), true, `${s} missing`);
+    }
+    // Raw ISO, so a restated row prints like one read from a fresh scan.
+    assert.equal(lines[0].includes('AT: 2026-08-05T14:00:00.000Z'), true);
+  });
+
+  it('omits a still-open position that entered on an earlier day', () => {
+    const lines = buildWatchlistSummaryLines(
+      [summary()], [], [], 'America/New_York', undefined,
+      [openTrade({ symbol: 'BATS:CORT', entryTimeRaw: '2026-08-03T13:45:00.000Z' })],
+    );
+
+    assert.equal(lines[0].includes('BATS:CORT'), false);
+    assert.equal(lines[0].endsWith('NO SIGNAL'), true);
+  });
+
+  it('scopes rows to their own watchlist and timeframe', () => {
+    const lines = buildWatchlistSummaryLines(
+      [summary()], [], [], 'America/New_York', undefined,
+      [openTrade({ watchlistName: 'Swing 4H', timeframe: '240' }), openTrade({ timeframe: '15' })],
+    );
+
+    assert.equal(lines[0].includes('OPEN:'), false);
+  });
+
+  // The capability this adds: an exit read on an earlier tick stays visible on a tick where the
+  // watchlist isn't due, sourced from the baseline's exit_time via priorSignals.
+  const priorExit = (over = {}) => ({
+    watchlistName: 'Swing 30m',
+    timeframe: '30',
+    trades: [{
+      symbol: 'BATS:SBLK', signal: 'EXIT', exitTime: '2026-08-05T15:00:00.000Z',
+      netPnl: '-170.28 USD | -1.44%', ...over,
+    }],
+  });
+
+  it("restates today's exit on a watchlist not due this tick", () => {
+    const lines = buildWatchlistSummaryLines(
+      [summary({ skipped_due_schedule: true })], [], [priorExit()], 'America/New_York', undefined, [],
+    );
+
+    assert.equal(lines[0].includes('WAITING FOR NEXT 30 BAR'), true);
+    assert.equal(lines[0].includes('EXIT: BATS:SBLK'), true);
+    assert.equal(lines[0].includes('EXIT SUMMARY'), true);
+  });
+
+  it('does not restate an exit from a previous day, or one with no exit time', () => {
+    const priorDay = buildWatchlistSummaryLines(
+      [summary({ skipped_due_schedule: true })], [], [priorExit({ exitTime: '2026-08-04T15:00:00.000Z' })],
+      'America/New_York', undefined, [],
+    );
+    // exitTime null is the shape a relabelled stale OPEN and a pre-feature baseline record both take.
+    const noExitTime = buildWatchlistSummaryLines(
+      [summary({ skipped_due_schedule: true })], [], [priorExit({ exitTime: null })],
+      'America/New_York', undefined, [],
+    );
+
+    assert.equal(priorDay[0].includes('BATS:SBLK'), false);
+    assert.equal(noExitTime[0].includes('BATS:SBLK'), false);
+  });
+
+  it('merges a fresh exit read over the restated one instead of listing it twice', () => {
+    const lines = buildWatchlistSummaryLines(
+      [summary()],
+      [{
+        watchlist_name: 'Swing 30m', timeframe: '30', symbol: 'AMEX:SBLK', scanned_at: SCAN_AT,
+        trade: { signal: 'EXIT', exitTime: '2026-08-05T15:00:00.000Z', netPnl: '-2.00%' },
+      }],
+      [priorExit()], 'America/New_York', undefined, [],
+    );
+
+    assert.equal(lines[0].match(/EXIT: \w+:SBLK/g).length, 1);
+    // Fresh read wins — it carries this scan's real P&L, not the stored one.
+    assert.equal(lines[0].includes('-2.00%'), true);
+  });
+
+  it('records an exit timestamp on the baseline only while the position is closed', () => {
+    const map = {};
+    updateBaselineEntry(map, {
+      symbol: 'BATS:SBLK', timeframe: '30', scanned_at: SCAN_AT,
+      trade: { signal: 'EXIT', entryTime: '2026-08-04T15:00:00.000Z', entryPrice: '28.4', exitTime: '2026-08-05T15:00:00.000Z', exitPrice: '28.0' },
+    });
+    assert.equal(map['BATS:SBLK:30'].exit_time, '2026-08-05T15:00:00.000Z');
+    assert.equal(map['BATS:SBLK:30'].exit_price, '28.0');
+
+    // Re-entering must clear it, or tomorrow's open would re-render as today's close.
+    updateBaselineEntry(map, {
+      symbol: 'BATS:SBLK', timeframe: '30', scanned_at: SCAN_AT,
+      trade: { signal: 'OPEN', entryTime: '2026-08-06T14:00:00.000Z', entryPrice: '29.1' },
+    });
+    assert.equal(map['BATS:SBLK:30'].exit_time, null);
+    assert.equal(map['BATS:SBLK:30'].exit_price, null);
+  });
+
+  it('never substitutes a missing exit time on the baseline', () => {
+    const map = {};
+    updateBaselineEntry(map, {
+      symbol: 'BATS:HIG', timeframe: '15', scanned_at: SCAN_AT,
+      trade: { signal: 'EXIT', entryTime: '2026-07-30T14:45:00.000Z', entryPrice: '146.71' },
+    });
+
+    assert.equal(map['BATS:HIG:15'].exit_time, null);
+  });
 });
 
 describe('trade table parsing', () => {
