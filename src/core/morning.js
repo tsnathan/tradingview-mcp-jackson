@@ -12,7 +12,7 @@ import * as alerts from "./alerts.js";
 import { launch as launchTradingView } from "./health.js";
 import * as watchlist from "./watchlist.js";
 import * as tradeLog from "./trade_log.js";
-import { attachOpenTradeRanks } from "./edge_analysis.js";
+import { attachOpenTradeRanks, buildSymbolEdgeScores } from "./edge_analysis.js";
 import {
   loadWebhookCredentials,
   loadWebhookSettings,
@@ -837,20 +837,37 @@ function formatPnlPercentOrUsd(value) {
  * usdPctText had no pctFraction to work with) — a summary in the wrong unit is recoverable, a
  * summary of "—" is not.
  */
-function buildExitSummary(recentExits) {
+/**
+ * Net/average P&L across a set of exits, as numbers AND their display strings.
+ *
+ * The numbers are what lets the dashboard colour the summary bar by sign the way it colours each
+ * row. Colouring by inspecting the formatted string instead (does it start with "-"?) would work
+ * until a formatter change, and would get "-0.00%" wrong.
+ *
+ * Percent is preferred over USD when any row carries one, matching what buildExitSummary always
+ * did — the two must agree, which is why the string is now formatted FROM this rather than
+ * computed alongside it.
+ */
+function buildExitTotals(recentExits) {
   const rows = Array.isArray(recentExits) ? recentExits : [];
   const percents = rows.map((row) => parsePctValue(row.netPnl)).filter(Number.isFinite);
   if (percents.length > 0) {
     const net = percents.reduce((sum, v) => sum + v, 0);
     const avg = net / percents.length;
-    return `  EXIT SUMMARY: NET P&L: ${formatPctValue(net)} | AVG P&L: ${formatPctValue(avg)} (${percents.length} exits)`;
+    return { net, avg, count: percents.length, unit: 'pct', netDisplay: formatPctValue(net), avgDisplay: formatPctValue(avg) };
   }
 
   const amounts = rows.map((row) => parseUsdValue(row.netPnl)).filter(Number.isFinite);
   if (amounts.length === 0) return null;
   const net = amounts.reduce((sum, v) => sum + v, 0);
   const avg = net / amounts.length;
-  return `  EXIT SUMMARY: NET P&L: ${formatUsdValue(net)} | AVG P&L: ${formatUsdValue(avg)} (${amounts.length} exits)`;
+  return { net, avg, count: amounts.length, unit: 'usd', netDisplay: formatUsdValue(net), avgDisplay: formatUsdValue(avg) };
+}
+
+function buildExitSummary(recentExits) {
+  const t = buildExitTotals(recentExits);
+  if (!t) return null;
+  return `  EXIT SUMMARY: NET P&L: ${t.netDisplay} | AVG P&L: ${t.avgDisplay} (${t.count} exits)`;
 }
 
 function formatEntryTimeDisplay(value, timezone = DEFAULT_MARKET_HOURS.timezone) {
@@ -1187,7 +1204,20 @@ export function buildPriorSignalsByWatchlist(
   });
 }
 
-export function buildWatchlistSummaryLines(
+/**
+ * Structured twin of buildWatchlistSummaryLines — the same computation, before it is flattened into
+ * display strings.
+ *
+ * The lines are built for a phone lock screen and a <pre>-ish block and cannot be parsed back into
+ * fields, which is the same reason `notify_signal_events` exists alongside `notify_signal_lines`.
+ * The dashboard renders the Current Signal log as a TABLE from these rows, and the text lines are
+ * formatted from the very same sections just below, so the two can never disagree about which
+ * positions count as today's.
+ *
+ * Rows carry both the raw value and its ET display form. One formatting decision, made once: the
+ * table and the text line show the same string, and neither re-derives it.
+ */
+export function buildWatchlistSummarySections(
   watchlistSummaries = [],
   results = [],
   priorSignalsByWatchlist = [],
@@ -1268,6 +1298,10 @@ export function buildWatchlistSummaryLines(
         symbol: row.symbol || 'n/a',
         exitTime: row.exitTime,
         netPnl: row.netPnl,
+        // Carried only to derive the hold period. On an EXIT this is when the now-closed position
+        // originally OPENED, which is exactly why it must never be used for recency (see above) —
+        // but it is the right end of the interval to measure a hold from.
+        entryTime: row.entryTimeRaw || row.entryTime || null,
       }));
 
     // Merge fresh-scan exits over restated ones, deduped by bare ticker so an exchange-prefix change
@@ -1282,24 +1316,22 @@ export function buildWatchlistSummaryLines(
     };
 
     if (summary.skipped_due_schedule) {
-      const openDetails = openRowsToShow
-        .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${formatEntryTimeDisplay(row.entryTime, timezone)}`);
       // A skipped watchlist has no fresh results, so its exits are entirely restated.
       const skippedExits = mergeExitRows([], restatedExits);
-      const exitDetails = skippedExits
-        .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${formatPnlPercentOrUsd(row.netPnl)} | AT: ${formatEntryTimeDisplay(row.exitTime, timezone)}`);
-      const exitGroup = exitDetails.length > 0
-        ? [buildExitSummary(skippedExits), ...exitDetails].filter(Boolean)
-        : [];
-      const groups = [openDetails, exitGroup].filter((g) => g.length > 0);
-      const suffix = groups.length > 0 ? `\n${groups.map((g) => g.join('\n')).join('\n\n')}` : '';
       // `skip_headline` lets a caller keep its own reason text while still getting today's restated
       // rows. buildOutsideHoursResult sets it, because "WAITING FOR NEXT 15 BAR (next: 12:46 PM ET)"
       // would promise a scan that is not coming when the reason is `Scheduled scanning disabled` or a
       // strategy mismatch. Absent, the normal not-due-yet wording is used exactly as before.
-      if (summary.skip_headline) return `${prefix} | ${summary.skip_headline}${suffix}`;
-      const nextDueEt = getNextScheduledRunLabel(scanTimestamp, marketHours, timeframe);
-      return `${prefix} | WAITING FOR NEXT ${timeframe || 'WATCHLIST'} BAR (next: ${nextDueEt})${suffix}`;
+      const headline = summary.skip_headline
+        || `WAITING FOR NEXT ${timeframe || 'WATCHLIST'} BAR (next: ${getNextScheduledRunLabel(scanTimestamp, marketHours, timeframe)})`;
+      return {
+        watchlistName, timeframe, symbolCount: displayedCount, scannedAt: scanTimestamp,
+        prefix, headline, skipped: true,
+        opens: openRowsToShow.map((row) => toOpenRow(row, timezone)),
+        exits: skippedExits.map((row) => toExitRow(row, timezone)),
+        exitSummary: buildExitSummary(skippedExits) || null,
+        exitTotals: buildExitTotals(skippedExits),
+      };
     }
 
     const recentOpenTrades = results
@@ -1341,31 +1373,90 @@ export function buildWatchlistSummaryLines(
         symbol: entry.state?.symbol || entry.symbol || 'n/a',
         exitTime: normalizeTradeDisplay(entry.trade?.exitTime),
         netPnl: normalizeTradeDisplay(entry.trade?.netPnl),
+        entryTime: entry.trade?.entryTime || null,   // for the hold period only — see restatedExits
       }));
 
     // Union with today's restated exits, so an earlier close on this watchlist stays visible on a
     // later scan of it rather than only on the tick that first read it.
     const exitsToShow = mergeExitRows(recentExits, restatedExits);
-    const exitSummary = buildExitSummary(exitsToShow);
 
-    if (rowsToShow.length > 0 || exitsToShow.length > 0) {
-      const openDetails = rowsToShow
-        .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${formatEntryTimeDisplay(row.entryTime, timezone)}`);
-      const exitDetails = exitsToShow
-        .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${formatPnlPercentOrUsd(row.netPnl)} | AT: ${formatEntryTimeDisplay(row.exitTime, timezone)}`);
-      const exitGroup = exitDetails.length > 0
-        ? [exitSummary, ...exitDetails].filter(Boolean)
-        : [];
-      // Grouped OPEN-then-EXIT (never interleaved), with a blank line between the two groups when
-      // both are present — so a busy block reads as two clearly separate lists rather than one
-      // run-on block. The per-row "OPEN:"/"EXIT:" prefix is untouched so hasMeaningfulSummary's
-      // /OPEN:\s*\w/i and /EXIT:\s*\w/i regex checks keep matching every row, not just a header.
-      const groups = [openDetails, exitGroup].filter((g) => g.length > 0);
-      const details = groups.map((g) => g.join('\n')).join('\n\n');
-      return `${prefix} | SIGNAL\n${details}`;
+    return {
+      watchlistName, timeframe, symbolCount: displayedCount, scannedAt: scanTimestamp,
+      prefix,
+      headline: (rowsToShow.length > 0 || exitsToShow.length > 0) ? 'SIGNAL' : 'NO SIGNAL',
+      skipped: false,
+      opens: rowsToShow.map((row) => toOpenRow(row, timezone)),
+      exits: exitsToShow.map((row) => toExitRow(row, timezone)),
+      exitSummary: buildExitSummary(exitsToShow) || null,
+      exitTotals: buildExitTotals(exitsToShow),
+    };
+  });
+}
+
+// Row shapes shared by the text lines and the dashboard table. `*Display` is what both render, so a
+// change of format reaches them together; the raw value is kept for sorting and for joining an Edge
+// score on, which needs the bare ticker rather than the rendered string.
+function toOpenRow(row, timezone) {
+  return {
+    symbol: row.symbol || 'n/a',
+    entryPrice: row.entryPrice ?? null,
+    entryPriceDisplay: normalizeTradeDisplay(row.entryPrice),
+    entryTime: row.entryTime ?? null,
+    entryTimeDisplay: formatEntryTimeDisplay(row.entryTime, timezone),
+  };
+}
+
+function toExitRow(row, timezone) {
+  return {
+    symbol: row.symbol || 'n/a',
+    netPnl: row.netPnl ?? null,
+    netPnlDisplay: formatPnlPercentOrUsd(row.netPnl),
+    exitTime: row.exitTime ?? null,
+    exitTimeDisplay: formatEntryTimeDisplay(row.exitTime, timezone),
+    // Calendar days held, entry to exit. A NUMBER, not a display string, unlike the other fields
+    // here: the dashboard already has fmtHold() for exactly this (it switches units across the
+    // 15m-to-1D range, where a fixed format reads wrong at one end), and a second implementation of
+    // that rule would be free to drift from it. The text lines therefore do not show hold — adding
+    // it there would require the duplicate formatter this avoids.
+    holdDays: holdPeriodDays(row.entryTime, row.exitTime),
+  };
+}
+
+// Null unless both ends are real and the exit is not before the entry — a negative or fabricated
+// hold is worse than a blank one, and the DOM-scrape fallback supplies no exit time at all.
+function holdPeriodDays(entryTime, exitTime) {
+  const entry = parseEntryTimestamp(entryTime);
+  const exit = parseEntryTimestamp(exitTime);
+  if (!Number.isFinite(entry) || !Number.isFinite(exit) || entry <= 0 || exit <= 0) return null;
+  const days = (exit - entry) / 86400000;
+  return days >= 0 ? days : null;
+}
+
+/**
+ * The text form of the Current Signal log, formatted from the sections above so the table and the
+ * lines cannot drift. Output is byte-identical to the pre-refactor implementation.
+ */
+export function buildWatchlistSummaryLines(...args) {
+  return buildWatchlistSummarySections(...args).map((section) => {
+    const openDetails = section.opens
+      .map((row) => `  OPEN: ${row.symbol} | ENTRY: ${row.entryPriceDisplay} | AT: ${row.entryTimeDisplay}`);
+    const exitDetails = section.exits
+      .map((row) => `  EXIT: ${row.symbol} | P&L: ${row.netPnlDisplay} | AT: ${row.exitTimeDisplay}`);
+    const exitGroup = exitDetails.length > 0
+      ? [section.exitSummary, ...exitDetails].filter(Boolean)
+      : [];
+    // Grouped OPEN-then-EXIT (never interleaved), with a blank line between the two groups when
+    // both are present — so a busy block reads as two clearly separate lists rather than one
+    // run-on block. The per-row "OPEN:"/"EXIT:" prefix is untouched so hasMeaningfulSummary's
+    // /OPEN:\s*\w/i and /EXIT:\s*\w/i regex checks keep matching every row, not just a header.
+    const groups = [openDetails, exitGroup].filter((g) => g.length > 0);
+    const details = groups.map((g) => g.join('\n')).join('\n\n');
+
+    if (section.skipped) {
+      return `${section.prefix} | ${section.headline}${details ? `\n${details}` : ''}`;
     }
-
-    return `${prefix} | NO SIGNAL`;
+    if (groups.length > 0) return `${section.prefix} | SIGNAL\n${details}`;
+    return `${section.prefix} | NO SIGNAL`;
   });
 }
 
@@ -1994,6 +2085,14 @@ export function createDashboardStatus(result = {}) {
       result.generated_at || new Date().toISOString(),
       marketHours.timezone || DEFAULT_MARKET_HOURS.timezone,
     ),
+    // Structured twin of `lines`, for the Current Signal table. Scored here, at the same chokepoint
+    // the open-trade ranking uses, so every write path emits it. `lines` is still sent and is still
+    // what renders if this is absent — a status file written before this feature, or one whose
+    // producer did not supply sections, degrades to the text block rather than to nothing.
+    currentSignal: attachSectionEdge(
+      Array.isArray(result.watchlist_summary_sections) ? result.watchlist_summary_sections : [],
+      tradeLog.listRuleTypes()[0]?.rule_type ?? null,
+    ),
     priorSignals,
     isPartialScan: Boolean(result.is_partial_scan),
     scanProgress: result.scan_progress || null,
@@ -2071,6 +2170,14 @@ export function buildOutsideHoursResult({
     changed_signal_lines: [],
     notify_signal_lines: [],
     watchlist_summary_lines: buildWatchlistSummaryLines(
+      summariesForLines,
+      [],
+      priorSignalsByWatchlist,
+      timezone,
+      marketHours,
+      openTrades,
+    ),
+    watchlist_summary_sections: buildWatchlistSummarySections(
       summariesForLines,
       [],
       priorSignalsByWatchlist,
@@ -2399,7 +2506,9 @@ export async function runBrief({
         const pPrior = buildPriorSignalsByWatchlist(watchlistSummaries, results, pBase.signals, timezone, pBase.last_updated, pBase.watchlists);
         let pTrades = buildOpenTrades(pPrior, pBase.signals, pGenAt, timezone, results);
         pTrades = enrichOpenTradesFromBaseline(pTrades, pBase.excursion_alerts);
-        const pSumLines = buildWatchlistSummaryLines(watchlistSummaries, results, pPrior, timezone, rules.market_hours || DEFAULT_MARKET_HOURS, pTrades);
+        const pSumArgs = [watchlistSummaries, results, pPrior, timezone, rules.market_hours || DEFAULT_MARKET_HOURS, pTrades];
+        const pSumLines = buildWatchlistSummaryLines(...pSumArgs);
+        const pSumSections = buildWatchlistSummarySections(...pSumArgs);
         const pNoSig = watchlistSummaries.map(
           (t) => `${formatTimestamp(pGenAt, timezone)} ET | WATCHLIST: ${t.watchlist_name} | SYMBOLS: ${t.symbol_count} | SCAN: ${formatDuration(t.scan_duration_ms)} | NO SIGNAL`,
         );
@@ -2427,7 +2536,8 @@ export async function runBrief({
           changed_signal_lines: pChg.map(mkLine),
           notify_signal_lines: [],
           all_scan_results: results,
-        watchlist_summary_lines: pSumLines,
+          watchlist_summary_lines: pSumLines,
+          watchlist_summary_sections: pSumSections,
           summary_line: pSumLines.join('\n') || pNoSig.join('\n'),
           connection_error: false,
         });
@@ -2554,14 +2664,16 @@ export async function runBrief({
   // NOTE: edge/org/new ranking is NOT applied here. It happens in createDashboardStatus(), the one
   // function every status write funnels through — see the comment there. Ranking at the producer is
   // what let five skip paths blank the columns by overwriting the file without it.
-  const watchlistSummaryLines = buildWatchlistSummaryLines(
+  const summaryArgs = [
     watchlistSummaries,
     results,
     priorSignalsByWatchlist,
     timezone,
     rules.market_hours || DEFAULT_MARKET_HOURS,
     openTrades,
-  );
+  ];
+  const watchlistSummaryLines = buildWatchlistSummaryLines(...summaryArgs);
+  const watchlistSummarySections = buildWatchlistSummarySections(...summaryArgs);
 
   return {
     success: true,
@@ -2617,6 +2729,7 @@ export async function runBrief({
       exit_time: entry.trade?.exitTime || null,
     })),
     watchlist_summary_lines: watchlistSummaryLines,
+    watchlist_summary_sections: watchlistSummarySections,
     summary_line: watchlistSummaryLines.join("\n") || noSignalLines.join("\n"),
     instruction: signals_only
       ? "Return only active signals. If none are present, say NO SIGNAL."
@@ -2673,6 +2786,39 @@ function enrichOpenTradesFromBaseline(openTrades, excursionAlerts = {}) {
 // Deliberately swallows: the edge/edgeRank* fields are purely additive, nothing downstream gates on
 // them, and an unrankable trade log must cost a log line rather than the whole status write. Returns
 // the input untouched on failure, so the rows themselves always survive.
+/**
+ * Attach the Edge score to each Current Signal row, so the table can show it next to the entry.
+ *
+ * Lives here rather than in buildWatchlistSummarySections for the same reason the ranking does: the
+ * score comes from the trade log, and both are joined at the status-write chokepoint so every write
+ * path gets them. Scoring inside the section builder would also mean reading the trade log on the
+ * partial-scan writer, which runs once per watchlist mid-scan.
+ *
+ * Swallows, and leaves rows unscored on failure — Edge is a decoration on this table, and an
+ * unreadable trade log must not cost the log its rows.
+ */
+function attachSectionEdge(sections, ruleType) {
+  if (!Array.isArray(sections) || sections.length === 0) return sections;
+  try {
+    const { scores } = buildSymbolEdgeScores({ ruleType });
+    const scoreFor = (symbol, timeframe) => {
+      const key = `${bareTicker(symbol).toUpperCase()}|${timeframeTag(timeframe)}`;
+      const s = scores[key];
+      // null, never 0, when the symbol has too little history: an unscored row must read as
+      // "unknown", never as "weak" — the same rule the portfolio cap follows.
+      return s && Number.isFinite(s.score) ? s.score : null;
+    };
+    return sections.map((section) => ({
+      ...section,
+      opens: section.opens.map((r) => ({ ...r, edgeScore: scoreFor(r.symbol, section.timeframe) })),
+      exits: section.exits.map((r) => ({ ...r, edgeScore: scoreFor(r.symbol, section.timeframe) })),
+    }));
+  } catch (err) {
+    console.error(`[edge] could not score current-signal rows: ${err?.message || err}`);
+    return sections;
+  }
+}
+
 function rankOpenTradesForStatus(openTrades, generatedAt, timezone) {
   try {
     return attachOpenTradeRanks(openTrades, {
