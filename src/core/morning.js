@@ -1228,9 +1228,17 @@ export function buildWatchlistSummaryLines(
     // stale baselineUpdatedAt can hide a genuinely same-day entry before it ever reaches this
     // function. Reading the same list the table reads removes that dependency entirely.
     //
-    // entryTimeRaw (ISO) is preferred over entryTime (ET display string) so a row restated from the
-    // baseline prints in the same format as one read from a fresh scan — the two paths formatted it
-    // differently before, so which format you saw depended on whether the watchlist was due.
+    // entryTimeRaw (ISO) is preferred over entryTime (ET display string) as the SOURCE, so a row
+    // restated from the baseline and one read from a fresh scan start from the same value — the two
+    // paths carried different formats before, so which one you saw depended on whether the watchlist
+    // was due.
+    //
+    // Rendering then goes through formatEntryTimeDisplay(), which converts to ET at the point of
+    // display. Uniformity used to be achieved by printing the raw ISO straight out, which made every
+    // AT: on this log read as UTC — four hours off every other timestamp on the page, and easy to
+    // misread as an entry that had not happened yet. formatEntryTimeDisplay normalizes BOTH raw ISO
+    // and an already-ET string to one format, so it keeps that uniformity rather than trading it
+    // away, and it is the same helper buildOpenTrades uses for the Open Trades table.
     const todaysOpenRows = (Array.isArray(openTrades) ? openTrades : [])
       .filter((row) => row.watchlistName === watchlistName
         && String(row.timeframe || '') === timeframe
@@ -1275,11 +1283,11 @@ export function buildWatchlistSummaryLines(
 
     if (summary.skipped_due_schedule) {
       const openDetails = openRowsToShow
-        .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${normalizeTradeDisplay(row.entryTime)}`);
+        .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${formatEntryTimeDisplay(row.entryTime, timezone)}`);
       // A skipped watchlist has no fresh results, so its exits are entirely restated.
       const skippedExits = mergeExitRows([], restatedExits);
       const exitDetails = skippedExits
-        .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${formatPnlPercentOrUsd(row.netPnl)} | AT: ${normalizeTradeDisplay(row.exitTime)}`);
+        .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${formatPnlPercentOrUsd(row.netPnl)} | AT: ${formatEntryTimeDisplay(row.exitTime, timezone)}`);
       const exitGroup = exitDetails.length > 0
         ? [buildExitSummary(skippedExits), ...exitDetails].filter(Boolean)
         : [];
@@ -1342,9 +1350,9 @@ export function buildWatchlistSummaryLines(
 
     if (rowsToShow.length > 0 || exitsToShow.length > 0) {
       const openDetails = rowsToShow
-        .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${normalizeTradeDisplay(row.entryTime)}`);
+        .map((row) => `  OPEN: ${row.symbol || 'n/a'} | ENTRY: ${normalizeTradeDisplay(row.entryPrice)} | AT: ${formatEntryTimeDisplay(row.entryTime, timezone)}`);
       const exitDetails = exitsToShow
-        .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${formatPnlPercentOrUsd(row.netPnl)} | AT: ${normalizeTradeDisplay(row.exitTime)}`);
+        .map((row) => `  EXIT: ${row.symbol || 'n/a'} | P&L: ${formatPnlPercentOrUsd(row.netPnl)} | AT: ${formatEntryTimeDisplay(row.exitTime, timezone)}`);
       const exitGroup = exitDetails.length > 0
         ? [exitSummary, ...exitDetails].filter(Boolean)
         : [];
@@ -1893,6 +1901,29 @@ export function formatSignalLine(entry, timezone = DEFAULT_MARKET_HOURS.timezone
   return `${stamp} ET | WATCHLIST: ${watchlistName} | SYMBOLS: ${symbolCount} | ${symbol} | SIGNAL: ${direction} | TF: ${entry.timeframe} | PRICE: ${price} | ${note}`;
 }
 
+/**
+ * One OPEN line for the ntfy push (notify_signal_lines).
+ *
+ * Extracted because runBrief built this string twice — once in the partial-scan writer and once for
+ * the final result — differing only in which fallback timestamp they used. Two copies of a line
+ * headed for a phone lock screen is exactly the shape that drifts.
+ *
+ * The entry time is rendered in ET via formatEntryTimeDisplay, not printed as the stored raw ISO.
+ * It sits directly beside an ET scan stamp in the same line, so a UTC value there read as four
+ * hours in the future — the same defect fixed on the dashboard's Current Signal log.
+ */
+export function formatNotifyOpenLine(
+  entry = {},
+  timezone = DEFAULT_MARKET_HOURS.timezone,
+  fallbackTimestamp = Date.now(),
+) {
+  const symbol = entry.state?.symbol || entry.symbol || 'n/a';
+  const stamp = formatTimestamp(entry.scanned_at || fallbackTimestamp, timezone);
+  return `${stamp} ET | WATCHLIST: ${entry.watchlist_name || 'Default'} | OPEN: ${symbol}`
+    + ` | ENTRY: ${normalizeTradeDisplay(entry.trade?.entryPrice)}`
+    + ` | AT: ${formatEntryTimeDisplay(entry.trade?.entryTime, timezone)}`;
+}
+
 export function createDashboardStatus(result = {}) {
   const watchlistSummaryLines = Array.isArray(result.watchlist_summary_lines) ? result.watchlist_summary_lines : [];
   const signalLines = Array.isArray(result.signal_lines) ? result.signal_lines : [];
@@ -2364,10 +2395,7 @@ export async function runBrief({
           }
           return hasSignalChanged(prev, e.signal);
         });
-        const mkLine = (e) => {
-          const sym = e.state?.symbol || e.symbol || 'n/a';
-          return `${formatTimestamp(e.scanned_at || pGenAt, timezone)} ET | WATCHLIST: ${e.watchlist_name || 'Default'} | OPEN: ${sym} | ENTRY: ${normalizeTradeDisplay(e.trade?.entryPrice)} | AT: ${normalizeTradeDisplay(e.trade?.entryTime)}`;
-        };
+        const mkLine = (e) => formatNotifyOpenLine(e, timezone, pGenAt);
         const pPrior = buildPriorSignalsByWatchlist(watchlistSummaries, results, pBase.signals, timezone, pBase.last_updated, pBase.watchlists);
         let pTrades = buildOpenTrades(pPrior, pBase.signals, pGenAt, timezone, results);
         pTrades = enrichOpenTradesFromBaseline(pTrades, pBase.excursion_alerts);
@@ -2501,10 +2529,7 @@ export async function runBrief({
     String(entry.trade?.signal || '').toUpperCase() === 'EXIT'
     && isSameTradingDay(entry.trade?.exitTime, generatedAt, timezone)
   );
-  const notifySignalLines = notifyEntries.map((entry) => {
-    const symbol = entry.state?.symbol || entry.symbol || 'n/a';
-    return `${formatTimestamp(entry.scanned_at || generatedAt, timezone)} ET | WATCHLIST: ${entry.watchlist_name || 'Default'} | OPEN: ${symbol} | ENTRY: ${normalizeTradeDisplay(entry.trade?.entryPrice)} | AT: ${normalizeTradeDisplay(entry.trade?.entryTime)}`;
-  });
+  const notifySignalLines = notifyEntries.map((entry) => formatNotifyOpenLine(entry, timezone, generatedAt));
   const noSignalLines = watchlistSummaries.map(
     (target) => `${formatTimestamp(generatedAt, timezone)} ET | WATCHLIST: ${target.watchlist_name} | SYMBOLS: ${target.symbol_count} | SCAN: ${formatDuration(target.scan_duration_ms)} | NO SIGNAL`,
   );

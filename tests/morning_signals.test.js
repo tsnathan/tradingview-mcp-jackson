@@ -17,7 +17,52 @@ import {
   syncWatchlistSymbolsFromTradingView,
   formatSignalLine,
   createDashboardStatus,
-  isMarketHoliday,  buildWatchlistSummaryLines,} from '../src/core/morning.js';
+  isMarketHoliday,  buildWatchlistSummaryLines,
+  formatNotifyOpenLine,
+} from '../src/core/morning.js';
+
+/**
+ * The ntfy push line lands on a phone lock screen with an ET scan stamp at its head, so a raw UTC
+ * entry time beside it read as an entry four hours in the future. Same defect, same fix as the
+ * dashboard's Current Signal log.
+ */
+describe('ntfy push line', () => {
+  const entry = (over = {}) => ({
+    watchlist_name: 'Swing 15m',
+    symbol: 'BATS:ABNB',
+    scanned_at: '2026-08-06T16:58:03.000Z',
+    trade: { entryPrice: '150.71', entryTime: '2026-08-06T14:30:00.000Z' },
+    ...over,
+  });
+
+  it('renders the entry time in ET, not raw UTC ISO', () => {
+    const line = formatNotifyOpenLine(entry(), 'America/New_York');
+    assert.match(line, /AT: 08\/06\/2026, 10:30:00 AM ET/);
+    assert.doesNotMatch(line, /\d{4}-\d{2}-\d{2}T[\d:.]+Z/, 'no raw ISO anywhere in the line');
+  });
+
+  it('keeps the scan stamp and the entry time on the same clock', () => {
+    const line = formatNotifyOpenLine(entry(), 'America/New_York');
+    assert.ok(line.startsWith('08/06/2026, 12:58:03 PM ET |'), `unexpected stamp: ${line}`);
+  });
+
+  it('prefers the resolved state symbol over the raw one', () => {
+    const line = formatNotifyOpenLine(entry({ state: { symbol: 'AMEX:ABNB' } }), 'America/New_York');
+    assert.match(line, /OPEN: AMEX:ABNB/);
+  });
+
+  it('falls back rather than throwing on a bare entry', () => {
+    const line = formatNotifyOpenLine({}, 'America/New_York', '2026-08-06T16:58:03.000Z');
+    assert.match(line, /WATCHLIST: Default/);
+    assert.match(line, /OPEN: n\/a/);
+    assert.doesNotMatch(line, /undefined|NaN/);
+  });
+
+  it('uses the fallback timestamp when the entry was never stamped', () => {
+    const line = formatNotifyOpenLine(entry({ scanned_at: undefined }), 'America/New_York', '2026-08-06T17:00:00.000Z');
+    assert.ok(line.startsWith('08/06/2026, 01:00:00 PM ET |'), `unexpected stamp: ${line}`);
+  });
+});
 
 describe('signal detection', () => {
   it('finds bullish signal from Pine labels', () => {
@@ -150,8 +195,11 @@ describe('signal detection', () => {
     for (const s of ['BATS:SGHC', 'TSX_DLY:CVE', 'BATS:SHO']) {
       assert.equal(lines[0].includes(`OPEN: ${s}`), true, `${s} missing`);
     }
-    // Raw ISO, so a restated row prints like one read from a fresh scan.
-    assert.equal(lines[0].includes('AT: 2026-08-05T14:00:00.000Z'), true);
+    // ET, not the stored raw ISO. The row is still SOURCED from entryTimeRaw so a restated row and a
+    // freshly-scanned one start from the same value, but formatEntryTimeDisplay converts at the
+    // point of display — printing the raw ISO put UTC next to ET everywhere else on the page
+    // (14:00Z here is 10:00 AM ET), which reads as an entry four hours in the future.
+    assert.equal(lines[0].includes('AT: 08/05/2026, 10:00:00 AM ET'), true);
   });
 
   it('omits a still-open position that entered on an earlier day', () => {
@@ -1038,6 +1086,16 @@ describe('outside-hours skip behavior', () => {
   it('does not restate an entry from a previous day', () => {
     const line = skipResultWithSignals('No watchlists are due for scan at this minute').watchlist_summary_lines[0];
     assert.doesNotMatch(line, /OPEN:\s*BATS:USO/, 'the Open Trades table is the full holdings view, not this log');
+  });
+
+  // Every other timestamp on the dashboard is ET. Printing the stored raw ISO here put UTC on the
+  // same screen four hours off, which reads as an entry that has not happened yet.
+  it('renders AT: in ET, never as raw UTC ISO', () => {
+    const line = skipResultWithSignals('No watchlists are due for scan at this minute').watchlist_summary_lines[0];
+    const at = line.match(/OPEN:\s*BATS:ERX[^\n]*\|\s*AT:\s*([^\n|]+)/);
+    assert.ok(at, 'the restated entry row must carry an AT: field');
+    assert.doesNotMatch(at[1], /\d{4}-\d{2}-\d{2}T.*Z/, 'AT: must not be a raw UTC ISO timestamp');
+    assert.match(at[1].trim(), /^\d{1,2}\/\d{1,2}\/\d{4},\s.*\sET$/, 'AT: must be ET display format');
   });
 
   it('keeps the reason on the line, and never promises a bar that is not coming', () => {
