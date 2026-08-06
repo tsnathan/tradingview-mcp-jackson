@@ -573,6 +573,21 @@ export function sweepMaxPositions({ capital, timeframes, tickers, priority, rank
       signalsTaken: r.signalsTaken,
       signalsSkipped: r.signalsSkipped,
       winRate: r.winRate,
+      // Per-trade expectancy, the metric this project measured as the only per-symbol ranking input
+      // that beats random out-of-sample (rho +0.381, against -0.145 for cagrDd). `expectancyPct` is
+      // the SIZE-NEUTRAL form — each trade scored against the equity that funded it — so it does not
+      // drift as the account compounds and is directly comparable across slot counts, which change
+      // position size by construction (size = equity / slots). `expectancyUsd` is the dollar
+      // companion and is deliberately gross of commission, matching simulatePortfolio.
+      expectancyPct: r.expectancyPctOfEquity,
+      expectancyUsd: r.expectancyUsd,
+      avgWinUsd: r.avgWinUsd,
+      avgLossUsd: r.avgLossUsd,
+      // Average win over average loss, as a positive multiple ("wins are 2.9x the size of losses").
+      // avgLossUsd is returned NEGATIVE by simulatePortfolio, hence the abs — a trap this project has
+      // already hit once in paper_run.js. Null rather than Infinity when nothing lost, so the UI
+      // renders an em dash instead of a number that would sort above every real row.
+      winLossRatio: r.avgLossUsd < 0 ? r.avgWinUsd / Math.abs(r.avgLossUsd) : null,
       // Time-in-market, all TIME-WEIGHTED over the calendar (see capitalUtilization above). Fill
       // rate answers "what share of signals did I take"; these answer "what share of the time was
       // my money actually at risk" — a selection can fill most of its signals and still sit in cash

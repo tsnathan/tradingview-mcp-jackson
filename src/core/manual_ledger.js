@@ -51,6 +51,30 @@ CREATE INDEX IF NOT EXISTS idx_manual_positions_status ON manual_positions(statu
 let db = null;
 let dbPathOverride = null; // test-only
 
+/**
+ * Extra schema statements contributed by sibling modules that live in this same database file.
+ *
+ * sim_templates.js registers its table here rather than opening a second DatabaseSync on the same
+ * path: two connections to one SQLite file from a single process can collide on write locks, and a
+ * separate file would put the template rows out of reach of a foreign key from manual_positions.
+ * Registration must happen at import time (module top level), before the first getDb() call.
+ */
+const schemaExtensions = [];
+export function registerLedgerSchema(sql) {
+  schemaExtensions.push(sql);
+  // If the connection is already open, apply immediately — the statements are all IF NOT EXISTS /
+  // additive, so running them twice is a no-op and import order stops being load-bearing.
+  if (db) db.exec(sql);
+}
+
+/**
+ * The shared connection for every table in this database file. Exported so sim_templates.js can use
+ * it without duplicating the open/migrate dance or the test-reset plumbing.
+ */
+export function getLedgerDb() {
+  return getDb();
+}
+
 function getDb() {
   if (db) return db;
   const path = dbPathOverride || MANUAL_LEDGER_DB_PATH;
@@ -58,6 +82,7 @@ function getDb() {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
   db = new DatabaseSync(path);
   db.exec(SCHEMA_SQL);
+  for (const sql of schemaExtensions) db.exec(sql);
   migrate(db);
   return db;
 }
@@ -75,6 +100,12 @@ function migrate(d) {
     // `side` arrived with Portfolio Analytics: without it a SHORT's realized P&L computes with the
     // sign of a long. Existing rows default to LONG, which is what they were recorded as.
     ["side", "ALTER TABLE manual_positions ADD COLUMN side TEXT NOT NULL DEFAULT 'LONG'"],
+    // Which Sim Template this position was opened under, so a book can be attributed back to the
+    // simulated configuration that justified it. Nullable and NOT back-filled: every row predating
+    // templates was opened without one, and guessing which template "would have" produced it would
+    // invent an attribution nobody made. No FK constraint — a template deleted after the fact must
+    // not cascade into rewriting position history; the join is resolved in the reader instead.
+    ["template_id", "ALTER TABLE manual_positions ADD COLUMN template_id INTEGER"],
   ];
   for (const [col, sql] of additions) {
     if (!have.has(col)) d.exec(sql);
@@ -89,6 +120,18 @@ export function _resetManualLedgerForTests(path = ':memory:') {
 }
 
 function positive(n) { return Number.isFinite(Number(n)) && Number(n) > 0; }
+
+/**
+ * A template id from a request body: null when absent/blank/cleared, the number when usable, and
+ * `false` — distinct from null — when present but unusable, so the caller can refuse rather than
+ * silently storing an unattributed position under a value the user meant to set.
+ */
+function parseTemplateId(raw) {
+  if (raw == null || raw === '') return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0 || Math.trunc(n) !== n) return false;
+  return n;
+}
 
 export function validateManualPositionInput(body) {
   const account = String(body?.account ?? '').trim();
@@ -119,6 +162,13 @@ export function validateManualPositionInput(body) {
   // row predating this field was. Only the sign of realized P&L depends on it.
   const side = String(body?.side ?? 'LONG').trim().toUpperCase() === 'SHORT' ? 'SHORT' : 'LONG';
 
+  // Which Sim Template this position is being opened under. Optional — a hand-entered holding need
+  // not belong to a simulated configuration. That the template EXISTS is checked by the caller, not
+  // here: this module owns no reference to sim_templates.js (which imports this one for the shared
+  // database connection), so the existence check lives at the HTTP layer alongside the account one.
+  const templateId = parseTemplateId(body?.template_id);
+  if (templateId === false) return { ok: false, error: 'template_id must be a positive whole number' };
+
   return {
     ok: true,
     value: {
@@ -126,6 +176,7 @@ export function validateManualPositionInput(body) {
       symbol,
       timeframe,
       side,
+      template_id: templateId,
       qty: Number(body.qty),
       entry_price: Number(body.entry_price),
       stop_price: stopPrice,
@@ -142,11 +193,12 @@ export function validateManualPositionInput(body) {
 export function createManualPosition(value) {
   const info = getDb().prepare(`
     INSERT INTO manual_positions
-      (account, symbol, qty, entry_price, stop_price, target_price, timeframe, side, levels_source, notes, entered_at, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')
+      (account, symbol, qty, entry_price, stop_price, target_price, timeframe, side, levels_source, notes, entered_at, template_id, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')
   `).run(
     value.account, value.symbol, value.qty, value.entry_price, value.stop_price,
     value.target_price, value.timeframe, value.side, value.levels_source, value.notes, value.entered_at,
+    value.template_id ?? null,
   );
   return getManualPositionById(info.lastInsertRowid);
 }
@@ -259,6 +311,13 @@ export function validateManualPositionUpdate(body, existing) {
   }
   if (has('levels_source')) {
     patch.levels_source = body.levels_source ? String(body.levels_source).trim() : 'manual';
+  }
+  if (has('template_id')) {
+    // An empty string or null detaches the template — a position can legitimately stop belonging to
+    // a configuration. `false` here means the caller sent something that isn't an id at all.
+    const templateId = parseTemplateId(body.template_id);
+    if (templateId === false) return { ok: false, error: 'template_id must be a positive whole number' };
+    patch.template_id = templateId;
   }
 
   if (Object.keys(patch).length === 0) return { ok: false, error: 'nothing to update' };

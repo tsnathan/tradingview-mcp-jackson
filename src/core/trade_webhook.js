@@ -252,6 +252,7 @@ export function validateOrderSpec({ orderType, timeInForce, limitPrice, stopPric
 export function buildWebhookPayload({
   symbol, side, action, timeframe, tag, price, group, secret,
   orderType, timeInForce, limitPrice, stopPrice, trailPercent, trailPrice,
+  template,
 }) {
   const check = validateOrderSpec({ orderType, timeInForce, limitPrice, stopPrice, trailPercent, trailPrice });
   if (!check.ok) throw new Error(check.error);
@@ -285,7 +286,36 @@ export function buildWebhookPayload({
     else payload.trail_price = String(spec.trailPrice);
   }
   if (spec.timeInForce) payload.time_in_force = spec.timeInForce;
+  // Sim Template attribution: which simulated configuration this order was placed under. Added ONLY
+  // when the caller resolved a template, so an order with no template keeps the original payload
+  // byte-for-byte — the executor's tolerance for unrecognised keys is not documented anywhere we can
+  // check, and an untagged order must never be the thing that discovers it is intolerant.
+  //
+  // Deliberately NOT routed through `tag`: that field selects the executor's strategy group, and
+  // folding a template into it would fragment one routing bucket into one per template.
+  const stamp = normalizeTemplateStamp(template);
+  if (stamp) {
+    payload.template_id = stamp.template_id;
+    payload.template = stamp.template;
+  }
   return payload;
+}
+
+/**
+ * Accept either a full template row or an already-built { template_id, template } stamp, and emit
+ * the two string fields or null. Both are strings for the same reason `price` is: TradingView's own
+ * placeholder expansion produces strings, so the receiver is already parsing that shape.
+ *
+ * Lives here rather than in sim_templates.js so this module keeps no import of it — the automatic
+ * dispatch path resolves the template and hands it over, and a payload can still be built with the
+ * templates database entirely absent.
+ */
+export function normalizeTemplateStamp(template) {
+  if (!template) return null;
+  const id = template.template_id ?? template.id;
+  const desc = template.template ?? template.short_desc;
+  if (id === null || id === undefined || id === "" || !desc) return null;
+  return { template_id: String(id), template: String(desc) };
 }
 
 /**
