@@ -78,6 +78,39 @@ function Test-CdpReady {
   } catch { return $false }
 }
 
+# Mirrors run_signal_job.ps1's gate, and must stay in step with it. This task's
+# DisallowStartIfOnBatteries was turned off (2026-08-06) so CDP recovery keeps working while the
+# scan runs unplugged — a scanner that runs on battery with no watchdog behind it just fails with
+# connection errors instead. Relaunching TradingView is the most expensive thing either script does,
+# so it gets the same floor rather than none.
+$MinBatteryPercent = 20
+
+function Test-BatteryGate {
+  # $true = OK to run. Every uncertain case runs: no battery (desktop/VM), an unreadable
+  # Win32_Battery, or BatteryStatus in 2/6/7/8/9 (AC or charging).
+  try {
+    $batteries = @(Get-CimInstance Win32_Battery -ErrorAction Stop)
+  } catch {
+    return $true
+  }
+  if ($batteries.Count -eq 0) { return $true }
+  if ($batteries | Where-Object { $_.BatteryStatus -in @(2, 6, 7, 8, 9) }) { return $true }
+
+  $charge = ($batteries |
+    Where-Object { $null -ne $_.EstimatedChargeRemaining } |
+    Measure-Object -Property EstimatedChargeRemaining -Maximum).Maximum
+  if ($null -eq $charge) { return $true }
+  if ($charge -ge $MinBatteryPercent) { return $true }
+
+  # ASCII only inside a double-quoted string here. This file is UTF-8 with NO BOM, so PS 5.1 reads
+  # it as Windows-1252: an em dash (E2 80 94) becomes the three chars a-euro-", and that third one
+  # is U+201D, which PowerShell accepts as a STRING DELIMITER. It closed this string early and the
+  # whole function then failed to parse with "Missing closing '}'" reported 17 lines earlier.
+  # Comments and single-quoted strings survive it; double-quoted ones do not.
+  Write-Host "On battery at $charge% (below $MinBatteryPercent%) - exiting."
+  return $false
+}
+
 function Get-TradingViewExe {
   $candidates = @(
     "$env:LOCALAPPDATA\TradingView\TradingView.exe",
@@ -179,6 +212,12 @@ Write-Host "[$ts] TV Watchdog running"
 
 if (-not (Test-MarketHours)) {
   Write-Host 'Outside market hours — exiting.'
+  exit 0
+}
+
+# After market hours, so an overnight run on battery does not log every 5 minutes about a recovery
+# that was never going to be attempted anyway.
+if (-not (Test-BatteryGate)) {
   exit 0
 }
 
