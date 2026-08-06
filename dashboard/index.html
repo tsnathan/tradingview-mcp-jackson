@@ -1664,6 +1664,19 @@
       return new Date(ts).toISOString();
     }
 
+    // The current moment as an ET wall clock, for the entry date/time field.
+    //
+    // This is the default for BOTH a fresh add and a row carried over with the Ledger button. The
+    // carry-over used to prefill the position's own scanned entry time, which is the wrong default
+    // for what this form is actually used for: recording a fill you are taking NOW against a signal
+    // that may have printed hours earlier. It also read as "3 hours ahead" on a Pacific machine —
+    // correctly ET, but nothing like the local wall clock, so it looked wrong on top of being the
+    // wrong instant. The position's real entry time is shown in the note under the form instead, so
+    // it can still be typed in when back-filling a historical position.
+    function etNowInput() {
+      return isoToEtInput(new Date().toISOString(), true);
+    }
+
     // ISO instant -> the ET wall clock a date / datetime-local input wants.
     function isoToEtInput(iso, withTime) {
       if (!iso) return '';
@@ -1717,7 +1730,7 @@
       set('ml-entry', p.entryPrice);
       set('ml-stop', p.stop);
       set('ml-target', p.target);
-      set('ml-entered', isoToEtInput(p.entryTimeRaw, true));
+      set('ml-entered', etNowInput());
       set('ml-side', p.side || 'LONG');
       set('ml-qty', '');
       const qtyEl = document.getElementById('ml-qty');
@@ -1741,9 +1754,15 @@
       mlAutoQty();
       const note = document.getElementById('ml-suggest-note');
       if (note) {
-        note.textContent = p.levelsSource === 'strategy_excursion'
+        // Entry date/time defaults to now, so name the position's own entry time here — it is the
+        // value to type in when back-filling rather than recording a fill being taken right now.
+        const signalledAt = isoToEtInput(p.entryTimeRaw, true);
+        const whenNote = signalledAt
+          ? ` Entry date/time is set to now — the signal itself entered at ${signalledAt.replace('T', ' ')} ET, if you are back-filling.`
+          : '';
+        note.textContent = (p.levelsSource === 'strategy_excursion'
           ? `Carried from the open ${p.symbol} position — stop/target are the avg excursion levels already computed for it. Pick an account (Qty sizes itself if that account has an equity and alloc %), adjust anything, then Add entry.`
-          : `Carried from the open ${p.symbol} position. No excursion levels were available, so enter stop and/or target by hand.`;
+          : `Carried from the open ${p.symbol} position. No excursion levels were available, so enter stop and/or target by hand.`) + whenNote;
       }
       document.getElementById('ml-account')?.focus();
     });
@@ -3642,6 +3661,11 @@
 
     async function loadManualLedgerTab() {
       const status = document.getElementById('ml-status');
+      // Honour the field's own "Defaults to now" tooltip, which nothing had ever implemented — the
+      // add form opened with a blank entry date/time. Only filled when empty, so a row carried over
+      // by the Ledger button (which runs before this) is never overwritten.
+      const enteredEl = document.getElementById('ml-entered');
+      if (enteredEl && !enteredEl.value) enteredEl.value = etNowInput();
       try {
         const [accountsResp, rulesResp, ledgerResp, tplResp] = await Promise.all([
           fetch('/api/accounts').then((r) => r.json()),
@@ -4969,7 +4993,10 @@
         if (!resp?.success) throw new Error(resp?.error || 'could not save the entry');
         ['ml-symbol', 'ml-qty', 'ml-entry', 'ml-stop', 'ml-target', 'ml-notes', 'ml-entered'].forEach((id) => {
           const el = document.getElementById(id);
-          el.value = '';
+          // Entry date/time re-defaults to now rather than clearing: the next entry is almost always
+          // another fill being taken around the same time, and a blank field is the one value that
+          // is never what you want.
+          el.value = id === 'ml-entered' ? etNowInput() : '';
           delete el.dataset.source;
           // The next entry is a fresh decision: a Qty or level typed for the position just saved
           // must not keep suppressing auto-sizing and level suggestions for the following one.
