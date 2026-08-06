@@ -1285,6 +1285,11 @@ export function buildWatchlistSummaryLines(
         : [];
       const groups = [openDetails, exitGroup].filter((g) => g.length > 0);
       const suffix = groups.length > 0 ? `\n${groups.map((g) => g.join('\n')).join('\n\n')}` : '';
+      // `skip_headline` lets a caller keep its own reason text while still getting today's restated
+      // rows. buildOutsideHoursResult sets it, because "WAITING FOR NEXT 15 BAR (next: 12:46 PM ET)"
+      // would promise a scan that is not coming when the reason is `Scheduled scanning disabled` or a
+      // strategy mismatch. Absent, the normal not-due-yet wording is used exactly as before.
+      if (summary.skip_headline) return `${prefix} | ${summary.skip_headline}${suffix}`;
       const nextDueEt = getNextScheduledRunLabel(scanTimestamp, marketHours, timeframe);
       return `${prefix} | WAITING FOR NEXT ${timeframe || 'WATCHLIST'} BAR (next: ${nextDueEt})${suffix}`;
     }
@@ -2005,6 +2010,28 @@ export function buildOutsideHoursResult({
     baseline.watchlists || {},
   );
 
+  const openTrades = buildOpenTrades(priorSignalsByWatchlist, baseline.signals || {}, generatedAt, timezone);
+
+  // The Current Signal log must show TODAY's entries and exits until the ET date rolls over,
+  // regardless of which timeframe happened to scan last — including on a tick where NOTHING was due
+  // and no scan ran at all. This function used to emit a bare `… | NO SIGNAL | <reason>` per
+  // watchlist instead of calling buildWatchlistSummaryLines(), so every such tick blanked the log
+  // while the positions themselves sat intact in the baseline. Same class as the ranking bug fixed
+  // the same day: a display value derivable from the baseline alone, computed on one path only.
+  //
+  // `skipped_due_schedule` selects the branch that restates today's OPEN rows (from the open-trades
+  // list, so the log and the Open Trades table share one source) and today's EXIT rows (from the
+  // baseline's stored exit_time). `skip_headline` preserves this function's own reason text, since
+  // the branch's default "WAITING FOR NEXT … BAR" would promise a scan that is not coming when the
+  // reason is a disabled schedule or a strategy mismatch. `scanned_at` is pinned to generatedAt so
+  // the restated rows are dated by this write, matching the prefix.
+  const summariesForLines = watchlistSummaries.map((target) => ({
+    ...target,
+    scanned_at: generatedAt,
+    skipped_due_schedule: true,
+    skip_headline: `NO SIGNAL | ${reason}`,
+  }));
+
   return {
     success: true,
     skipped: true,
@@ -2012,8 +2039,13 @@ export function buildOutsideHoursResult({
     signal_lines: [],
     changed_signal_lines: [],
     notify_signal_lines: [],
-    watchlist_summary_lines: watchlistSummaries.map(
-      (target) => `${formatTimestamp(generatedAt, timezone)} ET | WATCHLIST: ${target.watchlist_name} | SYMBOLS: ${target.symbol_count} | SCAN: ${formatDuration(target.scan_duration_ms)} | NO SIGNAL | ${reason}`,
+    watchlist_summary_lines: buildWatchlistSummaryLines(
+      summariesForLines,
+      [],
+      priorSignalsByWatchlist,
+      timezone,
+      marketHours,
+      openTrades,
     ),
     summary_line: `${formatTimestamp(generatedAt, timezone)} ET | NO SIGNAL | ${reason}`,
     generated_at: generatedAt,
@@ -2024,7 +2056,7 @@ export function buildOutsideHoursResult({
     changed_signals: 0,
     total_scan_count: 0,
     symbols_scanned: [],
-    open_trades: buildOpenTrades(priorSignalsByWatchlist, baseline.signals || {}, generatedAt, timezone),
+    open_trades: openTrades,
     scan_mode: 'signals_only',
     watchlists_checked: scanTargets.map((target) => target.watchlistName),
     prior_signals_by_watchlist: priorSignalsByWatchlist,

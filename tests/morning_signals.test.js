@@ -1002,6 +1002,68 @@ describe('outside-hours skip behavior', () => {
     assert.equal(result.total_scan_count, 0);
     assert.deepEqual(result.open_trades.map((row) => row.symbol), ['BATS:ERX', 'BATS:USO']);
   });
+
+  /**
+   * The Current Signal log must show TODAY's entries until the ET date rolls over, on every tick —
+   * including one where NOTHING was due and no scan ran, which is this function's whole job.
+   *
+   * It used to emit a bare `… | NO SIGNAL | <reason>` per watchlist instead of calling
+   * buildWatchlistSummaryLines(), so the log went blank about positions sitting intact in the
+   * baseline. The restated rows and the reason must BOTH survive: the reason is the only thing
+   * saying why nothing scanned, and "WAITING FOR NEXT … BAR" would promise a scan that is not
+   * coming when the reason is a disabled schedule.
+   */
+  const skipResultWithSignals = (reason) => {
+    const justNow = new Date(Date.now() - 60_000).toISOString();   // same ET day, barring midnight
+    return buildOutsideHoursResult({
+      marketHours: { timezone: 'America/New_York', open: '09:30', close: '16:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
+      scanTargets: [{ watchlistName: 'Swing 15m', timeframe: '15', symbols: ['BATS:ERX', 'BATS:USO'] }],
+      baseline: {
+        last_updated: justNow,
+        signals: {
+          'BATS:ERX:15': { symbol: 'BATS:ERX', timeframe: '15', signal_type: 'OPEN', entry_time: justNow, entry_price: '80.45 USD', net_pnl: 'In progress' },
+          'BATS:USO:15': { symbol: 'BATS:USO', timeframe: '15', signal_type: 'OPEN', entry_time: '2026-04-17T10:45:00.000Z', entry_price: '113.98 USD', net_pnl: 'In progress' },
+        },
+        watchlists: { 'Swing 15m': { symbols: ['BATS:ERX', 'BATS:USO'], symbol_count: 2 } },
+      },
+      reason,
+    });
+  };
+
+  it('restates today\'s entries on a tick where nothing was due', () => {
+    const line = skipResultWithSignals('No watchlists are due for scan at this minute').watchlist_summary_lines[0];
+    assert.match(line, /OPEN:\s*BATS:ERX/, 'today\'s entry must be restated');
+  });
+
+  it('does not restate an entry from a previous day', () => {
+    const line = skipResultWithSignals('No watchlists are due for scan at this minute').watchlist_summary_lines[0];
+    assert.doesNotMatch(line, /OPEN:\s*BATS:USO/, 'the Open Trades table is the full holdings view, not this log');
+  });
+
+  it('keeps the reason on the line, and never promises a bar that is not coming', () => {
+    for (const reason of ['Scheduled scanning disabled', 'Outside market hours', 'No watchlists are due for scan at this minute']) {
+      const line = skipResultWithSignals(reason).watchlist_summary_lines[0];
+      assert.ok(line.includes(`NO SIGNAL | ${reason}`), `reason missing for: ${reason}`);
+      assert.doesNotMatch(line, /WAITING FOR NEXT/, `must not promise a next bar for: ${reason}`);
+      assert.match(line, /OPEN:\s*BATS:ERX/, `restated rows lost for: ${reason}`);
+    }
+  });
+
+  it('still emits one line per watchlist when nothing entered today', () => {
+    const result = buildOutsideHoursResult({
+      marketHours: { timezone: 'America/New_York', open: '09:30', close: '16:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
+      scanTargets: [{ watchlistName: 'Swing 15m', timeframe: '15', symbols: ['BATS:ERX'] }],
+      baseline: {
+        last_updated: '2026-04-17T22:35:20.943Z',
+        signals: { 'BATS:ERX:15': { symbol: 'BATS:ERX', timeframe: '15', signal_type: 'OPEN', entry_time: '2026-04-17T10:45:08.000Z', entry_price: '80.45 USD' } },
+        watchlists: { 'Swing 15m': { symbols: ['BATS:ERX'], symbol_count: 1 } },
+      },
+      reason: 'Outside market hours',
+    });
+    assert.equal(result.watchlist_summary_lines.length, 1);
+    assert.match(result.watchlist_summary_lines[0], /NO SIGNAL \| Outside market hours/);
+    assert.doesNotMatch(result.watchlist_summary_lines[0], /OPEN:/);
+  });
 });
 
 describe('scheduled timeframe filtering', () => {
