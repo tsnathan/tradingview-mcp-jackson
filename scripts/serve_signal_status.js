@@ -39,7 +39,7 @@ import {
 } from '../src/core/sim_templates.js';
 import { runRegression } from '../src/core/regression.js';
 import { buildEdgeAnalysis } from '../src/core/edge_analysis.js';
-import { readPerfSnapshots, listRuleTypes, findWatchlistOrphans, readAllTradeLogs, summarizeMembershipFilter, timeframeLabel } from '../src/core/trade_log.js';
+import { buildOpenBySymbolTf, listRuleTypes, findWatchlistOrphans, readAllTradeLogs, summarizeMembershipFilter, timeframeLabel } from '../src/core/trade_log.js';
 import { simulatePortfolio, sweepMaxPositions, computeOpenPositionConcurrency } from '../src/core/portfolio_sim.js';
 import { buildUniverse, buildWatchlistMembership } from '../src/core/universe.js';
 import { replayPaperRun, normalizePaperConfig } from '../src/core/paper_run.js';
@@ -401,18 +401,6 @@ async function deleteManualLedgerAlerts(alertIds) {
   } catch (err) {
     return { ok: false, deleted: 0, error: err?.message || String(err) };
   }
-}
-
-function buildOpenBySymbolTf() {
-  const snapshots = readPerfSnapshots();
-  const openBySymbolTf = {};
-  for (const [key, perf] of Object.entries(snapshots)) {
-    openBySymbolTf[key] = {
-      openPct: (perf.openPLPercent || 0) * 100,
-      maxDDPct: (perf.maxDDPercent || 0) * 100,
-    };
-  }
-  return openBySymbolTf;
 }
 
 function readJsonBody(req) {
@@ -922,17 +910,9 @@ const server = http.createServer(async (req, res) => {
       // both tabs agree on what "better" means.
       let rankBy = {};
       if (priority === 'rank') {
-        const snaps = readPerfSnapshots();
-        const openBySymbolTf = {};
-        for (const [key, perf] of Object.entries(snaps)) {
-          openBySymbolTf[key] = {
-            openPct: (perf.openPLPercent || 0) * 100,
-            maxDDPct: (perf.maxDDPercent || 0) * 100,
-          };
-        }
         // Same variant as the simulation, or the ranking would order symbols by an edge measured
         // under a different exit rule than the one being simulated.
-        const edge = buildEdgeAnalysis({ openBySymbolTf, minTrades: 4, ruleType, membership });
+        const edge = buildEdgeAnalysis({ openBySymbolTf: buildOpenBySymbolTf(), minTrades: 4, ruleType, membership });
         if (edge.available) {
           for (const s of edge.symbols) if (s.cagrDd !== null) rankBy[s.key] = s.cagrDd;
         }

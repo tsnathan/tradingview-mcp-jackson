@@ -62,6 +62,43 @@ describe('ntfy push line', () => {
     const line = formatNotifyOpenLine(entry({ scanned_at: undefined }), 'America/New_York', '2026-08-06T17:00:00.000Z');
     assert.ok(line.startsWith('08/06/2026, 01:00:00 PM ET |'), `unexpected stamp: ${line}`);
   });
+
+  it('omits the Edge/KPI suffix when no stats index is supplied', () => {
+    const line = formatNotifyOpenLine(entry({ timeframe: '240' }), 'America/New_York');
+    assert.doesNotMatch(line, /EDGE:/);
+  });
+
+  it('appends the Edge score and this timeframe\'s KPI row when a stats index matches', () => {
+    const statsByKey = new Map([
+      ['ABNB|4h', {
+        key: 'ABNB|4h', tfDisplay: '4H', trades: 18, years: 1.9, winRate: 78,
+        expectancyPct: 5.1, cagr: 51.1, expectedPct: 116.5, cagrDd: 0.93,
+        avgMaePct: 10.5, maxMaePct: 39.2, avgHoldDays: 12.5, expPercentile: 0.72,
+      }],
+    ]);
+    const line = formatNotifyOpenLine(entry({ timeframe: '240' }), 'America/New_York', Date.now(), statsByKey);
+    assert.match(line, /EDGE: 72\/100/);
+    assert.match(line, /4H KPI: n=18 span=1\.9y win=78% exp=5\.1% CAGR=51\.1% Exp=116\.5% CAGR\/DD=0\.93 MAE avg=10\.5% max=39\.2% hold=12\.5d/);
+  });
+
+  it('reports n/a rather than a fabricated score for a symbol/timeframe with no closed-trade history', () => {
+    const line = formatNotifyOpenLine(entry({ timeframe: '240' }), 'America/New_York', Date.now(), new Map());
+    assert.match(line, /EDGE: n\/a \(no closed-trade history on this TF\)/);
+  });
+
+  it('renders Edge as n/a, never 0\\/100, for a row too thin to rank', () => {
+    const statsByKey = new Map([
+      ['ABNB|4h', {
+        key: 'ABNB|4h', tfDisplay: '4H', trades: 3, years: 0.4, winRate: 67,
+        expectancyPct: 2.1, cagr: 12.1, expectedPct: null, cagrDd: null,
+        avgMaePct: 4.2, maxMaePct: 9.1, avgHoldDays: 3.2, expPercentile: null,
+      }],
+    ]);
+    const line = formatNotifyOpenLine(entry({ timeframe: '240' }), 'America/New_York', Date.now(), statsByKey);
+    assert.match(line, /EDGE: n\/a \|/);
+    assert.doesNotMatch(line, /EDGE: 0\/100/);
+    assert.match(line, /Exp=n\/a CAGR\/DD=n\/a/);
+  });
 });
 
 describe('signal detection', () => {

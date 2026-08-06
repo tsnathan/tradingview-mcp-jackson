@@ -12,7 +12,7 @@ import * as alerts from "./alerts.js";
 import { launch as launchTradingView } from "./health.js";
 import * as watchlist from "./watchlist.js";
 import * as tradeLog from "./trade_log.js";
-import { attachOpenTradeRanks, buildSymbolEdgeScores } from "./edge_analysis.js";
+import { attachOpenTradeRanks, buildSymbolEdgeScores, buildEdgeAnalysis } from "./edge_analysis.js";
 import {
   loadWebhookCredentials,
   loadWebhookSettings,
@@ -1993,6 +1993,62 @@ export function formatSignalLine(entry, timezone = DEFAULT_MARKET_HOURS.timezone
 }
 
 /**
+ * Per (ticker, timeframe) Edge score + historical KPI row, for the ntfy OPEN push. Built once per
+ * scan (there can be several OPEN lines in one push batch) and handed to formatNotifyOpenLine
+ * rather than each line re-reading the ~2MB trade log.
+ *
+ * Reuses buildEdgeAnalysis() rather than computing a second version — its `symbols` rows are the
+ * exact same numbers the dashboard's "Historical Performance by Timeframe" table and Symbol Lookup
+ * render (both go through this same function; see symbol_lookup.js), and its `expPercentile` is the
+ * identical expectancy-percentile-within-timeframe methodology buildSymbolEdgeScores uses for the
+ * Open Trades table's Edge column. One push line disagreeing with the dashboard about a symbol's
+ * own Edge score would be worse than not showing it at all.
+ *
+ * `openBySymbolTf` (tradeLog.buildOpenBySymbolTf(), read from status/strategy-perf.json) supplies
+ * the live-read maxDDPct that CAGR/DD is divided by — without it every row's CAGR/DD renders "n/a",
+ * since buildEdgeAnalysis's own default is `{}` (no live drawdown data). This is the same map
+ * symbol_lookup.js and the dashboard's edge-analysis endpoint pass in, so the push agrees with them.
+ *
+ * Wrapped in try/catch and returns null on failure: this is a decoration on the push, and an
+ * unreadable trade log must cost the KPI suffix, never the underlying signal notification.
+ */
+function buildNotifyStatsIndex(ruleType) {
+  try {
+    const { symbols } = buildEdgeAnalysis({ ruleType, openBySymbolTf: tradeLog.buildOpenBySymbolTf() });
+    const byKey = new Map();
+    for (const s of symbols) byKey.set(s.key, s);
+    return byKey;
+  } catch (err) {
+    console.error(`[edge] could not build notify KPI index: ${err?.message || err}`);
+    return null;
+  }
+}
+
+/**
+ * ` | EDGE: ... | <TF> KPI: ...` suffix for one OPEN push line, or '' if no stats index was
+ * supplied (keeps every existing caller — the partial-scan writer's signal_lines/changed_signal_lines,
+ * and every test — byte-identical when statsByKey is omitted).
+ *
+ * Symbols below buildEdgeAnalysis's RANK_MIN_TRADES floor still return a row (buildEdgeAnalysis's own
+ * `minTrades` gate is looser, for coverage purposes) but `expPercentile` is null — rendered as
+ * "n/a", never as 0, so a thin history never reads as a bad signal.
+ */
+function formatEdgeKpiSuffix(symbol, timeframe, statsByKey) {
+  if (!statsByKey) return '';
+  const key = `${bareTicker(symbol).toUpperCase()}|${timeframeTag(timeframe)}`;
+  const s = statsByKey.get(key);
+  if (!s) return ' | EDGE: n/a (no closed-trade history on this TF)';
+  const pct = (v, d = 1) => (Number.isFinite(v) ? `${v.toFixed(d)}%` : 'n/a');
+  const edge = Number.isFinite(s.expPercentile) ? `${Math.round(s.expPercentile * 100)}/100` : 'n/a';
+  const span = Number.isFinite(s.years) ? `${s.years.toFixed(1)}y` : 'n/a';
+  const cagrDd = Number.isFinite(s.cagrDd) ? s.cagrDd.toFixed(2) : 'n/a';
+  const hold = Number.isFinite(s.avgHoldDays) ? `${s.avgHoldDays.toFixed(1)}d` : 'n/a';
+  return ` | EDGE: ${edge} | ${s.tfDisplay || timeframeTag(timeframe)} KPI: n=${s.trades} span=${span}`
+    + ` win=${pct(s.winRate, 0)} exp=${pct(s.expectancyPct)} CAGR=${pct(s.cagr)} Exp=${pct(s.expectedPct)}`
+    + ` CAGR/DD=${cagrDd} MAE avg=${pct(s.avgMaePct)} max=${pct(s.maxMaePct)} hold=${hold}`;
+}
+
+/**
  * One OPEN line for the ntfy push (notify_signal_lines).
  *
  * Extracted because runBrief built this string twice — once in the partial-scan writer and once for
@@ -2002,17 +2058,24 @@ export function formatSignalLine(entry, timezone = DEFAULT_MARKET_HOURS.timezone
  * The entry time is rendered in ET via formatEntryTimeDisplay, not printed as the stored raw ISO.
  * It sits directly beside an ET scan stamp in the same line, so a UTC value there read as four
  * hours in the future — the same defect fixed on the dashboard's Current Signal log.
+ *
+ * `statsByKey` (from buildNotifyStatsIndex) is optional and appends the Edge score + that symbol's
+ * historical KPI for THIS entry's own timeframe — the same row the dashboard's Historical
+ * Performance by Timeframe table would show for it — so the push answers "is this signal any good"
+ * without opening the dashboard.
  */
 export function formatNotifyOpenLine(
   entry = {},
   timezone = DEFAULT_MARKET_HOURS.timezone,
   fallbackTimestamp = Date.now(),
+  statsByKey = null,
 ) {
   const symbol = entry.state?.symbol || entry.symbol || 'n/a';
   const stamp = formatTimestamp(entry.scanned_at || fallbackTimestamp, timezone);
   return `${stamp} ET | WATCHLIST: ${entry.watchlist_name || 'Default'} | OPEN: ${symbol}`
     + ` | ENTRY: ${normalizeTradeDisplay(entry.trade?.entryPrice)}`
-    + ` | AT: ${formatEntryTimeDisplay(entry.trade?.entryTime, timezone)}`;
+    + ` | AT: ${formatEntryTimeDisplay(entry.trade?.entryTime, timezone)}`
+    + formatEdgeKpiSuffix(symbol, entry.timeframe, statsByKey);
 }
 
 export function createDashboardStatus(result = {}) {
@@ -2639,7 +2702,12 @@ export async function runBrief({
     String(entry.trade?.signal || '').toUpperCase() === 'EXIT'
     && isSameTradingDay(entry.trade?.exitTime, generatedAt, timezone)
   );
-  const notifySignalLines = notifyEntries.map((entry) => formatNotifyOpenLine(entry, timezone, generatedAt));
+  const notifyStatsIndex = notifyEntries.length
+    ? buildNotifyStatsIndex(tradeLog.listRuleTypes()[0]?.rule_type ?? null)
+    : null;
+  const notifySignalLines = notifyEntries.map(
+    (entry) => formatNotifyOpenLine(entry, timezone, generatedAt, notifyStatsIndex),
+  );
   const noSignalLines = watchlistSummaries.map(
     (target) => `${formatTimestamp(generatedAt, timezone)} ET | WATCHLIST: ${target.watchlist_name} | SYMBOLS: ${target.symbol_count} | SCAN: ${formatDuration(target.scan_duration_ms)} | NO SIGNAL`,
   );

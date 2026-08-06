@@ -377,6 +377,24 @@ export function readPerfSnapshots() {
   }
 }
 
+/**
+ * Perf snapshots reshaped into the "TICKER|tflabel" -> {openPct, maxDDPct} map buildEdgeAnalysis
+ * expects. One implementation rather than one per call site — this exact transform used to be
+ * copy-pasted in serve_signal_status.js (twice) before this existed, which is the same "two
+ * implementations of one rule drift" failure mode documented throughout this project.
+ */
+export function buildOpenBySymbolTf() {
+  const snapshots = readPerfSnapshots();
+  const openBySymbolTf = {};
+  for (const [key, perf] of Object.entries(snapshots)) {
+    openBySymbolTf[key] = {
+      openPct: (perf.openPLPercent || 0) * 100,
+      maxDDPct: (perf.maxDDPercent || 0) * 100,
+    };
+  }
+  return openBySymbolTf;
+}
+
 export function recordPerfSnapshot(ticker, tfLabel, perf) {
   if (!ticker || !tfLabel) return;
   try {
