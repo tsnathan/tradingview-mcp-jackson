@@ -109,6 +109,47 @@ function Test-ShouldRunNow {
   return ($currentMinutes -ge $openMinutes -and $currentMinutes -le $closeMinutes)
 }
 
+# Minimum charge to keep scanning while unplugged. Below this the scan stops rather than spending
+# the last of the battery driving TradingView.
+#
+# This replaces the task's DisallowStartIfOnBatteries flag, which is all-or-nothing: it refused
+# EVERY run on battery, silently — State stayed Ready, NextRunTime kept advancing, nothing was
+# logged, and the only tell was NumberOfMissedRuns climbing while LastRunTime sat still. That gate
+# is now off on the task (2026-08-06) and the threshold lives here instead, where it can be a
+# percentage and can say so in the log.
+$MinBatteryPercent = 20
+
+function Test-BatteryGate {
+  # $true = OK to run. Every uncertain case runs: this gate exists to save a nearly-flat battery,
+  # and refusing to scan because a battery status could not be read would be a far worse failure
+  # than the one it prevents.
+  try {
+    $batteries = @(Get-CimInstance Win32_Battery -ErrorAction Stop)
+  } catch {
+    return $true
+  }
+  if ($batteries.Count -eq 0) { return $true }   # desktop / VM — no battery to run down
+
+  # BatteryStatus 2 = AC, 6/7/8/9 = charging. All mean external power, so the gate cannot apply.
+  # Only a discharging battery reaches the threshold check.
+  if ($batteries | Where-Object { $_.BatteryStatus -in @(2, 6, 7, 8, 9) }) { return $true }
+
+  $charge = ($batteries |
+    Where-Object { $null -ne $_.EstimatedChargeRemaining } |
+    Measure-Object -Property EstimatedChargeRemaining -Maximum).Maximum
+  if ($null -eq $charge) { return $true }
+  if ($charge -ge $MinBatteryPercent) { return $true }
+
+  # Logged, unlike the market-hours skip. A battery gate that blocks silently is precisely what hid
+  # a dead scanner for a day; one line here makes it diagnosable from the same file you would
+  # already be reading.
+  Add-Content -Path '.\signal-scan.log' -Value (
+    "[{0}] Skipped: on battery at {1}%, below the {2}% floor" -f `
+      (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $charge, $MinBatteryPercent)
+  Write-Host "Skipping: on battery at $charge% (below $MinBatteryPercent%)."
+  return $false
+}
+
 $nodeCandidates = @(
   'C:\Program Files\nodejs\node.exe',
   'C:\Program Files (x86)\nodejs\node.exe',
@@ -204,6 +245,12 @@ public class ApplicationActivationManager {}
 
 if (-not (Test-ShouldRunNow)) {
   Write-Host 'Skipping: outside weekday market hours.'
+  exit 0
+}
+
+# Checked after market hours so an overnight run on battery does not write a log line every 15
+# minutes about a scan that was never going to happen anyway.
+if (-not (Test-BatteryGate)) {
   exit 0
 }
 
