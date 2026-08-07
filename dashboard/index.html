@@ -24,6 +24,15 @@
     .latest-list li.exit-summary { border-color:#0f766e; background:#071c20; }
     .latest-list li .line-gap { height:0.9em; }
     .latest-list li.exit-summary .exit-summary-header { display:block; font-weight:700; color:#a5f3fc; background:#05282c; margin:-10px -12px 10px -12px; padding:10px 12px; border-left:4px solid #22d3ee; border-top-right-radius:8px; border-bottom-right-radius:8px; }
+    /* One card per watchlist, two to a row. Scoped to `cs-grid` rather than changed on
+       `.latest-list` itself: the plain-text fallback rendering below still needs the base
+       single-column, pre-wrap layout untouched. `white-space:normal` here is load-bearing, not
+       cosmetic — `pre-wrap` on the base rule preserves the indentation *inside* the table-card
+       template literals as literal blank lines, which is the actual cause of the excess vertical
+       space in each card (confirmed against the rendered page, not a layout-only issue). */
+    .latest-list.cs-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:12px; align-items:start; }
+    .latest-list.cs-grid li { margin:0; white-space:normal; }
+    @media (max-width: 900px) { .latest-list.cs-grid { grid-template-columns: 1fr; } }
     .watchlist-section { margin-top:14px; padding:12px; background:#0f1728; border:1px solid #24314f; border-radius:12px; }
     .watchlist-title { margin:0 0 4px; font-size:18px; }
     .watchlist-meta { margin:0 0 8px; color:#98a7c6; font-size:13px; }
@@ -2659,11 +2668,15 @@
 
       const lines = document.getElementById('lines');
       lines.innerHTML = '';
+      // `cs-grid` (two-cards-per-row layout) applies only to the structured table form below.
+      // Reset unconditionally so the plain-text fallback further down never inherits it.
+      lines.classList.remove('cs-grid');
       // Table form when the scan supplied structured sections; the text block otherwise. A status
       // file written before `currentSignal` existed, or by a producer that did not supply sections,
       // still renders exactly as it used to rather than rendering nothing.
       if (!data.connectionError && !data.errorMessage
           && Array.isArray(data.currentSignal) && data.currentSignal.length) {
+        lines.classList.add('cs-grid');
         renderCurrentSignalTables(lines, data.currentSignal);
         renderExitPendingBanner(data.webhookExitPending || []);
         renderOpenTrades(data.openTrades || []);
@@ -2779,9 +2792,11 @@
           </tr>`);
         }
 
-        const head = `<div style="font-weight:700;margin-bottom:2px;text-align:center;">${escapeHtml(s.watchlistName || 'Watchlist')}
-          <span class="muted" style="font-weight:400;font-size:12px;">
-            · ${Number(s.symbolCount || 0)} symbols · ${escapeHtml(s.headline || '')}</span></div>`;
+        // One line, left-aligned like every other card title on this page (Open Trades,
+        // Executor Portfolio) — these used to be full-width banners where a centred title made
+        // sense; as two-up cards it reads as a normal card header instead.
+        const head = `<div style="font-weight:700;margin-bottom:2px;">${escapeHtml(s.watchlistName || 'Watchlist')}` +
+          ` <span class="muted" style="font-weight:400;font-size:12px;">· ${Number(s.symbolCount || 0)} symbols · ${escapeHtml(s.headline || '')}</span></div>`;
         // Coloured by SIGN, from the numbers, rather than by inspecting the formatted string — the
         // per-row cell still sniffs its leading "+"/"-" because that is all it has, but the summary
         // carries real values, and sign is what "-0.00%" would get wrong. Falls back to the plain
