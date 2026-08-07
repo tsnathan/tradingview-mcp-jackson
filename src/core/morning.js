@@ -772,7 +772,16 @@ function hasMeaningfulTradeValue(value) {
     && lowered !== 'in progress';
 }
 
+// A raw epoch-ms NUMBER (e.g. from Date.now(), used as the "skipped tick has no scanned_at"
+// fallback in buildWatchlistSummarySections) must be returned as-is. String(1786124186443) is a
+// bare numeral with no separators, which Date.parse() does not recognize as any date format — it
+// silently returns NaN, so every "is this same-day" comparison against it collapsed to epoch 0
+// (1970), permanently hiding today's restated OPEN/EXIT rows on any watchlist skipped this tick.
+// new Date(value) (formatTimestamp's approach) handles a raw number fine; Date.parse(String(value))
+// does not — that mismatch is exactly what let the timestamp display correctly while same-day
+// comparisons using this function failed.
 function parseTimestamp(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
   const cleaned = String(value || '')
     .replace(/\s+ET$/i, '')
     .trim();

@@ -240,6 +240,23 @@ describe('signal detection', () => {
     assert.equal(lines[0].includes('AT: 08/05/2026, 10:00:00 AM ET'), true);
   });
 
+  // Regression: the real skip branch in runBrief() (a watchlist not due THIS tick) never sets
+  // scanned_at at all — every other test in this block supplies one explicitly, which is exactly
+  // why this slipped through. Without it, buildWatchlistSummarySections falls back to Date.now(),
+  // a raw epoch-ms NUMBER. parseTimestamp used to stringify before parsing — String(1786124186443)
+  // is a bare numeral Date.parse() cannot read, silently returning 0 (1970) — so every same-day
+  // comparison against "now" failed and today's restated OPEN rows vanished on any skipped tick.
+  it("shows today's entries even when scanned_at is entirely absent (Date.now() fallback)", () => {
+    const nowIso = new Date().toISOString();
+    const lines = buildWatchlistSummaryLines(
+      [{ watchlist_name: 'Swing 45m', timeframe: '45', symbol_count: 35, scan_duration_ms: 0, skipped_due_schedule: true }],
+      [], [], 'America/New_York', undefined,
+      [openTrade({ watchlistName: 'Swing 45m', timeframe: '45', symbol: 'BATS:KMT', entryTimeRaw: nowIso })],
+    );
+
+    assert.equal(lines[0].includes('OPEN: BATS:KMT'), true);
+  });
+
   it('omits a still-open position that entered on an earlier day', () => {
     const lines = buildWatchlistSummaryLines(
       [summary()], [], [], 'America/New_York', undefined,
