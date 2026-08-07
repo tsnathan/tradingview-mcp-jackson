@@ -19,6 +19,7 @@ import {
   createDashboardStatus,
   isMarketHoliday,  buildWatchlistSummaryLines,
   formatNotifyOpenLine,
+  resolveSymbolsForWatchlist,
 } from '../src/core/morning.js';
 
 /**
@@ -1232,5 +1233,30 @@ describe('market hours gating', () => {
     const date = new Date('2026-06-19T14:00:00.000Z');
     assert.equal(isMarketHoliday(date, customHours), true);
     assert.equal(shouldRunEquityScanNow(date, customHours), false);
+  });
+});
+
+describe('resolveSymbolsForWatchlist: exact targets bypass every fallback', () => {
+  // A synthetic one-off target (the dashboard's "test a single symbol" feature) must win outright
+  // over the historical-symbols recovery fallback -- confirmed live 2026-08-07 that without this,
+  // asking for one symbol silently scanned every symbol ever seen on that timeframe instead.
+  //
+  // Only the exact:true short-circuit is tested here, and deliberately nothing else. Every other
+  // branch in this function calls through to a live TradingView CDP connection (with its own
+  // retry/backoff), and TradingView Desktop is genuinely running with CDP live on this machine --
+  // a test that fell through to that path wouldn't be mocking anything, it would actually drive
+  // the real chart. The exact:true path returns before any of that is ever reached.
+  it('returns exactly the target symbols, ignoring historical/baseline/rules fallbacks', async () => {
+    const target = { watchlistName: 'Manual 15', timeframe: '15', symbols: ['AAPL'], exact: true };
+    const result = await resolveSymbolsForWatchlist(target, ['SOXL', 'SPY'], {
+      baselineWatchlists: { 'Manual 15': { symbols: ['NOTAAPL'] } },
+      baselineSignals: {
+        'BATS:TNA:15': { symbol: 'BATS:TNA', timeframe: '15' },
+        'BATS:EWY:15': { symbol: 'BATS:EWY', timeframe: '15' },
+      },
+    });
+    assert.deepEqual(result.symbols, ['AAPL']);
+    assert.equal(result.count, 1);
+    assert.equal(result.source, 'exact');
   });
 });

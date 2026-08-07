@@ -1720,12 +1720,30 @@ export function validateWatchlistRegression({
   };
 }
 
-async function resolveSymbolsForWatchlist(target, fallbackSymbols, options = {}) {
+export async function resolveSymbolsForWatchlist(target, fallbackSymbols, options = {}) {
   const {
     allowFallback = true,
     baselineWatchlists = {},
     baselineSignals = {},
   } = options;
+
+  // A synthetic one-off target (the dashboard's "test a single symbol" feature) sets `exact` and
+  // supplies its own complete, authoritative symbol list -- it must win outright, before even the
+  // live-panel lookup below. Without this, `historicalSymbols` further down (every symbol ever
+  // scanned at this timeframe, across every REAL watchlist -- a deliberate recovery fallback for a
+  // watchlist whose own baseline entry went missing) outranks it, so a request for one symbol
+  // silently turned into a scan of every symbol ever seen on that timeframe. Confirmed live
+  // 2026-08-07: asking for AAPL/15 scanned 31 unrelated Swing-15m symbols instead and returned
+  // whichever of them happened to be scanned first. Also skips the live `watchlist.select()` call
+  // below, which would otherwise burn time hunting for a TradingView watchlist panel named after a
+  // one-off target that was never meant to exist there.
+  if (target?.exact === true && Array.isArray(target.symbols) && target.symbols.length > 0) {
+    return {
+      symbols: target.symbols,
+      count: target.symbols.length,
+      source: 'exact',
+    };
+  }
 
   try {
     await watchlist.select({ name: target.watchlistName });

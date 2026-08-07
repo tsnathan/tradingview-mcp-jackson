@@ -2149,6 +2149,11 @@ const server = http.createServer(async (req, res) => {
             watchlistName,
             timeframe,
             symbols: [symbol],
+            // Tells resolveSymbolsForWatchlist() this list is complete and authoritative on its
+            // own -- skip the live-panel lookup and the historical-symbols fallback, both of
+            // which exist to recover a REAL watchlist's membership and would otherwise silently
+            // replace this one requested symbol with every symbol ever scanned on this timeframe.
+            exact: true,
           };
 
           return runBrief({
@@ -2160,9 +2165,17 @@ const server = http.createServer(async (req, res) => {
           });
         })
           .then((result) => {
-            writeStatus(result);
-            pushEvent({ type: 'status-updated', source: 'manual-symbol-scan', updatedAt: new Date().toISOString() });
-
+            // Deliberately does NOT call writeStatus(result) here. `result` reflects only the
+            // one synthetic scan target built above (a single symbol/timeframe pair, real
+            // watchlists never touched) -- writeStatus() replaces the WHOLE status file from
+            // whatever it's given, so doing that here would overwrite the real, multi-watchlist
+            // Current Signal / Open Trades view with a view of just this one ad-hoc symbol.
+            // Confirmed live 2026-08-07: a single call to this endpoint collapsed the dashboard
+            // down to one card until the next real scan overwrote it back. The client already
+            // calls refresh(true) right after this request resolves -- with no write here, that
+            // simply re-renders the real, unaffected status file, which is what a one-off
+            // symbol lookup should do. The scan itself still ran and its result is returned
+            // below unchanged; only the dashboard-wide side effect is gone.
             const scan = Array.isArray(result.symbols_scanned) ? result.symbols_scanned[0] || {} : {};
             sendJson(res, 200, {
               success: true,
