@@ -4,6 +4,7 @@ import { existsSync, openSync, readFileSync, renameSync, statSync, watch, writeF
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { readJsonFile, parseJsonText } from '../src/json_file.js';
+import { acquireScanLock, releaseScanLock } from '../src/core/scan_lock.js';
 import { computeExcursionLevels, createDashboardStatus, ensureTradingViewConnection, exportMetricsScan, runBrief, runSignalJob, syncWatchlistSymbolsFromTradingView } from '../src/core/morning.js';
 import * as chart from '../src/core/chart.js';
 import * as data from '../src/core/data.js';
@@ -467,6 +468,16 @@ async function runExclusive(actionName, fn) {
     throw err;
   }
 
+  // The in-process check above only catches another dashboard-triggered action. The scheduled
+  // run_signal_job.js task is a separate OS process with no shared memory, so it needs the same
+  // cross-process lock file that task acquires for itself -- see src/core/scan_lock.js. Without
+  // this, a scheduled scan and a dashboard scan can run at once, both driving the same
+  // TradingView chart and stomping the same baseline/status files (confirmed live 2026-08-07:
+  // it silently dropped a whole watchlist's open trades and corrupted a symbol's
+  // cross-timeframe data). Throws with .code === 'SCAN_BUSY' on conflict, same as above, so the
+  // existing SCAN_BUSY -> 409 handling below needs no change.
+  acquireScanLock({ action: `dashboard:${actionName}` });
+
   scanState.running = true;
   scanState.action = actionName;
   scanState.startedAt = new Date().toISOString();
@@ -502,6 +513,7 @@ async function runExclusive(actionName, fn) {
     scanState.running = false;
     scanState.action = null;
     scanState.startedAt = null;
+    releaseScanLock();
   }
 }
 

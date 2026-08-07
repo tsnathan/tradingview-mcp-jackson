@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 import { runSignalJob } from '../src/core/morning.js';
 import { runRegression } from '../src/core/regression.js';
 import { readJsonFile } from '../src/json_file.js';
+import { acquireScanLock, releaseScanLock } from '../src/core/scan_lock.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STATUS_FILE = join(ROOT, 'status', 'latest-signal-status.json');
@@ -82,6 +83,25 @@ const wantOpenSync = nowMinutes >= OPEN_PREFLIGHT_MINUTES && syncState.openSyncD
 const wantCloseSync = nowMinutes >= timeToMinutes(marketHours.close) && syncState.closeSyncDate !== todayEt;
 const syncWatchlists = wantOpenSync || wantCloseSync;
 
+// A scheduled run and a dashboard-triggered scan are separate OS processes with no shared
+// memory -- see src/core/scan_lock.js. Skipping cleanly on SCAN_BUSY (same shape as the
+// schedule/battery gates) means the next 15-minute tick just tries again rather than fighting
+// over the same TradingView chart and the same baseline/status files.
+try {
+  acquireScanLock({ action: 'scheduled-run_signal_job' });
+} catch (err) {
+  if (err?.code === 'SCAN_BUSY') {
+    console.log(`Skipping: ${err.message}`);
+    process.exit(0);
+  }
+  throw err;
+}
+
+function releaseAndExit(code) {
+  releaseScanLock();
+  process.exit(code);
+}
+
 try {
   const result = await runSignalJob({ changed_only: !all, notify, force, syncWatchlists });
 
@@ -93,7 +113,7 @@ try {
 
   if (result.skipped) {
     console.log(result.reason || 'No signal');
-    process.exit(0);
+    releaseAndExit(0);
   }
 
   if ((result.signal_lines || []).length > 0) {
@@ -124,8 +144,8 @@ try {
     }
   }
 
-  process.exit(0);
+  releaseAndExit(0);
 } catch (error) {
   console.error(error?.message || String(error));
-  process.exit(1);
+  releaseAndExit(1);
 }

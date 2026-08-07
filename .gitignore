@@ -27,3 +27,7 @@ trade-log/*.pre-*
 # diff-friendly, unlike the tracked status/*.json and trade-log/*.csv. accounts.json (the picklist
 # config half of that feature) IS tracked, same as rules.json.
 data/
+
+# Cross-process scan lock (src/core/scan_lock.js) — a live pid + timestamp, deleted the instant
+# the holding scan finishes. Meaningless as history, unlike the tracked status/*.json snapshots.
+status/scan.lock
