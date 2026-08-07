@@ -80,10 +80,19 @@ export function normalizeAccounts(cfg) {
     let equity = null;
     let allocPct = null;
 
+    let defaultTemplate = null;
     if (typeof entry === 'string') {
       name = entry.trim();
     } else if (entry && typeof entry === 'object') {
       name = typeof entry.name === 'string' ? entry.name.trim() : '';
+
+      // A Sim Template's own short_desc, matched at the call site (serve_signal_status.js), which
+      // holds the templates module — accounts.js has no reference to it, same boundary the existing
+      // top-of-file comment already draws around equity/alloc_pct validation. Shape-only here: not
+      // blank, trimmed. "Does this template exist / is it archived" is not this file's question.
+      if (!isBlank(entry.default_template)) {
+        defaultTemplate = String(entry.default_template).trim();
+      }
 
       if (!isBlank(entry.equity)) {
         equity = finitePositive(entry.equity);
@@ -125,6 +134,9 @@ export function normalizeAccounts(cfg) {
       // A single flag the UI can branch on, so "can this account auto-size" is decided here rather
       // than re-derived from two nullable fields at every call site.
       sizing: equity != null && allocPct != null,
+      // Raw short_desc, unresolved — see the comment above. The caller resolves it against the
+      // templates module and turns an unknown/archived reference into a warning, never a drop.
+      defaultTemplate,
     });
   }
 

@@ -31,6 +31,7 @@ import {
   archiveTemplate,
   listTemplates,
   getTemplateById,
+  getTemplateByShortDesc,
   findTimeframeCollisions,
   templateStamp,
   templateStaleness,
@@ -1115,7 +1116,24 @@ const server = http.createServer(async (req, res) => {
       // and `warnings` surfaces anything the config dropped (a typo'd equity, a duplicate name)
       // rather than letting an account quietly stop offering an auto-qty.
       const { accounts, names, warnings } = loadNormalizedAccounts();
-      sendJson(res, 200, { success: true, accounts: names, details: accounts, warnings });
+      // default_template is resolved HERE, not in accounts.js, which holds no reference to the
+      // templates module — same boundary the manual-ledger template_id check draws. An unknown
+      // short_desc or an archived match both degrade to "no default" plus a warning, never a
+      // hard error: the account is still usable, it just doesn't pre-fill a template.
+      const details = accounts.map((a) => {
+        if (!a.defaultTemplate) return { ...a, defaultTemplateId: null };
+        const t = getTemplateByShortDesc(a.defaultTemplate);
+        if (!t) {
+          warnings.push(`"${a.name}": default_template "${a.defaultTemplate}" does not match any known Sim Template — ignored.`);
+          return { ...a, defaultTemplateId: null };
+        }
+        if (t.status !== 'active') {
+          warnings.push(`"${a.name}": default_template "${a.defaultTemplate}" is archived and is not offered when adding a new entry.`);
+          return { ...a, defaultTemplateId: null };
+        }
+        return { ...a, defaultTemplateId: t.id };
+      });
+      sendJson(res, 200, { success: true, accounts: names, details, warnings });
     } catch (err) {
       sendJson(res, 500, { success: false, error: err?.message || 'Failed to read accounts' });
     }
@@ -1143,13 +1161,28 @@ const server = http.createServer(async (req, res) => {
       const templates = listTemplates({ status });
       // One pass over the ledger rather than a query per template — the ledger is small and this
       // keeps the endpoint a single read regardless of how many templates exist.
+      //
+      // `open` counts ROWS — every recorded tranche, so it answers "how many times have I entered
+      // under this template." `openSymbols` counts DISTINCT tickers among the open rows, matched by
+      // bare ticker so an exchange-prefix difference between two tranches of the same instrument
+      // can't inflate it — same reasoning as mergePositionTranches() in portfolio_sim.js: a pyramid
+      // add is a second tranche of one position, not a second position, and slot capacity is a
+      // per-symbol question. Kept as a SEPARATE field rather than changing `open` itself, because the
+      // Sim Templates tab's "N still open" is deliberately a tranche/activity count and must not
+      // silently change meaning under it.
       const usage = {};
+      const openSymbolSets = {};
       for (const row of listManualPositions({ status: 'all' })) {
         if (row.template_id == null) continue;
-        const u = usage[row.template_id] || (usage[row.template_id] = { total: 0, open: 0 });
+        const u = usage[row.template_id] || (usage[row.template_id] = { total: 0, open: 0, openSymbols: 0 });
         u.total += 1;
-        if (row.status === 'open') u.open += 1;
+        if (row.status === 'open') {
+          u.open += 1;
+          const set = openSymbolSets[row.template_id] || (openSymbolSets[row.template_id] = new Set());
+          set.add(bareTicker(String(row.symbol || '')).toUpperCase());
+        }
       }
+      for (const [id, set] of Object.entries(openSymbolSets)) usage[id].openSymbols = set.size;
       const membership = resolveMembership(new URL(req.url, 'http://localhost').searchParams);
       const rows = templates.map((t) => {
         let currentTrades = null;
@@ -1168,7 +1201,7 @@ const server = http.createServer(async (req, res) => {
         } catch { currentTrades = null; }
         return {
           ...t,
-          usage: usage[t.id] || { total: 0, open: 0 },
+          usage: usage[t.id] || { total: 0, open: 0, openSymbols: 0 },
           currentTrades,
           staleness: templateStaleness(t, currentTrades),
         };

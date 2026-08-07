@@ -80,7 +80,7 @@ describe('normalizeAccounts', () => {
     });
     assert.deepEqual(names, ['Fidelity IRA']); // names stay bare — the save-time check compares them
     assert.deepEqual(accounts[0], {
-      name: 'Fidelity IRA', equity: 50000, allocPct: 10, notional: 5000, sizing: true,
+      name: 'Fidelity IRA', equity: 50000, allocPct: 10, notional: 5000, sizing: true, defaultTemplate: null,
     });
   });
 
@@ -146,6 +146,31 @@ describe('normalizeAccounts', () => {
   });
 });
 
+describe('normalizeAccounts: default_template', () => {
+  it('captures a trimmed default_template, raw and unresolved', () => {
+    // accounts.js has no reference to the templates module — resolving whether the short_desc
+    // actually names a known, active template happens at the call site (serve_signal_status.js),
+    // same boundary equity/alloc_pct validation already draws.
+    const { accounts } = normalizeAccounts({
+      accounts: [{ name: 'Fidelity IRA', default_template: '  30m45m1h10  ' }],
+    });
+    assert.equal(accounts[0].defaultTemplate, '30m45m1h10');
+  });
+
+  it('is null when absent, blank, or on the bare-string account form', () => {
+    const { accounts } = normalizeAccounts({
+      accounts: [
+        { name: 'A', equity: 1000, alloc_pct: 10 },
+        { name: 'B', default_template: '   ' },
+        'C',
+      ],
+    });
+    assert.equal(accounts[0].defaultTemplate, null);
+    assert.equal(accounts[1].defaultTemplate, null);
+    assert.equal(accounts[2].defaultTemplate, null);
+  });
+});
+
 describe('the dashboard form and the module size identically', () => {
   /**
    * mlAllocQty is a deliberate second copy of allocationQty living in dashboard/index.html — the
@@ -197,5 +222,6 @@ describe('the shipped config files parse', () => {
     assert.equal(warnings.length, 0);
     assert.ok(accounts.some((a) => a.sizing), 'the example should show a sized account');
     assert.ok(accounts.some((a) => !a.sizing), 'the example should show the bare-name form too');
+    assert.ok(accounts.some((a) => a.defaultTemplate), 'the example should show default_template');
   });
 });

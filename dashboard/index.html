@@ -34,6 +34,13 @@
     .latest-list.cs-grid li { margin:0; white-space:normal; }
     @media (max-width: 900px) { .latest-list.cs-grid { grid-template-columns: 1fr; } }
     .watchlist-section { margin-top:14px; padding:12px; background:#0f1728; border:1px solid #24314f; border-radius:12px; }
+    /* Manual Ledger: Add entry + Slot availability side by side. 2fr/1fr rather than an even split —
+       Add entry carries ~10 fields and needs the room, Slot availability is a compact table. Each
+       .card inside keeps its own margin-bottom, so the row's bottom spacing before the next stacked
+       card matches every other card-to-card gap on the page without extra rules. */
+    .ml-row-2col { display:grid; grid-template-columns: 2fr 1fr; gap:16px; align-items:start; margin-bottom:16px; }
+    .ml-row-2col > .card { margin-bottom:0; }
+    @media (max-width: 1100px) { .ml-row-2col { grid-template-columns: 1fr; } }
     .watchlist-title { margin:0 0 4px; font-size:18px; }
     .watchlist-meta { margin:0 0 8px; color:#98a7c6; font-size:13px; }
     .controls { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-top:10px; }
@@ -181,6 +188,8 @@
     .edge-table th { cursor:pointer; user-select:none; white-space:nowrap; }
     .edge-table th:hover { color:#e5eefc; }
     .edge-table td, .edge-table th { padding:7px 8px; font-size:13px; }
+    .ml-sortable { cursor:pointer; user-select:none; white-space:nowrap; }
+    .ml-sortable:hover { color:#e5eefc; }
     /* The column the Capacity Sweep is currently ranked by — tinted so the ★ in the bars above and
        the winning column in the table below are visibly the same claim. */
     .ps-pivot-col { background:rgba(56,189,248,.10); }
@@ -835,6 +844,82 @@
         <div id="ml-status" class="action-message"></div>
       </div>
 
+      <div class="ml-row-2col">
+        <div class="card">
+          <h2>Add entry</h2>
+          <div class="controls" style="margin-bottom:10px;">
+            <div class="control-group" style="min-width:170px;">
+              <label class="control-label" for="ml-account">Account</label>
+              <select id="ml-account" class="control-input"></select>
+            </div>
+            <div class="control-group" style="min-width:120px;">
+              <label class="control-label" for="ml-symbol">Symbol</label>
+              <input id="ml-symbol" class="control-input" type="text" placeholder="AAPL" autocomplete="off" />
+            </div>
+            <div class="control-group" style="min-width:110px;">
+              <label class="control-label" for="ml-timeframe">Timeframe</label>
+              <select id="ml-timeframe" class="control-input"></select>
+            </div>
+            <div class="control-group" style="min-width:95px;">
+              <label class="control-label" for="ml-side">Side</label>
+              <select id="ml-side" class="control-input" title="Only the sign of realized P&amp;L depends on this — a SHORT gains when price falls.">
+                <option value="LONG">LONG</option>
+                <option value="SHORT">SHORT</option>
+              </select>
+            </div>
+            <div class="control-group" style="min-width:90px;">
+              <label class="control-label" for="ml-qty">Qty</label>
+              <input id="ml-qty" class="control-input" type="number" step="any" min="0" title="Auto-filled from the account's equity and allocation % once an entry price is set, rounded down to whole shares. Type your own to override." />
+            </div>
+            <div class="control-group" style="min-width:110px;">
+              <label class="control-label" for="ml-entry">Entry price</label>
+              <input id="ml-entry" class="control-input" type="number" step="any" min="0" />
+            </div>
+            <div class="control-group" style="min-width:110px;">
+              <label class="control-label" for="ml-stop">Stop price</label>
+              <input id="ml-stop" class="control-input" type="number" step="any" min="0" />
+            </div>
+            <div class="control-group" style="min-width:110px;">
+              <label class="control-label" for="ml-target">Target price</label>
+              <input id="ml-target" class="control-input" type="number" step="any" min="0" />
+            </div>
+            <div class="control-group" style="min-width:190px;">
+              <label class="control-label" for="ml-entered">Entry date/time (ET)</label>
+              <input id="ml-entered" class="control-input" type="datetime-local" title="Eastern time, matching the Open Trades table. Defaults to now. Carried over when you use the Ledger button on an open trade." />
+            </div>
+            <div class="control-group" style="min-width:180px;">
+              <label class="control-label" for="ml-template">Sim template</label>
+              <select id="ml-template" class="control-input" title="Which saved Sim Template this position is being opened under. Optional — a hand-entered holding need not belong to a simulated configuration. Recorded on the position so the book can be attributed back to the config that called for it. Pre-filled from the account's default_template in accounts.json; pick your own to override."></select>
+            </div>
+            <div class="control-group" style="min-width:200px;">
+              <label class="control-label" for="ml-notes">Notes</label>
+              <input id="ml-notes" class="control-input" type="text" placeholder="optional" autocomplete="off" />
+            </div>
+            <div class="control-group">
+              <label class="control-label">&nbsp;</label>
+              <button type="button" class="btn" id="ml-add">Add entry</button>
+            </div>
+          </div>
+          <div id="ml-suggest-note" class="muted" style="font-size:12px;">Stop and target are suggested from the
+          strategy's own historical excursion on that symbol once you fill in symbol, timeframe and entry price —
+          they pre-fill only if you haven't typed your own. At least one of the two is required.</div>
+          <div id="ml-qty-note" class="muted" style="font-size:12px;margin-top:4px;"></div>
+          <div id="ml-accounts-warn"></div>
+          <div id="ml-add-status" class="action-message"></div>
+        </div>
+
+        <div class="card">
+          <h2>Slot availability</h2>
+          <p class="muted" style="margin:0 0 8px;font-size:12px;">Distinct open symbols against each Sim
+          Template's configured slot count — the same count the Capacity Sweep and Portfolio Sim use. A
+          pyramid add on an already-open symbol is a second tranche, not a second slot. Cost / Capacity
+          is the actual dollars deployed (every tranche counts here) against what a fully-slotted book
+          would cost at the account's own per-position sizing. A position with no template attached
+          carries no slot cap and is not counted against either.</p>
+          <div id="ml-slots"><div class="muted">Loading…</div></div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="controls" style="margin:0;">
           <div class="control-group" style="min-width:150px;">
@@ -868,69 +953,6 @@
           </div>
         </div>
         <div id="ml-filter-note" class="muted" style="font-size:12px;margin-top:8px;"></div>
-      </div>
-
-      <div class="card">
-        <h2>Add entry</h2>
-        <div class="controls" style="margin-bottom:10px;">
-          <div class="control-group" style="min-width:170px;">
-            <label class="control-label" for="ml-account">Account</label>
-            <select id="ml-account" class="control-input"></select>
-          </div>
-          <div class="control-group" style="min-width:120px;">
-            <label class="control-label" for="ml-symbol">Symbol</label>
-            <input id="ml-symbol" class="control-input" type="text" placeholder="AAPL" autocomplete="off" />
-          </div>
-          <div class="control-group" style="min-width:110px;">
-            <label class="control-label" for="ml-timeframe">Timeframe</label>
-            <select id="ml-timeframe" class="control-input"></select>
-          </div>
-          <div class="control-group" style="min-width:95px;">
-            <label class="control-label" for="ml-side">Side</label>
-            <select id="ml-side" class="control-input" title="Only the sign of realized P&amp;L depends on this — a SHORT gains when price falls.">
-              <option value="LONG">LONG</option>
-              <option value="SHORT">SHORT</option>
-            </select>
-          </div>
-          <div class="control-group" style="min-width:90px;">
-            <label class="control-label" for="ml-qty">Qty</label>
-            <input id="ml-qty" class="control-input" type="number" step="any" min="0" title="Auto-filled from the account's equity and allocation % once an entry price is set, rounded down to whole shares. Type your own to override." />
-          </div>
-          <div class="control-group" style="min-width:110px;">
-            <label class="control-label" for="ml-entry">Entry price</label>
-            <input id="ml-entry" class="control-input" type="number" step="any" min="0" />
-          </div>
-          <div class="control-group" style="min-width:110px;">
-            <label class="control-label" for="ml-stop">Stop price</label>
-            <input id="ml-stop" class="control-input" type="number" step="any" min="0" />
-          </div>
-          <div class="control-group" style="min-width:110px;">
-            <label class="control-label" for="ml-target">Target price</label>
-            <input id="ml-target" class="control-input" type="number" step="any" min="0" />
-          </div>
-          <div class="control-group" style="min-width:190px;">
-            <label class="control-label" for="ml-entered">Entry date/time (ET)</label>
-            <input id="ml-entered" class="control-input" type="datetime-local" title="Eastern time, matching the Open Trades table. Defaults to now. Carried over when you use the Ledger button on an open trade." />
-          </div>
-          <div class="control-group" style="min-width:180px;">
-            <label class="control-label" for="ml-template">Sim template</label>
-            <select id="ml-template" class="control-input" title="Which saved Sim Template this position is being opened under. Optional — a hand-entered holding need not belong to a simulated configuration. Recorded on the position so the book can be attributed back to the config that called for it."></select>
-          </div>
-          <div class="control-group" style="min-width:200px;">
-            <label class="control-label" for="ml-notes">Notes</label>
-            <input id="ml-notes" class="control-input" type="text" placeholder="optional" autocomplete="off" />
-          </div>
-          <div class="control-group">
-            <label class="control-label">&nbsp;</label>
-            <button type="button" class="btn" id="ml-add">Add entry</button>
-          </div>
-        </div>
-        <div id="ml-suggest-note" class="muted" style="font-size:12px;">Stop and target are suggested from the
-        strategy's own historical excursion on that symbol once you fill in symbol, timeframe and entry price —
-        they pre-fill only if you haven't typed your own. At least one of the two is required.</div>
-        <div id="ml-qty-note" class="muted" style="font-size:12px;margin-top:4px;"></div>
-        <div id="ml-accounts-warn"></div>
-        <div id="ml-add-status" class="action-message"></div>
       </div>
 
       <div class="card">
@@ -1750,6 +1772,8 @@
       set('ml-qty', '');
       const qtyEl = document.getElementById('ml-qty');
       if (qtyEl) delete qtyEl.dataset.touched; // a carried-over row sizes fresh from the account
+      const tplCarryEl = document.getElementById('ml-template');
+      if (tplCarryEl) delete tplCarryEl.dataset.touched; // same — re-derive from the current account
       set('ml-notes', '');
       const stopEl = document.getElementById('ml-stop');
       if (stopEl) stopEl.dataset.source = p.levelsSource;
@@ -1767,6 +1791,7 @@
       // Size against the currently selected account right away. loadManualLedgerTab also calls this
       // when it finishes, which covers the first-ever visit where the account list is still loading.
       mlAutoQty();
+      mlAutoTemplate();
       const note = document.getElementById('ml-suggest-note');
       if (note) {
         // Entry date/time defaults to now, so name the position's own entry time here — it is the
@@ -1781,6 +1806,88 @@
       }
       document.getElementById('ml-account')?.focus();
     });
+
+    /**
+     * "Duplicate" — pre-fill Add entry from an EXISTING open manual ledger row, for a second tranche
+     * of the same symbol or a near-identical position. Looked up from mlData by id rather than
+     * carrying a JSON payload in the button (the .ledger-from-open pattern): the row already lives
+     * client-side in mlData.open, and a stale/removed id just no-ops instead of replaying old data.
+     *
+     * Entry price is deliberately left BLANK, not carried over. That is the whole answer to "no
+     * duplicate TV alert": stop/target get their basis set to THIS row's entry price via
+     * mlSetLevelBasis, so typing a genuinely new entry price (which a real new tranche needs anyway —
+     * price has moved since the original) rescales them to a DIFFERENT absolute level automatically,
+     * the same mechanism editing a row's own entry price already uses. Leaving the original stop/
+     * target as the starting point (rather than blanking those too) is what makes "just modify the
+     * details" true — only price (and whatever else genuinely differs) needs retyping. The Add-entry
+     * save handler below still checks for an exact level collision as a backstop, in case the price
+     * is left untouched or two levels coincide by chance.
+     */
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.ml-duplicate-btn');
+      if (!btn) return;
+      const r = (mlData?.open || []).find((row) => String(row.id) === String(btn.dataset.id));
+      if (!r) return;
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+      set('ml-account', r.account || '');
+      set('ml-symbol', r.symbol || '');
+      set('ml-timeframe', r.timeframe || ''); // already on this tab, so the option is guaranteed to exist
+      set('ml-side', r.side || 'LONG');
+      set('ml-entry', ''); // see the comment above — the deliberate anti-collision gap
+      set('ml-qty', '');
+      const qtyEl = document.getElementById('ml-qty');
+      if (qtyEl) delete qtyEl.dataset.touched;
+      set('ml-stop', r.stop_price ?? '');
+      set('ml-target', r.target_price ?? '');
+      const stopEl = document.getElementById('ml-stop');
+      if (stopEl) stopEl.dataset.source = r.levels_source || 'manual';
+      mlSetLevelBasis(r.entry_price);
+      set('ml-notes', '');
+      set('ml-entered', etNowInput());
+      const tplEl = document.getElementById('ml-template');
+      if (tplEl) {
+        tplEl.value = r.template_id != null ? String(r.template_id) : '';
+        // The source row's own template choice is the point of duplicating it — pinned as touched so
+        // mlAutoTemplate (fired by the account carrying over unchanged) cannot override it right back
+        // to that account's accounts.json default.
+        tplEl.dataset.touched = '1';
+      }
+      const note = document.getElementById('ml-suggest-note');
+      if (note) {
+        note.textContent = `Duplicated ${r.symbol} ${r.timeframe} — account, side, template and the stop/target `
+          + `shape carried over. Entry price is blank on purpose: enter today's fill and stop/target will rescale `
+          + `to keep the same % distance, so this doesn't create a second TradingView alert at the original's exact price.`;
+      }
+      document.getElementById('ml-entry')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('ml-entry')?.focus();
+    });
+
+    /**
+     * Refuses to let a save quietly create a second native TradingView alert watching the same
+     * price. TradingView's alert is keyed on symbol + resolution + price — it has no idea two of our
+     * ledger rows both point at it, so two rows sharing a stop or target both fire independently on
+     * the same cross. Checked here, client-side, against the open rows already in mlData, rather than
+     * asking the server to query TradingView's live alert list on every save (a real network round
+     * trip for the common case, to guard a rare one). Matches by BARE ticker (exchange-prefix
+     * independent, same normalization as everywhere else in this file) and the raw timeframe string;
+     * a level counts as colliding only if it is SET on both sides, so a stop-only row and a
+     * target-only row on the same symbol never falsely collide with each other.
+     */
+    function mlFindLevelCollision(symbol, timeframe, stopPrice, targetPrice, excludeId) {
+      const bareSym = webhookBareTicker(symbol || '').toUpperCase();
+      const tf = String(timeframe || '');
+      const s = stopPrice !== '' && stopPrice != null ? Number(stopPrice) : null;
+      const t = targetPrice !== '' && targetPrice != null ? Number(targetPrice) : null;
+      if (!bareSym || !tf || (s == null && t == null)) return null;
+      return (mlData?.open || []).find((row) => {
+        if (excludeId != null && String(row.id) === String(excludeId)) return false;
+        if (webhookBareTicker(row.symbol || '').toUpperCase() !== bareSym) return false;
+        if (String(row.timeframe || '') !== tf) return false;
+        const rs = row.stop_price != null ? Number(row.stop_price) : null;
+        const rt = row.target_price != null ? Number(row.target_price) : null;
+        return (s != null && rs != null && s === rs) || (t != null && rt != null && t === rt);
+      }) || null;
+    }
 
     async function loadWebhookConfig() {
       try {
@@ -3626,6 +3733,7 @@
     let mlAccountDetails = new Map(); // name -> { equity, allocPct, notional, sizing }
     let mlTemplates = [];             // every template, active AND archived — see the fetch comment
     let mlTemplateById = new Map();   // String(id) -> template
+    let mlOpenSort = { col: null, dir: -1 }; // click-to-sort state for the Open table, same shape as edgeSort
 
     /**
      * How a position's template is shown on a row. An id that resolves to nothing renders as the raw
@@ -3638,6 +3746,53 @@
       if (!t) return `<span style="color:#fca5a5;" title="No template with this id — it may have been created on another machine">#${escapeHtml(String(templateId))}?</span>`;
       const archived = t.status === 'archived' ? ' <span class="muted" title="Archived — retired from new entries; this position keeps its attribution">(archived)</span>' : '';
       return `<span title="${escapeHtml(t.name)}">${escapeHtml(t.short_desc)}</span>${archived}`;
+    }
+
+    /**
+     * Groups a set of open rows by (account, bare ticker) and sums qty × entry price within each
+     * group — the combined dollar cost of every tranche of one symbol in one account. Timeframe is
+     * deliberately NOT part of the key: cash allocation is an account-level question ("how much of
+     * this account's equity is tied up in AUB"), and the account doesn't know or care which of its
+     * AUB tranches came from a 15m signal versus a 45m one. Keyed on bare ticker, not the raw symbol
+     * string, so an exchange-prefix difference between two tranches (BATS:AUB vs AMEX:AUB) can't
+     * split one holding into two groups — same normalization webhookBareTicker already uses.
+     */
+    function mlGroupOpenCosts(rows) {
+      const byGroup = new Map();
+      for (const row of rows) {
+        const cost = Number(row.qty) * Number(row.entry_price);
+        if (!(cost > 0)) continue;
+        const key = `${row.account || ''}|${webhookBareTicker(row.symbol || '').toUpperCase()}`;
+        const g = byGroup.get(key) || { cost: 0, count: 0 };
+        g.cost += cost;
+        g.count += 1;
+        byGroup.set(key, g);
+      }
+      return byGroup;
+    }
+
+    /**
+     * A SYMBOL's cumulative dollar cost across every open tranche in this account, as a share of the
+     * account's equity — cash allocation weight, not a slot count. Every tranche of one symbol shows
+     * the SAME cumulative figure (not its own slice), because a pyramid base + add is one holding for
+     * this purpose: showing each tranche's own weight would let an oversized combined bet hide behind
+     * two individually-modest-looking numbers. Distinct from the template-level Cost/Capacity ratio
+     * above it on the page: that one asks "is this whole book over-deployed", this one asks "is this
+     * ONE symbol bigger than intended" — the question that matters while sizing pyramid adds.
+     *
+     * Null (rendered as —), never 0, when the account carries no equity — an unsized account has no
+     * baseline to weigh against, and 0% would misreport a real position as weightless.
+     */
+    function mlWeightCell(groupCost, tranches, r) {
+      const detail = mlAccountDetails.get(r.account || '');
+      const equity = detail?.equity ?? null;
+      if (!(groupCost > 0) || equity == null) return '<span class="muted">—</span>';
+      const weight = (groupCost / equity) * 100;
+      const target = detail?.allocPct;
+      const overTarget = target != null && weight > target * 1.5; // clearly over, not just noise around it
+      return `<span style="color:${overTarget ? '#fb923c' : ''};font-weight:${overTarget ? '600' : 'normal'};">${weight.toFixed(1)}%</span>` +
+        (target != null ? ` <span class="muted" style="font-size:10px;">(target ${target}%)</span>` : '') +
+        (tranches > 1 ? ` <span class="muted" style="font-size:10px;">· ${tranches} tranches</span>` : '');
     }
 
     /**
@@ -3722,6 +3877,29 @@
     }
 
     /**
+     * Pre-fill the Sim template select from the selected account's accounts.json default_template,
+     * mirroring mlAutoQty above: runs on account change, never overwrites a template the user picked
+     * by hand (dataset.touched), and re-derives (including resetting to "none") every time the
+     * account changes while untouched — an account with no default clears a stale pick from the
+     * PREVIOUS account rather than leaving it looking chosen.
+     *
+     * defaultTemplateId is resolved server-side (/api/accounts), never here: an unknown or archived
+     * short_desc already degraded to null with a warning by the time this runs, so this function only
+     * ever has to handle "there is a valid id" or "there is nothing".
+     */
+    function mlAutoTemplate() {
+      const tplEl = document.getElementById('ml-template');
+      if (!tplEl || tplEl.dataset.touched === '1') return;
+      const account = document.getElementById('ml-account')?.value || '';
+      const detail = mlAccountDetails.get(account);
+      const id = detail?.defaultTemplateId;
+      // The option may not exist yet (templates still loading) or may legitimately be absent (a
+      // non-active template is never offered here) — in either case leave the select on "none"
+      // rather than writing a value with no matching <option>.
+      tplEl.value = (id != null && [...tplEl.options].some((o) => o.value === String(id))) ? String(id) : '';
+    }
+
+    /**
      * Accounts offered by an open row's inline account picker.
      *
      * The row's CURRENT account is unioned in even when accounts.json no longer lists it — the
@@ -3790,8 +3968,139 @@
       });
     }
 
+    // One row per (account, template) pair actually IN USE, plus one per account with positions
+    // carrying no template at all.
+    //
+    // NOT one row per template keyed on the template's OWN configured account — that was the bug
+    // (found live 2026-08-08): a Sim Template names exactly one account, but nothing stops a manual
+    // position in a DIFFERENT account from being attributed to it (the save-time check only confirms
+    // the template exists, never that it matches the row's own account — see the POST /api/manual-
+    // ledger handler in serve_signal_status.js). A second account reusing the first account's template
+    // therefore had its open count and dollars silently folded into the FIRST account's row: capacity
+    // and Cost/Capacity are inherently account-scoped (equity, alloc_pct), so mixing two accounts'
+    // capital into one ratio is simply wrong, not just mislabeled. Grouping on the ROW's own account
+    // — read straight from mlData.open, never from t.account — fixes it regardless of whether the
+    // mismatch was deliberate reuse or a picker mistake, and a mismatch is called out on the row so
+    // it's visible either way.
+    //
+    // "Open" counts DISTINCT SYMBOLS, not tranches — see the mergePositionTranches() reasoning in
+    // portfolio_sim.js: a pyramid add is a second tranche of one position, not a second slot.
+    //
+    // Deliberately reads the WHOLE book (mlData.open), never the ml filters above — "how many slots
+    // are left right now" is a live-book question, not a filtered historical one.
+    function renderMlSlotSummary() {
+      const el = document.getElementById('ml-slots');
+      if (!mlData) return;
+      const openRows = mlData.open || [];
+
+      const groups = new Map(); // `${account}|${templateId}` -> { account, templateId, symbols:Set, cost }
+      for (const row of openRows) {
+        if (row.template_id == null) continue;
+        const key = `${row.account || ''}|${row.template_id}`;
+        const g = groups.get(key) || { account: row.account || '', templateId: row.template_id, symbols: new Set(), cost: 0 };
+        g.symbols.add(webhookBareTicker(row.symbol || '').toUpperCase());
+        const cost = Number(row.qty) * Number(row.entry_price);
+        if (Number.isFinite(cost)) g.cost += cost;
+        groups.set(key, g);
+      }
+      // Every ACTIVE template with zero open positions still gets a row, under its OWN configured
+      // account, so "N slots free" stays visible before anything is opened under it. This is the
+      // only place t.account drives a row's identity — every group found above uses the row's own.
+      for (const t of mlTemplates || []) {
+        if (t.status !== 'active' || !t.account) continue;
+        const key = `${t.account}|${t.id}`;
+        if (!groups.has(key)) groups.set(key, { account: t.account, templateId: t.id, symbols: new Set(), cost: 0 });
+      }
+
+      const rows = [...groups.values()]
+        .map((g) => {
+          const t = mlTemplateById.get(String(g.templateId));
+          if (!t) return null; // dangling template_id — mlTemplateLabel already flags this elsewhere
+          const open = g.symbols.size;
+          const slots = Number(t.max_positions);
+          const overLimit = Number.isFinite(slots) && slots > 0 && open > slots;
+          // Capacity is what a fully-slotted book would cost at THIS GROUP'S OWN account sizing
+          // (notional = equity * alloc_pct/100) — never t.account's, which may be a different account
+          // entirely. null (not 0) when the account isn't sized, so an unknown ratio can't render as
+          // "0% used".
+          const notional = mlAccountDetails.get(g.account)?.notional ?? null;
+          const capacity = (notional != null && Number.isFinite(slots) && slots > 0) ? notional * slots : null;
+          const costRatio = capacity ? (g.cost / capacity) * 100 : null;
+          return {
+            account: g.account, template: t, open, slots,
+            remaining: Number.isFinite(slots) ? slots - open : null, overLimit,
+            deployed: g.cost, capacity, costRatio, costOverLimit: costRatio != null && costRatio > 100,
+            // Not an error — a template can legitimately be reused — but it changes what "Slots" means
+            // (this account is borrowing another account's designed cap) and is worth flagging.
+            offTemplateAccount: t.account && t.account !== g.account,
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.account.localeCompare(b.account) || a.template.short_desc.localeCompare(b.template.short_desc));
+
+      // Same (account, symbol) grouping for positions with no template at all — they carry no slot
+      // cap, but two different accounts' unassigned dollars still must not be summed into one figure.
+      const unassignedGroups = new Map(); // account -> { symbols:Set, cost }
+      for (const row of openRows) {
+        if (row.template_id != null) continue;
+        const key = row.account || '';
+        const g = unassignedGroups.get(key) || { symbols: new Set(), cost: 0 };
+        g.symbols.add(webhookBareTicker(row.symbol || '').toUpperCase());
+        const cost = Number(row.qty) * Number(row.entry_price);
+        if (Number.isFinite(cost)) g.cost += cost;
+        unassignedGroups.set(key, g);
+      }
+      const unassignedRows = [...unassignedGroups.entries()]
+        .map(([account, g]) => ({ account, open: g.symbols.size, deployed: g.cost }))
+        .sort((a, b) => a.account.localeCompare(b.account));
+
+      if (!rows.length && !unassignedRows.length) {
+        el.innerHTML = '<div class="muted">No open positions yet.</div>';
+        return;
+      }
+
+      const overCount = rows.filter((r) => r.overLimit).length;
+      const summaryLine = overCount
+        ? `<span style="color:#fb923c;font-weight:600;">${overCount} template${overCount === 1 ? '' : 's'} over its slot limit</span>`
+        : `<span style="color:#86efac;">All templates within their slot limit.</span>`;
+
+      el.innerHTML = `
+        <div style="margin-bottom:8px;font-size:13px;">${summaryLine}</div>
+        <table>
+          <thead><tr>
+            <th>Account</th><th>Template</th><th title="Distinct symbols currently open under this template — a pyramid add on an already-open symbol does not count as a second slot.">Open</th><th>Slots</th><th>Remaining</th>
+            <th title="Capital actually deployed (every tranche counts, including pyramid adds) versus what a fully-slotted book would cost at this account's own per-position sizing.">Cost / Capacity</th>
+          </tr></thead>
+          <tbody>${rows.map(({ account, template: t, open, slots, remaining, overLimit, deployed, capacity, costRatio, costOverLimit, offTemplateAccount }) => `
+            <tr${overLimit ? ' style="background:#2a1810;"' : ''}>
+              <td>${escapeHtml(account || '—')}${offTemplateAccount ? `<br><span class="muted" style="font-size:10px;" title="This template's own configured account is ${escapeHtml(t.account)} — its slot count and sizing are being borrowed here.">⚠ template's account: ${escapeHtml(t.account)}</span>` : ''}</td>
+              <td>${escapeHtml(t.short_desc)}${t.status === 'archived' ? ' <span class="muted">(archived)</span>' : ''}
+                <span class="muted" style="font-size:11px;"> · ${escapeHtml(t.name)}</span></td>
+              <td>${open}</td>
+              <td>${Number.isFinite(slots) && slots > 0 ? slots : '<span class="muted">—</span>'}</td>
+              <td style="color:${overLimit ? '#fb923c' : ''};font-weight:${overLimit ? '600' : 'normal'};">${
+                remaining == null ? '<span class="muted">—</span>' : overLimit ? `${remaining} (over)` : remaining
+              }</td>
+              <td style="color:${costOverLimit ? '#fb923c' : ''};font-weight:${costOverLimit ? '600' : 'normal'};font-size:12px;">${
+                capacity == null
+                  ? `${mlMoney(deployed)} <span class="muted">/ — (no equity/alloc_pct set)</span>`
+                  : `${mlMoney(deployed)} / ${mlMoney(capacity)} (${costRatio.toFixed(0)}%${costOverLimit ? ' over' : ''})`
+              }</td>
+            </tr>`).join('')}${unassignedRows.map(({ account, open, deployed }) => `
+            <tr>
+              <td>${escapeHtml(account || '—')}</td>
+              <td class="muted">No template attached</td>
+              <td>${open}</td>
+              <td class="muted">—</td>
+              <td class="muted">no cap</td>
+              <td style="font-size:12px;">${mlMoney(deployed)} <span class="muted">/ — (no cap)</span></td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+    }
+
     function renderManualLedger() {
       if (!mlData) return;
+      renderMlSlotSummary();
       const open = mlApplyFilters(mlData.open || []);
       const closed = mlApplyFilters(mlData.closed || []);
       const totalOpen = (mlData.open || []).length;
@@ -3882,6 +4191,7 @@
             : '';
         }
         mlAutoQty();
+        mlAutoTemplate();
 
         const tfSel = document.getElementById('ml-timeframe');
         const keepTf = tfSel.value;
@@ -3913,6 +4223,42 @@
       return s === 'failed' || s === 'partial' || s === 'stale';
     }
 
+    /**
+     * Has the underlying TradingView STRATEGY already exited this symbol/timeframe today, even
+     * though this manual position is still marked open? Distinct from "Exit fired" (r.exit_alert_*),
+     * which only answers "did price cross MY recorded stop/target" — a plain price alert that knows
+     * nothing about the strategy's own signal. This checks the strategy's own restated exits.
+     *
+     * Reads window.__latestDashboardStatus.currentSignal — the same structured data the Current
+     * Signal cards render, refreshed independently every 30s by the main poll loop (see `refresh()`),
+     * so this can go stale for up to that long, or read nothing at all if the page just loaded and the
+     * first poll hasn't landed yet. Not re-fetched here on purpose: this is a per-render display
+     * check, not something worth a network call of its own for every row on every render.
+     *
+     * ONLY catches an exit restated as "today" (the same ET-day rule documented at length in
+     * CLAUDE.md for the Current Signal log) — a position the strategy exited on an EARLIER day, still
+     * left open here, will not be flagged. That is a real gap, not a bug: catching it generally would
+     * need a trade-log query per row rather than data already on the page, and the common real case —
+     * "did TradingView just exit while I was looking at this tab" — is exactly what today's restated
+     * exits answer. Matched by bare ticker (exchange-prefix independent) and by raw timeframe string,
+     * the same normalization used throughout this file (webhookBareTicker) and the add-form's own
+     * Timeframe values, so "BATS:AUB" here matches "AMEX:AUB" there and "45" matches "45" not "45m".
+     */
+    function mlTvExitToday(r) {
+      const sections = window.__latestDashboardStatus?.currentSignal;
+      if (!Array.isArray(sections)) return null;
+      const bareSym = webhookBareTicker(r.symbol || '').toUpperCase();
+      const tf = String(r.timeframe || '').toUpperCase();
+      if (!bareSym || !tf) return null;
+      for (const s of sections) {
+        if (String(s.timeframe || '').toUpperCase() !== tf) continue;
+        for (const ex of (s.exits || [])) {
+          if (webhookBareTicker(ex.symbol || '').toUpperCase() === bareSym) return ex;
+        }
+      }
+      return null;
+    }
+
     function renderMlOpen(rows) {
       const el = document.getElementById('ml-open');
       if (!rows.length) {
@@ -3921,25 +4267,63 @@
       }
       const today = isoToEtInput(new Date().toISOString(), false); // ET trading day, not machine-local
       const accounts = mlAccountOptions();
+      const openCostGroups = mlGroupOpenCosts(rows);
+
+      // Sort is applied AFTER the ml-filter-* filters (renderManualLedger passes the already-filtered
+      // set in), on a COPY — rows is also read for grouping above and must not be reordered under it.
+      // Nulls (e.g. no exit_alert_fired_at) sort to the end regardless of direction, same convention
+      // as edgeSort's renderEdgeSymTable.
+      const sortGetters = {
+        symbol: (r) => r.symbol || '',
+        entered: (r) => (r.entered_at ? Date.parse(r.entered_at) : null),
+        exitFired: (r) => (r.exit_alert_fired_at ? Date.parse(r.exit_alert_fired_at) : null),
+      };
+      const sortedRows = mlOpenSort.col ? [...rows].sort((a, b) => {
+        const get = sortGetters[mlOpenSort.col];
+        const av = get(a), bv = get(b);
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        return typeof av === 'string' ? av.localeCompare(bv) * mlOpenSort.dir : (av - bv) * mlOpenSort.dir;
+      }) : rows;
+
+      const arrow = (col) => mlOpenSort.col === col ? (mlOpenSort.dir === -1 ? ' ▾' : ' ▴') : '';
+      const tvExitCount = sortedRows.filter((r) => mlTvExitToday(r)).length;
+
       const cellInput = 'width:100%;box-sizing:border-box;padding:3px 5px;font-size:11px;background:#0f1728;color:#e5eefc;border:1px solid #334155;border-radius:6px;';
       el.innerHTML = `
+        ${tvExitCount ? `<div class="warn-box" style="font-size:12px;margin-bottom:10px;">
+          ⚠ ${tvExitCount} open position${tvExitCount === 1 ? '' : 's'} show${tvExitCount === 1 ? 's' : ''} TradingView's
+          strategy already exiting TODAY, on the same symbol and timeframe — highlighted below. This only
+          catches an exit from earlier today; an older, still-open stale entry needs a manual check.
+        </div>` : ''}
         <table>
           <thead><tr>
-            <th>Account</th><th>Symbol</th><th>TF</th><th>Side</th><th>Entered</th><th>Qty</th><th>Entry</th><th>Stop</th><th>Target</th>
+            <th>Account</th><th class="ml-sortable" data-col="symbol">Symbol${arrow('symbol')}</th><th></th><th>TF</th><th>Side</th>
+            <th class="ml-sortable" data-col="entered">Entered${arrow('entered')}</th><th>Qty</th><th>Entry</th>
+            <th title="This symbol's TOTAL dollar cost across every open tranche in this account (a pyramid base + add show the same combined figure, not their own slice) as a share of the account's equity. Target is the account's own configured alloc_pct, where set.">Weight</th>
+            <th>Stop</th><th>Target</th>
             <th title="The Sim Template this position was opened under.">Template</th>
-            <th>TV alert</th><th>Exit fired</th><th>Edit</th><th>Close</th>
+            <th>Notes</th>
+            <th>TV alert</th>
+            <th class="ml-sortable" data-col="exitFired" title="Whether PRICE crossed this position's own recorded stop/target level.">Exit fired${arrow('exitFired')}</th>
+            <th>Edit</th><th>Close</th>
           </tr></thead>
-          <tbody>${rows.map((r) => {
+          <tbody>${sortedRows.map((r) => {
             // Every row carries BOTH a read view and an edit view; "Edit" swaps which is shown
             // rather than re-rendering, so a re-render triggered elsewhere (the 60s poll) cannot
             // wipe out half-typed values in a row being edited.
             const edit = (html) => `<span class="ml-view">${html}</span>`;
+            const tvExit = mlTvExitToday(r);
             return `
-            <tr class="ml-row" data-id="${r.id}">
+            <tr class="ml-row"${tvExit ? ' style="background:#2a1f0d;"' : ''} data-id="${r.id}">
               <td>${edit(escapeHtml(r.account || '—'))}<select class="ml-edit ml-f-account hidden" style="${cellInput}">${
                 accounts.map((a) => `<option value="${escapeHtml(a)}"${a === r.account ? ' selected' : ''}>${escapeHtml(a)}</option>`).join('')
               }</select></td>
-              <td>${edit(`<strong>${escapeHtml(r.symbol || '—')}</strong>`)}<input type="text" class="ml-edit ml-f-symbol hidden" value="${escapeHtml(r.symbol || '')}" style="${cellInput}width:90px;" /></td>
+              <td>${edit(`<strong>${escapeHtml(r.symbol || '—')}</strong>`)}<input type="text" class="ml-edit ml-f-symbol hidden" value="${escapeHtml(r.symbol || '')}" style="${cellInput}width:90px;" />${
+                tvExit ? `<br><span style="color:#fbbf24;font-size:10px;" title="TradingView's strategy restated an exit for this symbol/timeframe today">⚠ TV exited today${tvExit.netPnlDisplay ? ` · ${escapeHtml(tvExit.netPnlDisplay)}` : ''}</span>` : ''
+              }</td>
+              <td>${lookupAnchor(webhookBareTicker(r.symbol))}</td>
               <td>${edit(escapeHtml(r.timeframe || '—'))}<input type="text" class="ml-edit ml-f-timeframe hidden" value="${escapeHtml(r.timeframe || '')}" style="${cellInput}width:56px;" title="TradingView resolution, e.g. 45 or D" /></td>
               <td>${edit(escapeHtml(r.side || 'LONG'))}<select class="ml-edit ml-f-side hidden" style="${cellInput}width:74px;">
                 <option value="LONG"${r.side !== 'SHORT' ? ' selected' : ''}>LONG</option>
@@ -3948,6 +4332,10 @@
               <td style="font-size:12px;">${edit(fmtEt(r.entered_at, true))}<input type="datetime-local" class="ml-edit ml-f-entered hidden" value="${escapeHtml(isoToEtInput(r.entered_at, true) || '')}" style="${cellInput}width:170px;" title="Eastern time" /></td>
               <td>${edit(r.qty ?? '—')}<input type="number" step="any" min="0" class="ml-edit ml-f-qty hidden" value="${r.qty ?? ''}" style="${cellInput}width:70px;" /></td>
               <td>${edit(r.entry_price ?? '—')}<input type="number" step="any" min="0" class="ml-edit ml-f-entry hidden" value="${r.entry_price ?? ''}" style="${cellInput}width:80px;" /></td>
+              <td style="font-size:11px;">${(() => {
+                const g = openCostGroups.get(`${r.account || ''}|${webhookBareTicker(r.symbol || '').toUpperCase()}`);
+                return mlWeightCell(g?.cost || 0, g?.count || 0, r);
+              })()}</td>
               <td>${edit(r.stop_price ?? '<span class="muted">—</span>')}<input type="number" step="any" min="0" class="ml-edit ml-f-stop hidden" value="${r.stop_price ?? ''}" style="${cellInput}width:80px;" placeholder="none" /></td>
               <td>${edit(r.target_price ?? '<span class="muted">—</span>')}<input type="number" step="any" min="0" class="ml-edit ml-f-target hidden" value="${r.target_price ?? ''}" style="${cellInput}width:80px;" placeholder="none" /></td>
               <td style="font-size:11px;">${edit(mlTemplateLabel(r.template_id))}<select class="ml-edit ml-f-template hidden" style="${cellInput}width:130px;">
@@ -3957,6 +4345,9 @@
                   mlTemplates.filter((t) => t.status === 'active' || String(t.id) === String(r.template_id))
                     .map((t) => `<option value="${t.id}"${String(t.id) === String(r.template_id) ? ' selected' : ''}>${escapeHtml(t.short_desc)}</option>`).join('')
                 }</select></td>
+              <td style="font-size:11px;max-width:140px;">${edit(r.notes
+                ? `<span title="${escapeHtml(r.notes)}" style="display:inline-block;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">${escapeHtml(r.notes)}</span>`
+                : '<span class="muted">—</span>')}<input type="text" class="ml-edit ml-f-notes hidden" value="${escapeHtml(r.notes || '')}" style="${cellInput}width:140px;" placeholder="optional" /></td>
               <td style="font-size:11px;">${mlAlertBadge(r.tv_alert_status)}</td>
               <td style="font-size:11px;">${r.exit_alert_fired_at
                 ? `<span style="color:#fcd34d;">${escapeHtml(r.exit_alert_level || 'hit')}</span><br><span class="muted">${fmtEt(r.exit_alert_fired_at, true)}</span>`
@@ -3965,7 +4356,9 @@
                 ${mlNeedsAlertRetry(r.tv_alert_status) ? `<button type="button" class="btn ml-retry-alert-btn" data-id="${r.id}" style="padding:3px 8px;font-size:11px;margin-bottom:4px;">Retry alert</button><br>` : ''}
                 <button type="button" class="btn ml-edit-btn" style="padding:3px 9px;font-size:11px;">Edit</button>
                 <button type="button" class="btn ml-save-btn hidden" style="padding:3px 9px;font-size:11px;">Save</button>
-                <button type="button" class="btn ml-cancel-btn hidden" style="padding:3px 9px;font-size:11px;">Cancel</button>
+                <button type="button" class="btn ml-cancel-btn hidden" style="padding:3px 9px;font-size:11px;">Cancel</button><br>
+                <button type="button" class="btn ml-duplicate-btn" data-id="${r.id}" style="padding:3px 9px;font-size:11px;margin-top:4px;"
+                  title="Pre-fill Add entry from this position — account, symbol, timeframe, side, template, and the stop/target shape. Entry price is left blank on purpose: a fresh price is what a new tranche needs anyway, and it's what keeps the new TradingView alert off this position's exact price.">Duplicate</button>
               </td>
               <td>
                 <div class="ml-close-group" data-id="${r.id}" style="display:flex;gap:4px;align-items:center;">
@@ -3979,6 +4372,18 @@
         </table>`;
 
       wireMlRowEditing(el);
+
+      // Re-render through renderManualLedger, not renderMlOpen(rows) directly: the ml-filter-*
+      // filters must be re-applied to get the current filtered set, exactly as every other trigger
+      // (poll, edit, close) already does — sorting is a display concern layered on top of filtering,
+      // not a replacement for it.
+      el.querySelectorAll('th[data-col]').forEach((th) => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.col;
+          mlOpenSort = { col, dir: mlOpenSort.col === col ? -mlOpenSort.dir : -1 };
+          renderManualLedger();
+        });
+      });
 
       el.querySelectorAll('.ml-close-group').forEach((group) => {
         group.querySelector('.ml-close-btn').addEventListener('click', async () => {
@@ -4148,6 +4553,7 @@
             // '' is the deliberate detach signal, exactly like a cleared stop/target — the server's
             // partial validator reads it as "set to null" rather than "leave alone".
             template_id: val('.ml-f-template'),
+            notes: val('.ml-f-notes'),
             entered_at: etWallClockToIso(val('.ml-f-entered')),
           };
           if (!body.entered_at) delete body.entered_at; // blank input: leave the stored value alone
@@ -4210,8 +4616,9 @@
       el.innerHTML = `
         <table>
           <thead><tr>
-            <th>Account</th><th>Symbol</th><th>TF</th><th>Entered</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&amp;L</th>
-            <th title="The Sim Template this position was opened under.">Template</th><th>Closed</th>
+            <th>Account</th><th>Symbol</th><th></th><th>TF</th><th>Entered</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&amp;L</th>
+            <th title="The Sim Template this position was opened under.">Template</th>
+            <th>Notes</th><th>Closed</th>
           </tr></thead>
           <tbody>${rows.map((r) => {
             const entry = Number(r.entry_price);
@@ -4221,6 +4628,7 @@
             <tr>
               <td>${escapeHtml(r.account || '—')}</td>
               <td><strong>${escapeHtml(r.symbol || '—')}</strong></td>
+              <td>${lookupAnchor(webhookBareTicker(r.symbol))}</td>
               <td>${escapeHtml(r.timeframe || '—')}</td>
               <td style="font-size:12px;">${fmtEt(r.entered_at, false)}</td>
               <td>${r.qty ?? '—'}</td>
@@ -4228,6 +4636,9 @@
               <td>${r.exit_price ?? '—'}</td>
               <td style="color:${pct == null ? '' : pct >= 0 ? '#86efac' : '#fca5a5'};">${pct == null ? '—' : pct.toFixed(2) + '%'}</td>
               <td style="font-size:11px;">${mlTemplateLabel(r.template_id)}</td>
+              <td style="font-size:11px;max-width:140px;">${r.notes
+                ? `<span title="${escapeHtml(r.notes)}" style="display:inline-block;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;">${escapeHtml(r.notes)}</span>`
+                : '<span class="muted">—</span>'}</td>
               <td style="font-size:12px;">${fmtEt(r.closed_at, false)}</td>
             </tr>`;
           }).join('')}</tbody>
@@ -5071,7 +5482,10 @@
       mlAutoQty(); // the entry price is the other half of the sizing, so it re-sizes as you type
     });
     // Picking the account is the trigger the whole feature is named for.
-    document.getElementById('ml-account').addEventListener('change', mlAutoQty);
+    document.getElementById('ml-account').addEventListener('change', () => { mlAutoQty(); mlAutoTemplate(); });
+    // A hand-picked template is never overwritten again by a later account change — same convention
+    // as ml-stop/ml-target above, on 'change' rather than 'input' since this is a <select>.
+    document.getElementById('ml-template').addEventListener('change', (e) => { e.target.dataset.touched = '1'; });
     // A hand-typed Qty is never overwritten again; clearing the field hands it back to auto-sizing.
     document.getElementById('ml-qty').addEventListener('input', (e) => {
       const note = document.getElementById('ml-qty-note');
@@ -5108,6 +5522,20 @@
         msg.textContent = 'Enter at least one of stop price or target price.';
         msg.className = 'action-message action-message-error';
         return;
+      }
+      const symbolVal = document.getElementById('ml-symbol').value.trim();
+      const tfVal = document.getElementById('ml-timeframe').value;
+      const collision = mlFindLevelCollision(symbolVal, tfVal, stop, target);
+      if (collision) {
+        const sameLevels = [];
+        if (stop && Number(stop) === Number(collision.stop_price)) sameLevels.push(`stop ${stop}`);
+        if (target && Number(target) === Number(collision.target_price)) sameLevels.push(`target ${target}`);
+        if (!confirm(
+          `Position #${collision.id} (${collision.account || 'unknown account'}, entered ${fmtEt(collision.entered_at, false)}) `
+          + `is already open on ${symbolVal} ${tfVal} with the same ${sameLevels.join(' and ')}.\n\n`
+          + `TradingView cannot tell two alerts at the same symbol/timeframe/price apart — saving this will create a `
+          + `SECOND, redundant alert that fires alongside the first.\n\nSave anyway?`
+        )) return;
       }
       // Blank entry date means "now" — the server defaults it. Otherwise the input holds an ET wall
       // clock with no zone attached, which the server's new Date() would read in ITS timezone; it is
